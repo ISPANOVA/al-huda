@@ -95,4 +95,59 @@ void main() {
     expect(s.done, isTrue);
     expect(s.mistakes, isEmpty);
   });
+
+  test('disjoint letters recited by their names', () {
+    for (final heard in [
+      ['ألف', 'لام', 'ميم'],
+      ['الف', 'لام', 'ميم'],
+      ['الم'],
+      ['ألم'],
+      ['ا', 'ل', 'م'],
+      ['الف', 'لاميم'],
+    ]) {
+      final s = TasmeeSession(_words('الٓمٓ ذَٰلِكَ ٱلْكِتَٰبُ لَا رَيْبَ', surah: 2), []);
+      s.feed([...heard, 'ذلك', 'الكتاب', 'لا', 'ريب'], isFinal: true);
+      expect(s.done, isTrue, reason: heard.join(' '));
+      expect(s.mistakes, isEmpty, reason: heard.join(' '));
+    }
+  });
+
+  test('disjoint letters while still speaking and across utterances', () {
+    final s = TasmeeSession(_words('الٓمٓ ذَٰلِكَ ٱلْكِتَٰبُ', surah: 2), []);
+    s.feed(['ألف', 'لام'], isFinal: false);
+    expect(s.mistakes, isEmpty);
+    expect(s.expected, 0);
+    s.feed(['ألف', 'لام'], isFinal: true);
+    expect(s.mistakes, isEmpty);
+    s.newUtterance();
+    s.feed(['ميم', 'ذلك', 'الكتاب'], isFinal: true);
+    expect(s.done, isTrue);
+    expect(s.mistakes, isEmpty);
+  });
+
+  test('other disjoint letters', () {
+    final cases = {
+      'كٓهيعٓصٓ': (19, ['كاف', 'ها', 'يا', 'عين', 'صاد']),
+      'طه': (20, ['طاها']),
+      'يسٓ': (36, ['ياسين']),
+      'حمٓ': (40, ['حا', 'ميم']),
+      'طسٓمٓ': (26, ['طا', 'سين', 'ميم']),
+      'قٓۚ': (50, ['قاف']),
+      'نٓۚ': (68, ['نون']),
+      'الٓرۚ': (10, ['الف', 'لام', 'را']),
+    };
+    cases.forEach((text, c) {
+      final s = TasmeeSession(_words(text, surah: c.$1), []);
+      s.feed(c.$2, isFinal: true);
+      expect(s.done, isTrue, reason: text);
+      expect(s.mistakes, isEmpty, reason: text);
+    });
+  });
+
+  test('a slightly misheard word between correct ones is not a mistake', () {
+    final s = TasmeeSession(_words('ٱلَّذِينَ يُؤْمِنُونَ بِٱلْغَيْبِ وَيُقِيمُونَ ٱلصَّلَوٰةَ', surah: 2, ayah: 3), []);
+    s.feed(['الذين', 'يؤمنون', 'بالغيب', 'وتقيم', 'الصلاة'], isFinal: true);
+    expect(s.done, isTrue);
+    expect(s.mistakes, isEmpty);
+  });
 }

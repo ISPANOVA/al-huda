@@ -16,8 +16,13 @@ class TasmeeWord {
   /// The reciter got this word wrong at least once (shown in red when revealed).
   bool missed = false;
 
+  /// For the disjoint letters (الم، كهيعص…): the key of how they are recited,
+  /// letter by letter («ألف لام ميم»). Null for every other word.
+  final String? spoken;
+
   TasmeeWord({required this.surah, required this.ayah, required this.text, required this.endsAyah})
-      : key = TasmeeMatcher.key(text);
+      : key = TasmeeMatcher.key(text),
+        spoken = TasmeeMatcher.spokenLetters(surah, ayah, text);
 
   bool get revealed => state != TasmeeState.hidden && state != TasmeeState.mistake;
 }
@@ -88,6 +93,50 @@ class TasmeeMatcher {
     return distance(h, e) <= tol;
   }
 
+  /// Opening disjoint letters, as written (alef kept) and the surahs that
+  /// start with them.
+  static const _muqattaat = {
+    'الم', 'المص', 'الر', 'المر', 'كهيعص', 'طه', 'طسم', 'طس', 'يس', 'ص', 'حم', 'عسق', 'ق', 'ن',
+  };
+  static const _muqattaatSurahs = {
+    2, 3, 7, 10, 11, 12, 13, 14, 15, 19, 20, 26, 27, 28, 29, 30, 31, 32, 36, 38, //
+    40, 41, 42, 43, 44, 45, 46, 50, 68,
+  };
+
+  /// Keys of the letter names: ألف لام ميم صاد را كاف ها يا عين طا سين حا قاف نون.
+  static const _letterNames = {
+    'ا': 'لف', 'ل': 'لم', 'م': 'ميم', 'ص': 'صد', 'ر': 'ر', 'ك': 'كف', 'ه': 'ه', //
+    'ي': 'ي', 'ع': 'عين', 'ط': 'ط', 'س': 'سين', 'ح': 'ح', 'ق': 'قف', 'ن': 'نون',
+  };
+
+  static String? spokenLetters(int surah, int ayah, String text) {
+    if (!_muqattaatSurahs.contains(surah)) return null;
+    if (ayah != 1 && !(surah == 42 && ayah == 2)) return null;
+    final k = text.replaceAll(_marks, '').replaceAll(RegExp('[ٱأإآ]'), 'ا').replaceAll(_nonLetters, '');
+    if (!_muqattaat.contains(k)) return null;
+    return k.split('').map((c) => _letterNames[c] ?? c).join();
+  }
+
+  /// Heard letters [acc] (keys joined) are the disjoint letters of [w].
+  static bool letters(String acc, TasmeeWord w) =>
+      acc == w.key || similar(acc, w.spoken!);
+
+  /// [acc] could still grow into the disjoint letters of [w].
+  static bool lettersPrefix(String acc, TasmeeWord w) {
+    final sp = w.spoken!;
+    if (sp.startsWith(acc) || w.key.startsWith(acc)) return true;
+    if (acc.length < 3 || acc.length >= sp.length) return false;
+    return distance(acc, sp.substring(0, acc.length)) <= 1;
+  }
+
+  /// A looser match used when the recogniser probably misheard a correct word.
+  static bool close(String h, String e) {
+    if (similar(h, e)) return true;
+    if (e.length < 5) return false;
+    final tol = e.length <= 7 ? 2 : 3;
+    return distance(h, e) <= tol;
+  }
+
   /// Words people say around a recitation (isti'adha, basmala, closing) that
   /// are not part of the tested text.
   static final ignorable = {
@@ -113,6 +162,9 @@ class TasmeeSession {
 
   /// While the reciter repeats earlier words: the index they are at.
   int? _shadow;
+
+  /// Letter names heard so far for disjoint letters split across utterances.
+  String _pending = '';
 
   TasmeeSession(this.words, this.mistakes, {int consumed = 0}) : _consumed = consumed;
 
@@ -164,7 +216,7 @@ class TasmeeSession {
 
       final e = words[expected];
       // 2) The expected word (alone, split in two, or merged with the next).
-      if (_sim(h, e)) {
+      if (_sim(h, e) && _pending.isEmpty) {
         _reveal(expected);
         revealed++;
         _consumed++;
@@ -182,6 +234,36 @@ class TasmeeSession {
         revealed += 2;
         _consumed++;
         continue;
+      }
+      // Disjoint letters recited by their names: «ألف لام ميم».
+      if (e.spoken != null) {
+        var acc = _pending;
+        var n = 0;
+        var matched = false;
+        for (var i = _consumed; i < heard.length && n < 8; i++) {
+          n++;
+          final k = TasmeeMatcher.key(heard[i]);
+          if (k.isEmpty) continue;
+          acc += k;
+          if (TasmeeMatcher.letters(acc, e)) {
+            matched = true;
+            break;
+          }
+        }
+        if (matched) {
+          _reveal(expected);
+          revealed++;
+          _consumed += n;
+          continue;
+        }
+        if (acc.isNotEmpty && _consumed + n >= heard.length && TasmeeMatcher.lettersPrefix(acc, e)) {
+          if (isFinal) {
+            _pending = acc; // the rest comes in the next utterance
+            _consumed = heard.length;
+          }
+          break;
+        }
+        _pending = '';
       }
       // A partial word that doesn't match yet may still be completed.
       if (last) break;
@@ -218,7 +300,18 @@ class TasmeeSession {
         continue;
       }
 
-      // 6) A wrong word.
+      // 6) Probably misheard: close to the expected word, or the next heard
+      //    word is the next expected one.
+      final nextOk = hNext != null && expected + 1 < words.length && _sim(hNext, words[expected + 1]);
+      if (TasmeeMatcher.close(h, e.key) ||
+          (nextOk && TasmeeMatcher.distance(h, e.key) <= math.max(2, e.key.length ~/ 2))) {
+        _reveal(expected);
+        revealed++;
+        _consumed++;
+        continue;
+      }
+
+      // 7) A wrong word.
       if (e.state != TasmeeState.mistake) {
         _miss(e, heard[_consumed]);
         errors++;
@@ -248,6 +341,7 @@ class TasmeeSession {
   bool _atAyahStart() => expected == 0 || words[expected - 1].endsAyah;
 
   void _reveal(int index) {
+    _pending = '';
     words[index].state = TasmeeState.correct;
     expected = index + 1;
   }
@@ -264,6 +358,7 @@ class TasmeeSession {
     words[expected].state = TasmeeState.hinted;
     expected++;
     _shadow = null;
+    _pending = '';
   }
 
   /// Shows the rest of the current ayah.
@@ -275,5 +370,6 @@ class TasmeeSession {
       if (w.endsAyah) break;
     }
     _shadow = null;
+    _pending = '';
   }
 }

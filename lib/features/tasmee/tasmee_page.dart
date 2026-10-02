@@ -547,6 +547,36 @@ class _TasmeePageState extends State<TasmeePage> {
     );
   }
 
+  /// Icon above a one-line label: same size whatever the text or screen width.
+  Widget _hintButton(GlassTheme glass, IconData icon, String label, VoidCallback? onTap) {
+    final color = onTap == null ? glass.onGlassMuted.withValues(alpha: 0.5) : glass.accent;
+    return SizedBox(
+      height: 64,
+      child: OutlinedButton(
+        onPressed: onTap,
+        style: OutlinedButton.styleFrom(
+          padding: const EdgeInsets.symmetric(horizontal: 6),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          side: BorderSide(color: color.withValues(alpha: 0.5)),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 20, color: color),
+            const SizedBox(height: 4),
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(label,
+                  maxLines: 1,
+                  softWrap: false,
+                  style: TextStyle(color: color, fontSize: 13, fontWeight: FontWeight.w700)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _controls(GlassTheme glass, TasmeeSession s) {
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 10, 16, 12),
@@ -557,57 +587,72 @@ class _TasmeePageState extends State<TasmeePage> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(_status,
-              textAlign: TextAlign.center,
-              style: TextStyle(color: glass.onGlassMuted, fontSize: 12.5, height: 1.5)),
-          if (_active && _heard.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.only(top: 4),
+          SizedBox(
+            height: 38,
+            child: Center(
+              child: Text(_status,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: glass.onGlassMuted, fontSize: 12.5, height: 1.5)),
+            ),
+          ),
+          // Fixed height so the page above never jumps while speaking.
+          SizedBox(
+            height: 24,
+            child: Center(
               child: Text(
-                '«${_heard.split(' ').reversed.take(7).toList().reversed.join(' ')}»',
+                _active && _heard.isNotEmpty
+                    ? '«${_heard.split(' ').reversed.take(7).toList().reversed.join(' ')}»'
+                    : '',
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.center,
                 style: TextStyle(color: glass.accent.withValues(alpha: 0.85), fontSize: 13, fontWeight: FontWeight.w700),
               ),
             ),
-          const SizedBox(height: 10),
+          ),
+          const SizedBox(height: 6),
           Row(
             children: [
               Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: s.done ? null : _hintWord,
-                  icon: const Icon(Icons.lightbulb_outline_rounded, size: 18),
-                  label: const Text('الكلمة التالية'),
-                ),
+                child: _hintButton(glass, Icons.lightbulb_outline_rounded, 'الكلمة التالية', s.done ? null : _hintWord),
               ),
               const SizedBox(width: 12),
-              GestureDetector(
-                onTap: _toggleMic,
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 120),
-                  width: 72 + (_active ? _level * 10 : 0),
-                  height: 72 + (_active ? _level * 10 : 0),
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: _active ? const Color(0xFFE5484D) : glass.accent,
-                    boxShadow: [
-                      BoxShadow(
-                        color: (_active ? const Color(0xFFE5484D) : glass.accent).withValues(alpha: _listening ? 0.6 : 0.3),
-                        blurRadius: _listening ? 18 + _level * 22 : 12,
+              // The mic keeps a fixed footprint; the sound level only scales
+              // its painting, so the buttons beside it never move.
+              SizedBox(
+                width: 88,
+                height: 88,
+                child: Center(
+                  child: GestureDetector(
+                    onTap: _toggleMic,
+                    child: AnimatedScale(
+                      duration: const Duration(milliseconds: 120),
+                      scale: 1 + (_active ? _level * 0.12 : 0),
+                      child: Container(
+                        width: 72,
+                        height: 72,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: _active ? const Color(0xFFE5484D) : glass.accent,
+                          boxShadow: [
+                            BoxShadow(
+                              color: (_active ? const Color(0xFFE5484D) : glass.accent)
+                                  .withValues(alpha: _listening ? 0.6 : 0.3),
+                              blurRadius: _listening ? 18 + _level * 22 : 12,
+                            ),
+                          ],
+                        ),
+                        child: Icon(_active ? Icons.stop_rounded : Icons.mic_rounded, color: Colors.black, size: 36),
                       ),
-                    ],
+                    ),
                   ),
-                  child: Icon(_active ? Icons.stop_rounded : Icons.mic_rounded, color: Colors.black, size: 36),
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: s.done ? null : _hintAyah,
-                  icon: const Icon(Icons.subject_rounded, size: 18),
-                  label: const Text('باقي الآية'),
-                ),
+                child: _hintButton(glass, Icons.subject_rounded, 'باقي الآية', s.done ? null : _hintAyah),
               ),
             ],
           ),
