@@ -39,7 +39,12 @@ class TasmeePage extends StatefulWidget {
 
 class _TasmeePageState extends State<TasmeePage> {
   final SpeechToText _stt = SpeechToText();
-  final AudioPlayer _fx = AudioPlayer();
+  // No audio-session activation: a beep must not steal focus from the mic.
+  final AudioPlayer _fx = AudioPlayer(handleAudioSessionActivation: false);
+  Timer? _watchdog;
+  bool _starting = false;
+  String _heard = '';
+  double _level = 0;
   final List<TasmeeMistake> _mistakes = [];
   late int _page = widget.startPage;
   TasmeeSession? _session;
@@ -65,6 +70,7 @@ class _TasmeePageState extends State<TasmeePage> {
   @override
   void dispose() {
     _active = false;
+    _watchdog?.cancel();
     _flashTimer?.cancel();
     _stt.cancel();
     _fx.dispose();
@@ -121,9 +127,11 @@ class _TasmeePageState extends State<TasmeePage> {
   Future<void> _toggleMic() async {
     if (_active) {
       _active = false;
+      _watchdog?.cancel();
       await _stt.stop();
       setState(() {
         _listening = false;
+        _level = 0;
         _status = 'متوقف مؤقتًا • اضغط للمتابعة';
       });
       return;
@@ -136,18 +144,27 @@ class _TasmeePageState extends State<TasmeePage> {
       return;
     }
     _active = true;
+    // Android closes each utterance after a pause; keep the mic open while active.
+    _watchdog?.cancel();
+    _watchdog = Timer.periodic(const Duration(milliseconds: 700), (_) {
+      if (_active && !_starting && !_stt.isListening) _listen();
+    });
     await _listen();
   }
 
   Future<void> _listen() async {
-    if (!_active || !mounted) return;
+    if (!_active || !mounted || _starting) return;
+    _starting = true;
     _session?.newUtterance();
     try {
       await _stt.listen(
         onResult: _onResult,
+        onSoundLevelChange: (l) {
+          if (mounted) setState(() => _level = ((l + 2) / 12).clamp(0.0, 1.0));
+        },
         localeId: _localeId,
-        listenFor: const Duration(minutes: 1),
-        pauseFor: const Duration(seconds: 6),
+        listenFor: const Duration(minutes: 5),
+        pauseFor: const Duration(seconds: 30),
         listenOptions: SpeechListenOptions(
           partialResults: true,
           cancelOnError: false,
@@ -161,16 +178,22 @@ class _TasmeePageState extends State<TasmeePage> {
         });
       }
     } catch (_) {
-      if (mounted) setState(() => _status = 'تعذر بدء الاستماع، حاول مرة أخرى');
+      if (mounted) setState(() => _status = 'جارٍ إعادة الاتصال بالميكروفون…');
+    } finally {
+      _starting = false;
     }
   }
 
   void _onStatus(String status) {
     if (!mounted) return;
     if (status == 'done' || status == 'notListening') {
-      setState(() => _listening = false);
-      // Android ends each utterance after a pause: keep going while active.
-      if (_active) Future.delayed(const Duration(milliseconds: 250), _listen);
+      setState(() {
+        _listening = false;
+        _level = 0;
+      });
+      if (_active) Future.delayed(const Duration(milliseconds: 150), _listen);
+    } else if (status == 'listening') {
+      setState(() => _listening = true);
     }
   }
 
@@ -178,24 +201,23 @@ class _TasmeePageState extends State<TasmeePage> {
     if (!mounted) return;
     if (e.errorMsg.contains('permission')) {
       _active = false;
+      _watchdog?.cancel();
       setState(() => _status = 'يحتاج التسميع إذن الميكروفون من إعدادات التطبيق');
-      return;
     }
-    if (_active) Future.delayed(const Duration(milliseconds: 300), _listen);
+    // Other errors (silence, no match, busy) are recovered by the watchdog.
   }
 
   void _onResult(SpeechRecognitionResult r) {
     final s = _session;
     if (s == null || !mounted) return;
+    _heard = r.recognizedWords;
     final heard = r.recognizedWords.split(RegExp(r'\s+')).where((w) => w.isNotEmpty).toList();
-    final before = s.expected;
+    final wasDone = s.done;
     final res = s.feed(heard, isFinal: r.finalResult);
     if (res.mistakes > 0) _onMistake();
-    if (res.revealed > 0 || res.mistakes > 0) {
-      _revealedTotal += res.revealed;
-      setState(() {});
-    }
-    if (s.done && before < s.words.length) _pageDone(s.consumed);
+    _revealedTotal += res.revealed;
+    setState(() {});
+    if (s.done && !wasDone) _pageDone(s);
   }
 
   Future<void> _onMistake() async {
@@ -212,20 +234,19 @@ class _TasmeePageState extends State<TasmeePage> {
     } catch (_) {}
   }
 
-  Future<void> _pageDone(int consumed) async {
-    try {
-      await _fx.setAsset('assets/sounds/tasmee_page.wav');
-      unawaited(_fx.play());
-    } catch (_) {}
+  /// Next page right away, continuing the same utterance: words already
+  /// heard for this page are not fed to the next one.
+  Future<void> _pageDone(TasmeeSession finished) async {
+    HapticFeedback.mediumImpact();
     if (_page >= 604) {
       _active = false;
+      _watchdog?.cancel();
       await _stt.stop();
       if (mounted) _showSummary(finished: true);
       return;
     }
-    await Future.delayed(const Duration(milliseconds: 700));
     if (!mounted) return;
-    await _loadPage(_page + 1, consumed: consumed);
+    await _loadPage(_page + 1, consumed: finished.consumed);
   }
 
   // ------------------------------------------------------------- hints ---
@@ -234,14 +255,14 @@ class _TasmeePageState extends State<TasmeePage> {
     _session?.hintNext();
     HapticFeedback.selectionClick();
     setState(() {});
-    if (_session?.done ?? false) _pageDone(_session!.consumed);
+    if (_session?.done ?? false) _pageDone(_session!);
   }
 
   void _hintAyah() {
     _session?.revealAyah();
     HapticFeedback.selectionClick();
     setState(() {});
-    if (_session?.done ?? false) _pageDone(_session!.consumed);
+    if (_session?.done ?? false) _pageDone(_session!);
   }
 
   Future<void> _showSummary({bool finished = false}) {
@@ -350,9 +371,18 @@ class _TasmeePageState extends State<TasmeePage> {
                   Expanded(
                     child: SingleChildScrollView(
                       padding: const EdgeInsets.fromLTRB(14, 6, 14, 16),
-                      child: NoorCard(
-                        padding: const EdgeInsets.fromLTRB(14, 18, 14, 18),
-                        child: _pageText(glass, s),
+                      child: AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 380),
+                        switchInCurve: Curves.easeOutCubic,
+                        transitionBuilder: (child, a) => SlideTransition(
+                          position: Tween(begin: const Offset(-0.15, 0), end: Offset.zero).animate(a),
+                          child: FadeTransition(opacity: a, child: child),
+                        ),
+                        child: NoorCard(
+                          key: ValueKey(_page),
+                          padding: const EdgeInsets.fromLTRB(14, 18, 14, 18),
+                          child: _pageText(glass, s),
+                        ),
                       ),
                     ),
                   ),
@@ -530,6 +560,17 @@ class _TasmeePageState extends State<TasmeePage> {
           Text(_status,
               textAlign: TextAlign.center,
               style: TextStyle(color: glass.onGlassMuted, fontSize: 12.5, height: 1.5)),
+          if (_active && _heard.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Text(
+                '«${_heard.split(' ').reversed.take(7).toList().reversed.join(' ')}»',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+                style: TextStyle(color: glass.accent.withValues(alpha: 0.85), fontSize: 13, fontWeight: FontWeight.w700),
+              ),
+            ),
           const SizedBox(height: 10),
           Row(
             children: [
@@ -544,16 +585,16 @@ class _TasmeePageState extends State<TasmeePage> {
               GestureDetector(
                 onTap: _toggleMic,
                 child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 250),
-                  width: 72,
-                  height: 72,
+                  duration: const Duration(milliseconds: 120),
+                  width: 72 + (_active ? _level * 10 : 0),
+                  height: 72 + (_active ? _level * 10 : 0),
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: _active ? const Color(0xFFE5484D) : glass.accent,
                     boxShadow: [
                       BoxShadow(
                         color: (_active ? const Color(0xFFE5484D) : glass.accent).withValues(alpha: _listening ? 0.6 : 0.3),
-                        blurRadius: _listening ? 24 : 12,
+                        blurRadius: _listening ? 18 + _level * 22 : 12,
                       ),
                     ],
                   ),

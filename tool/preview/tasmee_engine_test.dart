@@ -21,7 +21,7 @@ void main() {
   test('reveals words as they are recited', () {
     final s = TasmeeSession(_words('ٱلْحَمْدُ لِلَّهِ رَبِّ ٱلْعَٰلَمِينَ'), []);
     s.feed(['الحمد', 'لله', 'رب'], isFinal: false);
-    expect(s.expected, 2); // last partial word held back
+    expect(s.expected, 3); // the word being spoken shows as soon as it matches
     s.feed(['الحمد', 'لله', 'رب', 'العالمين'], isFinal: true);
     expect(s.done, isTrue);
     expect(s.mistakes, isEmpty);
@@ -45,11 +45,54 @@ void main() {
     expect(s.mistakes, isEmpty);
   });
 
-  test('skipped word', () {
+  test('dropped short word is not a mistake', () {
     final s = TasmeeSession(_words('قُلْ هُوَ ٱللَّهُ أَحَدٌ', surah: 112), []);
     s.feed(['قل', 'الله', 'أحد'], isFinal: true);
     expect(s.done, isTrue);
+    expect(s.mistakes, isEmpty);
+  });
+
+  test('skipped long word is a mistake', () {
+    final s = TasmeeSession(_words('إِنَّآ أَعْطَيْنَٰكَ ٱلْكَوْثَرَ', surah: 108), []);
+    s.feed(['إنا', 'الكوثر'], isFinal: true);
+    expect(s.done, isTrue);
     expect(s.mistakes.length, 1);
     expect(s.words[1].missed, isTrue);
+  });
+
+  test('last word shows while still speaking', () {
+    final s = TasmeeSession(_words('ٱلْحَمْدُ لِلَّهِ رَبِّ ٱلْعَٰلَمِينَ'), []);
+    s.feed(['الحمد', 'لله', 'رب', 'العالمين'], isFinal: false);
+    expect(s.done, isTrue);
+  });
+
+  test('restarting from the beginning is not a mistake', () {
+    final s = TasmeeSession(
+      _words('بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ ٱلْحَمْدُ لِلَّهِ رَبِّ ٱلْعَٰلَمِينَ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ مَٰلِكِ يَوْمِ ٱلدِّينِ'),
+      [],
+    );
+    s.feed(
+      'بسم الله الرحمن الرحيم الحمد لله رب العالمين الرحمن الرحيم بسم الله الرحمن الرحيم الحمد لله رب العالمين الرحمن الرحيم مالك يوم الدين'
+          .split(' '),
+      isFinal: true,
+    );
+    expect(s.mistakes, isEmpty);
+    expect(s.done, isTrue);
+  });
+
+  test('repeating the last few words is not a mistake', () {
+    final s = TasmeeSession(_words('ٱلْحَمْدُ لِلَّهِ رَبِّ ٱلْعَٰلَمِينَ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ'), []);
+    s.feed('الحمد لله رب العالمين رب العالمين الرحمن الرحيم'.split(' '), isFinal: true);
+    expect(s.mistakes, isEmpty);
+    expect(s.done, isTrue);
+  });
+
+  test('a new utterance continues where it stopped', () {
+    final s = TasmeeSession(_words('ٱلْحَمْدُ لِلَّهِ رَبِّ ٱلْعَٰلَمِينَ'), []);
+    s.feed(['الحمد', 'لله'], isFinal: true);
+    s.newUtterance();
+    s.feed(['رب', 'العالمين'], isFinal: true);
+    expect(s.done, isTrue);
+    expect(s.mistakes, isEmpty);
   });
 }
