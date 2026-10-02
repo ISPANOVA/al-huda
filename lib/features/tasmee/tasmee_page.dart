@@ -1,0 +1,593 @@
+import 'dart:async';
+
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:just_audio/just_audio.dart';
+import 'package:speech_to_text/speech_recognition_error.dart';
+import 'package:speech_to_text/speech_recognition_result.dart';
+import 'package:speech_to_text/speech_to_text.dart';
+
+import '../../core/data/surah_metadata.dart';
+import '../../core/theme/app_themes.dart';
+import '../../core/utils/arabic_utils.dart';
+import '../../core/widgets/gradient_background.dart';
+import '../../core/widgets/noor_ui.dart';
+import '../../core/widgets/state_views.dart';
+import '../audio/presentation/cubit/audio_cubit.dart';
+import '../quran/domain/repositories/quran_repository.dart';
+import '../quran/presentation/mushaf/mushaf_page.dart' show kBasmala;
+import 'tasmee_engine.dart';
+
+/// التسميع: the page's words are hidden; recite from memory and each word
+/// appears as you say it. A wrong word stays hidden with a red line and a
+/// warning tone. Pages turn by themselves until you stop.
+class TasmeePage extends StatefulWidget {
+  final int startPage;
+
+  /// Optional global ayah number to start from (earlier ayahs are shown).
+  final int? startAyah;
+
+  const TasmeePage({super.key, required this.startPage, this.startAyah});
+
+  static Route<void> route({required int page, int? ayah}) =>
+      MaterialPageRoute(builder: (_) => TasmeePage(startPage: page, startAyah: ayah));
+
+  @override
+  State<TasmeePage> createState() => _TasmeePageState();
+}
+
+class _TasmeePageState extends State<TasmeePage> {
+  final SpeechToText _stt = SpeechToText();
+  final AudioPlayer _fx = AudioPlayer();
+  final List<TasmeeMistake> _mistakes = [];
+  late int _page = widget.startPage;
+  TasmeeSession? _session;
+  bool _ready = false;
+  bool _active = false; // user wants to listen
+  bool _listening = false;
+  bool _peek = false;
+  String _status = 'اضغط على الميكروفون وابدأ التلاوة من حفظك';
+  String? _localeId;
+  int _flashIndex = -1;
+  Timer? _flashTimer;
+  int _revealedTotal = 0;
+  bool _leaving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final audio = context.read<AudioCubit>();
+    if (audio.state.playing) audio.togglePlay();
+    _loadPage(_page, startAyah: widget.startAyah);
+  }
+
+  @override
+  void dispose() {
+    _active = false;
+    _flashTimer?.cancel();
+    _stt.cancel();
+    _fx.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadPage(int page, {int? startAyah, int consumed = 0}) async {
+    final repo = context.read<QuranRepository>();
+    await repo.ensureLoaded();
+    final ayahs = repo.ayahsOnPage(page);
+    final words = <TasmeeWord>[];
+    for (final a in ayahs) {
+      final parts = a.text.split(' ').where((w) => w.trim().isNotEmpty).toList();
+      for (var i = 0; i < parts.length; i++) {
+        words.add(TasmeeWord(surah: a.surah, ayah: a.numberInSurah, text: parts[i], endsAyah: i == parts.length - 1));
+      }
+    }
+    final session = TasmeeSession(words, _mistakes, consumed: consumed);
+    if (startAyah != null) {
+      final first = ayahs.indexWhere((a) => a.number == startAyah);
+      if (first > 0) {
+        final ref = ayahs[first];
+        for (final w in words) {
+          if (w.surah == ref.surah && w.ayah == ref.numberInSurah) break;
+          w.state = TasmeeState.correct;
+          session.expected++;
+        }
+      }
+    }
+    if (!mounted) return;
+    setState(() {
+      _page = page;
+      _session = session;
+    });
+  }
+
+  // ------------------------------------------------------------ speech ---
+
+  Future<bool> _init() async {
+    if (_ready) return true;
+    _ready = await _stt.initialize(onStatus: _onStatus, onError: _onError);
+    if (!_ready) return false;
+    try {
+      final locales = await _stt.locales();
+      final ar = locales.where((l) => l.localeId.toLowerCase().startsWith('ar')).toList();
+      String? pick(String id) => ar.where((l) => l.localeId.replaceAll('-', '_') == id).firstOrNull?.localeId;
+      _localeId = pick('ar_SA') ?? pick('ar_EG') ?? (ar.isNotEmpty ? ar.first.localeId : 'ar_SA');
+    } catch (_) {
+      _localeId = 'ar_SA';
+    }
+    return true;
+  }
+
+  Future<void> _toggleMic() async {
+    if (_active) {
+      _active = false;
+      await _stt.stop();
+      setState(() {
+        _listening = false;
+        _status = 'متوقف مؤقتًا • اضغط للمتابعة';
+      });
+      return;
+    }
+    if (!await _init()) {
+      if (mounted) {
+        setState(() => _status = 'تعذر تشغيل التعرف على الصوت. اسمح للتطبيق باستخدام الميكروفون، '
+            'وتأكد من وجود خدمة Google للتعرف على الكلام.');
+      }
+      return;
+    }
+    _active = true;
+    await _listen();
+  }
+
+  Future<void> _listen() async {
+    if (!_active || !mounted) return;
+    _session?.newUtterance();
+    try {
+      await _stt.listen(
+        onResult: _onResult,
+        localeId: _localeId,
+        listenFor: const Duration(minutes: 1),
+        pauseFor: const Duration(seconds: 6),
+        listenOptions: SpeechListenOptions(
+          partialResults: true,
+          cancelOnError: false,
+          listenMode: ListenMode.dictation,
+        ),
+      );
+      if (mounted) {
+        setState(() {
+          _listening = true;
+          _status = 'أستمع إليك… اقرأ من حفظك';
+        });
+      }
+    } catch (_) {
+      if (mounted) setState(() => _status = 'تعذر بدء الاستماع، حاول مرة أخرى');
+    }
+  }
+
+  void _onStatus(String status) {
+    if (!mounted) return;
+    if (status == 'done' || status == 'notListening') {
+      setState(() => _listening = false);
+      // Android ends each utterance after a pause: keep going while active.
+      if (_active) Future.delayed(const Duration(milliseconds: 250), _listen);
+    }
+  }
+
+  void _onError(SpeechRecognitionError e) {
+    if (!mounted) return;
+    if (e.errorMsg.contains('permission')) {
+      _active = false;
+      setState(() => _status = 'يحتاج التسميع إذن الميكروفون من إعدادات التطبيق');
+      return;
+    }
+    if (_active) Future.delayed(const Duration(milliseconds: 300), _listen);
+  }
+
+  void _onResult(SpeechRecognitionResult r) {
+    final s = _session;
+    if (s == null || !mounted) return;
+    final heard = r.recognizedWords.split(RegExp(r'\s+')).where((w) => w.isNotEmpty).toList();
+    final before = s.expected;
+    final res = s.feed(heard, isFinal: r.finalResult);
+    if (res.mistakes > 0) _onMistake();
+    if (res.revealed > 0 || res.mistakes > 0) {
+      _revealedTotal += res.revealed;
+      setState(() {});
+    }
+    if (s.done && before < s.words.length) _pageDone(s.consumed);
+  }
+
+  Future<void> _onMistake() async {
+    HapticFeedback.heavyImpact();
+    final idx = _session?.expected ?? -1;
+    _flashTimer?.cancel();
+    setState(() => _flashIndex = idx);
+    _flashTimer = Timer(const Duration(milliseconds: 900), () {
+      if (mounted) setState(() => _flashIndex = -1);
+    });
+    try {
+      await _fx.setAsset('assets/sounds/tasmee_error.wav');
+      await _fx.play();
+    } catch (_) {}
+  }
+
+  Future<void> _pageDone(int consumed) async {
+    try {
+      await _fx.setAsset('assets/sounds/tasmee_page.wav');
+      unawaited(_fx.play());
+    } catch (_) {}
+    if (_page >= 604) {
+      _active = false;
+      await _stt.stop();
+      if (mounted) _showSummary(finished: true);
+      return;
+    }
+    await Future.delayed(const Duration(milliseconds: 700));
+    if (!mounted) return;
+    await _loadPage(_page + 1, consumed: consumed);
+  }
+
+  // ------------------------------------------------------------- hints ---
+
+  void _hintWord() {
+    _session?.hintNext();
+    HapticFeedback.selectionClick();
+    setState(() {});
+    if (_session?.done ?? false) _pageDone(_session!.consumed);
+  }
+
+  void _hintAyah() {
+    _session?.revealAyah();
+    HapticFeedback.selectionClick();
+    setState(() {});
+    if (_session?.done ?? false) _pageDone(_session!.consumed);
+  }
+
+  Future<void> _showSummary({bool finished = false}) {
+    final glass = GlassTheme.of(context);
+    return showGlassSheet<void>(context, builder: (ctx) {
+      return SizedBox(
+        height: MediaQuery.sizeOf(ctx).height * 0.6,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(finished ? 'أتممت التسميع، بارك الله فيك' : 'نتيجة التسميع',
+                textAlign: TextAlign.center,
+                style: Theme.of(ctx).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900)),
+            const SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                _stat(glass, '${ArabicUtils.toArabicDigits(_revealedTotal)}', 'كلمة صحيحة'),
+                const SizedBox(width: 12),
+                _stat(glass, '${ArabicUtils.toArabicDigits(_mistakes.length)}', 'خطأ', error: true),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Expanded(
+              child: _mistakes.isEmpty
+                  ? Center(child: Text('لا أخطاء، ما شاء الله 🌿', style: TextStyle(color: glass.onGlassMuted)))
+                  : ListView.separated(
+                      itemCount: _mistakes.length,
+                      separatorBuilder: (_, _) => Divider(height: 1, color: glass.onGlass.withValues(alpha: 0.08)),
+                      itemBuilder: (_, i) {
+                        final m = _mistakes[i];
+                        return ListTile(
+                          dense: true,
+                          leading: const Icon(Icons.close_rounded, color: Color(0xFFE5484D)),
+                          title: Text(m.word, style: QuranFont.amiriQuran.style(fontSize: 20, height: 1.6, color: glass.onGlass)),
+                          subtitle: Text(
+                            'سورة ${SurahMetadata.surah(m.surah).name} • الآية ${ArabicUtils.toArabicDigits(m.ayah)}'
+                            '${m.heard.isEmpty ? ' • كلمة متروكة' : ' • قلت: ${m.heard}'}',
+                          ),
+                        );
+                      },
+                    ),
+            ),
+          ],
+        ),
+      );
+    });
+  }
+
+  Widget _stat(GlassTheme glass, String value, String label, {bool error = false}) {
+    final c = error ? const Color(0xFFE5484D) : glass.accent;
+    return Container(
+      width: 120,
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(18),
+        color: c.withValues(alpha: 0.12),
+        border: Border.all(color: c.withValues(alpha: 0.4)),
+      ),
+      child: Column(
+        children: [
+          Text(value, style: TextStyle(fontSize: 26, fontWeight: FontWeight.w900, color: c)),
+          Text(label, style: TextStyle(color: glass.onGlassMuted)),
+        ],
+      ),
+    );
+  }
+
+  // ---------------------------------------------------------------- UI ---
+
+  @override
+  Widget build(BuildContext context) {
+    final glass = GlassTheme.of(context);
+    final s = _session;
+    return PopScope(
+      canPop: _leaving || (_mistakes.isEmpty && _revealedTotal == 0),
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop) return;
+        _active = false;
+        _stt.stop();
+        _showSummaryThenLeave();
+      },
+      child: GlassScaffold(
+        title: 'التسميع',
+        actions: [
+          IconButton(
+            tooltip: _peek ? 'إخفاء النص' : 'إظهار النص للمراجعة',
+            icon: Icon(_peek ? Icons.visibility_off_rounded : Icons.visibility_rounded),
+            onPressed: () => setState(() => _peek = !_peek),
+          ),
+          IconButton(
+            tooltip: 'النتيجة',
+            icon: Badge(
+              isLabelVisible: _mistakes.isNotEmpty,
+              label: Text(ArabicUtils.toArabicDigits(_mistakes.length)),
+              child: const Icon(Icons.fact_check_rounded),
+            ),
+            onPressed: () => _showSummary(),
+          ),
+        ],
+        body: s == null
+            ? const Center(child: CircularProgressIndicator())
+            : Column(
+                children: [
+                  _topBar(glass, s),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.fromLTRB(14, 6, 14, 16),
+                      child: NoorCard(
+                        padding: const EdgeInsets.fromLTRB(14, 18, 14, 18),
+                        child: _pageText(glass, s),
+                      ),
+                    ),
+                  ),
+                  _controls(glass, s),
+                ],
+              ),
+      ),
+    );
+  }
+
+  Future<void> _showSummaryThenLeave() async {
+    await _showSummary();
+    if (!mounted) return;
+    setState(() => _leaving = true);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) Navigator.of(context).pop();
+    });
+  }
+
+  Widget _topBar(GlassTheme glass, TasmeeSession s) {
+    final first = s.words.isEmpty ? null : s.words.first;
+    final progress = s.words.isEmpty ? 0.0 : s.expected / s.words.length;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 6),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Text(
+                first == null ? '' : 'سورة ${SurahMetadata.surah(first.surah).name}',
+                style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16),
+              ),
+              const Spacer(),
+              Text('صفحة ${ArabicUtils.toArabicDigits(_page)}',
+                  style: TextStyle(color: glass.onGlassMuted, fontWeight: FontWeight.w700)),
+              const SizedBox(width: 10),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  color: (_mistakes.isEmpty ? glass.accent : const Color(0xFFE5484D)).withValues(alpha: 0.15),
+                ),
+                child: Text(
+                  'الأخطاء ${ArabicUtils.toArabicDigits(_mistakes.length)}',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w800,
+                    fontSize: 12.5,
+                    color: _mistakes.isEmpty ? glass.accent : const Color(0xFFE5484D),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(6),
+            child: LinearProgressIndicator(
+              value: progress,
+              minHeight: 5,
+              color: glass.accent,
+              backgroundColor: glass.onGlass.withValues(alpha: 0.08),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _pageText(GlassTheme glass, TasmeeSession s) {
+    final base = QuranFont.amiriQuran.style(fontSize: 23, height: 2.0, color: glass.onGlass);
+    final children = <Widget>[];
+    var line = <Widget>[];
+    void flush() {
+      if (line.isEmpty) return;
+      children.add(Wrap(
+        alignment: WrapAlignment.center,
+        runAlignment: WrapAlignment.center,
+        spacing: 7,
+        runSpacing: 2,
+        children: line,
+      ));
+      line = <Widget>[];
+    }
+
+    for (var i = 0; i < s.words.length; i++) {
+      final w = s.words[i];
+      final startsSurah = w.ayah == 1 && (i == 0 || s.words[i - 1].ayah != 1 || s.words[i - 1].surah != w.surah);
+      if (startsSurah && (i == 0 || s.words[i - 1].endsAyah)) {
+        flush();
+        children.add(_surahBanner(glass, w.surah));
+      }
+      line.add(_word(glass, base, w, i == s.expected && _active, i == _flashIndex));
+      if (w.endsAyah) {
+        line.add(Text(ArabicUtils.ornateAyahMarker(w.ayah), style: base.copyWith(color: glass.accent)));
+      }
+    }
+    flush();
+    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: children);
+  }
+
+  Widget _surahBanner(GlassTheme glass, int surah) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6, top: 4),
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(vertical: 6),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(14),
+              color: glass.accent.withValues(alpha: 0.12),
+              border: Border.all(color: glass.accent.withValues(alpha: 0.4)),
+            ),
+            alignment: Alignment.center,
+            child: Text('سورة ${SurahMetadata.surah(surah).name}',
+                style: QuranFont.amiriQuran.style(fontSize: 22, height: 1.6, color: glass.accent)),
+          ),
+          if (surah != 1 && surah != 9)
+            Text(kBasmala,
+                textAlign: TextAlign.center,
+                style: QuranFont.amiriQuran.style(fontSize: 21, height: 2, color: glass.onGlass)),
+        ],
+      ),
+    );
+  }
+
+  Widget _word(GlassTheme glass, TextStyle base, TasmeeWord w, bool current, bool flash) {
+    const red = Color(0xFFE5484D);
+    final hidden = !w.revealed;
+    Color color;
+    if (!hidden) {
+      color = w.missed ? red : (w.state == TasmeeState.hinted ? glass.accent : glass.onGlass);
+    } else {
+      color = _peek ? glass.onGlass.withValues(alpha: 0.28) : Colors.transparent;
+    }
+    final mistake = w.state == TasmeeState.mistake;
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 220),
+      padding: const EdgeInsets.symmetric(horizontal: 2),
+      decoration: BoxDecoration(
+        color: flash
+            ? red.withValues(alpha: 0.18)
+            : current
+                ? glass.accent.withValues(alpha: 0.10)
+                : null,
+        borderRadius: BorderRadius.circular(6),
+        border: Border(
+          bottom: BorderSide(
+            color: mistake || flash
+                ? red
+                : hidden
+                    ? (current ? glass.accent : glass.onGlass.withValues(alpha: 0.22))
+                    : Colors.transparent,
+            width: mistake || flash || current ? 2.4 : 1.2,
+          ),
+        ),
+      ),
+      child: AnimatedDefaultTextStyle(
+        duration: const Duration(milliseconds: 260),
+        style: base.copyWith(color: color),
+        child: Text(w.text),
+      ),
+    );
+  }
+
+  Widget _controls(GlassTheme glass, TasmeeSession s) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 10, 16, 12),
+      decoration: BoxDecoration(
+        color: noorSurface(context),
+        border: Border(top: BorderSide(color: glass.accent.withValues(alpha: 0.18))),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(_status,
+              textAlign: TextAlign.center,
+              style: TextStyle(color: glass.onGlassMuted, fontSize: 12.5, height: 1.5)),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: s.done ? null : _hintWord,
+                  icon: const Icon(Icons.lightbulb_outline_rounded, size: 18),
+                  label: const Text('الكلمة التالية'),
+                ),
+              ),
+              const SizedBox(width: 12),
+              GestureDetector(
+                onTap: _toggleMic,
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 250),
+                  width: 72,
+                  height: 72,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: _active ? const Color(0xFFE5484D) : glass.accent,
+                    boxShadow: [
+                      BoxShadow(
+                        color: (_active ? const Color(0xFFE5484D) : glass.accent).withValues(alpha: _listening ? 0.6 : 0.3),
+                        blurRadius: _listening ? 24 : 12,
+                      ),
+                    ],
+                  ),
+                  child: Icon(_active ? Icons.stop_rounded : Icons.mic_rounded, color: Colors.black, size: 36),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: s.done ? null : _hintAyah,
+                  icon: const Icon(Icons.subject_rounded, size: 18),
+                  label: const Text('باقي الآية'),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              TextButton.icon(
+                onPressed: _page > 1 ? () => _loadPage(_page - 1) : null,
+                icon: const Icon(Icons.chevron_right_rounded),
+                label: const Text('السابقة'),
+              ),
+              TextButton.icon(
+                onPressed: _page < 604 ? () => _loadPage(_page + 1) : null,
+                icon: const Icon(Icons.chevron_left_rounded),
+                label: const Text('التالية'),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}

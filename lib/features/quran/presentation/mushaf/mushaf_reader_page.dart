@@ -20,6 +20,7 @@ import '../../domain/repositories/quran_repository.dart';
 import '../cubit/bookmarks_cubit.dart';
 import '../cubit/quran_nav_cubit.dart';
 import '../pages/quran_search_page.dart';
+import '../../../tasmee/tasmee_page.dart';
 import '../widgets/ayah_sheets.dart';
 import '../../../wird/wird_tracker.dart';
 import 'mushaf_page.dart';
@@ -306,6 +307,7 @@ class _MushafReaderPageState extends State<MushafReaderPage> {
                       onSurahs: () => _openIndex(0),
                       onIndex: () => _openIndex(0),
                       onSearch: () => Navigator.of(context).push(QuranSearchPage.route()),
+                      onTasmee: () => Navigator.of(context).push(TasmeePage.route(page: first.page)),
                     ),
                   ),
                   ValueListenableBuilder<double>(
@@ -376,6 +378,7 @@ class _Header extends StatelessWidget {
   final VoidCallback onSurahs;
   final VoidCallback onIndex;
   final VoidCallback onSearch;
+  final VoidCallback onTasmee;
   final Widget Function(Widget) fade;
 
   const _Header({
@@ -386,6 +389,7 @@ class _Header extends StatelessWidget {
     required this.onSurahs,
     required this.onIndex,
     required this.onSearch,
+    required this.onTasmee,
   });
 
   @override
@@ -414,6 +418,7 @@ class _Header extends StatelessWidget {
           ),
           _ToolIcon(icon: Icons.search_rounded, color: style.accent, onTap: onSearch, tooltip: 'بحث'),
           const Spacer(),
+          fade(_ToolIcon(icon: Icons.mic_rounded, color: style.accent, onTap: onTasmee, tooltip: 'التسميع')),
           fade(_ToolIcon(icon: Icons.grid_view_rounded, color: style.accent, onTap: onIndex, tooltip: 'الفهرس')),
           const Spacer(),
           _Chip(

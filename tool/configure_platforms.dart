@@ -380,6 +380,7 @@ void _configureManifest() {
     'android.permission.VIBRATE',
     'android.permission.USE_EXACT_ALARM',
     'android.permission.SCHEDULE_EXACT_ALARM',
+    'android.permission.RECORD_AUDIO',
   ];
   final missing = permissions.where((p) => !s.contains('"$p"')).map((p) => '    <uses-permission android:name="$p"/>').join('\n');
   if (missing.isNotEmpty) {
@@ -389,7 +390,7 @@ void _configureManifest() {
   s = s.replaceFirst(RegExp(r'android:label="[^"]*"'), 'android:label="$appLabel"');
   // Text-to-speech (tafsir listening) must be visible on Android 11+.
   if (!s.contains('android.intent.action.TTS_SERVICE')) {
-    const tts = '    <queries>\n        <intent>\n            <action android:name="android.intent.action.TTS_SERVICE"/>\n        </intent>\n    </queries>\n';
+    const tts = '    <queries>\n        <intent>\n            <action android:name="android.intent.action.TTS_SERVICE"/>\n        </intent>\n        <intent>\n            <action android:name="android.speech.RecognitionService"/>\n        </intent>\n    </queries>\n';
     s = s.replaceFirst('<application', '$tts    <application');
   }
   // Some live Haram streams are plain http.

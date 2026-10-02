@@ -156,13 +156,10 @@ class NoorCard extends StatelessWidget {
             glass.accent.withValues(alpha: highlighted ? 0.7 : 0.22),
           ],
         ),
-        boxShadow: [
-          BoxShadow(
-            color: (highlighted ? glass.accent : Colors.black).withValues(alpha: dark ? 0.28 : 0.08),
-            blurRadius: highlighted ? 22 : 16,
-            offset: const Offset(0, 6),
-          ),
-        ],
+        // Blurred shadows are costly in long lists: only highlighted cards glow.
+        boxShadow: highlighted
+            ? [BoxShadow(color: glass.accent.withValues(alpha: dark ? 0.28 : 0.15), blurRadius: 18, offset: const Offset(0, 4))]
+            : null,
       ),
       child: Material(
         color: noorSurface(context),

@@ -1,8 +1,17 @@
 import 'package:flutter/material.dart';
 
-/// Soft fade + slight upward slide used for every screen in the app.
+/// Every screen slides in from the reading side (RTL: from the left) while
+/// the page underneath drifts a little. Pure translations: no opacity layer
+/// (saveLayer) and no re-raster of text, so push *and* back stay at full
+/// frame rate even over heavy pages.
 class FadeSlidePageTransitionsBuilder extends PageTransitionsBuilder {
   const FadeSlidePageTransitionsBuilder();
+
+  @override
+  Duration get transitionDuration => const Duration(milliseconds: 320);
+
+  @override
+  Duration get reverseTransitionDuration => const Duration(milliseconds: 260);
 
   @override
   Widget buildTransitions<T>(
@@ -12,12 +21,15 @@ class FadeSlidePageTransitionsBuilder extends PageTransitionsBuilder {
     Animation<double> secondaryAnimation,
     Widget child,
   ) {
-    final curved = CurvedAnimation(parent: animation, curve: Curves.easeOutCubic, reverseCurve: Curves.easeInCubic);
-    return FadeTransition(
-      opacity: curved,
+    final rtl = Directionality.maybeOf(context) == TextDirection.rtl;
+    final dir = rtl ? -1.0 : 1.0;
+    final inCurve = CurvedAnimation(parent: animation, curve: Curves.easeOutCubic, reverseCurve: Curves.easeInCubic);
+    final outCurve = CurvedAnimation(parent: secondaryAnimation, curve: Curves.easeOutCubic, reverseCurve: Curves.easeInCubic);
+    return SlideTransition(
+      position: Tween(begin: Offset.zero, end: Offset(-0.22 * dir, 0)).animate(outCurve),
       child: SlideTransition(
-        position: Tween(begin: const Offset(0, 0.035), end: Offset.zero).animate(curved),
-        child: child,
+        position: Tween(begin: Offset(dir, 0), end: Offset.zero).animate(inCurve),
+        child: RepaintBoundary(child: child),
       ),
     );
   }

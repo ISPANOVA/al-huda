@@ -15,6 +15,7 @@ import '../cubit/bookmarks_cubit.dart';
 import '../pages/ayah_image_page.dart';
 import 'listen_sheet.dart';
 import 'tafsir_panel.dart';
+import '../../../tasmee/tasmee_page.dart';
 
 String _reference(Ayah a) =>
     'سورة ${SurahMetadata.surah(a.surah).name} • الآية ${ArabicUtils.toArabicDigits(a.numberInSurah)}';
@@ -136,6 +137,10 @@ class _ActionBar extends StatelessWidget {
         if (!context.mounted) return;
         close();
         showGlassSnack(hostContext, 'تم نسخ الآية');
+      }),
+      _ActionData(Icons.mic_rounded, 'تسميع', false, () {
+        close();
+        Navigator.of(hostContext).push(TasmeePage.route(page: ayah.page, ayah: ayah.number));
       }),
       _ActionData(Icons.image_outlined, 'صورة', false, () {
         close();

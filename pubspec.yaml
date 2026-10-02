@@ -50,6 +50,7 @@ dependencies:
   share_plus: ">=11.0.0 <14.0.0"
   file_picker: ">=8.0.0 <11.0.0"
   flutter_tts: ">=4.0.0 <6.0.0"
+  speech_to_text: ^7.0.0
 
 dev_dependencies:
   flutter_test:
@@ -62,6 +63,7 @@ flutter:
   assets:
     - assets/icon/
     - assets/quran/
+    - assets/sounds/
   fonts:
     - family: AmiriQuran
       fonts:
