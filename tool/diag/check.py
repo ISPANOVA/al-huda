@@ -22,7 +22,7 @@ def get_json(url):
 
 out = {}
 # 1) verse-by-verse editions on cdn.islamic.network
-eds = get_json('https://api.alquran.cloud/v1/edition?format=audio&type=versebyverse')['data']
+eds = get_json('https://api.alquran.cloud/v1/edition?format=audio&type=versebyverse')['data'] if os.path.exists('tool/diag/FULL') else []
 eds = [e for e in eds if e['language'] == 'ar']
 bitrates = [192, 128, 64, 48, 40, 32]
 jobs = {}
