@@ -18,14 +18,14 @@ Color mediaTint(String seed, {double s = 0.42, double l = 0.30}) {
   return HSLColor.fromAHSL(1, hues[h % hues.length], s, l).toColor();
 }
 
+/// One distinctive letter for a monogram: the first letter of the family
+/// name (e.g. المنشاوي → م, الحصري → ح), drawn in the Mushaf font.
 String reciterInitials(String name) {
-  final parts = name
-      .split(' ')
-      .where((p) => p.isNotEmpty && !const {'عبد', 'أبو', 'بن', 'محمد', 'صديق', 'علي', 'خليل'}.contains(p))
-      .toList();
-  if (parts.isEmpty) return name.characters.first;
-  String first(String w) => (w.startsWith('ال') && w.length > 3 ? w.substring(2) : w).characters.first;
-  return parts.length == 1 ? first(parts.first) : '${first(parts.first)} ${first(parts.last)}';
+  final parts = name.split(' ').where((p) => p.isNotEmpty).toList();
+  if (parts.isEmpty) return '';
+  var w = parts.last;
+  if (w.startsWith('ال') && w.length > 3) w = w.substring(2);
+  return w.characters.first;
 }
 
 /// Press feedback: gently scales the child while pressed.
@@ -217,10 +217,12 @@ class MonogramAvatar extends StatelessWidget {
           child: Text(
             reciterInitials(name),
             style: TextStyle(
-              fontSize: size * 0.28,
-              fontWeight: FontWeight.w900,
-              color: Colors.white.withValues(alpha: 0.95),
-              height: 1.1,
+              fontFamily: 'UthmanicHafs',
+              fontSize: size * 0.42,
+              fontWeight: FontWeight.w700,
+              color: Color.lerp(accent, Colors.white, 0.55),
+              height: 1.25,
+              shadows: [Shadow(color: Colors.black.withValues(alpha: 0.5), blurRadius: 8)],
             ),
           ),
         ),
@@ -398,10 +400,17 @@ class SkylinePainter extends CustomPainter {
       final kw = w * 0.2;
       final kh = h * 0.42;
       final k = Rect.fromLTWH(w * 0.5 - kw / 2, base - h * 0.16 - kh, kw, kh);
-      canvas.drawRect(k, fill);
+      canvas.drawRect(k, Paint()..color = const Color(0xFF050403));
+      canvas.drawRect(
+        k,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1
+          ..color = color,
+      );
       canvas.drawRect(
         Rect.fromLTWH(k.left, k.top + kh * 0.2, kw, kh * 0.07),
-        Paint()..color = const Color(0xFFE2C275).withValues(alpha: 0.55),
+        Paint()..color = const Color(0xFFF7E2A3).withValues(alpha: 0.9),
       );
       // clock tower in the distance
       minaret(w * 0.66, h * 0.95, w * 0.045);
@@ -466,8 +475,8 @@ class MediaSectionHeader extends StatelessWidget {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(action!, style: const TextStyle(fontWeight: FontWeight.w800)),
-                  const Icon(Icons.chevron_left_rounded, size: 20),
+                  Text(action!, style: TextStyle(fontWeight: FontWeight.w800, color: glass.accent)),
+                  Icon(Icons.chevron_left_rounded, size: 20, color: glass.accent),
                 ],
               ),
             ),

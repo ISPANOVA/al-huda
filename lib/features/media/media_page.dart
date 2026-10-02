@@ -194,7 +194,7 @@ class _LiveCarouselState extends State<LiveCarousel> {
     return Column(
       children: [
         SizedBox(
-          height: 218,
+          height: 238,
           child: PageView.builder(
             controller: _controller,
             itemCount: _lives.length,
@@ -212,7 +212,7 @@ class _LiveCarouselState extends State<LiveCarousel> {
             ),
           ),
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 2),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -245,7 +245,7 @@ class _LiveCard extends StatelessWidget {
     return Pressable(
       onTap: () => Navigator.of(context).push(LiveStreamPage.route(live.title, live.urls)),
       child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 6),
+        margin: const EdgeInsets.fromLTRB(6, 4, 6, 16),
         clipBehavior: Clip.antiAlias,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(30),
@@ -274,7 +274,7 @@ class _LiveCard extends StatelessWidget {
               right: 0,
               bottom: 0,
               height: 120,
-              child: CustomPaint(painter: SkylinePainter(color: Colors.black.withValues(alpha: 0.55), makkah: live.makkah)),
+              child: CustomPaint(painter: SkylinePainter(color: gold.withValues(alpha: 0.26), makkah: live.makkah)),
             ),
             Positioned.fill(
               child: DecoratedBox(
