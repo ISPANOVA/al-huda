@@ -1,0 +1,78 @@
+name: al_huda
+description: "الهدى - تطبيق إسلامي متكامل: القرآن الكريم، التلاوات، مواقيت الصلاة، القبلة، الأذكار والتسبيح."
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.10.0
+  flutter: ">=3.38.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+
+  # State management
+  flutter_bloc: ^9.1.1
+  equatable: ^2.0.7
+
+  # Storage & networking
+  hive: ^2.2.3
+  hive_flutter: ^1.1.0
+  dio: ^5.8.0
+  path_provider: ^2.1.5
+
+  # Audio
+  just_audio: ^0.10.5
+  video_player: ^2.9.2
+  audio_service: ^0.18.18
+  audio_session: ">=0.1.25 <0.3.0"
+
+  # Location, prayer times & Qibla
+  geolocator: ^14.0.2
+  geocoding: ^4.0.0
+  adhan: ^2.0.0+1
+  flutter_compass: ^0.8.1
+  sensors_plus: ">=6.1.0 <8.0.0"
+
+  # Notifications
+  flutter_local_notifications: ^22.0.0
+  timezone: ^0.11.0
+  flutter_timezone: ^5.0.0
+
+  # UI & utilities
+  google_fonts: ^6.2.1
+  scrollable_positioned_list: ^0.3.8
+  intl: any
+  hijri: ^3.0.0
+  share_plus: ">=11.0.0 <14.0.0"
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.14.4
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/icon/
+    - assets/quran/
+  fonts:
+    - family: AmiriQuran
+      fonts:
+        - asset: assets/fonts/AmiriQuran-Regular.ttf
+    - family: UthmanicHafs
+      fonts:
+        - asset: assets/fonts/UthmanicHafs18.ttf
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/icon/app_icon.png"
+  remove_alpha_ios: true
+  min_sdk_android: 24
+  adaptive_icon_background: "assets/icon/app_icon_background.png"
+  adaptive_icon_foreground: "assets/icon/app_icon_foreground.png"

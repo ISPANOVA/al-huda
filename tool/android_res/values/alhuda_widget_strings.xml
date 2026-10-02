@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_prayer_name">مواقيت الصلاة</string>
+    <string name="widget_prayer_desc">مواقيت الصلاة والوقت المتبقي على الصلاة القادمة</string>
+    <string name="widget_ayah_name">آية اليوم</string>
+    <string name="widget_ayah_desc">آية جديدة من القرآن الكريم كل يوم</string>
+</resources>
