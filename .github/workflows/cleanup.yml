@@ -1,0 +1,17 @@
+name: Delete old releases
+on:
+  push:
+    branches: [cleanup]
+permissions:
+  contents: write
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          for t in v1.0.2 v1.0.3 v1.0.4; do
+            gh release delete "$t" --cleanup-tag -y -R "$GITHUB_REPOSITORY" || true
+          done
+          gh release list -R "$GITHUB_REPOSITORY"
