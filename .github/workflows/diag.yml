@@ -1,0 +1,20 @@
+name: Network diagnostics
+on:
+  push:
+    branches: [diag]
+permissions:
+  contents: write
+jobs:
+  diag:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 tool/diag/check.py
+      - name: Push results
+        if: always()
+        run: |
+          mkdir -p "$RUNNER_TEMP/d" && cp -r diag "$RUNNER_TEMP/d/" || true
+          git config user.name ci-bot && git config user.email ci-bot@users.noreply.github.com
+          git checkout --orphan diag-results-tmp && git rm -rq --cached . >/dev/null
+          rm -rf diag && cp -r "$RUNNER_TEMP/d/diag" . || mkdir diag
+          git add -f diag && git commit -qm "diag ${{ github.run_number }}" && git push -f origin HEAD:diag-results
