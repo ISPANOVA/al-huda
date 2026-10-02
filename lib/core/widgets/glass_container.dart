@@ -75,7 +75,7 @@ class GlassContainer extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.center,
-          colors: [Colors.white.withValues(alpha: dark ? 0.035 : 0.25), Colors.transparent],
+          colors: [Colors.white.withValues(alpha: dark ? 0.035 : 0.0), Colors.transparent],
         ),
       ),
       child: ClipRRect(
