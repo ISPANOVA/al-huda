@@ -1,0 +1,27 @@
+name: APK info
+on:
+  push:
+    branches: [apkinfo]
+permissions:
+  contents: write
+jobs:
+  info:
+    runs-on: ubuntu-latest
+    steps:
+      - env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          BT=$(ls -d $ANDROID_HOME/build-tools/* | sort -V | tail -1)
+          for n in 5 6 7 8 9; do
+            gh release download build-$n -R "$GITHUB_REPOSITORY" -p "*.apk" -D r$n || true
+            f=$(ls r$n/*.apk 2>/dev/null | head -1)
+            [ -z "$f" ] && continue
+            echo "== build-$n $(stat -c%s $f)" >> info.txt
+            $BT/aapt2 dump badging "$f" 2>/dev/null | head -1 >> info.txt || $BT/aapt dump badging "$f" | head -1 >> info.txt
+            $BT/apksigner verify --print-certs -v "$f" 2>&1 | grep -E "Verified using|SHA-256 digest|DN:|minSdk|Number of signers" >> info.txt
+          done
+          cat info.txt
+          git init -q out && cd out && cp ../info.txt . && git checkout -q -b apkinfo-results
+          git config user.name ci-bot && git config user.email ci-bot@users.noreply.github.com
+          git add info.txt && git commit -qm info
+          git push -f "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" HEAD:apkinfo-results
