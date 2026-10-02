@@ -111,7 +111,7 @@ jobs:
           git config user.name "ci-bot"
           git config user.email "ci-bot@users.noreply.github.com"
           git checkout --orphan ci-logs-tmp
-          git rm -rq --cached . > /dev/null
+          git rm -rqf --cached . > /dev/null
           cp "$RUNNER_TEMP/build_log.txt" build_log.txt
           echo "run ${{ github.run_number }} @ ${{ github.sha }}" > RUN.txt
           git add -f build_log.txt RUN.txt
