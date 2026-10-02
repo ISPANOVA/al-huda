@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/services/storage_service.dart';
 import '../../../core/theme/app_themes.dart';
-import '../../../core/widgets/glass_container.dart';
+import '../../../core/widgets/noor_ui.dart';
 import '../../../core/widgets/state_views.dart';
 import '../../audio/presentation/pages/downloads_page.dart';
 import '../../audio/presentation/pages/memorization_page.dart';
@@ -92,25 +92,22 @@ class _QuickActionsSectionState extends State<QuickActionsSection> {
 
   @override
   Widget build(BuildContext context) {
-    final glass = GlassTheme.of(context);
     final actions = [for (final id in _ids) kQuickActions.firstWhere((a) => a.id == id)];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        GlassSectionTitle(
-          'وصول سريع',
-          trailing: TextButton.icon(
-            onPressed: _edit,
-            icon: Icon(Icons.edit_rounded, size: 18, color: glass.accent),
-            label: Text('تعديل', style: TextStyle(color: glass.accent, fontWeight: FontWeight.w700)),
-          ),
+        Padding(
+          padding: const EdgeInsets.only(left: 0, right: 0),
+          child: NoorSection('وصول سريع', action: 'تخصيص', onAction: _edit),
         ),
         GridView.count(
-          crossAxisCount: 3,
+          crossAxisCount: 4,
           shrinkWrap: true,
+          padding: EdgeInsets.zero,
           physics: const NeverScrollableScrollPhysics(),
-          mainAxisSpacing: 10,
-          crossAxisSpacing: 10,
+          mainAxisSpacing: 14,
+          crossAxisSpacing: 8,
+          childAspectRatio: 0.78,
           children: [
             for (final a in actions) _QuickTile(def: a, onTap: () => _run(a), onLongPress: _edit),
             _AddTile(onTap: _edit),
@@ -131,25 +128,33 @@ class _QuickTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final glass = GlassTheme.of(context);
-    return GlassContainer(
-      blur: 0,
+    return GestureDetector(
       onTap: onTap,
       onLongPress: onLongPress,
-      padding: const EdgeInsets.all(8),
+      behavior: HitTestBehavior.opaque,
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(shape: BoxShape.circle, color: glass.accent.withValues(alpha: 0.18)),
-            child: Icon(def.icon, color: glass.accent, size: 26),
+          Expanded(
+            child: AspectRatio(
+              aspectRatio: 0.86,
+              child: ArchCard(
+                archHeight: 0.5,
+                padding: const EdgeInsets.only(top: 18),
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [glass.accent.withValues(alpha: 0.30), glass.accent.withValues(alpha: 0.06)],
+                ),
+                child: Center(child: Icon(def.icon, color: glass.accent, size: 26)),
+              ),
+            ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 6),
           Text(def.label,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.center,
-              style: const TextStyle(fontWeight: FontWeight.w800)),
+              style: TextStyle(fontWeight: FontWeight.w800, fontSize: 12.5, color: glass.onGlass)),
         ],
       ),
     );
@@ -166,19 +171,24 @@ class _AddTile extends StatelessWidget {
     final glass = GlassTheme.of(context);
     return GestureDetector(
       onTap: onTap,
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: glass.accent.withValues(alpha: 0.45), width: 1.4),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.add_circle_outline_rounded, color: glass.accent, size: 30),
-            const SizedBox(height: 6),
-            Text('إضافة', style: TextStyle(fontWeight: FontWeight.w800, color: glass.onGlassMuted)),
-          ],
-        ),
+      behavior: HitTestBehavior.opaque,
+      child: Column(
+        children: [
+          Expanded(
+            child: AspectRatio(
+              aspectRatio: 0.86,
+              child: ArchCard(
+                archHeight: 0.5,
+                color: Colors.transparent,
+                borderColor: glass.accent.withValues(alpha: 0.35),
+                padding: const EdgeInsets.only(top: 18),
+                child: Center(child: Icon(Icons.add_rounded, color: glass.accent, size: 26)),
+              ),
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text('إضافة', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 12.5, color: glass.onGlassMuted)),
+        ],
       ),
     );
   }

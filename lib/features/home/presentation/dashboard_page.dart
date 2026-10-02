@@ -1,122 +1,310 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hijri/hijri_calendar.dart';
+import 'package:intl/intl.dart';
 
 import '../../../core/data/surah_metadata.dart';
 import '../../../core/services/home_widgets.dart';
 import '../../../core/theme/app_themes.dart';
 import '../../../core/utils/arabic_utils.dart';
-import '../../../core/widgets/glass_container.dart';
+import '../../../core/widgets/noor_ui.dart';
 import '../../audio/presentation/cubit/audio_cubit.dart';
 import '../../khatmah/presentation/cubit/khatmah_cubit.dart';
 import '../../khatmah/presentation/pages/khatmah_page.dart';
-import '../../prayer/presentation/widgets/next_prayer_card.dart';
+import '../../prayer/domain/prayer_entities.dart';
+import '../../prayer/presentation/cubit/prayer_cubit.dart';
 import '../../qibla/presentation/pages/qibla_page.dart';
 import '../../quran/domain/entities/ayah.dart';
 import '../../quran/domain/entities/ayah_ref.dart';
 import '../../quran/domain/repositories/quran_repository.dart';
 import '../../quran/presentation/cubit/bookmarks_cubit.dart';
 import '../../quran/presentation/mushaf/mushaf_reader_page.dart';
+import '../../quran/presentation/pages/ayah_image_page.dart';
 import '../../settings/presentation/cubit/settings_cubit.dart';
 import '../../stats/domain/stats_entities.dart';
 import '../../stats/presentation/stats_page.dart';
 import '../../wird/wird_card.dart';
+import '../../wird/wird_tracker.dart';
 import 'quick_actions.dart';
 
+/// الرئيسية — a living sky that follows the prayer day, then the user's
+/// reading, daily goals, shortcuts and the ayah of the day.
 class DashboardPage extends StatelessWidget {
   final ValueChanged<int> onNavigate;
 
   const DashboardPage({super.key, required this.onNavigate});
 
-  String _greeting() {
-    final h = DateTime.now().hour;
-    if (h < 12) return 'صباح الخير';
-    if (h < 18) return 'طاب يومك';
-    return 'مساء الخير';
-  }
-
   @override
   Widget build(BuildContext context) {
-    final glass = GlassTheme.of(context);
-    HijriCalendar.setLocal('ar');
-    final hijri = HijriCalendar.now();
-
     return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 130),
+      padding: const EdgeInsets.fromLTRB(0, 6, 0, 130),
+      physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
       children: [
-        Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('${_greeting()} 🌿', style: TextStyle(color: glass.onGlassMuted)),
-                  Text('الهدى', style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w900)),
-                  Text('${hijri.toFormat('dd MMMM yyyy')} هـ',
-                      style: TextStyle(color: glass.accent, fontWeight: FontWeight.w700)),
-                ],
-              ),
-            ),
-            GlassIconButton(
-              icon: Icons.explore_rounded,
-              tooltip: 'القبلة',
-              onPressed: () => Navigator.of(context).push(QiblaPage.route()),
-            ),
-          ],
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14),
+          child: HomeSkyHero(onTap: () => onNavigate(3)),
         ),
         const SizedBox(height: 16),
-        NextPrayerCard(onTap: () => onNavigate(3)),
+        const Padding(padding: EdgeInsets.symmetric(horizontal: 14), child: _ContinueReading()),
         const SizedBox(height: 12),
-        const _ContinueReadingCard(),
-        const SizedBox(height: 12),
-        const WirdCard(),
-        const _KhatmahMiniCard(),
-        const SizedBox(height: 12),
-        BlocBuilder<StatsCubit, StatsSummary>(
-          builder: (context, s) => StreakCard(summary: s, onTap: () => Navigator.of(context).push(StatsPage.route())),
+        const Padding(padding: EdgeInsets.symmetric(horizontal: 14), child: _GoalsRow()),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14),
+          child: QuickActionsSection(onNavigate: onNavigate),
         ),
-        QuickActionsSection(onNavigate: onNavigate),
-        const GlassSectionTitle('آية اليوم'),
-        const _AyahOfTheDay(),
+        const NoorSection('آية اليوم'),
+        const Padding(padding: EdgeInsets.symmetric(horizontal: 14), child: _AyahOfTheDay()),
       ],
     );
   }
 }
 
-class _ContinueReadingCard extends StatelessWidget {
-  const _ContinueReadingCard();
+// --------------------------------------------------------------- hero ---
+
+class HomeSkyHero extends StatelessWidget {
+  final VoidCallback? onTap;
+
+  const HomeSkyHero({super.key, this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    HijriCalendar.setLocal('ar');
+    final hijri = HijriCalendar.now();
+    final greg = DateFormat('EEEE d MMMM', 'ar').format(DateTime.now());
+    return BlocBuilder<PrayerCubit, PrayerState>(
+      builder: (context, s) {
+        final today = s.today;
+        final sky = skyState(
+          now: DateTime.now(),
+          fajr: today?[PrayerName.fajr],
+          sunrise: today?[PrayerName.sunrise],
+          dhuhr: today?[PrayerName.dhuhr],
+          maghrib: today?[PrayerName.maghrib],
+          isha: today?[PrayerName.isha],
+        );
+        return GestureDetector(
+          onTap: onTap,
+          child: Container(
+            height: 300,
+            clipBehavior: Clip.antiAlias,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(34),
+              boxShadow: [
+                BoxShadow(
+                  color: skyColors(sky.phase)[1].withValues(alpha: 0.45),
+                  blurRadius: 30,
+                  offset: const Offset(0, 12),
+                ),
+              ],
+            ),
+            child: Stack(
+              children: [
+                Positioned.fill(
+                  child: RepaintBoundary(
+                    child: CustomPaint(painter: SkyPainter(phase: sky.phase, t: sky.t, sun: sky.sun, orbitTop: 0.2, horizonAt: 0.68)),
+                  ),
+                ),
+                Positioned(
+                  top: 18,
+                  left: 18,
+                  right: 12,
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(skyGreeting(sky.phase),
+                                style: TextStyle(color: Colors.white.withValues(alpha: 0.8), fontSize: 14)),
+                            const Text('الهدى',
+                                style: TextStyle(
+                                    color: Colors.white, fontSize: 30, fontWeight: FontWeight.w900, height: 1.2)),
+                            Text('${hijri.toFormat('dd MMMM yyyy')} هـ',
+                                style: const TextStyle(
+                                    color: Color(0xFFFFE3A3), fontWeight: FontWeight.w800, fontSize: 13.5)),
+                            Text(greg, style: TextStyle(color: Colors.white.withValues(alpha: 0.65), fontSize: 12)),
+                          ],
+                        ),
+                      ),
+                      NoorIconButton(
+                        icon: Icons.explore_rounded,
+                        tooltip: 'القبلة',
+                        onDark: true,
+                        onTap: () => Navigator.of(context).push(QiblaPage.route()),
+                      ),
+                    ],
+                  ),
+                ),
+                Positioned(
+                  left: 14,
+                  right: 14,
+                  bottom: 14,
+                  child: _NextPrayerGlass(state: s),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _NextPrayerGlass extends StatelessWidget {
+  final PrayerState state;
+
+  const _NextPrayerGlass({required this.state});
 
   @override
   Widget build(BuildContext context) {
     final glass = GlassTheme.of(context);
+    final next = state.next;
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 10, 10, 10),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(22),
+        color: Colors.black.withValues(alpha: 0.38),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
+      ),
+      child: next == null
+          ? Row(
+              children: [
+                const Icon(Icons.location_searching_rounded, color: Colors.white70),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    state.error ?? (state.loading ? 'جارٍ تحديد موقعك لحساب المواقيت…' : 'اضغط لتحديد الموقع'),
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                ),
+              ],
+            )
+          : Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(next.name.isPrayer ? 'الصلاة القادمة' : 'الشروق',
+                          style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 12)),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text(next.name.nameAr,
+                              style: const TextStyle(
+                                  color: Colors.white, fontSize: 22, fontWeight: FontWeight.w900, height: 1.2)),
+                          const SizedBox(width: 8),
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 3),
+                            child: Text(ArabicUtils.formatTime(next.time),
+                                style: const TextStyle(color: Color(0xFFFFE3A3), fontWeight: FontWeight.w800)),
+                          ),
+                        ],
+                      ),
+                      if (state.location?.city != null)
+                        Text(state.location!.city!,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(color: Colors.white.withValues(alpha: 0.6), fontSize: 11.5)),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(16),
+                    color: glass.accent,
+                  ),
+                  child: Column(
+                    children: [
+                      Text(ArabicUtils.formatDuration(state.countdown),
+                          style: const TextStyle(
+                              color: Colors.black, fontWeight: FontWeight.w900, fontSize: 17, height: 1.1)),
+                      const Text('متبقٍ', style: TextStyle(color: Colors.black87, fontSize: 10.5)),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+    );
+  }
+}
+
+// --------------------------------------------------------- reading ---
+
+class _ContinueReading extends StatelessWidget {
+  const _ContinueReading();
+
+  @override
+  Widget build(BuildContext context) {
+    final glass = GlassTheme.of(context);
+    final font = context.select((SettingsCubit c) => c.state.quranFont);
     final last = context.select<BookmarksCubit, AyahRef?>((c) => c.state.lastRead);
     final surah = last?.surah ?? 1;
     final ayah = last?.ayah ?? 1;
     final info = SurahMetadata.surah(surah);
     final percent = SurahMetadata.globalAyah(surah, ayah) / SurahMetadata.totalAyahs;
-    return GlassContainer(
+    return NoorCard(
+      padding: const EdgeInsets.all(12),
       onTap: () => MushafReaderPage.open(context, surah: surah, ayah: ayah),
       child: Row(
         children: [
-          Icon(Icons.auto_stories_rounded, color: glass.accent, size: 36),
+          SizedBox(
+            width: 92,
+            height: 112,
+            child: ArchCard(
+              archHeight: 0.42,
+              padding: const EdgeInsets.fromLTRB(6, 26, 6, 8),
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [glass.accent.withValues(alpha: 0.35), glass.accent.withValues(alpha: 0.08)],
+              ),
+              child: FittedBox(
+                child: Text(info.name, style: font.style(fontSize: 26, height: 1.4, color: glass.onGlass)),
+              ),
+            ),
+          ),
           const SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(last == null ? 'ابدأ القراءة' : 'متابعة القراءة', style: TextStyle(color: glass.onGlassMuted)),
-                Text('سورة ${info.name} • الآية ${ArabicUtils.toArabicDigits(ayah)}',
-                    style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w900)),
-                const SizedBox(height: 8),
-                GlassProgressBar(value: percent, height: 6),
+                Text(last == null ? 'ابدأ رحلتك مع القرآن' : 'تابع من حيث توقفت',
+                    style: TextStyle(color: glass.onGlassMuted, fontSize: 12.5)),
+                const SizedBox(height: 2),
+                Text('سورة ${info.name}', style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w900)),
+                Text('الآية ${ArabicUtils.toArabicDigits(ayah)} • ${info.revelationAr}',
+                    style: TextStyle(color: glass.accent, fontWeight: FontWeight.w700, fontSize: 13)),
+                const SizedBox(height: 10),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(6),
+                  child: LinearProgressIndicator(
+                    value: percent,
+                    minHeight: 6,
+                    color: glass.accent,
+                    backgroundColor: glass.onGlass.withValues(alpha: 0.08),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text('${ArabicUtils.toArabicDigits((percent * 100).toStringAsFixed(1))}٪ من المصحف',
+                    style: TextStyle(fontSize: 11, color: glass.onGlassMuted)),
               ],
             ),
           ),
-          const SizedBox(width: 8),
-          IconButton(
-            tooltip: 'استماع',
-            icon: Icon(Icons.play_circle_fill_rounded, color: glass.accent, size: 40),
-            onPressed: () => context.read<AudioCubit>().playSurah(surah, fromAyah: ayah),
+          const SizedBox(width: 6),
+          Material(
+            color: glass.accent,
+            shape: const CircleBorder(),
+            child: InkWell(
+              customBorder: const CircleBorder(),
+              onTap: () => context.read<AudioCubit>().playSurah(surah, fromAyah: ayah),
+              child: const SizedBox.square(
+                dimension: 46,
+                child: Icon(Icons.play_arrow_rounded, color: Colors.black, size: 28),
+              ),
+            ),
           ),
         ],
       ),
@@ -124,62 +312,152 @@ class _ContinueReadingCard extends StatelessWidget {
   }
 }
 
-class _KhatmahMiniCard extends StatelessWidget {
-  const _KhatmahMiniCard();
+// ----------------------------------------------------------- goals ---
+
+class _GoalsRow extends StatelessWidget {
+  const _GoalsRow();
 
   @override
   Widget build(BuildContext context) {
-    final glass = GlassTheme.of(context);
-    final plan = context.select((KhatmahCubit c) => c.state.plan);
-    return Padding(
-      padding: const EdgeInsets.only(top: 12),
-      child: GlassContainer(
-        onTap: () => Navigator.of(context).push(KhatmahPage.route()),
-        child: plan == null
-            ? Row(
-                children: [
-                  Icon(Icons.flag_circle_rounded, color: glass.accent, size: 36),
-                  const SizedBox(width: 14),
-                  const Expanded(
-                    child: Text('خطط لختمتك: حدد المدة وسنقسّم وردك اليومي ونذكّرك به',
-                        style: TextStyle(fontWeight: FontWeight.w700)),
-                  ),
-                  const Icon(Icons.chevron_left_rounded),
-                ],
-              )
-            : Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Row(
-                    children: [
-                      Icon(Icons.flag_rounded, color: glass.accent),
-                      const SizedBox(width: 8),
-                      const Expanded(child: Text('ورد الختمة اليوم', style: TextStyle(fontWeight: FontWeight.w900))),
-                      Text(
-                        plan.isFinished
-                            ? 'مكتملة 🎉'
-                            : plan.isTodayDone(DateTime.now())
-                                ? 'تم ✅'
-                                : 'متبقٍ ${ArabicUtils.toArabicDigits(plan.todayRemaining(DateTime.now()))} آية',
-                        style: TextStyle(color: glass.accent, fontWeight: FontWeight.w800),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 10),
-                  GlassProgressBar(value: plan.progress),
-                  const SizedBox(height: 6),
-                  Text(
-                    'الإنجاز الكلي ${ArabicUtils.toArabicDigits((plan.progress * 100).toStringAsFixed(1))}٪',
-                    style: TextStyle(color: glass.onGlassMuted, fontSize: 12.5),
-                  ),
-                ],
-              ),
+    return const IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Expanded(child: _WirdTile()),
+          SizedBox(width: 10),
+          Expanded(child: _KhatmahTile()),
+          SizedBox(width: 10),
+          Expanded(child: _StreakTile()),
+        ],
       ),
     );
   }
 }
 
-/// Deterministic "ayah of the day" based on the date.
+class _GoalTile extends StatelessWidget {
+  final double value;
+  final Widget center;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+
+  const _GoalTile({
+    required this.value,
+    required this.center,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final glass = GlassTheme.of(context);
+    return NoorCard(
+      radius: 22,
+      padding: const EdgeInsets.fromLTRB(8, 14, 8, 12),
+      onTap: onTap,
+      child: Column(
+        children: [
+          NoorRing(value: value, color: glass.accent, size: 58, stroke: 5, child: center),
+          const SizedBox(height: 8),
+          Text(title, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 14)),
+          Text(subtitle,
+              maxLines: 2,
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 11, height: 1.3, color: glass.onGlassMuted)),
+        ],
+      ),
+    );
+  }
+}
+
+class _WirdTile extends StatelessWidget {
+  const _WirdTile();
+
+  @override
+  Widget build(BuildContext context) {
+    final glass = GlassTheme.of(context);
+    final goal = context.select((SettingsCubit c) => c.state.wirdPages);
+    final tracker = context.read<WirdTracker>();
+    return ListenableBuilder(
+      listenable: tracker,
+      builder: (context, _) {
+        final done = tracker.todayCount;
+        if (goal <= 0) {
+          return _GoalTile(
+            value: 0,
+            center: Icon(Icons.add_rounded, color: glass.accent),
+            title: 'الورد اليومي',
+            subtitle: 'حدّد هدفك',
+            onTap: () => showWirdSetup(context),
+          );
+        }
+        final complete = done >= goal;
+        return _GoalTile(
+          value: done / goal,
+          center: complete
+              ? Icon(Icons.check_rounded, color: glass.accent)
+              : Text('${ArabicUtils.toArabicDigits(done)}/${ArabicUtils.toArabicDigits(goal)}',
+                  style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 13)),
+          title: 'وردي',
+          subtitle: complete ? 'أتممته اليوم' : 'صفحات اليوم',
+          onTap: () {
+            final page = context.read<BookmarksCubit>().lastPage ?? 1;
+            MushafReaderPage.open(context, page: page);
+          },
+        );
+      },
+    );
+  }
+}
+
+class _KhatmahTile extends StatelessWidget {
+  const _KhatmahTile();
+
+  @override
+  Widget build(BuildContext context) {
+    final glass = GlassTheme.of(context);
+    final plan = context.select((KhatmahCubit c) => c.state.plan);
+    final now = DateTime.now();
+    return _GoalTile(
+      value: plan?.progress ?? 0,
+      center: plan == null
+          ? Icon(Icons.flag_rounded, color: glass.accent)
+          : Text('${ArabicUtils.toArabicDigits((plan.progress * 100).round())}٪',
+              style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 13)),
+      title: 'الختمة',
+      subtitle: plan == null
+          ? 'خطّط لختمتك'
+          : plan.isFinished
+              ? 'مكتملة 🎉'
+              : plan.isTodayDone(now)
+                  ? 'ورد اليوم تم'
+                  : 'باقي ${ArabicUtils.toArabicDigits(plan.todayRemaining(now))} آية',
+      onTap: () => Navigator.of(context).push(KhatmahPage.route()),
+    );
+  }
+}
+
+class _StreakTile extends StatelessWidget {
+  const _StreakTile();
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<StatsCubit, StatsSummary>(
+      builder: (context, s) => _GoalTile(
+        value: (s.currentStreak / 7).clamp(0.0, 1.0),
+        center: Text('🔥${ArabicUtils.toArabicDigits(s.currentStreak)}',
+            style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 13)),
+        title: 'المداومة',
+        subtitle: 'أيام متتالية',
+        onTap: () => Navigator.of(context).push(StatsPage.route()),
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------- ayah of the day ---
+
 class _AyahOfTheDay extends StatefulWidget {
   const _AyahOfTheDay();
 
@@ -188,13 +466,7 @@ class _AyahOfTheDay extends StatefulWidget {
 }
 
 class _AyahOfTheDayState extends State<_AyahOfTheDay> {
-  late Future<Ayah?> _future;
-
-  @override
-  void initState() {
-    super.initState();
-    _future = _load();
-  }
+  late Future<Ayah?> _future = _load();
 
   Future<Ayah?> _load() async {
     final repo = context.read<QuranRepository>();
@@ -215,39 +487,71 @@ class _AyahOfTheDayState extends State<_AyahOfTheDay> {
       future: _future,
       builder: (context, snap) {
         if (snap.connectionState != ConnectionState.done) {
-          return const GlassContainer(child: SizedBox(height: 80, child: Center(child: CircularProgressIndicator())));
+          return const SizedBox(height: 160, child: Center(child: CircularProgressIndicator()));
         }
         final ayah = snap.data;
         if (ayah == null) {
-          return GlassContainer(
+          return NoorCard(
             onTap: () => setState(() => _future = _load()),
-            child: Text(
-              'تعذر جلب آية اليوم. اتصل بالإنترنت مرة واحدة أو نزّل المصحف كاملًا من صفحة البحث. اضغط لإعادة المحاولة.',
-              style: TextStyle(color: glass.onGlassMuted),
-            ),
+            child: Text('تعذر جلب آية اليوم، اضغط لإعادة المحاولة.', style: TextStyle(color: glass.onGlassMuted)),
           );
         }
-        return GlassContainer(
+        return GestureDetector(
           onTap: () => MushafReaderPage.open(context, surah: ayah.surah, ayah: ayah.numberInSurah),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                '${ayah.text} ${ArabicUtils.ornateAyahMarker(ayah.numberInSurah)}',
-                textAlign: TextAlign.center,
-                style: font.style(fontSize: 22, height: 2, color: glass.onGlass),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'سورة ${SurahMetadata.surah(ayah.surah).name} • ${ArabicUtils.toArabicDigits(ayah.numberInSurah)}',
-                textAlign: TextAlign.center,
-                style: TextStyle(color: glass.accent, fontWeight: FontWeight.w800),
-              ),
-              if (ayah.tafseer.isNotEmpty) ...[
-                const Divider(height: 22),
-                Text(ayah.tafseer, style: TextStyle(color: glass.onGlassMuted, height: 1.7)),
+          child: ArchCard(
+            archHeight: 0.22,
+            padding: const EdgeInsets.fromLTRB(22, 64, 22, 16),
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [glass.accent.withValues(alpha: 0.16), glass.accent.withValues(alpha: 0.02)],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  '${ayah.text} ${ArabicUtils.ornateAyahMarker(ayah.numberInSurah)}',
+                  textAlign: TextAlign.center,
+                  style: font.style(fontSize: 23, height: 2.0, color: glass.onGlass),
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(width: 24, height: 1, color: glass.accent),
+                    const SizedBox(width: 8),
+                    Text(
+                      'سورة ${SurahMetadata.surah(ayah.surah).name} • ${ArabicUtils.toArabicDigits(ayah.numberInSurah)}',
+                      style: TextStyle(color: glass.accent, fontWeight: FontWeight.w800),
+                    ),
+                    const SizedBox(width: 8),
+                    Container(width: 24, height: 1, color: glass.accent),
+                  ],
+                ),
+                if (ayah.tafseer.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  Text(ayah.tafseer,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: glass.onGlassMuted, height: 1.7, fontSize: 13.5)),
+                ],
+                const SizedBox(height: 10),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    TextButton.icon(
+                      onPressed: () => context.read<AudioCubit>().playAyahs(ayah.surah, ayah.numberInSurah, ayah.numberInSurah),
+                      icon: Icon(Icons.volume_up_rounded, color: glass.accent),
+                      label: Text('استماع', style: TextStyle(color: glass.accent, fontWeight: FontWeight.w800)),
+                    ),
+                    TextButton.icon(
+                      onPressed: () => Navigator.of(context).push(AyahImagePage.route(ayah)),
+                      icon: Icon(Icons.ios_share_rounded, color: glass.accent),
+                      label: Text('مشاركة', style: TextStyle(color: glass.accent, fontWeight: FontWeight.w800)),
+                    ),
+                  ],
+                ),
               ],
-            ],
+            ),
           ),
         );
       },
