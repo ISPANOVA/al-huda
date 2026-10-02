@@ -105,15 +105,44 @@ class _QuickActionsSectionState extends State<QuickActionsSection> {
           shrinkWrap: true,
           padding: EdgeInsets.zero,
           physics: const NeverScrollableScrollPhysics(),
-          mainAxisSpacing: 14,
+          mainAxisSpacing: 12,
           crossAxisSpacing: 8,
-          childAspectRatio: 0.78,
+          childAspectRatio: 0.92,
           children: [
             for (final a in actions) _QuickTile(def: a, onTap: () => _run(a), onLongPress: _edit),
             _AddTile(onTap: _edit),
           ],
         ),
       ],
+    );
+  }
+}
+
+class _SoftIcon extends StatelessWidget {
+  final IconData icon;
+  final bool dashed;
+
+  const _SoftIcon({required this.icon, this.dashed = false});
+
+  @override
+  Widget build(BuildContext context) {
+    final glass = GlassTheme.of(context);
+    return Container(
+      width: 56,
+      height: 56,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(19),
+        color: dashed ? Colors.transparent : null,
+        gradient: dashed
+            ? null
+            : LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [glass.accent.withValues(alpha: 0.22), glass.accent.withValues(alpha: 0.08)],
+              ),
+        border: Border.all(color: glass.accent.withValues(alpha: dashed ? 0.35 : 0.22)),
+      ),
+      child: Icon(icon, color: glass.accent, size: 25),
     );
   }
 }
@@ -128,33 +157,20 @@ class _QuickTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final glass = GlassTheme.of(context);
-    return GestureDetector(
+    return InkWell(
       onTap: onTap,
       onLongPress: onLongPress,
-      behavior: HitTestBehavior.opaque,
+      borderRadius: BorderRadius.circular(18),
       child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Expanded(
-            child: AspectRatio(
-              aspectRatio: 0.86,
-              child: ArchCard(
-                archHeight: 0.5,
-                padding: const EdgeInsets.only(top: 18),
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [glass.accent.withValues(alpha: 0.30), glass.accent.withValues(alpha: 0.06)],
-                ),
-                child: Center(child: Icon(def.icon, color: glass.accent, size: 26)),
-              ),
-            ),
-          ),
-          const SizedBox(height: 6),
+          _SoftIcon(icon: def.icon),
+          const SizedBox(height: 7),
           Text(def.label,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.center,
-              style: TextStyle(fontWeight: FontWeight.w800, fontSize: 12.5, color: glass.onGlass)),
+              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12, color: glass.onGlass)),
         ],
       ),
     );
@@ -169,25 +185,15 @@ class _AddTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final glass = GlassTheme.of(context);
-    return GestureDetector(
+    return InkWell(
       onTap: onTap,
-      behavior: HitTestBehavior.opaque,
+      borderRadius: BorderRadius.circular(18),
       child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Expanded(
-            child: AspectRatio(
-              aspectRatio: 0.86,
-              child: ArchCard(
-                archHeight: 0.5,
-                color: Colors.transparent,
-                borderColor: glass.accent.withValues(alpha: 0.35),
-                padding: const EdgeInsets.only(top: 18),
-                child: Center(child: Icon(Icons.add_rounded, color: glass.accent, size: 26)),
-              ),
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text('إضافة', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 12.5, color: glass.onGlassMuted)),
+          const _SoftIcon(icon: Icons.add_rounded, dashed: true),
+          const SizedBox(height: 7),
+          Text('إضافة', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12, color: glass.onGlassMuted)),
         ],
       ),
     );

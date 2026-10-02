@@ -14,16 +14,16 @@ class ArchClipper extends CustomClipper<Path> {
   final double archHeight;
   final double radius;
 
-  const ArchClipper({this.archHeight = 0.34, this.radius = 22});
+  const ArchClipper({this.archHeight = 0.22, this.radius = 20});
 
-  static Path path(Size s, {double archHeight = 0.34, double radius = 22}) {
+  static Path path(Size s, {double archHeight = 0.22, double radius = 20}) {
     final w = s.width;
     final h = s.height;
     final ah = math.min(w * archHeight, h * 0.5);
     return Path()
       ..moveTo(0, ah)
-      ..quadraticBezierTo(0, ah * 0.28, w / 2, 0)
-      ..quadraticBezierTo(w, ah * 0.28, w, ah)
+      ..cubicTo(0, ah * 0.38, w * 0.3, 0, w / 2, 0)
+      ..cubicTo(w * 0.7, 0, w, ah * 0.38, w, ah)
       ..lineTo(w, h - radius)
       ..quadraticBezierTo(w, h, w - radius, h)
       ..lineTo(radius, h)
@@ -59,7 +59,7 @@ class _ArchBorderPainter extends CustomPainter {
       ArchClipper.path(Size(size.width - 12, size.height - 12), archHeight: archHeight),
       p
         ..strokeWidth = width * 0.5
-        ..color = color.withValues(alpha: color.a * 0.5),
+        ..color = color.withValues(alpha: color.a * 0.35),
     );
     canvas.restore();
   }
@@ -82,8 +82,8 @@ class ArchCard extends StatelessWidget {
     required this.child,
     this.gradient,
     this.color,
-    this.archHeight = 0.34,
-    this.padding = const EdgeInsets.fromLTRB(18, 40, 18, 18),
+    this.archHeight = 0.22,
+    this.padding = const EdgeInsets.fromLTRB(18, 30, 18, 18),
     this.borderColor,
   });
 
@@ -91,7 +91,7 @@ class ArchCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final glass = GlassTheme.of(context);
     return CustomPaint(
-      foregroundPainter: _ArchBorderPainter(borderColor ?? glass.accent.withValues(alpha: 0.55), archHeight, 1.3),
+      foregroundPainter: _ArchBorderPainter(borderColor ?? glass.accent.withValues(alpha: 0.4), archHeight, 1.1),
       child: ClipPath(
         clipper: ArchClipper(archHeight: archHeight),
         child: DecoratedBox(

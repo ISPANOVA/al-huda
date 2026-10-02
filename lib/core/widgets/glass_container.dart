@@ -1,8 +1,7 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 
 import '../theme/app_themes.dart';
+import 'noor_ui.dart';
 
 /// Frosted glass surface: backdrop blur + translucent gradient fill +
 /// double border (outer hairline & inner highlight).
@@ -46,55 +45,54 @@ class GlassContainer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final glass = GlassTheme.of(context);
+    final dark = Theme.of(context).brightness == Brightness.dark;
     final radius = BorderRadius.circular(borderRadius);
-    final baseOpacity = opacity ?? glass.glassOpacity;
-    final tintColor = tint ?? glass.glassTint;
+    final base = noorSurface(context);
+    // Calm, opaque surface (the "Noor" look). A tint, when given, is laid
+    // softly over it for selected / highlighted states.
+    final fill = tint == null ? base : Color.alphaBlend(tint!.withValues(alpha: ((opacity ?? 0.3) * 0.6).clamp(0.0, 1.0)), base);
 
-    Widget surface = Container(
+    final surface = Container(
       width: width,
       height: height,
       decoration: BoxDecoration(
         borderRadius: radius,
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            tintColor.withValues(alpha: (baseOpacity + 0.10).clamp(0.0, 1.0)),
-            tintColor.withValues(alpha: baseOpacity),
-            tintColor.withValues(alpha: (baseOpacity * 0.6).clamp(0.0, 1.0)),
-          ],
-          stops: const [0, 0.55, 1],
+        color: fill,
+        border: Border.all(
+          color: borderColor ?? glass.accent.withValues(alpha: dark ? 0.16 : 0.22),
+          width: 1,
         ),
-        border: Border.all(color: borderColor ?? glass.glassBorder, width: 1.2),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: dark ? 0.22 : 0.06),
+            blurRadius: 14,
+            offset: const Offset(0, 5),
+          ),
+        ],
       ),
       foregroundDecoration: BoxDecoration(
         borderRadius: radius,
-        border: Border.all(color: glass.glassHighlight, width: 0.6),
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.center,
-          colors: [glass.glassHighlight.withValues(alpha: 0.18), Colors.transparent],
+          colors: [Colors.white.withValues(alpha: dark ? 0.035 : 0.25), Colors.transparent],
         ),
       ),
-      child: Material(
-        type: MaterialType.transparency,
-        child: InkWell(
-          onTap: onTap,
-          onLongPress: onLongPress,
-          borderRadius: radius,
-          child: Padding(padding: padding, child: child),
+      child: ClipRRect(
+        borderRadius: radius,
+        child: Material(
+          type: MaterialType.transparency,
+          child: InkWell(
+            onTap: onTap,
+            onLongPress: onLongPress,
+            borderRadius: radius,
+            child: Padding(padding: padding, child: child),
+          ),
         ),
       ),
     );
 
-    if (blur > 0 && realBlur) {
-      surface = BackdropFilter(filter: ImageFilter.blur(sigmaX: blur, sigmaY: blur), child: surface);
-    }
-
-    return Padding(
-      padding: margin ?? EdgeInsets.zero,
-      child: ClipRRect(borderRadius: radius, child: surface),
-    );
+    return Padding(padding: margin ?? EdgeInsets.zero, child: surface);
   }
 }
 
@@ -146,17 +144,14 @@ class GlassSectionTitle extends StatelessWidget {
   Widget build(BuildContext context) {
     final glass = GlassTheme.of(context);
     return Padding(
-      padding: const EdgeInsets.fromLTRB(4, 18, 4, 10),
+      padding: const EdgeInsets.fromLTRB(6, 22, 4, 10),
       child: Row(
         children: [
-          Container(
-            width: 4,
-            height: 20,
-            decoration: BoxDecoration(color: glass.accent, borderRadius: BorderRadius.circular(4)),
-          ),
-          const SizedBox(width: 10),
+          Icon(Icons.auto_awesome_rounded, size: 14, color: glass.accent),
+          const SizedBox(width: 8),
           Expanded(
-            child: Text(title, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
+            child: Text(title,
+                style: TextStyle(fontSize: 16.5, fontWeight: FontWeight.w900, color: glass.onGlass)),
           ),
           ?trailing,
         ],
@@ -179,7 +174,7 @@ class GlassProgressBar extends StatelessWidget {
     return Container(
       height: height,
       decoration: BoxDecoration(
-        color: glass.onGlass.withValues(alpha: 0.12),
+        color: glass.onGlass.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(height),
       ),
       child: Align(
@@ -189,8 +184,7 @@ class GlassProgressBar extends StatelessWidget {
           child: Container(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(height),
-              gradient: LinearGradient(colors: [glass.accent, Theme.of(context).colorScheme.primary]),
-              boxShadow: [BoxShadow(color: glass.accent.withValues(alpha: 0.5), blurRadius: 8)],
+              gradient: LinearGradient(colors: [glass.accent.withValues(alpha: 0.75), glass.accent]),
             ),
           ),
         ),

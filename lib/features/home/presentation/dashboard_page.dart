@@ -251,11 +251,11 @@ class _ContinueReading extends StatelessWidget {
       child: Row(
         children: [
           SizedBox(
-            width: 92,
-            height: 112,
+            width: 70,
+            height: 84,
             child: ArchCard(
-              archHeight: 0.42,
-              padding: const EdgeInsets.fromLTRB(6, 26, 6, 8),
+              archHeight: 0.3,
+              padding: const EdgeInsets.fromLTRB(6, 18, 6, 8),
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
@@ -499,8 +499,8 @@ class _AyahOfTheDayState extends State<_AyahOfTheDay> {
         return GestureDetector(
           onTap: () => MushafReaderPage.open(context, surah: ayah.surah, ayah: ayah.numberInSurah),
           child: ArchCard(
-            archHeight: 0.22,
-            padding: const EdgeInsets.fromLTRB(22, 64, 22, 16),
+            archHeight: 0.08,
+            padding: const EdgeInsets.fromLTRB(22, 34, 22, 14),
             gradient: LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,

@@ -75,9 +75,9 @@ class AthkarHomePage extends StatelessWidget {
             shrinkWrap: true,
             padding: EdgeInsets.zero,
             physics: const NeverScrollableScrollPhysics(),
-            mainAxisSpacing: 14,
+            mainAxisSpacing: 12,
             crossAxisSpacing: 12,
-            childAspectRatio: 0.78,
+            childAspectRatio: 1.08,
             children: [
               for (final c in cats) _CategoryArch(category: c, progress: state.categoryProgress(c)),
             ],
@@ -130,7 +130,7 @@ class _FeaturedAthkar extends StatelessWidget {
     return GestureDetector(
       onTap: () => Navigator.of(context).push(AthkarListPage.route(category.id)),
       child: Container(
-        height: 190,
+        height: 170,
         clipBehavior: Clip.antiAlias,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(30),
@@ -142,7 +142,7 @@ class _FeaturedAthkar extends StatelessWidget {
             PositionedDirectional(
               end: -30,
               bottom: -30,
-              child: Icon(look.icon, size: 190, color: Colors.white.withValues(alpha: 0.10)),
+              child: Icon(look.icon, size: 160, color: Colors.white.withValues(alpha: 0.08)),
             ),
             Padding(
               padding: const EdgeInsets.all(20),
@@ -189,8 +189,8 @@ class _FeaturedAthkar extends StatelessWidget {
                     value: progress,
                     color: Colors.white,
                     track: Colors.white.withValues(alpha: 0.2),
-                    size: 92,
-                    stroke: 7,
+                    size: 80,
+                    stroke: 6,
                     child: Text('${ArabicUtils.toArabicDigits((progress * 100).round())}٪',
                         style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w900)),
                   ),
@@ -217,17 +217,17 @@ class _CategoryArch extends StatelessWidget {
     return GestureDetector(
       onTap: () => Navigator.of(context).push(AthkarListPage.route(category.id)),
       child: ArchCard(
-        archHeight: 0.42,
-        padding: const EdgeInsets.fromLTRB(12, 30, 12, 14),
-        borderColor: glass.accent.withValues(alpha: 0.6),
+        archHeight: 0.16,
+        padding: const EdgeInsets.fromLTRB(14, 22, 14, 12),
+        borderColor: glass.accent.withValues(alpha: 0.35),
         gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: look.colors),
         child: Column(
           children: [
-            Icon(look.icon, color: Colors.white, size: 38),
+            Icon(look.icon, color: Colors.white.withValues(alpha: 0.9), size: 26),
             const Spacer(),
             Text(category.title,
                 textAlign: TextAlign.center,
-                style: const TextStyle(color: Colors.white, fontSize: 16.5, fontWeight: FontWeight.w900)),
+                style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w900)),
             Text('${ArabicUtils.toArabicDigits(category.items.length)} ذكرًا',
                 style: TextStyle(color: Colors.white.withValues(alpha: 0.75), fontSize: 12)),
             const SizedBox(height: 10),

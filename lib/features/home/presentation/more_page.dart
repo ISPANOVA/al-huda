@@ -67,8 +67,8 @@ class MorePage extends StatelessWidget {
             shrinkWrap: true,
             padding: EdgeInsets.zero,
             physics: const NeverScrollableScrollPhysics(),
-            crossAxisSpacing: 10,
-            childAspectRatio: 0.62,
+            crossAxisSpacing: 8,
+            childAspectRatio: 0.8,
             children: [
               for (final f in featured)
                 GestureDetector(
@@ -76,21 +76,22 @@ class MorePage extends StatelessWidget {
                   behavior: HitTestBehavior.opaque,
                   child: Column(
                     children: [
-                      Expanded(
-                        child: ArchCard(
-                          archHeight: 0.55,
-                          padding: const EdgeInsets.only(top: 22),
+                      Container(
+                        width: 58,
+                        height: 58,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(20),
                           gradient: LinearGradient(
                             begin: Alignment.topCenter,
                             end: Alignment.bottomCenter,
-                            colors: [glass.accent, Color.lerp(glass.accent, Colors.black, 0.45)!],
+                            colors: [glass.accent.withValues(alpha: 0.28), glass.accent.withValues(alpha: 0.10)],
                           ),
-                          borderColor: glass.accent,
-                          child: Center(child: Icon(f.icon, color: Colors.black, size: 30)),
+                          border: Border.all(color: glass.accent.withValues(alpha: 0.3)),
                         ),
+                        child: Icon(f.icon, color: glass.accent, size: 26),
                       ),
-                      const SizedBox(height: 8),
-                      Text(f.title, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 14)),
+                      const SizedBox(height: 7),
+                      Text(f.title, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13)),
                       Text(f.subtitle,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
