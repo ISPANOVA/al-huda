@@ -4,6 +4,9 @@ import '../../../core/theme/app_themes.dart';
 import '../../../core/widgets/background_patterns.dart';
 import '../../../core/widgets/noor_ui.dart';
 import '../../settings/presentation/pages/appearance_page.dart';
+import '../../calendar/calendar_page.dart';
+import '../../duas/duas_page.dart';
+import '../../hifz/hifz_review_page.dart';
 import '../../audio/presentation/pages/downloads_page.dart';
 import '../../audio/presentation/pages/memorization_page.dart';
 import '../../audio/presentation/pages/player_page.dart';
@@ -34,6 +37,15 @@ class MorePage extends StatelessWidget {
         [
           (icon: Icons.auto_awesome_rounded, title: 'الفضائل', subtitle: 'فضل الذكر والصلاة على النبي ﷺ', route: VirtuesPage.route),
           (icon: Icons.healing_rounded, title: 'الرقية الشرعية', subtitle: 'من القرآن والسنة', route: RuqyahPage.route),
+          (icon: Icons.back_hand_rounded, title: 'الأدعية', subtitle: 'للكرب والسفر والمرض والاستخارة', route: DuasPage.route),
+        ]
+      ),
+      (
+        'القرآن والتقويم',
+        [
+          (icon: Icons.psychology_rounded, title: 'مراجعة الحفظ', subtitle: 'اختبر حفظك بإخفاء الكلمات', route: HifzReviewPage.route),
+          (icon: Icons.calendar_month_rounded, title: 'التقويم الهجري', subtitle: 'المناسبات وتذكير الصيام', route: CalendarPage.route),
+          (icon: Icons.brightness_3_rounded, title: 'إمساكية رمضان', subtitle: 'السحور والإفطار لمدينتك', route: ImsakiyaPage.route),
         ]
       ),
       (

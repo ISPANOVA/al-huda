@@ -4,4 +4,6 @@
     <string name="widget_prayer_desc">مواقيت الصلاة والوقت المتبقي على الصلاة القادمة</string>
     <string name="widget_ayah_name">آية اليوم</string>
     <string name="widget_ayah_desc">آية جديدة من القرآن الكريم كل يوم</string>
+    <string name="widget_athkar_name">الأذكار</string>
+    <string name="widget_athkar_desc">ذكر الوقت مع عداد تسبيح من الشاشة الرئيسية</string>
 </resources>

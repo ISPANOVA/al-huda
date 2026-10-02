@@ -7,6 +7,7 @@ import '../../../../core/utils/arabic_utils.dart';
 import '../../../../core/widgets/noor_ui.dart';
 import '../../../tasbeeh/presentation/pages/tasbeeh_page.dart';
 import '../../../virtues/virtues_pages.dart';
+import '../../../duas/duas_page.dart';
 import '../../../../core/widgets/gradient_background.dart';
 import '../../../audio/presentation/cubit/audio_cubit.dart';
 import '../../../audio/presentation/widgets/mini_player.dart';
@@ -91,7 +92,7 @@ class AthkarHomePage extends StatelessWidget {
               for (final (i, item) in [
                 (Icons.blur_circular_rounded, 'المسبحة', TasbeehPage.route),
                 (Icons.healing_rounded, 'الرقية', RuqyahPage.route),
-                (Icons.auto_awesome_rounded, 'الفضائل', VirtuesPage.route),
+                (Icons.back_hand_rounded, 'الأدعية', DuasPage.route),
               ].indexed) ...[
                 if (i > 0) const SizedBox(width: 10),
                 Expanded(

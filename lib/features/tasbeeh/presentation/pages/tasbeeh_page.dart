@@ -39,8 +39,32 @@ class _TasbeehPageState extends State<TasbeehPage> with SingleTickerProviderStat
     final haptics = context.read<SettingsCubit>().state.hapticFeedback;
     final roundDone = context.read<TasbeehCubit>().tap();
     _pulse.reverse(from: 1).then((_) => _pulse.forward());
-    if (haptics) roundDone ? HapticFeedback.heavyImpact() : HapticFeedback.lightImpact();
-    if (roundDone) showGlassSnack(context, 'أتممت دورة كاملة، بارك الله فيك');
+    final count = context.read<TasbeehCubit>().state.count;
+    if (haptics) {
+      if (roundDone) {
+        HapticFeedback.heavyImpact();
+        Future.delayed(const Duration(milliseconds: 140), HapticFeedback.heavyImpact);
+      } else if (count > 0 && count % 33 == 0) {
+        HapticFeedback.mediumImpact();
+        Future.delayed(const Duration(milliseconds: 110), HapticFeedback.mediumImpact);
+      } else {
+        HapticFeedback.lightImpact();
+      }
+    }
+    if (roundDone) {
+      _celebrate();
+      showGlassSnack(context, 'أتممت دورة كاملة، بارك الله فيك');
+    }
+  }
+
+  /// A short burst of golden stars over the counter.
+  void _celebrate() {
+    final overlay = Overlay.maybeOf(context);
+    if (overlay == null) return;
+    final accent = GlassTheme.of(context).accent;
+    late OverlayEntry entry;
+    entry = OverlayEntry(builder: (_) => _StarBurst(color: accent, onDone: () => entry.remove()));
+    overlay.insert(entry);
   }
 
   Future<void> _addPhrase() async {
@@ -244,4 +268,79 @@ class _BeadsRingPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant _BeadsRingPainter old) =>
       old.progress != progress || old.beads != beads || old.accent != accent;
+}
+
+
+class _StarBurst extends StatefulWidget {
+  final Color color;
+  final VoidCallback onDone;
+
+  const _StarBurst({required this.color, required this.onDone});
+
+  @override
+  State<_StarBurst> createState() => _StarBurstState();
+}
+
+class _StarBurstState extends State<_StarBurst> with SingleTickerProviderStateMixin {
+  late final AnimationController _c = AnimationController(vsync: this, duration: const Duration(milliseconds: 1300))
+    ..forward().whenComplete(widget.onDone);
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return IgnorePointer(
+      child: AnimatedBuilder(
+        animation: _c,
+        builder: (context, _) => CustomPaint(
+          size: MediaQuery.sizeOf(context),
+          painter: _BurstPainter(_c.value, widget.color),
+        ),
+      ),
+    );
+  }
+}
+
+class _BurstPainter extends CustomPainter {
+  final double t;
+  final Color color;
+
+  _BurstPainter(this.t, this.color);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final c = Offset(size.width / 2, size.height * 0.45);
+    final ease = Curves.easeOutCubic.transform(t);
+    final fade = (1 - t).clamp(0.0, 1.0);
+    final rnd = math.Random(5);
+    for (var i = 0; i < 28; i++) {
+      final a = i * 2 * math.pi / 28 + rnd.nextDouble() * 0.3;
+      final dist = (90 + rnd.nextDouble() * 120) * ease;
+      final p = c + Offset(math.cos(a) * dist, math.sin(a) * dist);
+      final r = (3 + rnd.nextDouble() * 5) * (1 - t * 0.5);
+      final path = Path();
+      for (var k = 0; k < 8; k++) {
+        final ang = -math.pi / 2 + k * math.pi / 4;
+        final rr = k.isEven ? r : r * 0.4;
+        final pt = p + Offset(math.cos(ang) * rr, math.sin(ang) * rr);
+        k == 0 ? path.moveTo(pt.dx, pt.dy) : path.lineTo(pt.dx, pt.dy);
+      }
+      canvas.drawPath(path..close(), Paint()..color = color.withValues(alpha: fade));
+    }
+    canvas.drawCircle(
+      c,
+      140 * ease,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 3 * fade
+        ..color = color.withValues(alpha: 0.5 * fade),
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _BurstPainter old) => old.t != t;
 }

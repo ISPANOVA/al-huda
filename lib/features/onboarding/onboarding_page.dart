@@ -8,6 +8,7 @@ import '../../core/services/storage_service.dart';
 import '../../core/theme/app_themes.dart';
 import '../../core/widgets/glass_container.dart';
 import '../../core/widgets/gradient_background.dart';
+import '../../core/widgets/noor_ui.dart';
 import '../prayer/presentation/cubit/prayer_cubit.dart';
 
 /// First-launch walkthrough: a few feature slides then a permissions slide.
@@ -27,7 +28,8 @@ class _Slide {
   final IconData icon;
   final String title;
   final String body;
-  const _Slide(this.icon, this.title, this.body);
+  final SkyPhase sky;
+  const _Slide(this.icon, this.title, this.body, this.sky);
 }
 
 class _OnboardingPageState extends State<OnboardingPage> {
@@ -38,14 +40,12 @@ class _OnboardingPageState extends State<OnboardingPage> {
   bool _busy = false;
 
   static const _slides = [
-    _Slide(Icons.menu_book_rounded, 'مصحف كامل بين يديك',
-        'المصحف الشريف بـ٦٠٤ صفحة مدمج في التطبيق دون إنترنت. اضغط مطولًا على أي آية لقراءة التفسير الميسر، وسيفتح لك التطبيق دائمًا من حيث توقفت.'),
-    _Slide(Icons.headphones_rounded, 'استمع وراجع حفظك',
-        'تلاوات لكبار القراء مع تتبع الآية المقروءة، وتكرار المقاطع للحفظ، وتحميل السور للاستماع دون إنترنت حتى والشاشة مغلقة.'),
-    _Slide(Icons.access_time_filled_rounded, 'مواقيت الصلاة والقبلة',
-        'مواقيت دقيقة حسب موقعك مع اختيار طريقة الحساب والمذهب، وتنبيه بالأذان، وبوصلة لتحديد اتجاه القبلة.'),
-    _Slide(Icons.auto_graph_rounded, 'أذكار وختمة وإحصائيات',
-        'أذكار الصباح والمساء، والسبحة، وخطة لختم القرآن بمواعيد تذكير، وإحصائيات تشجعك على المداومة.'),
+    _Slide(Icons.menu_book_rounded, 'القرآن بين يديك',
+        'مصحف المدينة كاملًا دون إنترنت بخط واضح، مع سبعة تفاسير وتلاوات لكبار القراء، ومراجعة لحفظك.', SkyPhase.morning),
+    _Slide(Icons.mosque_rounded, 'صلاتك في وقتها',
+        'مواقيت دقيقة حسب مدينتك، وأذان يُرفع حتى والهاتف صامت، وقبلة، وتقويم هجري بالمناسبات والإمساكية.', SkyPhase.sunset),
+    _Slide(Icons.favorite_rounded, 'ذكر يطمئن به القلب',
+        'أذكار الصباح والمساء والنوم، وأدعية مصنّفة، ومسبحة، وورد يومي يحتسب قراءتك تلقائيًا.', SkyPhase.night),
   ];
 
   int get _count => _slides.length + 1;
@@ -102,7 +102,6 @@ class _OnboardingPageState extends State<OnboardingPage> {
   @override
   Widget build(BuildContext context) {
     final glass = GlassTheme.of(context);
-    final primary = Theme.of(context).colorScheme.primary;
     final last = _page == _count - 1;
     return Stack(
       children: [
@@ -151,7 +150,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
                         width: i == _page ? 26 : 8,
                         height: 8,
                         decoration: BoxDecoration(
-                          color: i == _page ? primary : glass.onGlass.withValues(alpha: 0.2),
+                          color: i == _page ? glass.accent : glass.onGlass.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(4),
                         ),
                       ),
@@ -188,36 +187,62 @@ class _SlideView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final glass = GlassTheme.of(context);
-    final primary = Theme.of(context).colorScheme.primary;
+    final sun = slide.sky != SkyPhase.night;
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 28),
+      padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           TweenAnimationBuilder<double>(
-            tween: Tween(begin: 0.7, end: 1),
-            duration: const Duration(milliseconds: 600),
-            curve: Curves.easeOutBack,
-            builder: (_, v, child) => Transform.scale(scale: v, child: child),
+            tween: Tween(begin: 0.85, end: 1),
+            duration: const Duration(milliseconds: 700),
+            curve: Curves.easeOutCubic,
+            builder: (_, v, child) => Opacity(opacity: ((v - 0.85) / 0.15).clamp(0.0, 1.0), child: Transform.scale(scale: v, child: child)),
             child: Container(
-              width: 150,
-              height: 150,
+              height: 260,
+              clipBehavior: Clip.antiAlias,
               decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: RadialGradient(colors: [primary.withValues(alpha: 0.45), primary.withValues(alpha: 0.08)]),
-                border: Border.all(color: glass.accent.withValues(alpha: 0.6), width: 1.5),
+                borderRadius: BorderRadius.circular(36),
+                boxShadow: [BoxShadow(color: skyColors(slide.sky)[1].withValues(alpha: 0.5), blurRadius: 30, offset: const Offset(0, 12))],
               ),
-              child: Icon(slide.icon, size: 68, color: glass.accent),
+              child: Stack(
+                children: [
+                  Positioned.fill(
+                    child: CustomPaint(
+                      painter: SkyPainter(
+                        phase: slide.sky,
+                        t: slide.sky == SkyPhase.morning ? 0.3 : (slide.sky == SkyPhase.sunset ? 0.9 : 0.45),
+                        sun: sun,
+                        horizonAt: 0.82,
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    top: 18,
+                    right: 18,
+                    child: Container(
+                      width: 52,
+                      height: 52,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.black.withValues(alpha: 0.3),
+                        border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
+                      ),
+                      child: Icon(slide.icon, color: const Color(0xFFFFE3A3), size: 26),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
-          const SizedBox(height: 40),
+          const SizedBox(height: 34),
           Text(slide.title,
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 26, fontWeight: FontWeight.w900, color: glass.onGlass)),
-          const SizedBox(height: 16),
+              style: TextStyle(fontSize: 27, fontWeight: FontWeight.w900, color: glass.onGlass)),
+          const SizedBox(height: 12),
           Text(slide.body,
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 16, height: 1.8, color: glass.onGlassMuted)),
+              style: TextStyle(fontSize: 15.5, height: 1.85, color: glass.onGlassMuted)),
         ],
       ),
     );

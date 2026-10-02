@@ -15,6 +15,9 @@ import '../../settings/presentation/pages/settings_page.dart';
 import '../../stats/presentation/stats_page.dart';
 import '../../tasbeeh/presentation/pages/tasbeeh_page.dart';
 import '../../virtues/virtues_pages.dart';
+import '../../calendar/calendar_page.dart';
+import '../../duas/duas_page.dart';
+import '../../hifz/hifz_review_page.dart';
 
 /// One shortcut the user can pin to the home screen.
 class QuickActionDef {
@@ -41,6 +44,9 @@ final List<QuickActionDef> kQuickActions = [
   const QuickActionDef('virtues', Icons.auto_awesome_rounded, 'الفضائل', route: VirtuesPage.route),
   const QuickActionDef('ruqyah', Icons.healing_rounded, 'الرقية', route: RuqyahPage.route),
   const QuickActionDef('search', Icons.manage_search_rounded, 'بحث في القرآن', route: QuranSearchPage.route),
+  const QuickActionDef('duas', Icons.back_hand_rounded, 'الأدعية', route: DuasPage.route),
+  const QuickActionDef('calendar', Icons.calendar_month_rounded, 'التقويم', route: CalendarPage.route),
+  const QuickActionDef('review', Icons.psychology_rounded, 'مراجعة الحفظ', route: HifzReviewPage.route),
   const QuickActionDef('player', Icons.headphones_rounded, 'المشغل', route: PlayerPage.route),
   const QuickActionDef('downloads', Icons.download_for_offline_rounded, 'التحميلات', route: DownloadsPage.route),
   const QuickActionDef('stats', Icons.insights_rounded, 'إحصائياتي', route: StatsPage.route),

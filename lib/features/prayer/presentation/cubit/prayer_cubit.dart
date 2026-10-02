@@ -89,6 +89,20 @@ class PrayerCubit extends Cubit<PrayerState> {
     _ticker = Timer.periodic(const Duration(seconds: 1), (_) => _tick());
   }
 
+  /// Prayer times for any date at the current location (imsakiya, calendar).
+  PrayerDay? dayFor(DateTime date) {
+    final loc = state.location;
+    if (loc == null) return null;
+    final s = _settings.state;
+    return _repo.calculate(
+      location: loc,
+      date: date,
+      method: s.calcMethod,
+      madhab: s.madhab,
+      adjustments: s.prayerAdjustments,
+    );
+  }
+
   String _settingsKey(SettingsState s) =>
       '${s.calcMethod}|${s.madhab}|${s.prayerNotifications}|${s.prayerAdjustments.join(',')}|'
       '${s.adhanVoice}|${s.adhanFull}|${s.preAdhanEnabled}|${s.preAdhanMinutes}|${s.prayerAlerts.join(',')}|'

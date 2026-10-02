@@ -14,6 +14,8 @@ import '../../../core/widgets/gradient_background.dart';
 import '../../athkar/presentation/cubit/athkar_cubit.dart';
 import '../../athkar/presentation/pages/athkar_pages.dart';
 import '../../media/media_page.dart';
+import '../../calendar/islamic_calendar.dart';
+import '../../settings/presentation/cubit/settings_cubit.dart';
 import '../../audio/presentation/widgets/mini_player.dart';
 import '../../prayer/presentation/pages/prayer_times_page.dart';
 import '../../quran/presentation/cubit/quran_nav_cubit.dart';
@@ -61,6 +63,12 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
       if (mounted) _askAlertPermissions();
       _onNotificationOpen();
       if (mounted) _pushDailyAyahs();
+      if (mounted) {
+        IslamicCalendar.scheduleReminders(
+          context.read<NotificationService>(),
+          enabled: context.read<SettingsCubit>().state.occasionReminders,
+        );
+      }
     });
   }
 

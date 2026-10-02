@@ -42,6 +42,8 @@ object WidgetStore {
         if (prayerIds.isNotEmpty()) PrayerWidgetProvider.render(context, mgr, prayerIds)
         val ayahIds = mgr.getAppWidgetIds(ComponentName(context, AyahWidgetProvider::class.java))
         if (ayahIds.isNotEmpty()) AyahWidgetProvider.render(context, mgr, ayahIds)
+        val athkarIds = mgr.getAppWidgetIds(ComponentName(context, AthkarWidgetProvider::class.java))
+        if (athkarIds.isNotEmpty()) AthkarWidgetProvider.render(context, mgr, athkarIds)
     }
 
     fun openAppIntent(context: Context): PendingIntent {
@@ -135,8 +137,23 @@ class PrayerWidgetProvider : AppWidgetProvider() {
                     views.setTextColor(nameIds[j], if (next) Color.parseColor("#F3DDA6") else Color.parseColor("#B8C2C8"))
                     views.setTextColor(timeIds[j], if (next) Color.WHITE else Color.parseColor("#E6ECEF"))
                 }
+                // Living sky: background follows the part of the day.
+                val today = days.getJSONObject(0).getJSONArray("t")
+                val fajr = today.getLong(0); val dhuhr = today.getLong(1)
+                val maghrib = today.getLong(3); val isha = today.getLong(4)
+                val sky = when {
+                    now < fajr || now >= isha -> R.drawable.widget_sky_night
+                    now < fajr + 80 * 60_000L -> R.drawable.widget_sky_dawn
+                    now < dhuhr -> R.drawable.widget_sky_morning
+                    now < maghrib - 40 * 60_000L -> R.drawable.widget_sky_afternoon
+                    else -> R.drawable.widget_sky_sunset
+                }
+                views.setInt(R.id.widget_root, "setBackgroundResource", sky)
+                val boundaries = longArrayOf(fajr + 80 * 60_000L, maghrib - 40 * 60_000L)
+                for (b in boundaries) if (b > now && (nextAt <= 0 || b < nextAt)) nextAt = b
                 views.setTextViewText(R.id.next_label, "المتبقي على صلاة " + names.optString(nextIndex))
-                views.setChronometer(R.id.countdown, SystemClock.elapsedRealtime() + (nextAt - now), null, true)
+                val prayerAt = times.getLong(nextIndex)
+                views.setChronometer(R.id.countdown, SystemClock.elapsedRealtime() + (prayerAt - now), null, true)
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) views.setChronometerCountDown(R.id.countdown, true)
                 views.setViewVisibility(R.id.countdown, View.VISIBLE)
                 views.setTextViewText(R.id.city, root.optString("city", "الهدى"))
@@ -184,6 +201,118 @@ class AyahWidgetProvider : AppWidgetProvider() {
                 set(Calendar.HOUR_OF_DAY, 0); set(Calendar.MINUTE, 1); set(Calendar.SECOND, 0)
             }
             WidgetStore.scheduleUpdate(context, AyahWidgetProvider::class.java, 4102, cal.timeInMillis)
+        }
+    }
+}
+
+
+/** Athkar widget: the thikr that fits the time of day, with a tap counter. */
+class AthkarWidgetProvider : AppWidgetProvider() {
+    override fun onUpdate(context: Context, mgr: AppWidgetManager, ids: IntArray) = render(context, mgr, ids)
+
+    override fun onReceive(context: Context, intent: Intent) {
+        when (intent.action) {
+            ACTION_TAP -> step(context, advanceOnly = false)
+            ACTION_NEXT -> step(context, advanceOnly = true)
+            else -> { super.onReceive(context, intent); return }
+        }
+        val mgr = AppWidgetManager.getInstance(context)
+        render(context, mgr, mgr.getAppWidgetIds(ComponentName(context, AthkarWidgetProvider::class.java)))
+    }
+
+    companion object {
+        private const val PREFS = "alhuda_athkar_widget"
+        private const val ACTION_TAP = "com.alhuda.islamic.app.ATHKAR_TAP"
+        private const val ACTION_NEXT = "com.alhuda.islamic.app.ATHKAR_NEXT"
+
+        private data class T(val text: String, val count: Int)
+
+        private val morningEvening = listOf(
+            T("بِسْمِ اللَّهِ الَّذِي لَا يَضُرُّ مَعَ اسْمِهِ شَيْءٌ فِي الْأَرْضِ وَلَا فِي السَّمَاءِ وَهُوَ السَّمِيعُ الْعَلِيمُ", 3),
+            T("رَضِيتُ بِاللَّهِ رَبًّا، وَبِالْإِسْلَامِ دِينًا، وَبِمُحَمَّدٍ ﷺ نَبِيًّا", 3),
+            T("حَسْبِيَ اللَّهُ لَا إِلَهَ إِلَّا هُوَ عَلَيْهِ تَوَكَّلْتُ وَهُوَ رَبُّ الْعَرْشِ الْعَظِيمِ", 7),
+            T("لَا إِلَهَ إِلَّا اللَّهُ وَحْدَهُ لَا شَرِيكَ لَهُ، لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ", 10),
+            T("سُبْحَانَ اللَّهِ وَبِحَمْدِهِ", 100),
+            T("أَسْتَغْفِرُ اللَّهَ وَأَتُوبُ إِلَيْهِ", 100),
+        )
+        private val sleep = listOf(
+            T("بِاسْمِكَ اللَّهُمَّ أَمُوتُ وَأَحْيَا", 1),
+            T("سُبْحَانَ اللَّهِ", 33),
+            T("الْحَمْدُ لِلَّهِ", 33),
+            T("اللَّهُ أَكْبَرُ", 34),
+        )
+        private val general = listOf(
+            T("سُبْحَانَ اللَّهِ وَبِحَمْدِهِ، سُبْحَانَ اللَّهِ الْعَظِيمِ", 33),
+            T("لَا حَوْلَ وَلَا قُوَّةَ إِلَّا بِاللَّهِ", 33),
+            T("اللَّهُمَّ صَلِّ وَسَلِّمْ عَلَى نَبِيِّنَا مُحَمَّدٍ", 10),
+            T("لَا إِلَهَ إِلَّا اللَّهُ", 100),
+        )
+
+        /** (title, list, set key) for the current hour. */
+        private fun current(): Triple<String, List<T>, String> {
+            val h = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
+            val day = WidgetStore.dayKey(System.currentTimeMillis())
+            return when {
+                h in 4..11 -> Triple("أذكار الصباح", morningEvening, "m-$day")
+                h in 15..19 -> Triple("أذكار المساء", morningEvening, "e-$day")
+                h >= 21 || h < 4 -> Triple("أذكار النوم", sleep, "s-$day")
+                else -> Triple("ذكر الله", general, "g-$day")
+            }
+        }
+
+        private fun step(context: Context, advanceOnly: Boolean) {
+            val (_, list, key) = current()
+            val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            var index = if (prefs.getString("key", "") == key) prefs.getInt("index", 0) else 0
+            var count = if (prefs.getString("key", "") == key) prefs.getInt("count", 0) else 0
+            if (index >= list.size) index = 0
+            if (advanceOnly) {
+                index = (index + 1) % list.size; count = 0
+            } else {
+                count++
+                if (count >= list[index].count) {
+                    index = (index + 1) % list.size; count = 0
+                }
+            }
+            prefs.edit().putString("key", key).putInt("index", index).putInt("count", count).apply()
+        }
+
+        private fun broadcast(context: Context, action: String, code: Int): PendingIntent {
+            val i = Intent(context, AthkarWidgetProvider::class.java).setAction(action)
+            return PendingIntent.getBroadcast(context, code, i, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+        }
+
+        fun render(context: Context, mgr: AppWidgetManager, ids: IntArray) {
+            val views = RemoteViews(context.packageName, R.layout.widget_athkar)
+            val (title, list, key) = current()
+            val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            val same = prefs.getString("key", "") == key
+            val index = if (same) prefs.getInt("index", 0).coerceIn(0, list.size - 1) else 0
+            val count = if (same) prefs.getInt("count", 0) else 0
+            val t = list[index]
+            val bg = when (key.first()) {
+                'm' -> R.drawable.widget_sky_morning
+                'e' -> R.drawable.widget_sky_sunset
+                's' -> R.drawable.widget_sky_night
+                else -> R.drawable.widget_bg
+            }
+            views.setInt(R.id.widget_root, "setBackgroundResource", bg)
+            views.setTextViewText(R.id.athkar_title, title)
+            views.setTextViewText(R.id.athkar_step, WidgetStore.arabicDigits("${index + 1}/${list.size}"))
+            views.setTextViewText(R.id.athkar_text, t.text)
+            views.setTextViewText(
+                R.id.athkar_count,
+                WidgetStore.arabicDigits("$count / ${t.count}") + "  •  اضغط"
+            )
+            views.setOnClickPendingIntent(R.id.athkar_count, broadcast(context, ACTION_TAP, 4201))
+            views.setOnClickPendingIntent(R.id.athkar_next, broadcast(context, ACTION_NEXT, 4202))
+            views.setOnClickPendingIntent(R.id.athkar_text, WidgetStore.openAppIntent(context))
+            mgr.updateAppWidget(ids, views)
+            // Re-render on the next hour so the category follows the time of day.
+            val cal = Calendar.getInstance().apply {
+                add(Calendar.HOUR_OF_DAY, 1); set(Calendar.MINUTE, 0); set(Calendar.SECOND, 5)
+            }
+            WidgetStore.scheduleUpdate(context, AthkarWidgetProvider::class.java, 4103, cal.timeInMillis)
         }
     }
 }

@@ -170,6 +170,25 @@ void _configureWidgets() {
     s = s.replaceRange(idx, idx, '$receivers    ');
     manifest.writeAsStringSync(s);
   }
+  if (!s.contains('AthkarWidgetProvider')) {
+    const athkar = '''
+        <receiver
+            android:name=".AthkarWidgetProvider"
+            android:exported="false"
+            android:label="@string/widget_athkar_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_athkar_info"/>
+        </receiver>
+''';
+    final idx = s.lastIndexOf('</application>');
+    if (idx < 0) throw '</application> not found';
+    s = s.replaceRange(idx, idx, '$athkar    ');
+    manifest.writeAsStringSync(s);
+  }
   if (!s.contains('AdhanService')) {
     const adhan = '''
         <!-- Adhan that plays even in silent/vibrate mode (alarm stream) -->
@@ -368,6 +387,11 @@ void _configureManifest() {
   }
 
   s = s.replaceFirst(RegExp(r'android:label="[^"]*"'), 'android:label="$appLabel"');
+  // Text-to-speech (tafsir listening) must be visible on Android 11+.
+  if (!s.contains('android.intent.action.TTS_SERVICE')) {
+    const tts = '    <queries>\n        <intent>\n            <action android:name="android.intent.action.TTS_SERVICE"/>\n        </intent>\n    </queries>\n';
+    s = s.replaceFirst('<application', '$tts    <application');
+  }
   // Some live Haram streams are plain http.
   if (!s.contains('usesCleartextTraffic')) {
     s = s.replaceFirst('<application', '<application\n        android:usesCleartextTraffic="true"');

@@ -15,6 +15,10 @@ import '../../../quran/presentation/widgets/ayah_sheets.dart';
 import '../cubit/settings_cubit.dart';
 import '../cubit/settings_state.dart';
 import 'appearance_page.dart';
+import 'about_pages.dart';
+import '../../../../core/services/backup_service.dart';
+import '../../../../core/services/storage_service.dart';
+import 'package:flutter/services.dart';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
@@ -93,6 +97,30 @@ class SettingsPage extends StatelessWidget {
                   ],
                 ),
               ),
+              const GlassSectionTitle('النسخ الاحتياطي'),
+              const _BackupCard(),
+              const GlassSectionTitle('الخصوصية والمصادر'),
+              GlassContainer(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                child: Column(
+                  children: [
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      leading: Icon(Icons.privacy_tip_rounded, color: glass.accent),
+                      title: const Text('سياسة الخصوصية'),
+                      trailing: const Icon(Icons.chevron_left_rounded),
+                      onTap: () => Navigator.of(context).push(PrivacyPage.route()),
+                    ),
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      leading: Icon(Icons.library_books_rounded, color: glass.accent),
+                      title: const Text('المصادر والحقوق'),
+                      trailing: const Icon(Icons.chevron_left_rounded),
+                      onTap: () => Navigator.of(context).push(SourcesPage.route()),
+                    ),
+                  ],
+                ),
+              ),
               const SizedBox(height: 24),
               Center(
                 child: Text('${AppConstants.appName} • الإصدار 1.0.0',
@@ -105,6 +133,114 @@ class SettingsPage extends StatelessWidget {
             ],
           );
         },
+      ),
+    );
+  }
+}
+
+/// Export / restore all personal data as one file.
+class _BackupCard extends StatefulWidget {
+  const _BackupCard();
+
+  @override
+  State<_BackupCard> createState() => _BackupCardState();
+}
+
+class _BackupCardState extends State<_BackupCard> {
+  bool _busy = false;
+
+  BackupService get _service => BackupService(context.read<StorageService>());
+
+  Future<void> _export() async {
+    setState(() => _busy = true);
+    try {
+      await _service.export();
+    } catch (_) {
+      if (mounted) showGlassSnack(context, 'تعذر إنشاء النسخة الاحتياطية');
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Future<void> _restore() async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('استعادة نسخة احتياطية'),
+        content: const Text('ستُستبدل بياناتك الحالية (العلامات، الختمة، الورد، الإحصائيات، الإعدادات) بما في الملف. متابعة؟'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('إلغاء')),
+          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('اختيار الملف')),
+        ],
+      ),
+    );
+    if (ok != true || !mounted) return;
+    setState(() => _busy = true);
+    try {
+      final done = await _service.pickAndRestore();
+      if (done == true && mounted) {
+        await showDialog<void>(
+          context: context,
+          barrierDismissible: false,
+          builder: (ctx) => AlertDialog(
+            title: const Text('تمت الاستعادة ✅'),
+            content: const Text('سيُغلق التطبيق الآن، افتحه مرة أخرى لتظهر بياناتك.'),
+            actions: [FilledButton(onPressed: () => SystemNavigator.pop(), child: const Text('حسنًا'))],
+          ),
+        );
+      }
+    } on FormatException {
+      if (mounted) showGlassSnack(context, 'الملف ليس نسخة احتياطية من تطبيق الهدى');
+    } catch (_) {
+      if (mounted) showGlassSnack(context, 'تعذر قراءة الملف');
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final glass = GlassTheme.of(context);
+    return GlassContainer(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.cloud_sync_rounded, color: glass.accent, size: 30),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'احفظ علاماتك وختمتك ووردك وإعداداتك في ملف، واسترجعها على أي جهاز أو بعد إعادة التثبيت.',
+                  style: TextStyle(fontSize: 13, height: 1.6, color: glass.onGlassMuted),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          if (_busy)
+            const Center(child: Padding(padding: EdgeInsets.all(8), child: CircularProgressIndicator()))
+          else
+            Row(
+              children: [
+                Expanded(
+                  child: FilledButton.icon(
+                    onPressed: _export,
+                    icon: const Icon(Icons.upload_rounded),
+                    label: const Text('نسخ احتياطي'),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: _restore,
+                    icon: const Icon(Icons.download_rounded),
+                    label: const Text('استعادة'),
+                  ),
+                ),
+              ],
+            ),
+        ],
       ),
     );
   }

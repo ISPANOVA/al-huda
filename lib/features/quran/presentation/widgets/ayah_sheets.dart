@@ -14,6 +14,7 @@ import '../../domain/entities/ayah.dart';
 import '../cubit/bookmarks_cubit.dart';
 import '../pages/ayah_image_page.dart';
 import 'listen_sheet.dart';
+import 'tafsir_panel.dart';
 
 String _reference(Ayah a) =>
     'سورة ${SurahMetadata.surah(a.surah).name} • الآية ${ArabicUtils.toArabicDigits(a.numberInSurah)}';
@@ -93,32 +94,7 @@ class _AyahSheet extends StatelessWidget {
                       style: QuranFont.amiriQuran.style(fontSize: 24, height: 2.0, color: glass.onGlass),
                     ),
                     const SizedBox(height: 16),
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: glass.onGlass.withValues(alpha: 0.05),
-                        borderRadius: BorderRadius.circular(18),
-                        border: Border.all(color: glass.accent.withValues(alpha: 0.3)),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          Row(
-                            children: [
-                              Icon(Icons.auto_stories_rounded, size: 18, color: glass.accent),
-                              const SizedBox(width: 8),
-                              Text('التفسير الميسر',
-                                  style: TextStyle(fontWeight: FontWeight.w800, color: glass.accent)),
-                            ],
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            ayah.tafseer.isEmpty ? 'التفسير غير متوفر لهذه الآية.' : ayah.tafseer,
-                            style: TextStyle(fontSize: 16, height: 1.85, color: glass.onGlass),
-                          ),
-                        ],
-                      ),
-                    ),
+                    TafsirPanel(ayah: ayah),
                   ],
                 ),
               ),

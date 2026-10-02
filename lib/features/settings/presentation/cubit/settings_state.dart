@@ -50,6 +50,9 @@ class SettingsState extends Equatable {
 
   /// Play the adhan on the alarm stream so silent/vibrate mode doesn't mute it.
   final bool adhanAlwaysPlay;
+
+  /// Reminders the evening before occasions / recommended fasts, and Friday.
+  final bool occasionReminders;
   final double patternStrength;
 
   const SettingsState({
@@ -81,6 +84,7 @@ class SettingsState extends Equatable {
     this.customBackground = 0xFF000000,
     this.bgPattern = 1,
     this.adhanAlwaysPlay = true,
+    this.occasionReminders = true,
     this.patternStrength = 1.0,
   });
 
@@ -113,6 +117,7 @@ class SettingsState extends Equatable {
     int? customBackground,
     int? bgPattern,
     bool? adhanAlwaysPlay,
+    bool? occasionReminders,
     double? patternStrength,
   }) {
     return SettingsState(
@@ -144,6 +149,7 @@ class SettingsState extends Equatable {
       customBackground: customBackground ?? this.customBackground,
       bgPattern: bgPattern ?? this.bgPattern,
       adhanAlwaysPlay: adhanAlwaysPlay ?? this.adhanAlwaysPlay,
+      occasionReminders: occasionReminders ?? this.occasionReminders,
       patternStrength: patternStrength ?? this.patternStrength,
     );
   }
@@ -177,6 +183,7 @@ class SettingsState extends Equatable {
         'customBackground': customBackground,
         'bgPattern': bgPattern,
         'adhanAlwaysPlay': adhanAlwaysPlay,
+        'occasionReminders': occasionReminders,
         'patternStrength': patternStrength,
       };
 
@@ -217,6 +224,7 @@ class SettingsState extends Equatable {
       customBackground: (m['customBackground'] as num?)?.toInt() ?? d.customBackground,
       bgPattern: (m['bgPattern'] as num?)?.toInt() ?? d.bgPattern,
       adhanAlwaysPlay: m['adhanAlwaysPlay'] as bool? ?? d.adhanAlwaysPlay,
+      occasionReminders: m['occasionReminders'] as bool? ?? d.occasionReminders,
       patternStrength: (m['patternStrength'] as num?)?.toDouble() ?? d.patternStrength,
     );
   }
@@ -251,6 +259,7 @@ class SettingsState extends Equatable {
         customBackground,
         bgPattern,
         adhanAlwaysPlay,
+        occasionReminders,
         patternStrength,
       ];
 }

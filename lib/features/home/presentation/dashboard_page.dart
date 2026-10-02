@@ -26,6 +26,8 @@ import '../../stats/presentation/stats_page.dart';
 import '../../wird/wird_card.dart';
 import '../../wird/wird_tracker.dart';
 import 'quick_actions.dart';
+import '../../calendar/calendar_page.dart';
+import '../../calendar/islamic_calendar.dart';
 
 /// الرئيسية — a living sky that follows the prayer day, then the user's
 /// reading, daily goals, shortcuts and the ayah of the day.
@@ -45,6 +47,7 @@ class DashboardPage extends StatelessWidget {
           child: HomeSkyHero(onTap: () => onNavigate(3)),
         ),
         const SizedBox(height: 16),
+        const _SeasonalCards(),
         const Padding(padding: EdgeInsets.symmetric(horizontal: 14), child: _ContinueReading()),
         const SizedBox(height: 12),
         const Padding(padding: EdgeInsets.symmetric(horizontal: 14), child: _GoalsRow()),
@@ -227,6 +230,103 @@ class _NextPrayerGlass extends StatelessWidget {
                 ),
               ],
             ),
+    );
+  }
+}
+
+// --------------------------------------------------------- seasonal ---
+
+/// Friday reminder (Al-Kahf & salawat) and, in Ramadan, the iftar countdown.
+class _SeasonalCards extends StatelessWidget {
+  const _SeasonalCards();
+
+  @override
+  Widget build(BuildContext context) {
+    final now = DateTime.now();
+    final friday = now.weekday == DateTime.friday;
+    final ramadan = IslamicCalendar.isRamadan;
+    if (!friday && !ramadan) return const SizedBox.shrink();
+    return Column(
+      children: [
+        if (ramadan)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(14, 0, 14, 12),
+            child: BlocBuilder<PrayerCubit, PrayerState>(
+              buildWhen: (p, c) => p.countdown.inMinutes != c.countdown.inMinutes || p.today != c.today,
+              builder: (context, s) {
+                final maghrib = s.today?[PrayerName.maghrib];
+                final fajr = s.today?[PrayerName.fajr];
+                final fasting = maghrib != null && fajr != null && now.isAfter(fajr) && now.isBefore(maghrib);
+                return _BannerCard(
+                  colors: skyColors(SkyPhase.sunset),
+                  icon: Icons.brightness_3_rounded,
+                  title: 'رمضان كريم',
+                  subtitle: fasting
+                      ? 'باقي على الإفطار ${ArabicUtils.formatDuration(maghrib.difference(now), withSeconds: false)}'
+                      : 'الإمساكية ومواعيد السحور والإفطار',
+                  onTap: () => Navigator.of(context).push(ImsakiyaPage.route()),
+                );
+              },
+            ),
+          ),
+        if (friday)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(14, 0, 14, 12),
+            child: _BannerCard(
+              colors: const [Color(0xFF0B2A24), Color(0xFF1E5E4E), Color(0xFFC9A44C)],
+              icon: Icons.mosque_rounded,
+              title: 'جمعة مباركة',
+              subtitle: 'اقرأ سورة الكهف، وأكثر من الصلاة على النبي ﷺ',
+              onTap: () => MushafReaderPage.open(context, surah: 18, ayah: 1),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+class _BannerCard extends StatelessWidget {
+  final List<Color> colors;
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+
+  const _BannerCard({
+    required this.colors,
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(16, 14, 12, 14),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(24),
+          gradient: LinearGradient(begin: Alignment.topRight, end: Alignment.bottomLeft, colors: colors),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, color: const Color(0xFFFFE3A3), size: 32),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title, style: const TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w900)),
+                  Text(subtitle, style: TextStyle(color: Colors.white.withValues(alpha: 0.82), fontSize: 12.5)),
+                ],
+              ),
+            ),
+            const Icon(Icons.chevron_left_rounded, color: Colors.white),
+          ],
+        ),
+      ),
     );
   }
 }

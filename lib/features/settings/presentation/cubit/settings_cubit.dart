@@ -53,6 +53,8 @@ class SettingsCubit extends Cubit<SettingsState> {
 
   Future<void> setAdhanAlwaysPlay(bool v) => _save(state.copyWith(adhanAlwaysPlay: v));
 
+  Future<void> setOccasionReminders(bool v) => _save(state.copyWith(occasionReminders: v));
+
   Future<void> setBackgroundPattern(BgPattern pattern) async {
     final next = state.copyWith(bgPattern: pattern.index);
     _applyCustom(next);

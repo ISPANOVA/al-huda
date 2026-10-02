@@ -243,6 +243,24 @@ class NotificationService {
     );
   }
 
+  /// One-shot gentle reminder (occasions, fasting, Friday).
+  Future<void> scheduleReminderAt({
+    required int id,
+    required String title,
+    required String body,
+    required DateTime when,
+  }) async {
+    if (when.isBefore(DateTime.now())) return;
+    await _plugin.zonedSchedule(
+      id: id,
+      title: title,
+      body: body,
+      scheduledDate: tz.TZDateTime.from(when, tz.local),
+      notificationDetails: NotificationDetails(android: _reminderChannel, iOS: _darwin),
+      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+    );
+  }
+
   /// Repeats every day at [hour]:[minute] local time.
   Future<void> scheduleDaily({
     required int id,
