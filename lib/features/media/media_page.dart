@@ -66,8 +66,8 @@ class _MediaPageState extends State<MediaPage> {
     return CustomScrollView(
       physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
       slivers: [
-        const SliverToBoxAdapter(child: _Header()),
-        const SliverToBoxAdapter(child: _LiveCarousel()),
+        const SliverToBoxAdapter(child: MediaHeader()),
+        const SliverToBoxAdapter(child: LiveCarousel()),
         const SliverToBoxAdapter(
           child: MediaSectionHeader('الإذاعات', subtitle: 'بث متواصل على مدار الساعة'),
         ),
@@ -104,8 +104,8 @@ class _MediaPageState extends State<MediaPage> {
 
 // ------------------------------------------------------------ header ---
 
-class _Header extends StatelessWidget {
-  const _Header();
+class MediaHeader extends StatelessWidget {
+  const MediaHeader({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -171,14 +171,14 @@ class _Header extends StatelessWidget {
 
 // ---------------------------------------------------------- live TV ---
 
-class _LiveCarousel extends StatefulWidget {
-  const _LiveCarousel();
+class LiveCarousel extends StatefulWidget {
+  const LiveCarousel({super.key});
 
   @override
-  State<_LiveCarousel> createState() => _LiveCarouselState();
+  State<LiveCarousel> createState() => _LiveCarouselState();
 }
 
-class _LiveCarouselState extends State<_LiveCarousel> {
+class _LiveCarouselState extends State<LiveCarousel> {
   final _controller = PageController(viewportFraction: 0.88);
   int _page = 0;
 
@@ -565,7 +565,7 @@ class _ReciterRadios extends StatelessWidget {
           physics: const BouncingScrollPhysics(),
           padding: const EdgeInsets.symmetric(horizontal: 16),
           itemCount: kReciterRadios.length,
-          separatorBuilder: (_, __) => const SizedBox(width: 14),
+          separatorBuilder: (_, _) => const SizedBox(width: 14),
           itemBuilder: (context, i) {
             final radio = kReciterRadios[i];
             final playing = audio.hasQueue && audio.isLive && audio.title == radio.name && audio.playing;
@@ -704,7 +704,7 @@ class _FeaturedReciters extends StatelessWidget {
         physics: const BouncingScrollPhysics(),
         padding: const EdgeInsets.symmetric(horizontal: 16),
         itemCount: list.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 12),
+        separatorBuilder: (_, _) => const SizedBox(width: 12),
         itemBuilder: (context, i) => SizedBox(width: 142, child: ReciterCard(reciter: list[i])),
       ),
     );

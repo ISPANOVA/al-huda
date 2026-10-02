@@ -19,12 +19,21 @@ jobs:
           flutter pub get > analyze.txt 2>&1 || true
           flutter analyze --no-fatal-infos --no-fatal-warnings lib >> analyze.txt 2>&1 || true
           tail -60 analyze.txt
+      - name: Render previews
+        run: |
+          curl -sL -o /tmp/Cairo.ttf "https://github.com/google/fonts/raw/main/ofl/cairo/Cairo%5Bslnt,wght%5D.ttf" || true
+          flutter test tool/preview --update-goldens > preview.txt 2>&1 || true
+          tail -40 preview.txt
       - name: Push results
         if: always()
         run: |
           cp analyze.txt "$RUNNER_TEMP/analyze.txt" || echo none > "$RUNNER_TEMP/analyze.txt"
           git config user.name ci-bot && git config user.email ci-bot@users.noreply.github.com
           git checkout --orphan check-results-tmp && git rm -rq --cached . >/dev/null
+          cp preview.txt "$RUNNER_TEMP/" 2>/dev/null || true
+          mkdir -p "$RUNNER_TEMP/out" && cp tool/preview/out/*.png "$RUNNER_TEMP/out/" 2>/dev/null || true
           cp "$RUNNER_TEMP/analyze.txt" analyze.txt
+          cp "$RUNNER_TEMP/preview.txt" preview.txt 2>/dev/null || true
+          mkdir -p out && cp "$RUNNER_TEMP"/out/*.png out/ 2>/dev/null || true
           echo "${{ github.sha }}" > SHA.txt
-          git add -f analyze.txt SHA.txt && git commit -qm "analyze ${{ github.run_number }}" && git push -f origin HEAD:check-results
+          git add -f analyze.txt SHA.txt preview.txt out || git add -f analyze.txt SHA.txt; git add -f analyze.txt SHA.txt && git commit -qm "analyze ${{ github.run_number }}" && git push -f origin HEAD:check-results
