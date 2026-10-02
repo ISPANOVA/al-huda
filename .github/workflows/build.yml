@@ -19,7 +19,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 60
     env:
-      BUILD_NAME: 1.0.${{ github.run_number }}
+      # Public version stays 1.0.0 until the first Google Play release.
+      # BUILD_NUMBER (Android versionCode) is hidden from users but must keep
+      # increasing so each APK installs over the previous one.
+      BUILD_NAME: 1.0.0
       BUILD_NUMBER: ${{ github.run_number }}
     steps:
       - uses: actions/checkout@v4
@@ -80,24 +83,24 @@ jobs:
       - name: Rename outputs
         run: |
           mkdir -p dist
-          cp build/app/outputs/flutter-apk/app-release.apk dist/AlHuda-$BUILD_NAME.apk
-          cp build/app/outputs/bundle/release/app-release.aab dist/AlHuda-$BUILD_NAME.aab
+          cp build/app/outputs/flutter-apk/app-release.apk dist/AlHuda-$BUILD_NAME-build$BUILD_NUMBER.apk
+          cp build/app/outputs/bundle/release/app-release.aab dist/AlHuda-$BUILD_NAME-build$BUILD_NUMBER.aab
           ls -la dist
 
       - name: Publish release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v${{ env.BUILD_NAME }}
-          name: الهدى ${{ env.BUILD_NAME }}
+          tag_name: build-${{ env.BUILD_NUMBER }}
+          name: الهدى ${{ env.BUILD_NAME }} • نسخة تجريبية ${{ env.BUILD_NUMBER }}
           body: |
             ${{ github.event.head_commit.message }}
 
-            • AlHuda-${{ env.BUILD_NAME }}.apk — للتثبيت المباشر على الموبايل
-            • AlHuda-${{ env.BUILD_NAME }}.aab — للرفع على Google Play
+            • AlHuda-${{ env.BUILD_NAME }}-build${{ env.BUILD_NUMBER }}.apk — للتثبيت المباشر على الموبايل
+            • AlHuda-${{ env.BUILD_NAME }}-build${{ env.BUILD_NUMBER }}.aab — للرفع على Google Play
           make_latest: true
           files: |
-            dist/AlHuda-${{ env.BUILD_NAME }}.apk
-            dist/AlHuda-${{ env.BUILD_NAME }}.aab
+            dist/AlHuda-${{ env.BUILD_NAME }}-build${{ env.BUILD_NUMBER }}.apk
+            dist/AlHuda-${{ env.BUILD_NAME }}-build${{ env.BUILD_NUMBER }}.aab
 
       - name: Save log on failure
         if: failure()
