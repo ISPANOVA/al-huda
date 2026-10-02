@@ -210,13 +210,14 @@ class PatternPainter extends CustomPainter {
   /// Scattered twinkles and a crescent in the corner.
   void _starry(Canvas canvas, Size size, Paint p, Paint fill) {
     final rnd = math.Random(7);
-    final count = (size.width * size.height / (9000 * scale * scale)).round().clamp(12, 260);
+    final count = (size.width * size.height / (5200 * scale * scale)).round().clamp(14, 320);
     for (var i = 0; i < count; i++) {
       final c = Offset(rnd.nextDouble() * size.width, rnd.nextDouble() * size.height);
       final big = rnd.nextDouble() < 0.12;
-      final r = (big ? 5.5 : 1.2 + rnd.nextDouble() * 1.6) * scale.clamp(0.5, 1.0);
+      final r = (big ? 7.0 : 1.8 + rnd.nextDouble() * 2.0) * scale.clamp(0.5, 1.0);
       if (big) {
-        canvas.drawPath(_star(c, r, r * 0.25, 4, 0), fill);
+        canvas.drawPath(_star(c, r, r * 0.22, 4, 0), fill);
+        canvas.drawCircle(c, r * 0.18, fill);
       } else {
         canvas.drawCircle(c, r * 0.6, fill);
       }

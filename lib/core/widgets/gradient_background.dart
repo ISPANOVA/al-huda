@@ -80,7 +80,7 @@ class _IslamicPatternOverlay extends StatelessWidget {
           builder: (context, style, _) => CustomPaint(
             painter: PatternPainter(
               pattern: style.pattern,
-              color: glass.accent.withValues(alpha: dark ? 0.11 : 0.16),
+              color: glass.accent.withValues(alpha: dark ? 0.14 : 0.18),
               strength: style.strength,
             ),
           ),
