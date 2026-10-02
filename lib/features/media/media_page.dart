@@ -273,7 +273,7 @@ class _LiveCard extends StatelessWidget {
               left: 0,
               right: 0,
               bottom: 0,
-              height: 120,
+              height: 100,
               child: CustomPaint(painter: SkylinePainter(color: gold.withValues(alpha: 0.26), makkah: live.makkah)),
             ),
             Positioned.fill(
@@ -282,8 +282,8 @@ class _LiveCard extends StatelessWidget {
                   gradient: LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
-                    colors: [Colors.transparent, Colors.black.withValues(alpha: 0.65)],
-                    stops: const [0.45, 1],
+                    colors: [Colors.transparent, Colors.black.withValues(alpha: 0.82)],
+                    stops: const [0.35, 1],
                   ),
                 ),
               ),
