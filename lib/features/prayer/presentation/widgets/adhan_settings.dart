@@ -82,7 +82,8 @@ class _AdhanSettingsCardState extends State<AdhanSettingsCard> {
           p.prayerAlerts != c.prayerAlerts ||
           p.postPrayerAthkar != c.postPrayerAthkar ||
           p.postPrayerMinutes != c.postPrayerMinutes ||
-          p.adhanAlwaysPlay != c.adhanAlwaysPlay,
+          p.adhanAlwaysPlay != c.adhanAlwaysPlay ||
+          p.sunriseAlert != c.sunriseAlert,
       builder: (context, s) {
         final cubit = context.read<SettingsCubit>();
         final glass = GlassTheme.of(context);
@@ -124,7 +125,22 @@ class _AdhanSettingsCardState extends State<AdhanSettingsCard> {
                             ),
                             onSelected: (v) => cubit.setPrayerAlert(i, v),
                           ),
+                        FilterChip(
+                          label: const Text('الشروق'),
+                          selected: s.sunriseAlert,
+                          showCheckmark: false,
+                          avatar: Icon(
+                            s.sunriseAlert ? Icons.wb_twilight_rounded : Icons.notifications_off_outlined,
+                            size: 18,
+                          ),
+                          onSelected: cubit.setSunriseAlert,
+                        ),
                       ],
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4),
+                      child: Text('الشروق تنبيه هادئ وليس أذانًا • يوم الجمعة تظهر صلاة الظهر باسم «الجمعة»',
+                          style: TextStyle(fontSize: 11.5, color: glass.onGlassMuted)),
                     ),
                     const Divider(height: 22),
                     ListTile(

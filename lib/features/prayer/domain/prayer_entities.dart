@@ -13,6 +13,10 @@ extension PrayerNameX on PrayerName {
       };
 
   bool get isPrayer => this != PrayerName.sunrise;
+
+  /// Name on a given day: Dhuhr is "الجمعة" on Fridays.
+  String nameOn(DateTime day) =>
+      this == PrayerName.dhuhr && day.weekday == DateTime.friday ? 'الجمعة' : nameAr;
 }
 
 class UserLocation extends Equatable {

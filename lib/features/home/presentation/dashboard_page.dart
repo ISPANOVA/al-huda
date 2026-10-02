@@ -194,7 +194,7 @@ class _NextPrayerGlass extends StatelessWidget {
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
-                          Text(next.name.nameAr,
+                          Text(next.name.nameOn(next.time),
                               style: const TextStyle(
                                   color: Colors.white, fontSize: 22, fontWeight: FontWeight.w900, height: 1.2)),
                           const SizedBox(width: 8),

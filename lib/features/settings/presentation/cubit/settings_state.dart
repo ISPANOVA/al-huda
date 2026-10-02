@@ -53,6 +53,9 @@ class SettingsState extends Equatable {
 
   /// Reminders the evening before occasions / recommended fasts, and Friday.
   final bool occasionReminders;
+
+  /// Optional reminder at sunrise (الشروق).
+  final bool sunriseAlert;
   final double patternStrength;
 
   const SettingsState({
@@ -85,6 +88,7 @@ class SettingsState extends Equatable {
     this.bgPattern = 1,
     this.adhanAlwaysPlay = true,
     this.occasionReminders = true,
+    this.sunriseAlert = false,
     this.patternStrength = 1.0,
   });
 
@@ -118,6 +122,7 @@ class SettingsState extends Equatable {
     int? bgPattern,
     bool? adhanAlwaysPlay,
     bool? occasionReminders,
+    bool? sunriseAlert,
     double? patternStrength,
   }) {
     return SettingsState(
@@ -150,6 +155,7 @@ class SettingsState extends Equatable {
       bgPattern: bgPattern ?? this.bgPattern,
       adhanAlwaysPlay: adhanAlwaysPlay ?? this.adhanAlwaysPlay,
       occasionReminders: occasionReminders ?? this.occasionReminders,
+      sunriseAlert: sunriseAlert ?? this.sunriseAlert,
       patternStrength: patternStrength ?? this.patternStrength,
     );
   }
@@ -184,6 +190,7 @@ class SettingsState extends Equatable {
         'bgPattern': bgPattern,
         'adhanAlwaysPlay': adhanAlwaysPlay,
         'occasionReminders': occasionReminders,
+        'sunriseAlert': sunriseAlert,
         'patternStrength': patternStrength,
       };
 
@@ -225,6 +232,7 @@ class SettingsState extends Equatable {
       bgPattern: (m['bgPattern'] as num?)?.toInt() ?? d.bgPattern,
       adhanAlwaysPlay: m['adhanAlwaysPlay'] as bool? ?? d.adhanAlwaysPlay,
       occasionReminders: m['occasionReminders'] as bool? ?? d.occasionReminders,
+      sunriseAlert: m['sunriseAlert'] as bool? ?? d.sunriseAlert,
       patternStrength: (m['patternStrength'] as num?)?.toDouble() ?? d.patternStrength,
     );
   }
@@ -260,6 +268,7 @@ class SettingsState extends Equatable {
         bgPattern,
         adhanAlwaysPlay,
         occasionReminders,
+        sunriseAlert,
         patternStrength,
       ];
 }

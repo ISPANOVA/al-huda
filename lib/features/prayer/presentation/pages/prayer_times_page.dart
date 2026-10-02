@@ -160,7 +160,7 @@ class _SunPathHero extends StatelessWidget {
                 right: 0,
                 child: Column(
                   children: [
-                    Text(next.name.isPrayer ? 'باقي على صلاة ${next.name.nameAr}' : 'باقي على الشروق',
+                    Text(next.name.isPrayer ? 'باقي على صلاة ${next.name.nameOn(next.time)}' : 'باقي على الشروق',
                         style: TextStyle(color: Colors.white.withValues(alpha: 0.8), fontWeight: FontWeight.w700)),
                     Text(
                       ArabicUtils.formatDuration(s.countdown),
@@ -179,7 +179,7 @@ class _SunPathHero extends StatelessWidget {
                         borderRadius: BorderRadius.circular(20),
                         color: Colors.black.withValues(alpha: 0.3),
                       ),
-                      child: Text('${next.name.nameAr} • ${ArabicUtils.formatTime(next.time)}',
+                      child: Text('${next.name.nameOn(next.time)} • ${ArabicUtils.formatTime(next.time)}',
                           style: const TextStyle(color: Color(0xFFFFE3A3), fontWeight: FontWeight.w800)),
                     ),
                   ],
@@ -217,6 +217,7 @@ class _Timeline extends StatelessWidget {
     final now = DateTime.now();
     final alerts = context.select((SettingsCubit c) => c.state.prayerAlerts);
     final enabled = context.select((SettingsCubit c) => c.state.prayerNotifications);
+    final sunrise = context.select((SettingsCubit c) => c.state.sunriseAlert);
     final list = PrayerName.values;
     return NoorCard(
       padding: const EdgeInsets.fromLTRB(10, 10, 14, 10),
@@ -232,11 +233,26 @@ class _Timeline extends StatelessWidget {
               passed: today[list[i]].isBefore(now),
               first: i == 0,
               last: i == list.length - 1,
-              alert: list[i].isPrayer && enabled && _alertOn(alerts, list[i]),
+              alert: list[i] == PrayerName.sunrise ? sunrise : enabled && _alertOn(alerts, list[i]),
+              onToggleAlert: () => _toggle(context, list[i], enabled, alerts, sunrise),
             ),
         ],
       ),
     );
+  }
+
+  void _toggle(BuildContext context, PrayerName p, bool enabled, List<bool> alerts, bool sunrise) {
+    final cubit = context.read<SettingsCubit>();
+    if (p == PrayerName.sunrise) {
+      cubit.setSunriseAlert(!sunrise);
+      showGlassSnack(context, sunrise ? 'أُوقف تنبيه الشروق' : 'سيصلك تنبيه عند الشروق');
+      return;
+    }
+    final idx = PrayerName.values.where((e) => e.isPrayer).toList().indexOf(p);
+    final on = enabled && _alertOn(alerts, p);
+    if (!enabled) cubit.setPrayerNotifications(true);
+    cubit.setPrayerAlert(idx, !on);
+    showGlassSnack(context, on ? 'أُوقف أذان ${p.nameAr}' : 'سيُرفع أذان ${p.nameAr}');
   }
 
   bool _alertOn(List<bool> alerts, PrayerName p) {
@@ -254,8 +270,10 @@ class _Timeline extends StatelessWidget {
     required bool first,
     required bool last,
     required bool alert,
+    required VoidCallback onToggleAlert,
   }) {
     final muted = passed && !isNext;
+    final friday = name == PrayerName.dhuhr && time.weekday == DateTime.friday;
     return IntrinsicHeight(
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -307,29 +325,50 @@ class _Timeline extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          name.nameAr,
+                          name.nameOn(time),
                           style: TextStyle(
                             fontSize: isNext ? 19 : 16.5,
                             fontWeight: isNext ? FontWeight.w900 : FontWeight.w800,
                             color: muted ? glass.onGlassMuted : glass.onGlass,
                           ),
                         ),
-                        if (isNext)
-                          Text('بعد ${ArabicUtils.formatDuration(state.countdown, withSeconds: false)}',
-                              style: TextStyle(fontSize: 12, color: glass.accent, fontWeight: FontWeight.w700)),
+                        if (isNext || friday)
+                          Text(
+                            [
+                              if (isNext) 'بعد ${ArabicUtils.formatDuration(state.countdown, withSeconds: false)}',
+                              if (friday) 'اقرأ سورة الكهف',
+                            ].join(' • '),
+                            style: TextStyle(fontSize: 12, color: glass.accent, fontWeight: FontWeight.w700),
+                          ),
                       ],
                     ),
                   ),
-                  if (name.isPrayer)
-                    Icon(alert ? Icons.notifications_active_rounded : Icons.notifications_off_outlined,
-                        size: 17, color: alert ? glass.accent.withValues(alpha: 0.8) : glass.onGlassMuted),
-                  const SizedBox(width: 10),
-                  Text(
-                    ArabicUtils.formatTime(time),
-                    style: TextStyle(
-                      fontSize: isNext ? 19 : 16.5,
-                      fontWeight: FontWeight.w900,
-                      color: muted ? glass.onGlassMuted : (isNext ? glass.accent : glass.onGlass),
+                  // Fixed-width columns so times and bells line up row to row.
+                  SizedBox(
+                    width: 84,
+                    child: Text(
+                      ArabicUtils.formatTime(time),
+                      textAlign: TextAlign.end,
+                      style: TextStyle(
+                        fontSize: isNext ? 18 : 16.5,
+                        fontWeight: FontWeight.w900,
+                        fontFeatures: const [FontFeature.tabularFigures()],
+                        color: muted ? glass.onGlassMuted : (isNext ? glass.accent : glass.onGlass),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  SizedBox.square(
+                    dimension: 38,
+                    child: IconButton(
+                      padding: EdgeInsets.zero,
+                      tooltip: alert ? 'إيقاف التنبيه' : 'تشغيل التنبيه',
+                      onPressed: onToggleAlert,
+                      icon: Icon(
+                        alert ? Icons.notifications_active_rounded : Icons.notifications_off_outlined,
+                        size: 20,
+                        color: alert ? glass.accent : glass.onGlassMuted.withValues(alpha: 0.6),
+                      ),
                     ),
                   ),
                 ],

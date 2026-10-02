@@ -106,7 +106,7 @@ class PrayerCubit extends Cubit<PrayerState> {
   String _settingsKey(SettingsState s) =>
       '${s.calcMethod}|${s.madhab}|${s.prayerNotifications}|${s.prayerAdjustments.join(',')}|'
       '${s.adhanVoice}|${s.adhanFull}|${s.preAdhanEnabled}|${s.preAdhanMinutes}|${s.prayerAlerts.join(',')}|'
-      '${s.postPrayerAthkar}|${s.postPrayerMinutes}|${s.adhanAlwaysPlay}';
+      '${s.postPrayerAthkar}|${s.postPrayerMinutes}|${s.adhanAlwaysPlay}|${s.sunriseAlert}';
 
   Future<void> refreshLocation({bool silent = false}) async {
     if (!silent) emit(state.copyWith(loading: true, clearError: true));
@@ -168,7 +168,7 @@ class PrayerCubit extends Cubit<PrayerState> {
             madhab: s.madhab,
             adjustments: s.prayerAdjustments,
           );
-          return (date: day.date, prayers: [for (final p in prayers) (p.nameAr, day[p])]);
+          return (date: day.date, prayers: [for (final p in prayers) (p.nameOn(day.date), day[p])]);
         }(),
     ];
     HomeWidgets.updatePrayers(city: loc.city ?? 'الهدى', days: days);
@@ -228,12 +228,25 @@ class PrayerCubit extends Cubit<PrayerState> {
     final prayers = PrayerName.values.where((p) => p.isPrayer).toList();
     final city = loc.city ?? 'الهدى';
     var slot = 0;
+    var dayIndex = 0;
     for (final day in days) {
+      if (s.sunriseAlert) {
+        await _notifications.scheduleReminderAt(
+          id: base + 50 + dayIndex,
+          title: 'أشرقت الشمس ☀️',
+          body: 'حان وقت الشروق ${ArabicUtils.formatTime(day[PrayerName.sunrise])} • تبدأ صلاة الضحى بعد ارتفاع الشمس بربع ساعة',
+          when: day[PrayerName.sunrise],
+        );
+      }
+      dayIndex++;
       for (var i = 0; i < prayers.length; i++, slot++) {
         final p = prayers[i];
         if (i < s.prayerAlerts.length && !s.prayerAlerts[i]) continue;
-        final title = 'حان الآن موعد صلاة ${p.nameAr} 🕌';
-        final body = '${ArabicUtils.formatTime(day[p])} • $city';
+        final jumuah = p == PrayerName.dhuhr && day.date.weekday == DateTime.friday;
+        final title = 'حان الآن موعد صلاة ${p.nameOn(day.date)} 🕌';
+        final body = jumuah
+            ? '${ArabicUtils.formatTime(day[p])} • $city — لا تنسَ قراءة سورة الكهف والصلاة على النبي ﷺ'
+            : '${ArabicUtils.formatTime(day[p])} • $city';
         final id = base + slot;
         final when = day[p];
         Future<void> notify() => _notifications.scheduleAdhan(
@@ -254,7 +267,7 @@ class PrayerCubit extends Cubit<PrayerState> {
         if (s.postPrayerAthkar) {
           await _notifications.schedulePostPrayer(
             id: base + 40 + slot,
-            title: 'أذكار بعد صلاة ${p.nameAr} 🤲',
+            title: 'أذكار بعد صلاة ${p.nameOn(day.date)} 🤲',
             body: 'لا تنسَ أذكار ما بعد الصلاة: أستغفر الله، وآية الكرسي، والتسبيح ٣٣',
             when: day[p].add(Duration(minutes: s.postPrayerMinutes)),
           );
@@ -262,7 +275,7 @@ class PrayerCubit extends Cubit<PrayerState> {
         if (s.preAdhanEnabled) {
           await _notifications.schedulePreAdhan(
             id: base + 20 + slot,
-            title: 'اقترب موعد صلاة ${p.nameAr}',
+            title: 'اقترب موعد صلاة ${p.nameOn(day.date)}',
             body: 'باقي ${ArabicUtils.toArabicDigits(s.preAdhanMinutes)} دقيقة على الأذان • ${ArabicUtils.formatTime(day[p])}',
             when: day[p].subtract(Duration(minutes: s.preAdhanMinutes)),
           );
