@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../theme/app_themes.dart';
+import 'background_patterns.dart';
 
 /// Vibrant multi-stop gradient with soft light orbs behind the glass layers.
 class GradientBackground extends StatelessWidget {
@@ -64,50 +65,29 @@ class _Orb extends StatelessWidget {
   }
 }
 
-/// Very subtle eight-pointed star lattice for an Islamic geometric feel.
+/// The user's chosen ornament (see BackgroundStyle), painted in the accent.
 class _IslamicPatternOverlay extends StatelessWidget {
   const _IslamicPatternOverlay();
 
   @override
   Widget build(BuildContext context) {
     final glass = GlassTheme.of(context);
+    final dark = Theme.of(context).brightness == Brightness.dark;
     return IgnorePointer(
       child: RepaintBoundary(
-        child: CustomPaint(painter: _StarLatticePainter(glass.onGlass.withValues(alpha: 0.035))),
+        child: ValueListenableBuilder(
+          valueListenable: BackgroundStyle.current,
+          builder: (context, style, _) => CustomPaint(
+            painter: PatternPainter(
+              pattern: style.pattern,
+              color: glass.accent.withValues(alpha: dark ? 0.11 : 0.16),
+              strength: style.strength,
+            ),
+          ),
+        ),
       ),
     );
   }
-}
-
-class _StarLatticePainter extends CustomPainter {
-  final Color color;
-
-  _StarLatticePainter(this.color);
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1;
-    const cell = 72.0;
-    for (double y = 0; y < size.height + cell; y += cell) {
-      for (double x = 0; x < size.width + cell; x += cell) {
-        final c = Offset(x, y);
-        const r = cell * 0.32;
-        final square = Rect.fromCenter(center: c, width: r * 2, height: r * 2);
-        canvas.drawRect(square, paint);
-        canvas.save();
-        canvas.translate(c.dx, c.dy);
-        canvas.rotate(0.785398); // 45°
-        canvas.drawRect(Rect.fromCenter(center: Offset.zero, width: r * 2, height: r * 2), paint);
-        canvas.restore();
-      }
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _StarLatticePainter oldDelegate) => oldDelegate.color != color;
 }
 
 /// Standard page scaffold: gradient background + transparent app bar.

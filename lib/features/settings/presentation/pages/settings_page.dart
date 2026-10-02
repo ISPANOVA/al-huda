@@ -5,6 +5,7 @@ import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_themes.dart';
 import '../../../../core/widgets/glass_container.dart';
 import '../../../../core/widgets/state_views.dart';
+import '../../../../core/widgets/background_patterns.dart';
 import '../../../../core/widgets/gradient_background.dart';
 import '../../../audio/domain/reciter.dart';
 import '../../../audio/presentation/widgets/mini_player.dart';
@@ -13,6 +14,7 @@ import '../../../prayer/presentation/widgets/prayer_calc_settings.dart';
 import '../../../quran/presentation/widgets/ayah_sheets.dart';
 import '../cubit/settings_cubit.dart';
 import '../cubit/settings_state.dart';
+import 'appearance_page.dart';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
@@ -30,51 +32,7 @@ class SettingsPage extends StatelessWidget {
           return ListView(
             padding: const EdgeInsets.all(16),
             children: [
-              const GlassSectionTitle('المظهر الزجاجي'),
-              GridView.count(
-                crossAxisCount: 2,
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                mainAxisSpacing: 10,
-                crossAxisSpacing: 10,
-                childAspectRatio: 1.6,
-                children: [
-                  for (final t in AppThemeType.values) _ThemeTile(type: t, selected: s.themeType == t),
-                ],
-              ),
-              const SizedBox(height: 12),
-              GlassContainer(
-                padding: const EdgeInsets.all(8),
-                child: SegmentedButton<ThemeMode>(
-                  showSelectedIcon: false,
-                  segments: const [
-                    ButtonSegment(value: ThemeMode.system, label: Text('تلقائي'), icon: Icon(Icons.brightness_auto_rounded)),
-                    ButtonSegment(value: ThemeMode.light, label: Text('فاتح'), icon: Icon(Icons.light_mode_rounded)),
-                    ButtonSegment(value: ThemeMode.dark, label: Text('داكن'), icon: Icon(Icons.dark_mode_rounded)),
-                  ],
-                  selected: {s.themeMode},
-                  onSelectionChanged: (v) => cubit.setThemeMode(v.first),
-                ),
-              ),
-              if (s.themeType == AppThemeType.custom)
-                Padding(
-                  padding: const EdgeInsets.only(top: 8),
-                  child: FilledButton.tonalIcon(
-                    icon: const Icon(Icons.palette_rounded),
-                    label: const Text('تعديل ألواني'),
-                    onPressed: () => showCustomColorsSheet(context),
-                  ),
-                ),
-              if (AppThemes.palette(s.themeType).alwaysDark || AppThemes.palette(s.themeType).alwaysLight)
-                Padding(
-                  padding: const EdgeInsets.only(top: 6),
-                  child: Text(
-                      s.themeType == AppThemeType.custom
-                          ? 'الوضع الفاتح أو الداكن يتحدد تلقائيًا من لون الخلفية الذي اخترته.'
-                          : 'هذا الثيم داكن دائمًا بطبيعته.',
-                      style: TextStyle(fontSize: 12, color: glass.onGlassMuted),
-                      textAlign: TextAlign.center),
-                ),
+              _AppearanceEntry(settings: s),
               const GlassSectionTitle('القراءة والخط'),
               GlassContainer(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
@@ -141,7 +99,7 @@ class SettingsPage extends StatelessWidget {
                     style: TextStyle(color: glass.onGlassMuted, fontSize: 12)),
               ),
               Center(
-                child: Text('النص القرآني والتفسير: alquran.cloud • التلاوات: Islamic Network CDN',
+                child: Text('النص القرآني والتفسير: alquran.cloud • تلاوات المصحف: Islamic Network • الوسائط والإذاعات: mp3quran.net',
                     textAlign: TextAlign.center, style: TextStyle(color: glass.onGlassMuted, fontSize: 11)),
               ),
             ],
@@ -152,59 +110,82 @@ class SettingsPage extends StatelessWidget {
   }
 }
 
-class _ThemeTile extends StatelessWidget {
-  final AppThemeType type;
-  final bool selected;
+/// Single entry that opens the dedicated Appearance page.
+class _AppearanceEntry extends StatelessWidget {
+  final SettingsState settings;
 
-  const _ThemeTile({required this.type, required this.selected});
+  const _AppearanceEntry({required this.settings});
 
   @override
   Widget build(BuildContext context) {
-    final p = AppThemes.palette(type);
-    final dark = Theme.of(context).brightness == Brightness.dark || p.alwaysDark;
-    final colors = dark ? p.darkGradient : p.lightGradient;
-    return GestureDetector(
-      onTap: () async {
-        await context.read<SettingsCubit>().setThemeType(type);
-        if (type == AppThemeType.custom && context.mounted) showCustomColorsSheet(context);
-      },
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 250),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(22),
-          gradient: LinearGradient(colors: colors, begin: Alignment.topRight, end: Alignment.bottomLeft),
-          border: Border.all(color: selected ? p.accent : Colors.white24, width: selected ? 3 : 1),
-          boxShadow: selected ? [BoxShadow(color: p.accent.withValues(alpha: 0.5), blurRadius: 16)] : null,
-        ),
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Row(
-              children: [
-                for (final c in [p.primary, p.secondary, p.accent])
-                  Container(
-                    width: 16,
-                    height: 16,
-                    margin: const EdgeInsetsDirectional.only(end: 4),
-                    decoration: BoxDecoration(shape: BoxShape.circle, color: c, border: Border.all(color: Colors.white54)),
-                  ),
-                const Spacer(),
-                if (selected) Icon(Icons.check_circle_rounded, color: p.accent),
-              ],
-            ),
-            Text(
-              type == AppThemeType.custom ? '🎨 ${p.nameAr}' : p.nameAr,
-              style: TextStyle(fontWeight: FontWeight.w900, color: dark ? Colors.white : const Color(0xFF0E1B17)),
-            ),
-          ],
+    final glass = GlassTheme.of(context);
+    final p = AppThemes.palette(settings.themeType);
+    final pattern = BgPattern.values[settings.bgPattern.clamp(0, BgPattern.values.length - 1)];
+    final mode = switch (settings.themeMode) {
+      ThemeMode.light => 'فاتح',
+      ThemeMode.dark => 'داكن',
+      ThemeMode.system => 'تلقائي',
+    };
+    return Padding(
+      padding: const EdgeInsets.only(top: 4, bottom: 4),
+      child: GlassContainer(
+        padding: EdgeInsets.zero,
+        onTap: () => Navigator.of(context).push(AppearancePage.route()),
+        child: Padding(
+          padding: const EdgeInsets.all(14),
+          child: Row(
+            children: [
+              Container(
+                width: 64,
+                height: 64,
+                clipBehavior: Clip.antiAlias,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(18),
+                  gradient: LinearGradient(colors: glass.backgroundGradient),
+                  border: Border.all(color: glass.accent.withValues(alpha: 0.6)),
+                ),
+                child: CustomPaint(
+                  painter: PatternPainter(pattern: pattern, color: glass.accent.withValues(alpha: 0.6), scale: 0.4),
+                  child: Center(child: Icon(Icons.palette_rounded, color: glass.accent, size: 28)),
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('المظهر', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
+                    const SizedBox(height: 2),
+                    Text('الألوان والوضع الليلي وزخرفة الخلفية',
+                        style: TextStyle(fontSize: 12.5, color: glass.onGlassMuted)),
+                    const SizedBox(height: 6),
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 4,
+                      children: [
+                        for (final t in [p.nameAr, mode, pattern.labelAr])
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(12),
+                              color: glass.accent.withValues(alpha: 0.13),
+                            ),
+                            child: Text(t,
+                                style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: glass.accent)),
+                          ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              Icon(Icons.chevron_left_rounded, color: glass.onGlassMuted),
+            ],
+          ),
         ),
       ),
     );
   }
 }
-
 
 const _swatches = [
   Color(0xFFC9A44C), Color(0xFFE2C275), Color(0xFFB8860B), Color(0xFFD4AF37),

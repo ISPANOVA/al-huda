@@ -45,6 +45,10 @@ class SettingsState extends Equatable {
   final int customAccent;
   final int customBackground;
 
+  /// Index into BgPattern and its intensity (0.4 – 2.0).
+  final int bgPattern;
+  final double patternStrength;
+
   const SettingsState({
     this.themeType = AppThemeType.noirGold,
     this.themeMode = ThemeMode.dark,
@@ -72,6 +76,8 @@ class SettingsState extends Equatable {
     this.customPrimary = 0xFFC9A44C,
     this.customAccent = 0xFFE2C275,
     this.customBackground = 0xFF000000,
+    this.bgPattern = 1,
+    this.patternStrength = 1.0,
   });
 
   SettingsState copyWith({
@@ -101,6 +107,8 @@ class SettingsState extends Equatable {
     int? customPrimary,
     int? customAccent,
     int? customBackground,
+    int? bgPattern,
+    double? patternStrength,
   }) {
     return SettingsState(
       themeType: themeType ?? this.themeType,
@@ -129,6 +137,8 @@ class SettingsState extends Equatable {
       customPrimary: customPrimary ?? this.customPrimary,
       customAccent: customAccent ?? this.customAccent,
       customBackground: customBackground ?? this.customBackground,
+      bgPattern: bgPattern ?? this.bgPattern,
+      patternStrength: patternStrength ?? this.patternStrength,
     );
   }
 
@@ -159,6 +169,8 @@ class SettingsState extends Equatable {
         'customPrimary': customPrimary,
         'customAccent': customAccent,
         'customBackground': customBackground,
+        'bgPattern': bgPattern,
+        'patternStrength': patternStrength,
       };
 
   factory SettingsState.fromMap(Map<String, dynamic> m) {
@@ -196,6 +208,8 @@ class SettingsState extends Equatable {
       customPrimary: (m['customPrimary'] as num?)?.toInt() ?? d.customPrimary,
       customAccent: (m['customAccent'] as num?)?.toInt() ?? d.customAccent,
       customBackground: (m['customBackground'] as num?)?.toInt() ?? d.customBackground,
+      bgPattern: (m['bgPattern'] as num?)?.toInt() ?? d.bgPattern,
+      patternStrength: (m['patternStrength'] as num?)?.toDouble() ?? d.patternStrength,
     );
   }
 
@@ -227,5 +241,7 @@ class SettingsState extends Equatable {
         customPrimary,
         customAccent,
         customBackground,
+        bgPattern,
+        patternStrength,
       ];
 }

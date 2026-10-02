@@ -6,6 +6,7 @@ import '../../../../core/services/notification_service.dart';
 import '../../../../core/services/storage_service.dart';
 import '../../../../core/theme/app_themes.dart';
 import '../../../../core/theme/theme_transition.dart';
+import '../../../../core/widgets/background_patterns.dart';
 import 'settings_state.dart';
 
 class SettingsCubit extends Cubit<SettingsState> {
@@ -30,6 +31,10 @@ class SettingsCubit extends Cubit<SettingsState> {
   }
 
   static void _applyCustom(SettingsState s) {
+    BackgroundStyle.set(
+      BgPattern.values[s.bgPattern.clamp(0, BgPattern.values.length - 1)],
+      s.patternStrength,
+    );
     AppThemes.custom = AppThemes.customFrom(Color(s.customPrimary), Color(s.customAccent), Color(s.customBackground));
   }
 
@@ -43,6 +48,24 @@ class SettingsCubit extends Cubit<SettingsState> {
     );
     _applyCustom(next);
     _notifications.accent = AppThemes.custom.primary;
+    await _save(next);
+  }
+
+  Future<void> setBackgroundPattern(BgPattern pattern) async {
+    final next = state.copyWith(bgPattern: pattern.index);
+    _applyCustom(next);
+    await _save(next);
+  }
+
+  /// Live preview while dragging the slider (saved on release).
+  void previewPatternStrength(double v) => BackgroundStyle.set(
+        BgPattern.values[state.bgPattern.clamp(0, BgPattern.values.length - 1)],
+        v.clamp(0.4, 2.0),
+      );
+
+  Future<void> setPatternStrength(double v) async {
+    final next = state.copyWith(patternStrength: v.clamp(0.4, 2.0));
+    _applyCustom(next);
     await _save(next);
   }
 
