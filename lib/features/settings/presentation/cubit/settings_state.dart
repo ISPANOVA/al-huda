@@ -47,6 +47,9 @@ class SettingsState extends Equatable {
 
   /// Index into BgPattern and its intensity (0.4 – 2.0).
   final int bgPattern;
+
+  /// Play the adhan on the alarm stream so silent/vibrate mode doesn't mute it.
+  final bool adhanAlwaysPlay;
   final double patternStrength;
 
   const SettingsState({
@@ -77,6 +80,7 @@ class SettingsState extends Equatable {
     this.customAccent = 0xFFE2C275,
     this.customBackground = 0xFF000000,
     this.bgPattern = 1,
+    this.adhanAlwaysPlay = true,
     this.patternStrength = 1.0,
   });
 
@@ -108,6 +112,7 @@ class SettingsState extends Equatable {
     int? customAccent,
     int? customBackground,
     int? bgPattern,
+    bool? adhanAlwaysPlay,
     double? patternStrength,
   }) {
     return SettingsState(
@@ -138,6 +143,7 @@ class SettingsState extends Equatable {
       customAccent: customAccent ?? this.customAccent,
       customBackground: customBackground ?? this.customBackground,
       bgPattern: bgPattern ?? this.bgPattern,
+      adhanAlwaysPlay: adhanAlwaysPlay ?? this.adhanAlwaysPlay,
       patternStrength: patternStrength ?? this.patternStrength,
     );
   }
@@ -170,6 +176,7 @@ class SettingsState extends Equatable {
         'customAccent': customAccent,
         'customBackground': customBackground,
         'bgPattern': bgPattern,
+        'adhanAlwaysPlay': adhanAlwaysPlay,
         'patternStrength': patternStrength,
       };
 
@@ -209,6 +216,7 @@ class SettingsState extends Equatable {
       customAccent: (m['customAccent'] as num?)?.toInt() ?? d.customAccent,
       customBackground: (m['customBackground'] as num?)?.toInt() ?? d.customBackground,
       bgPattern: (m['bgPattern'] as num?)?.toInt() ?? d.bgPattern,
+      adhanAlwaysPlay: m['adhanAlwaysPlay'] as bool? ?? d.adhanAlwaysPlay,
       patternStrength: (m['patternStrength'] as num?)?.toDouble() ?? d.patternStrength,
     );
   }
@@ -242,6 +250,7 @@ class SettingsState extends Equatable {
         customAccent,
         customBackground,
         bgPattern,
+        adhanAlwaysPlay,
         patternStrength,
       ];
 }

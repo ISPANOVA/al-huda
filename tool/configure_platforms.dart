@@ -170,6 +170,28 @@ void _configureWidgets() {
     s = s.replaceRange(idx, idx, '$receivers    ');
     manifest.writeAsStringSync(s);
   }
+  if (!s.contains('AdhanService')) {
+    const adhan = '''
+        <!-- Adhan that plays even in silent/vibrate mode (alarm stream) -->
+        <service
+            android:name=".AdhanService"
+            android:exported="false"
+            android:foregroundServiceType="mediaPlayback"/>
+        <receiver
+            android:name=".AdhanReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED"/>
+                <action android:name="android.intent.action.QUICKBOOT_POWERON"/>
+            </intent-filter>
+        </receiver>
+''';
+    final idx = s.lastIndexOf('</application>');
+    if (idx < 0) throw '</application> not found';
+    s = s.replaceRange(idx, idx, '$adhan    ');
+    manifest.writeAsStringSync(s);
+  }
 }
 
 void _configureAndroidResources() {
@@ -261,6 +283,32 @@ class MainActivity : AudioServiceActivity() {
                     result.success(true)
                 }
                 else -> result.notImplemented()
+            }
+        }
+        // Adhan on the alarm stream (plays even when the phone is silent).
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "alhuda/adhan").setMethodCallHandler { call, result ->
+            try {
+                when (call.method) {
+                    "schedule" -> {
+                        AdhanAlarm.schedule(this, call.argument<List<Map<String, Any?>>>("items") ?: emptyList())
+                        result.success(true)
+                    }
+                    "cancelAll" -> { AdhanAlarm.cancelAll(this); result.success(true) }
+                    "playNow" -> {
+                        AdhanAlarm.playNow(this, call.argument<String>("sound") ?: "",
+                            call.argument<String>("title") ?: "", call.argument<String>("body") ?: "")
+                        result.success(true)
+                    }
+                    "test" -> {
+                        AdhanAlarm.scheduleTest(this, call.argument<Int>("seconds") ?: 10, call.argument<String>("sound") ?: "",
+                            call.argument<String>("title") ?: "", call.argument<String>("body") ?: "")
+                        result.success(true)
+                    }
+                    "stop" -> { AdhanAlarm.stop(this); result.success(true) }
+                    else -> result.notImplemented()
+                }
+            } catch (e: Exception) {
+                result.error("adhan", e.message, null)
             }
         }
     }

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:just_audio/just_audio.dart';
 
+import '../../../../core/services/adhan_native.dart';
 import '../../../../core/services/notification_service.dart';
 import '../../../../core/theme/app_themes.dart';
 import '../../../../core/utils/arabic_utils.dart';
@@ -80,7 +81,8 @@ class _AdhanSettingsCardState extends State<AdhanSettingsCard> {
           p.preAdhanMinutes != c.preAdhanMinutes ||
           p.prayerAlerts != c.prayerAlerts ||
           p.postPrayerAthkar != c.postPrayerAthkar ||
-          p.postPrayerMinutes != c.postPrayerMinutes,
+          p.postPrayerMinutes != c.postPrayerMinutes ||
+          p.adhanAlwaysPlay != c.adhanAlwaysPlay,
       builder: (context, s) {
         final cubit = context.read<SettingsCubit>();
         final glass = GlassTheme.of(context);
@@ -147,7 +149,34 @@ class _AdhanSettingsCardState extends State<AdhanSettingsCard> {
                       const SizedBox(height: 10),
                       _PreviewButton(voice: voice.id, full: s.adhanFull),
                     ],
+                    const Divider(height: 22),
+                    Row(
+                      children: [
+                        Icon(Icons.volume_up_rounded, color: glass.accent),
+                        const SizedBox(width: 10),
+                        const Expanded(
+                          child: Text('عندما يكون الهاتف صامتًا أو على الاهتزاز',
+                              style: TextStyle(fontWeight: FontWeight.w700)),
+                        ),
+                      ],
+                    ),
                     const SizedBox(height: 8),
+                    _ModeOption(
+                      selected: s.adhanAlwaysPlay,
+                      icon: Icons.campaign_rounded,
+                      title: 'يُرفع الأذان دائمًا',
+                      subtitle: 'يعمل كالمنبّه حتى في الصامت والاهتزاز (بصوت المنبّه)',
+                      onTap: () => cubit.setAdhanAlwaysPlay(true),
+                    ),
+                    const SizedBox(height: 8),
+                    _ModeOption(
+                      selected: !s.adhanAlwaysPlay,
+                      icon: Icons.vibration_rounded,
+                      title: 'حسب وضع الهاتف',
+                      subtitle: 'لا يؤذّن إلا إذا كان صوت الهاتف مفتوحًا',
+                      onTap: () => cubit.setAdhanAlwaysPlay(false),
+                    ),
+                    const SizedBox(height: 12),
                     FilledButton.tonalIcon(
                       style: FilledButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 12),
@@ -219,7 +248,11 @@ class _AdhanSettingsCardState extends State<AdhanSettingsCard> {
     final allowed = await n.requestPermissions();
     await n.ensureExactAlarms();
     final voice = AdhanVoices.byId(s.adhanVoice);
-    await n.scheduleAdhanTest(voice: voice.id, voiceName: voice.nameAr, full: s.adhanFull);
+    if (s.adhanAlwaysPlay && AdhanNative.supported) {
+      await AdhanNative.test(sound: AdhanNative.sound(voice.id, s.adhanFull));
+    } else {
+      await n.scheduleAdhanTest(voice: voice.id, voiceName: voice.nameAr, full: s.adhanFull);
+    }
     if (!context.mounted) return;
     showGlassSnack(
       context,
@@ -274,6 +307,57 @@ class _AdhanSettingsCardState extends State<AdhanSettingsCard> {
     });
     await AdhanPreview.stop();
     if (picked != null) await cubit.setAdhanVoice(picked);
+  }
+}
+
+class _ModeOption extends StatelessWidget {
+  final bool selected;
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+
+  const _ModeOption({
+    required this.selected,
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final glass = GlassTheme.of(context);
+    return InkWell(
+      borderRadius: BorderRadius.circular(16),
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          color: selected ? glass.accent.withValues(alpha: 0.14) : glass.onGlass.withValues(alpha: 0.04),
+          border: Border.all(color: selected ? glass.accent : glass.onGlass.withValues(alpha: 0.12), width: selected ? 2 : 1),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, color: selected ? glass.accent : glass.onGlassMuted),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title, style: TextStyle(fontWeight: FontWeight.w800, color: selected ? glass.accent : glass.onGlass)),
+                  Text(subtitle, style: TextStyle(fontSize: 12, color: glass.onGlassMuted)),
+                ],
+              ),
+            ),
+            Icon(selected ? Icons.radio_button_checked_rounded : Icons.radio_button_off_rounded,
+                color: selected ? glass.accent : glass.onGlassMuted),
+          ],
+        ),
+      ),
+    );
   }
 }
 

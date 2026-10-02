@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/services/adhan_native.dart';
+
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/services/notification_service.dart';
 import '../../../../core/utils/arabic_utils.dart';
@@ -90,7 +92,7 @@ class PrayerCubit extends Cubit<PrayerState> {
   String _settingsKey(SettingsState s) =>
       '${s.calcMethod}|${s.madhab}|${s.prayerNotifications}|${s.prayerAdjustments.join(',')}|'
       '${s.adhanVoice}|${s.adhanFull}|${s.preAdhanEnabled}|${s.preAdhanMinutes}|${s.prayerAlerts.join(',')}|'
-      '${s.postPrayerAthkar}|${s.postPrayerMinutes}';
+      '${s.postPrayerAthkar}|${s.postPrayerMinutes}|${s.adhanAlwaysPlay}';
 
   Future<void> refreshLocation({bool silent = false}) async {
     if (!silent) emit(state.copyWith(loading: true, clearError: true));
@@ -187,7 +189,15 @@ class PrayerCubit extends Cubit<PrayerState> {
 
     // 3 days × 5 prayers × (adhan, pre-adhan, post-prayer athkar).
     await _notifications.cancelPendingRange(base, 60);
-    if (!s.prayerNotifications || loc == null) return;
+    if (!s.prayerNotifications || loc == null) {
+      await AdhanNative.cancelAll();
+      return;
+    }
+    // "Always" mode: the native player rings on the alarm stream instead of a
+    // notification sound, so silent / vibrate mode doesn't mute the adhan.
+    final native = s.adhanAlwaysPlay && AdhanNative.supported;
+    final nativeItems = <({int id, DateTime at, String sound, String title, String body})>[];
+    final fallback = <Future<void> Function()>[];
 
     final days = <PrayerDay>[
       today,
@@ -208,15 +218,25 @@ class PrayerCubit extends Cubit<PrayerState> {
       for (var i = 0; i < prayers.length; i++, slot++) {
         final p = prayers[i];
         if (i < s.prayerAlerts.length && !s.prayerAlerts[i]) continue;
-        await _notifications.scheduleAdhan(
-          id: base + slot,
-          title: 'حان الآن موعد صلاة ${p.nameAr} 🕌',
-          body: '${ArabicUtils.formatTime(day[p])} • $city',
-          when: day[p],
-          voice: voice.id,
-          voiceName: voice.nameAr,
-          full: s.adhanFull,
-        );
+        final title = 'حان الآن موعد صلاة ${p.nameAr} 🕌';
+        final body = '${ArabicUtils.formatTime(day[p])} • $city';
+        final id = base + slot;
+        final when = day[p];
+        Future<void> notify() => _notifications.scheduleAdhan(
+              id: id,
+              title: title,
+              body: body,
+              when: when,
+              voice: voice.id,
+              voiceName: voice.nameAr,
+              full: s.adhanFull,
+            );
+        if (native) {
+          nativeItems.add((id: slot, at: when, sound: AdhanNative.sound(voice.id, s.adhanFull), title: title, body: body));
+          fallback.add(notify);
+        } else {
+          await notify();
+        }
         if (s.postPrayerAthkar) {
           await _notifications.schedulePostPrayer(
             id: base + 40 + slot,
@@ -233,6 +253,13 @@ class PrayerCubit extends Cubit<PrayerState> {
             when: day[p].subtract(Duration(minutes: s.preAdhanMinutes)),
           );
         }
+      }
+    }
+    if (!native) {
+      await AdhanNative.cancelAll();
+    } else if (!await AdhanNative.schedule(nativeItems)) {
+      for (final f in fallback) {
+        await f();
       }
     }
   }
