@@ -9,6 +9,9 @@ import '../../../stats/data/stats_repository.dart';
 import '../../../stats/domain/stats_entities.dart';
 import '../../data/playlist_builder.dart';
 import '../../data/quran_audio_handler.dart';
+import 'package:just_audio/just_audio.dart';
+
+import '../../../media/media_catalog.dart';
 import '../../domain/reciter.dart';
 import 'audio_state.dart';
 
@@ -62,9 +65,22 @@ class AudioCubit extends Cubit<AudioState> {
     final surah = (extras['surah'] as num?)?.toInt();
     final ayah = (extras['ayah'] as num?)?.toInt();
     final global = (extras['global'] as num?)?.toInt();
-    emit(state.copyWith(
-      surah: surah,
-      ayah: ayah,
+    final live = extras['live'] == true;
+    emit(AudioState(
+      hasQueue: state.hasQueue,
+      playing: state.playing,
+      buffering: state.buffering,
+      surah: live ? null : surah,
+      ayah: live ? null : ayah,
+      queueIndex: state.queueIndex,
+      queueLength: state.queueLength,
+      speed: state.speed,
+      loopsRemaining: state.loopsRemaining,
+      infiniteLoop: state.infiniteLoop,
+      isMemorization: state.isMemorization,
+      error: state.error,
+      artist: item.artist,
+      isLive: live,
       title: item.title,
       duration: item.duration ?? Duration.zero,
       reciterId: extras['reciter'] as String? ?? state.reciterId,
@@ -132,10 +148,40 @@ class AudioCubit extends Cubit<AudioState> {
     }
   }
 
-  /// Plays a 24/7 Quran radio station.
-  Future<void> playRadio(String url, String title) async {
+  /// Plays a 24/7 station, trying each mirror in [urls] until one opens.
+  Future<bool> playRadio(List<String> urls, String title, {String artist = 'بث مباشر'}) async {
     emit(state.copyWith(isMemorization: false, clearError: true));
-    await _handler.playStream(url: url, title: title, artist: 'إذاعة القرآن الكريم');
+    for (final url in urls) {
+      try {
+        await _handler.playStream(url: url, title: title, artist: artist);
+        return true;
+      } catch (_) {
+        // try the next mirror
+      }
+    }
+    emit(state.copyWith(error: 'تعذر تشغيل البث الآن، تحقق من الاتصال'));
+    return false;
+  }
+
+  /// Full-surah MP3s (الوسائط): plays [surah] then continues to the next ones.
+  Future<void> playMediaSurah(MediaReciter reciter, int surah, {String? Function(int surah)? localPath}) async {
+    final items = <MediaItem>[];
+    final sources = <AudioSource>[];
+    for (var s = surah; s <= 114; s++) {
+      final info = SurahMetadata.surah(s);
+      final item = MediaItem(
+        id: '${reciter.id}:$s',
+        title: 'سورة ${info.name}',
+        album: 'القرآن الكريم',
+        artist: reciter.mujawwad ? '${reciter.name} • ${reciter.style}' : reciter.name,
+        extras: <String, dynamic>{'surah': s, 'reciter': reciter.id},
+      );
+      final local = localPath?.call(s);
+      items.add(item);
+      sources.add(local != null ? AudioSource.file(local, tag: item) : AudioSource.uri(Uri.parse(reciter.urlFor(s)), tag: item));
+    }
+    emit(state.copyWith(isMemorization: false, reciterId: reciter.id, clearError: true));
+    await _handler.loadPlaylist(items: items, sources: sources, speed: _settings.state.playbackSpeed);
   }
 
   /// Whole surah with a given reciter (media section).

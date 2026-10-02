@@ -23,7 +23,8 @@ class MiniPlayer extends StatelessWidget {
           p.buffering != c.buffering ||
           p.title != c.title ||
           p.duration != c.duration ||
-          p.reciterId != c.reciterId,
+          p.reciterId != c.reciterId ||
+          p.artist != c.artist,
       builder: (context, state) {
         if (!state.hasQueue) return const SizedBox.shrink();
         final glass = GlassTheme.of(context);
@@ -54,7 +55,7 @@ class MiniPlayer extends StatelessWidget {
                       children: [
                         Text(state.title ?? '', maxLines: 1, overflow: TextOverflow.ellipsis,
                             style: const TextStyle(fontWeight: FontWeight.w800)),
-                        Text(Reciters.byId(state.reciterId).nameAr,
+                        Text(state.artist ?? Reciters.byId(state.reciterId).nameAr,
                             maxLines: 1, style: TextStyle(fontSize: 12, color: glass.onGlassMuted)),
                       ],
                     ),

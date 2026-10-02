@@ -1,421 +1,238 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:video_player/video_player.dart';
 
-import '../../core/data/surah_metadata.dart';
 import '../../core/theme/app_themes.dart';
 import '../../core/utils/arabic_utils.dart';
-import '../../core/widgets/gradient_background.dart';
 import '../../core/widgets/state_views.dart';
-import '../audio/data/audio_download_service.dart';
-import '../audio/domain/reciter.dart';
 import '../audio/presentation/cubit/audio_cubit.dart';
 import '../audio/presentation/cubit/audio_state.dart';
-import '../audio/presentation/cubit/downloads_cubit.dart';
-import '../audio/presentation/pages/downloads_page.dart';
-
-// ------------------------------------------------------------ sources ---
+import 'live_stream_page.dart';
+import 'media_catalog.dart';
+import 'media_downloads.dart';
+import 'media_downloads_page.dart';
+import 'media_widgets.dart';
+import 'reciter_pages.dart';
 
 class _Live {
   final String title;
   final String subtitle;
-  final IconData icon;
+  final bool makkah;
   final List<Color> colors;
-
-  /// Tried in order until one plays.
   final List<String> urls;
 
-  const _Live(this.title, this.subtitle, this.icon, this.colors, this.urls);
+  const _Live(this.title, this.subtitle, this.makkah, this.colors, this.urls);
 }
 
 const _lives = [
-  _Live('مباشر الحرم المكي', 'المسجد الحرام • قناة القرآن الكريم', Icons.mosque_rounded,
-      [Color(0xFF1B3A2F), Color(0xFF0B1A14)], [
+  _Live('الحرم المكي', 'المسجد الحرام • قناة القرآن الكريم', true, [Color(0xFF2A2210), Color(0xFF0A0906)], [
     'https://cdn-globecast.akamaized.net/live/eds/saudi_quran/hls_roku/index.m3u8',
-    'http://m.live.net.sa:1935/live/quran/playlist.m3u8',
   ]),
-  _Live('مباشر الحرم النبوي', 'المسجد النبوي • قناة السنة النبوية', Icons.location_city_rounded,
-      [Color(0xFF213049), Color(0xFF0C1322)], [
+  _Live('الحرم النبوي', 'المسجد النبوي • قناة السنة النبوية', false, [Color(0xFF0E2A22), Color(0xFF05100D)], [
     'https://cdn-globecast.akamaized.net/live/eds/saudi_sunnah/hls_roku/index.m3u8',
-    'http://m.live.net.sa:1935/live/sunnah/playlist.m3u8',
   ]),
 ];
 
-class _Radio {
-  final String name;
-  final String url;
-
-  const _Radio(this.name, this.url);
+Future<void> playStation(BuildContext context, MediaRadio radio) async {
+  HapticFeedback.selectionClick();
+  final cubit = context.read<AudioCubit>();
+  final s = cubit.state;
+  if (s.hasQueue && s.isLive && s.title == radio.name) {
+    cubit.togglePlay();
+    return;
+  }
+  final ok = await cubit.playRadio(radio.urls, radio.name, artist: radio.subtitle ?? 'بث مباشر على مدار الساعة');
+  if (!ok && context.mounted) showGlassSnack(context, 'تعذر تشغيل ${radio.name} الآن، حاول مرة أخرى');
 }
 
-const _radios = [
-  _Radio('إذاعة القرآن الكريم | السعودية', 'https://stream.radiojar.com/0tpy1h0kxtzuv'),
-  _Radio('إذاعة القرآن الكريم | القاهرة', 'https://stream.radiojar.com/8s5u82pmwtzuv'),
-];
-
-// ------------------------------------------------------------- page ---
-
-/// الوسائط: downloads, reciters (full surahs), live Haram streams, Quran radio.
-class MediaPage extends StatelessWidget {
+/// الوسائط — live Haram channels, Quran radio and full-surah recitations.
+class MediaPage extends StatefulWidget {
   const MediaPage({super.key});
+
+  @override
+  State<MediaPage> createState() => _MediaPageState();
+}
+
+class _MediaPageState extends State<MediaPage> {
+  @override
+  void initState() {
+    super.initState();
+    MediaDownloads.instance.init();
+  }
 
   @override
   Widget build(BuildContext context) {
     final glass = GlassTheme.of(context);
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 130),
-      children: [
-        Text('الوسائط', style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800)),
-        const SizedBox(height: 14),
-        _DownloadsCard(onTap: () => Navigator.of(context).push(DownloadsPage.route())),
-        _SectionTitle(
-          'القرّاء',
-          action: 'عرض الكل',
-          onAction: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AllRecitersPage())),
+    return CustomScrollView(
+      physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+      slivers: [
+        const SliverToBoxAdapter(child: _Header()),
+        const SliverToBoxAdapter(child: _LiveCarousel()),
+        const SliverToBoxAdapter(
+          child: MediaSectionHeader('الإذاعات', subtitle: 'بث متواصل على مدار الساعة'),
         ),
-        _ReciterGrid(reciters: Reciters.all.take(9).toList()),
-        const _SectionTitle('البث المباشر'),
-        for (final l in _lives) _LiveCard(live: l),
-        const _SectionTitle('إذاعة القرآن الكريم'),
-        const _RadioCard(),
-        const SizedBox(height: 8),
-        Text(
-          'البث المباشر والإذاعة يحتاجان اتصالًا بالإنترنت.',
-          textAlign: TextAlign.center,
-          style: TextStyle(fontSize: 12, color: glass.onGlassMuted),
+        const SliverToBoxAdapter(child: _OfficialStations()),
+        SliverToBoxAdapter(
+          child: MediaSectionHeader(
+            'القرّاء',
+            subtitle: 'المصحف كاملًا • استمع أو حمّل للاستماع بلا إنترنت',
+            action: 'الكل (${ArabicUtils.toArabicDigits(MediaCatalog.reciters.length)})',
+            onAction: () => Navigator.of(context).push(AllRecitersPage.route()),
+          ),
+        ),
+        const SliverToBoxAdapter(child: _FeaturedReciters()),
+        const SliverToBoxAdapter(
+          child: MediaSectionHeader('إذاعات القرّاء', subtitle: 'تلاوات متواصلة لقارئك المفضل'),
+        ),
+        const SliverToBoxAdapter(child: _ReciterRadios()),
+        const SliverToBoxAdapter(child: MediaSectionHeader('إذاعات منوعة')),
+        const SliverPadding(padding: EdgeInsets.symmetric(horizontal: 16), sliver: _ThemeRadiosGrid()),
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(24, 22, 24, 140),
+            child: Text(
+              'البث المباشر والإذاعات تحتاج اتصالًا بالإنترنت • التلاوات مقدّمة من mp3quran.net',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 11.5, color: glass.onGlassMuted),
+            ),
+          ),
         ),
       ],
     );
   }
 }
 
-class _SectionTitle extends StatelessWidget {
-  final String title;
-  final String? action;
-  final VoidCallback? onAction;
+// ------------------------------------------------------------ header ---
 
-  const _SectionTitle(this.title, {this.action, this.onAction});
+class _Header extends StatelessWidget {
+  const _Header();
 
   @override
   Widget build(BuildContext context) {
     final glass = GlassTheme.of(context);
     return Padding(
-      padding: const EdgeInsets.fromLTRB(4, 22, 4, 12),
+      padding: const EdgeInsets.fromLTRB(20, 10, 16, 14),
       child: Row(
         children: [
           Expanded(
-            child: Text(title,
-                style: TextStyle(fontSize: 21, fontWeight: FontWeight.w900, color: Theme.of(context).colorScheme.primary)),
-          ),
-          if (action != null)
-            TextButton(
-              onPressed: onAction,
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(action!, style: TextStyle(color: glass.onGlassMuted)),
-                  Icon(Icons.chevron_left_rounded, color: glass.onGlassMuted, size: 20),
-                ],
-              ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ShaderMask(
+                  blendMode: BlendMode.srcIn,
+                  shaderCallback: (r) => LinearGradient(
+                    colors: [glass.accent, Color.lerp(glass.accent, glass.onGlass, 0.45)!],
+                  ).createShader(r),
+                  child: const Text('الوسائط', style: TextStyle(fontSize: 32, fontWeight: FontWeight.w900, height: 1.2)),
+                ),
+                Text('استمع • شاهد • حمّل', style: TextStyle(color: glass.onGlassMuted, letterSpacing: 0.3)),
+              ],
             ),
+          ),
+          ListenableBuilder(
+            listenable: MediaDownloads.instance,
+            builder: (context, _) {
+              final n = MediaDownloads.instance.totalCount;
+              return Pressable(
+                onTap: () => Navigator.of(context).push(MediaDownloadsPage.route()),
+                child: Container(
+                  height: 48,
+                  padding: const EdgeInsets.symmetric(horizontal: 14),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(18),
+                    color: glass.accent.withValues(alpha: 0.12),
+                    border: Border.all(color: glass.accent.withValues(alpha: 0.45)),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.download_for_offline_rounded, color: glass.accent),
+                      const SizedBox(width: 6),
+                      Text('تنزيلاتي', style: TextStyle(fontWeight: FontWeight.w800, color: glass.onGlass)),
+                      if (n > 0) ...[
+                        const SizedBox(width: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 1),
+                          decoration: BoxDecoration(color: glass.accent, borderRadius: BorderRadius.circular(10)),
+                          child: Text(ArabicUtils.toArabicDigits(n),
+                              style: const TextStyle(color: Colors.black, fontSize: 12, fontWeight: FontWeight.w900)),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
         ],
       ),
     );
   }
 }
 
-class _DownloadsCard extends StatelessWidget {
-  final VoidCallback onTap;
+// ---------------------------------------------------------- live TV ---
 
-  const _DownloadsCard({required this.onTap});
+class _LiveCarousel extends StatefulWidget {
+  const _LiveCarousel();
 
   @override
-  Widget build(BuildContext context) {
-    final glass = GlassTheme.of(context);
-    return Material(
-      color: glass.onGlass.withValues(alpha: 0.05),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(26),
-        side: BorderSide(color: glass.accent.withValues(alpha: 0.45)),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              Container(
-                width: 56,
-                height: 56,
-                decoration: BoxDecoration(
-                  color: glass.accent.withValues(alpha: 0.18),
-                  borderRadius: BorderRadius.circular(18),
-                ),
-                child: Icon(Icons.download_for_offline_rounded, color: glass.accent, size: 30),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text('تنزيلاتي', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
-                    Text('السور التي نزّلتها — تُسمع بلا إنترنت', style: TextStyle(color: glass.onGlassMuted)),
-                  ],
-                ),
-              ),
-              Icon(Icons.chevron_left_rounded, color: glass.onGlassMuted),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
+  State<_LiveCarousel> createState() => _LiveCarouselState();
 }
 
-// ---------------------------------------------------------- reciters ---
+class _LiveCarouselState extends State<_LiveCarousel> {
+  final _controller = PageController(viewportFraction: 0.88);
+  int _page = 0;
 
-/// Monogram portrait (no photos are bundled): initials on a soft gradient.
-class ReciterAvatar extends StatelessWidget {
-  final Reciter reciter;
-  final double size;
-
-  const ReciterAvatar({super.key, required this.reciter, this.size = 92});
-
-  static String _initials(String name) {
-    final parts = name.split(' ').where((p) => p.isNotEmpty && p != 'عبد' && p != 'أبو' && p != 'بن').toList();
-    if (parts.isEmpty) return name.characters.first;
-    final a = parts.first.replaceFirst('ال', '').characters.first;
-    final b = parts.length > 1 ? parts.last.replaceFirst('ال', '').characters.first : '';
-    return '$a $b'.trim();
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final glass = GlassTheme.of(context);
-    final primary = Theme.of(context).colorScheme.primary;
-    final hue = (reciter.id.hashCode % 360).abs().toDouble();
-    final tint = HSLColor.fromAHSL(1, hue, 0.35, 0.32).toColor();
-    return Container(
-      width: size,
-      height: size,
-      padding: const EdgeInsets.all(3),
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        border: Border.all(color: glass.accent.withValues(alpha: 0.75), width: 2),
-      ),
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          gradient: LinearGradient(
-            begin: Alignment.topRight,
-            end: Alignment.bottomLeft,
-            colors: [Color.lerp(tint, primary, 0.4)!, Color.lerp(tint, Colors.black, 0.45)!],
-          ),
-        ),
-        child: Center(
-          child: Text(
-            _initials(reciter.nameAr),
-            style: TextStyle(
-              fontSize: size * 0.27,
-              fontWeight: FontWeight.w900,
-              color: Colors.white.withValues(alpha: 0.92),
+    return Column(
+      children: [
+        SizedBox(
+          height: 218,
+          child: PageView.builder(
+            controller: _controller,
+            itemCount: _lives.length,
+            onPageChanged: (i) => setState(() => _page = i),
+            itemBuilder: (context, i) => AnimatedBuilder(
+              animation: _controller,
+              builder: (context, child) {
+                var delta = 0.0;
+                if (_controller.hasClients && _controller.position.haveDimensions) {
+                  delta = ((_controller.page ?? 0) - i).abs().clamp(0.0, 1.0);
+                }
+                return Transform.scale(scale: 1 - delta * 0.06, child: child);
+              },
+              child: _LiveCard(live: _lives[i]),
             ),
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _ReciterGrid extends StatelessWidget {
-  final List<Reciter> reciters;
-
-  const _ReciterGrid({required this.reciters});
-
-  @override
-  Widget build(BuildContext context) {
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: reciters.length,
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
-        mainAxisSpacing: 14,
-        crossAxisSpacing: 10,
-        childAspectRatio: 0.78,
-      ),
-      itemBuilder: (context, i) {
-        final r = reciters[i];
-        return InkWell(
-          borderRadius: BorderRadius.circular(20),
-          onTap: () => Navigator.of(context).push(ReciterSurahsPage.route(r)),
-          child: Column(
-            children: [
-              Expanded(child: FittedBox(child: ReciterAvatar(reciter: r))),
-              const SizedBox(height: 8),
-              Text(r.nameAr,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(fontWeight: FontWeight.w800)),
-              if (r.style != 'مرتل')
-                Text(r.style, style: TextStyle(fontSize: 11, color: GlassTheme.of(context).onGlassMuted)),
-            ],
-          ),
-        );
-      },
-    );
-  }
-}
-
-class AllRecitersPage extends StatelessWidget {
-  const AllRecitersPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return GlassScaffold(
-      title: 'كل القرّاء',
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-        child: _ReciterGrid(reciters: Reciters.all),
-      ),
-    );
-  }
-}
-
-/// 114 surahs of one reciter: play or download each.
-class ReciterSurahsPage extends StatefulWidget {
-  final Reciter reciter;
-
-  const ReciterSurahsPage({super.key, required this.reciter});
-
-  static Route<void> route(Reciter r) => MaterialPageRoute(builder: (_) => ReciterSurahsPage(reciter: r));
-
-  @override
-  State<ReciterSurahsPage> createState() => _ReciterSurahsPageState();
-}
-
-class _ReciterSurahsPageState extends State<ReciterSurahsPage> {
-  String _query = '';
-
-  @override
-  Widget build(BuildContext context) {
-    final glass = GlassTheme.of(context);
-    final primary = Theme.of(context).colorScheme.primary;
-    final list = [
-      for (final s in SurahMetadata.all)
-        if (_query.isEmpty || ArabicUtils.normalize(s.name).contains(ArabicUtils.normalize(_query)) || '${s.number}' == _query)
-          s,
-    ];
-    return BlocProvider(
-      create: (ctx) => DownloadsCubit(ctx.read<AudioDownloadService>(), widget.reciter.id),
-      child: GlassScaffold(
-        title: widget.reciter.nameAr,
-        body: Column(
+        const SizedBox(height: 10),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
-              child: TextField(
-                onChanged: (v) => setState(() => _query = v.trim()),
-                decoration: const InputDecoration(
-                  isDense: true,
-                  hintText: 'اختر سورة للاستماع أو ابحث باسمها',
-                  prefixIcon: Icon(Icons.search_rounded),
+            for (var i = 0; i < _lives.length; i++)
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 250),
+                margin: const EdgeInsets.symmetric(horizontal: 3),
+                width: i == _page ? 22 : 7,
+                height: 7,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(6),
+                  color: i == _page ? glass.accent : glass.onGlass.withValues(alpha: 0.2),
                 ),
               ),
-            ),
-            Expanded(
-              child: BlocBuilder<DownloadsCubit, DownloadsState>(
-                builder: (context, d) => BlocBuilder<AudioCubit, AudioState>(
-                  buildWhen: (p, c) => p.surah != c.surah || p.playing != c.playing || p.reciterId != c.reciterId,
-                  builder: (context, audio) => ListView.builder(
-                    padding: const EdgeInsets.fromLTRB(12, 0, 12, 24),
-                    itemCount: list.length,
-                    itemBuilder: (context, i) {
-                      final s = list[i];
-                      final playingThis = audio.playing && audio.surah == s.number && audio.reciterId == widget.reciter.id;
-                      final progress = d.progress[s.number];
-                      final downloaded = d.downloaded.contains(s.number);
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 5),
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 46,
-                              height: 46,
-                              alignment: Alignment.center,
-                              decoration: BoxDecoration(
-                                color: primary.withValues(alpha: 0.16),
-                                borderRadius: BorderRadius.circular(14),
-                              ),
-                              child: Text(ArabicUtils.toArabicDigits(s.number),
-                                  style: TextStyle(fontWeight: FontWeight.w800, color: glass.accent)),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text('سورة ${s.name}',
-                                      style: QuranFont.amiriQuran.style(fontSize: 19, height: 1.5, color: glass.onGlass)),
-                                  Text('${s.revelationAr} • ${ArabicUtils.toArabicDigits(s.ayahCount)} آية',
-                                      style: TextStyle(fontSize: 12, color: glass.onGlassMuted)),
-                                ],
-                              ),
-                            ),
-                            SizedBox(
-                              width: 44,
-                              child: progress != null
-                                  ? Center(
-                                      child: SizedBox(
-                                        width: 24,
-                                        height: 24,
-                                        child: CircularProgressIndicator(value: progress, strokeWidth: 2.5),
-                                      ),
-                                    )
-                                  : IconButton(
-                                      tooltip: downloaded ? 'تم التنزيل' : 'تنزيل',
-                                      icon: Icon(
-                                        downloaded ? Icons.download_done_rounded : Icons.download_rounded,
-                                        color: downloaded ? glass.accent : glass.onGlassMuted,
-                                      ),
-                                      onPressed: downloaded ? null : () => context.read<DownloadsCubit>().download(s.number),
-                                    ),
-                            ),
-                            IconButton(
-                              iconSize: 40,
-                              icon: Icon(
-                                playingThis ? Icons.pause_circle_rounded : Icons.play_circle_outline_rounded,
-                                color: primary,
-                              ),
-                              onPressed: () {
-                                HapticFeedback.selectionClick();
-                                final audioCubit = context.read<AudioCubit>();
-                                if (playingThis) {
-                                  audioCubit.togglePlay();
-                                } else {
-                                  audioCubit.playSurahWith(widget.reciter, s.number);
-                                }
-                              },
-                            ),
-                          ],
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              ),
-            ),
           ],
         ),
-      ),
+      ],
     );
   }
 }
-
-// ---------------------------------------------------------- live TV ---
 
 class _LiveCard extends StatelessWidget {
   final _Live live;
@@ -424,206 +241,110 @@ class _LiveCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final glass = GlassTheme.of(context);
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 14),
-      child: Material(
+    const gold = Color(0xFFE2C275);
+    return Pressable(
+      onTap: () => Navigator.of(context).push(LiveStreamPage.route(live.title, live.urls)),
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 6),
         clipBehavior: Clip.antiAlias,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(26),
-          side: BorderSide(color: glass.accent.withValues(alpha: 0.3)),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(30),
+          gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: live.colors),
+          border: Border.all(color: gold.withValues(alpha: 0.35)),
+          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.35), blurRadius: 24, offset: const Offset(0, 10))],
         ),
-        child: InkWell(
-          onTap: () => Navigator.of(context).push(LiveStreamPage.route(live.title, live.urls)),
-          child: Ink(
-            height: 190,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(begin: Alignment.topRight, end: Alignment.bottomLeft, colors: live.colors),
-            ),
-            child: Stack(
-              children: [
-                Positioned(
-                  left: -20,
-                  bottom: -30,
-                  child: Icon(live.icon, size: 190, color: Colors.white.withValues(alpha: 0.06)),
+        child: Stack(
+          children: [
+            const Positioned.fill(child: CustomPaint(painter: LatticePainter(color: Color(0x14E2C275)))),
+            // moon glow
+            Positioned(
+              top: -40,
+              left: -30,
+              child: Container(
+                width: 170,
+                height: 170,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: RadialGradient(colors: [gold.withValues(alpha: 0.28), Colors.transparent]),
                 ),
-                Positioned(
-                  top: 14,
-                  left: 14,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-                    decoration: BoxDecoration(color: const Color(0xFFE5484D), borderRadius: BorderRadius.circular(20)),
-                    child: const Row(
+              ),
+            ),
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              height: 120,
+              child: CustomPaint(painter: SkylinePainter(color: Colors.black.withValues(alpha: 0.55), makkah: live.makkah)),
+            ),
+            Positioned.fill(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [Colors.transparent, Colors.black.withValues(alpha: 0.65)],
+                    stops: const [0.45, 1],
+                  ),
+                ),
+              ),
+            ),
+            const PositionedDirectional(top: 16, start: 16, child: LiveBadge()),
+            PositionedDirectional(
+              top: 14,
+              end: 14,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.35),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.hd_rounded, size: 16, color: Colors.white70),
+                    SizedBox(width: 4),
+                    Text('بث فيديو', style: TextStyle(color: Colors.white70, fontSize: 11.5, fontWeight: FontWeight.w700)),
+                  ],
+                ),
+              ),
+            ),
+            PositionedDirectional(
+              start: 20,
+              end: 20,
+              bottom: 18,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.circle, size: 8, color: Colors.white),
-                        SizedBox(width: 6),
-                        Text('مباشر', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800)),
+                        Text('مباشر من', style: TextStyle(color: gold.withValues(alpha: 0.9), fontWeight: FontWeight.w700)),
+                        Text(live.title,
+                            style: const TextStyle(
+                                color: Colors.white, fontSize: 26, fontWeight: FontWeight.w900, height: 1.25)),
+                        Text(live.subtitle,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 12.5)),
                       ],
                     ),
                   ),
-                ),
-                Center(
-                  child: Container(
-                    width: 64,
-                    height: 64,
+                  Container(
+                    width: 58,
+                    height: 58,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: Colors.black.withValues(alpha: 0.3),
-                      border: Border.all(color: Colors.white.withValues(alpha: 0.8), width: 2),
+                      gradient: const LinearGradient(colors: [Color(0xFFF7E2A3), gold, Color(0xFFA8812F)]),
+                      boxShadow: [BoxShadow(color: gold.withValues(alpha: 0.5), blurRadius: 18)],
                     ),
-                    child: const Icon(Icons.play_arrow_rounded, color: Colors.white, size: 38),
+                    child: const Icon(Icons.play_arrow_rounded, color: Colors.black, size: 36),
                   ),
-                ),
-                Positioned(
-                  right: 18,
-                  bottom: 16,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(live.title,
-                          style: const TextStyle(color: Colors.white, fontSize: 19, fontWeight: FontWeight.w900)),
-                      Text(live.subtitle, style: TextStyle(color: Colors.white.withValues(alpha: 0.75))),
-                    ],
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Full-screen-capable HLS player for the live Haram channels.
-class LiveStreamPage extends StatefulWidget {
-  final String title;
-  final List<String> urls;
-
-  const LiveStreamPage({super.key, required this.title, required this.urls});
-
-  static Route<void> route(String title, List<String> urls) =>
-      MaterialPageRoute(builder: (_) => LiveStreamPage(title: title, urls: urls));
-
-  @override
-  State<LiveStreamPage> createState() => _LiveStreamPageState();
-}
-
-class _LiveStreamPageState extends State<LiveStreamPage> {
-  VideoPlayerController? _controller;
-  bool _failed = false;
-  bool _fullscreen = false;
-
-  @override
-  void initState() {
-    super.initState();
-    final audio = context.read<AudioCubit>();
-    if (audio.state.playing) audio.togglePlay();
-    _start();
-  }
-
-  Future<void> _start() async {
-    setState(() => _failed = false);
-    for (final url in widget.urls) {
-      final c = VideoPlayerController.networkUrl(Uri.parse(url));
-      try {
-        await c.initialize().timeout(const Duration(seconds: 15));
-        if (!mounted) {
-          await c.dispose();
-          return;
-        }
-        await c.play();
-        setState(() => _controller = c);
-        return;
-      } catch (_) {
-        await c.dispose();
-      }
-    }
-    if (mounted) setState(() => _failed = true);
-  }
-
-  Future<void> _toggleFullscreen() async {
-    _fullscreen = !_fullscreen;
-    if (_fullscreen) {
-      await SystemChrome.setPreferredOrientations([DeviceOrientation.landscapeLeft, DeviceOrientation.landscapeRight]);
-      await SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
-    } else {
-      await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
-      await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-    }
-    if (mounted) setState(() {});
-  }
-
-  @override
-  void dispose() {
-    _controller?.dispose();
-    if (_fullscreen) {
-      SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
-      SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-    }
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final c = _controller;
-    final Widget video = _failed
-        ? MessageView(
-            icon: Icons.wifi_off_rounded,
-            title: 'تعذر تشغيل البث الآن',
-            subtitle: 'تأكد من اتصالك بالإنترنت ثم أعد المحاولة.',
-            actionLabel: 'إعادة المحاولة',
-            onAction: _start,
-          )
-        : c == null
-            ? const Center(child: CircularProgressIndicator(color: Colors.white))
-            : Center(
-                child: AspectRatio(
-                  aspectRatio: c.value.aspectRatio == 0 ? 16 / 9 : c.value.aspectRatio,
-                  child: VideoPlayer(c),
-                ),
-              );
-    return PopScope(
-      canPop: !_fullscreen,
-      onPopInvokedWithResult: (didPop, _) {
-        if (!didPop) _toggleFullscreen();
-      },
-      child: Scaffold(
-        backgroundColor: Colors.black,
-        appBar: _fullscreen
-            ? null
-            : AppBar(
-                backgroundColor: Colors.black,
-                foregroundColor: Colors.white,
-                title: Text(widget.title),
-              ),
-        body: Stack(
-          children: [
-            Positioned.fill(child: video),
-            if (c != null)
-              Positioned(
-                left: 12,
-                bottom: 12,
-                child: SafeArea(
-                  child: Row(
-                    children: [
-                      IconButton.filledTonal(
-                        icon: Icon(c.value.isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded),
-                        onPressed: () async {
-                          c.value.isPlaying ? await c.pause() : await c.play();
-                          if (mounted) setState(() {});
-                        },
-                      ),
-                      const SizedBox(width: 8),
-                      IconButton.filledTonal(
-                        icon: Icon(_fullscreen ? Icons.fullscreen_exit_rounded : Icons.fullscreen_rounded),
-                        onPressed: _toggleFullscreen,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
           ],
         ),
       ),
@@ -631,98 +352,361 @@ class _LiveStreamPageState extends State<LiveStreamPage> {
   }
 }
 
-// ------------------------------------------------------------ radio ---
+// ------------------------------------------------------ radio stations ---
 
-class _RadioCard extends StatefulWidget {
-  const _RadioCard();
+class _OfficialStations extends StatefulWidget {
+  const _OfficialStations();
 
   @override
-  State<_RadioCard> createState() => _RadioCardState();
+  State<_OfficialStations> createState() => _OfficialStationsState();
 }
 
-class _RadioCardState extends State<_RadioCard> {
+class _OfficialStationsState extends State<_OfficialStations> with SingleTickerProviderStateMixin {
   int _index = 0;
+  late final AnimationController _waves = AnimationController(vsync: this, duration: const Duration(seconds: 3));
+
+  @override
+  void dispose() {
+    _waves.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
+    final glass = GlassTheme.of(context);
     final primary = Theme.of(context).colorScheme.primary;
-    final radio = _radios[_index];
+    final station = kOfficialRadios[_index];
     return BlocBuilder<AudioCubit, AudioState>(
-      buildWhen: (p, c) => p.title != c.title || p.playing != c.playing || p.buffering != c.buffering,
+      buildWhen: (p, c) =>
+          p.title != c.title || p.playing != c.playing || p.buffering != c.buffering || p.isLive != c.isLive,
       builder: (context, audio) {
-        final isThis = audio.hasQueue && audio.title == radio.name;
+        final isThis = audio.hasQueue && audio.isLive && audio.title == station.name;
         final playing = isThis && audio.playing;
-        return Container(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(26),
-            gradient: LinearGradient(
-              colors: [Color.lerp(primary, Colors.black, 0.15)!, Color.lerp(primary, Colors.black, 0.5)!],
+        if (playing && !_waves.isAnimating) {
+          _waves.repeat();
+        } else if (!playing && _waves.isAnimating) {
+          _waves.stop();
+        }
+        final dark = Color.lerp(primary, Colors.black, 0.78)!;
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Container(
+            clipBehavior: Clip.antiAlias,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(30),
+              gradient: LinearGradient(
+                begin: Alignment.topRight,
+                end: Alignment.bottomLeft,
+                colors: [Color.lerp(primary, Colors.black, 0.45)!, dark],
+              ),
+              border: Border.all(color: glass.accent.withValues(alpha: 0.35)),
             ),
-          ),
-          child: Row(
-            children: [
-              const Icon(Icons.radio_rounded, color: Colors.white, size: 40),
-              const SizedBox(width: 14),
-              Expanded(
-                child: PopupMenuButton<int>(
-                  initialValue: _index,
-                  onSelected: (i) => setState(() => _index = i),
-                  itemBuilder: (_) => [
-                    for (var i = 0; i < _radios.length; i++) PopupMenuItem(value: i, child: Text(_radios[i].name)),
-                  ],
-                  child: Row(
+            child: Stack(
+              children: [
+                PositionedDirectional(
+                  end: -50,
+                  top: -50,
+                  child: RepaintBoundary(
+                    child: SizedBox(
+                      width: 230,
+                      height: 230,
+                      child: CustomPaint(painter: _WavesPainter(_waves, glass.accent)),
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              radio.name.replaceFirst('إذاعة ', ''),
-                              style: const TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w900),
+                      Row(
+                        children: [
+                          Container(
+                            width: 46,
+                            height: 46,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(15),
+                              color: glass.accent.withValues(alpha: 0.18),
                             ),
-                            Text(
-                              playing ? 'يُبث الآن على مدار الساعة' : 'اضغط لاختيار الإذاعة',
-                              style: TextStyle(color: Colors.white.withValues(alpha: 0.75), fontSize: 12.5),
+                            child: Icon(Icons.radio_rounded, color: glass.accent),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                AnimatedSwitcher(
+                                  duration: const Duration(milliseconds: 250),
+                                  child: Text(
+                                    station.name,
+                                    key: ValueKey(station.name),
+                                    style: const TextStyle(color: Colors.white, fontSize: 17.5, fontWeight: FontWeight.w900),
+                                  ),
+                                ),
+                                Row(
+                                  children: [
+                                    if (playing) ...[
+                                      Equalizer(playing: true, color: glass.accent, size: 13),
+                                      const SizedBox(width: 6),
+                                    ],
+                                    Text(
+                                      playing
+                                          ? 'يُبث الآن'
+                                          : (isThis && audio.buffering ? 'جارٍ الاتصال…' : station.subtitle ?? ''),
+                                      style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 12.5),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                          Pressable(
+                            onTap: () => playStation(context, station),
+                            child: Container(
+                              width: 62,
+                              height: 62,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: glass.accent,
+                                boxShadow: [BoxShadow(color: glass.accent.withValues(alpha: 0.45), blurRadius: 18)],
+                              ),
+                              child: isThis && audio.buffering
+                                  ? const Padding(
+                                      padding: EdgeInsets.all(19),
+                                      child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.black),
+                                    )
+                                  : Icon(playing ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                                      color: Colors.black, size: 36),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      Row(
+                        children: [
+                          for (var i = 0; i < kOfficialRadios.length; i++) ...[
+                            if (i > 0) const SizedBox(width: 8),
+                            Expanded(
+                              child: Pressable(
+                                onTap: () => setState(() => _index = i),
+                                child: AnimatedContainer(
+                                  duration: const Duration(milliseconds: 220),
+                                  padding: const EdgeInsets.symmetric(vertical: 10),
+                                  alignment: Alignment.center,
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(14),
+                                    color: i == _index ? Colors.white : Colors.white.withValues(alpha: 0.08),
+                                  ),
+                                  child: Text(
+                                    kOfficialRadios[i].name.contains('القاهرة') ? 'القاهرة' : 'السعودية',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w900,
+                                      color: i == _index ? dark : Colors.white.withValues(alpha: 0.85),
+                                    ),
+                                  ),
+                                ),
+                              ),
                             ),
                           ],
-                        ),
+                        ],
                       ),
-                      const Icon(Icons.arrow_drop_down_rounded, color: Colors.white),
                     ],
                   ),
                 ),
-              ),
-              const SizedBox(width: 8),
-              Material(
-                color: Colors.white,
-                shape: const CircleBorder(),
-                child: InkWell(
-                  customBorder: const CircleBorder(),
-                  onTap: () {
-                    final cubit = context.read<AudioCubit>();
-                    if (isThis) {
-                      cubit.togglePlay();
-                    } else {
-                      cubit.playRadio(radio.url, radio.name);
-                    }
-                  },
-                  child: SizedBox(
-                    width: 58,
-                    height: 58,
-                    child: isThis && audio.buffering
-                        ? Padding(
-                            padding: const EdgeInsets.all(16),
-                            child: CircularProgressIndicator(strokeWidth: 2.5, color: primary),
-                          )
-                        : Icon(playing ? Icons.pause_rounded : Icons.play_arrow_rounded, color: primary, size: 34),
-                  ),
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
         );
       },
+    );
+  }
+}
+
+class _WavesPainter extends CustomPainter {
+  final AnimationController t;
+  final Color color;
+
+  _WavesPainter(this.t, this.color) : super(repaint: t);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final c = size.center(Offset.zero);
+    final max = size.width / 2;
+    for (var i = 0; i < 4; i++) {
+      final f = (t.value + i / 4) % 1;
+      final r = max * (0.25 + 0.75 * f);
+      canvas.drawCircle(
+        c,
+        r,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1.4
+          ..color = color.withValues(alpha: (t.isAnimating ? 0.35 : 0.12) * (1 - f)),
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _WavesPainter old) => old.color != color;
+}
+
+class _ReciterRadios extends StatelessWidget {
+  const _ReciterRadios();
+
+  @override
+  Widget build(BuildContext context) {
+    final glass = GlassTheme.of(context);
+    return SizedBox(
+      height: 124,
+      child: BlocBuilder<AudioCubit, AudioState>(
+        buildWhen: (p, c) => p.title != c.title || p.playing != c.playing || p.isLive != c.isLive,
+        builder: (context, audio) => ListView.separated(
+          scrollDirection: Axis.horizontal,
+          physics: const BouncingScrollPhysics(),
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          itemCount: kReciterRadios.length,
+          separatorBuilder: (_, __) => const SizedBox(width: 14),
+          itemBuilder: (context, i) {
+            final radio = kReciterRadios[i];
+            final playing = audio.hasQueue && audio.isLive && audio.title == radio.name && audio.playing;
+            return Pressable(
+              onTap: () => playStation(context, radio),
+              child: SizedBox(
+                width: 78,
+                child: Column(
+                  children: [
+                    Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        AnimatedContainer(
+                          duration: const Duration(milliseconds: 250),
+                          padding: const EdgeInsets.all(2.5),
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: playing ? glass.accent : Colors.transparent,
+                              width: 2,
+                            ),
+                          ),
+                          child: MonogramAvatar(name: radio.name, seed: radio.reciterKey ?? radio.name, size: 70),
+                        ),
+                        if (playing)
+                          PositionedDirectional(
+                            bottom: -2,
+                            end: -2,
+                            child: Container(
+                              padding: const EdgeInsets.all(5),
+                              decoration: BoxDecoration(color: glass.accent, shape: BoxShape.circle),
+                              child: const Equalizer(playing: true, color: Colors.black, size: 13),
+                            ),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      radio.name,
+                      maxLines: 2,
+                      textAlign: TextAlign.center,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 11.5,
+                        height: 1.25,
+                        fontWeight: FontWeight.w800,
+                        color: playing ? glass.accent : glass.onGlass,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+class _ThemeRadiosGrid extends StatelessWidget {
+  const _ThemeRadiosGrid();
+
+  @override
+  Widget build(BuildContext context) {
+    final glass = GlassTheme.of(context);
+    return BlocBuilder<AudioCubit, AudioState>(
+      buildWhen: (p, c) => p.title != c.title || p.playing != c.playing || p.isLive != c.isLive,
+      builder: (context, audio) => SliverGrid.builder(
+        itemCount: kThemeRadios.length,
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          mainAxisSpacing: 10,
+          crossAxisSpacing: 10,
+          mainAxisExtent: 70,
+        ),
+        itemBuilder: (context, i) {
+          final radio = kThemeRadios[i];
+          final playing = audio.hasQueue && audio.isLive && audio.title == radio.name && audio.playing;
+          final tint = mediaTint(radio.name, s: 0.5, l: 0.42);
+          return Pressable(
+            onTap: () => playStation(context, radio),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 250),
+              padding: const EdgeInsets.symmetric(horizontal: 10),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(20),
+                color: playing ? glass.accent.withValues(alpha: 0.16) : glass.onGlass.withValues(alpha: 0.05),
+                border: Border.all(
+                  color: playing ? glass.accent.withValues(alpha: 0.7) : glass.onGlass.withValues(alpha: 0.08),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 42,
+                    height: 42,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(14),
+                      gradient: LinearGradient(colors: [tint, Color.lerp(tint, Colors.black, 0.5)!]),
+                    ),
+                    child: Icon(radio.icon, color: Colors.white, size: 22),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      radio.name,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(fontSize: 13, height: 1.3, fontWeight: FontWeight.w800, color: glass.onGlass),
+                    ),
+                  ),
+                  if (playing) Equalizer(playing: true, color: glass.accent, size: 16),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+// -------------------------------------------------------- reciters ---
+
+class _FeaturedReciters extends StatelessWidget {
+  const _FeaturedReciters();
+
+  @override
+  Widget build(BuildContext context) {
+    final list = MediaCatalog.featured;
+    return SizedBox(
+      height: 206,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        physics: const BouncingScrollPhysics(),
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        itemCount: list.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 12),
+        itemBuilder: (context, i) => SizedBox(width: 142, child: ReciterCard(reciter: list[i])),
+      ),
     );
   }
 }

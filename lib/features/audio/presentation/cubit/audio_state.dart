@@ -9,6 +9,10 @@ class AudioState extends Equatable {
   /// 0 means the Basmala intro.
   final int? ayah;
   final String? title;
+
+  /// Reciter / station shown under the title (from the media item).
+  final String? artist;
+  final bool isLive;
   final Duration duration;
   final int queueIndex;
   final int queueLength;
@@ -26,6 +30,8 @@ class AudioState extends Equatable {
     this.surah,
     this.ayah,
     this.title,
+    this.artist,
+    this.isLive = false,
     this.duration = Duration.zero,
     this.queueIndex = 0,
     this.queueLength = 0,
@@ -39,6 +45,9 @@ class AudioState extends Equatable {
 
   bool isCurrent(int s, int a) => hasQueue && surah == s && ayah == a;
 
+  /// Full-surah media playback (الوسائط) or a live station.
+  bool get isMedia => isLive || reciterId.startsWith('mp3q:');
+
   AudioState copyWith({
     bool? hasQueue,
     bool? playing,
@@ -46,6 +55,8 @@ class AudioState extends Equatable {
     int? surah,
     int? ayah,
     String? title,
+    String? artist,
+    bool? isLive,
     Duration? duration,
     int? queueIndex,
     int? queueLength,
@@ -64,6 +75,8 @@ class AudioState extends Equatable {
       surah: surah ?? this.surah,
       ayah: ayah ?? this.ayah,
       title: title ?? this.title,
+      artist: artist ?? this.artist,
+      isLive: isLive ?? this.isLive,
       duration: duration ?? this.duration,
       queueIndex: queueIndex ?? this.queueIndex,
       queueLength: queueLength ?? this.queueLength,
@@ -84,6 +97,8 @@ class AudioState extends Equatable {
         surah,
         ayah,
         title,
+        artist,
+        isLive,
         duration,
         queueIndex,
         queueLength,

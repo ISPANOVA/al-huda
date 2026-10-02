@@ -1,0 +1,30 @@
+name: Analyze (check branch)
+on:
+  push:
+    branches: [check]
+permissions:
+  contents: write
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.47.5
+          channel: stable
+          cache: true
+      - name: Analyze
+        run: |
+          flutter pub get > analyze.txt 2>&1 || true
+          flutter analyze --no-fatal-infos --no-fatal-warnings lib >> analyze.txt 2>&1 || true
+          tail -60 analyze.txt
+      - name: Push results
+        if: always()
+        run: |
+          cp analyze.txt "$RUNNER_TEMP/analyze.txt" || echo none > "$RUNNER_TEMP/analyze.txt"
+          git config user.name ci-bot && git config user.email ci-bot@users.noreply.github.com
+          git checkout --orphan check-results-tmp && git rm -rq --cached . >/dev/null
+          cp "$RUNNER_TEMP/analyze.txt" analyze.txt
+          echo "${{ github.sha }}" > SHA.txt
+          git add -f analyze.txt SHA.txt && git commit -qm "analyze ${{ github.run_number }}" && git push -f origin HEAD:check-results

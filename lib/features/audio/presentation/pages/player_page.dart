@@ -67,7 +67,9 @@ class PlayerPage extends StatelessWidget {
                   children: [
                     InkWell(
                       borderRadius: BorderRadius.circular(20),
-                      onTap: () async {
+                      onTap: state.isMedia
+                          ? null
+                          : () async {
                         final id = await showReciterPicker(context, state.reciterId);
                         if (id != null && context.mounted) await context.read<AudioCubit>().changeReciter(id);
                       },
@@ -78,9 +80,13 @@ class PlayerPage extends StatelessWidget {
                           children: [
                             Icon(Icons.record_voice_over_rounded, color: glass.accent, size: 20),
                             const SizedBox(width: 8),
-                            Text(Reciters.byId(state.reciterId).nameAr,
-                                style: const TextStyle(fontWeight: FontWeight.w800)),
-                            const Icon(Icons.expand_more_rounded),
+                            Flexible(
+                              child: Text(state.artist ?? Reciters.byId(state.reciterId).nameAr,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(fontWeight: FontWeight.w800)),
+                            ),
+                            if (!state.isMedia) const Icon(Icons.expand_more_rounded),
                           ],
                         ),
                       ),
@@ -95,8 +101,10 @@ class PlayerPage extends StatelessWidget {
                         border: Border.all(color: glass.accent, width: 2),
                       ),
                       alignment: Alignment.center,
-                      child: Text(
-                        surahInfo?.name ?? '',
+                      child: surahInfo == null
+                          ? Icon(Icons.radio_rounded, size: 64, color: glass.accent)
+                          : Text(
+                        surahInfo.name,
                         textAlign: TextAlign.center,
                         style: context
                             .read<SettingsCubit>()
@@ -160,7 +168,7 @@ class PlayerPage extends StatelessWidget {
                 OutlinedButton.icon(
                   onPressed: () => MushafReaderPage.open(context, surah: state.surah!, ayah: (state.ayah ?? 1).clamp(1, 286)),
                   icon: const Icon(Icons.menu_book_rounded),
-                  label: const Text('فتح المصحف مع تظليل الآية'),
+                  label: Text(state.isMedia ? 'فتح السورة في المصحف' : 'فتح المصحف مع تظليل الآية'),
                 ),
               const SizedBox(height: 8),
               TextButton.icon(
