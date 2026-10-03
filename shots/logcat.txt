@@ -1,0 +1,642 @@
+--------- beginning of main
+10-03 17:41:07.959  2305  2321 D libEGL  : loaded /vendor/lib64/egl/libEGL_emulation.so
+10-03 17:41:07.964  2305  2321 D libEGL  : loaded /vendor/lib64/egl/libGLESv1_CM_emulation.so
+10-03 17:41:07.967  2305  2305 D CompatibilityChangeReporter: Compat change id reported: 171228096; UID 10126; state: ENABLED
+10-03 17:41:07.973  2305  2305 D CompatibilityChangeReporter: Compat change id reported: 160794467; UID 10126; state: ENABLED
+10-03 17:41:07.979  2305  2321 D libEGL  : loaded /vendor/lib64/egl/libGLESv2_emulation.so
+10-03 17:41:07.984  2305  2305 D CompatibilityChangeReporter: Compat change id reported: 210923482; UID 10126; state: ENABLED
+--------- beginning of system
+10-03 17:41:08.023   548   836 D CoreBackPreview: Window{7d4a9c1 u0 com.alhuda.islamic.app/com.alhuda.islamic.app.WidgetPreviewActivity}: Setting back callback OnBackInvokedCallbackInfo{mCallback=android.window.IOnBackInvokedCallback$Stub$Proxy@655d0a7, mPriority=0}
+10-03 17:41:08.120   419   437 W TransactionTracing: Could not find layer handle 0x7a7dd7a6e150
+10-03 17:41:08.120   419   437 W TransactionTracing: Could not find layer handle 0x7a7dd7a6eed0
+10-03 17:41:08.125  2305  2319 D HostConnection: HostComposition ext ANDROID_EMU_CHECKSUM_HELPER_v1 ANDROID_EMU_native_sync_v2 ANDROID_EMU_dma_v1 ANDROID_EMU_direct_mem ANDROID_EMU_host_composition_v1 ANDROID_EMU_host_composition_v2 ANDROID_EMU_vulkan ANDROID_EMU_deferred_vulkan_commands ANDROID_EMU_vulkan_null_optional_strings ANDROID_EMU_vulkan_create_resources_with_requirements ANDROID_EMU_YUV_Cache ANDROID_EMU_vulkan_ignored_handles ANDROID_EMU_has_shared_slots_host_memory_allocator ANDROID_EMU_vulkan_free_memory_sync ANDROID_EMU_vulkan_shader_float16_int8 ANDROID_EMU_vulkan_async_queue_submit ANDROID_EMU_vulkan_queue_submit_with_commands ANDROID_EMU_sync_buffer_data ANDROID_EMU_vulkan_async_qsri ANDROID_EMU_read_color_buffer_dma ANDROID_EMU_hwc_multi_configs ANDROID_EMU_hwc_color_transform GL_OES_EGL_image_external_essl3 GL_OES_vertex_array_object GL_KHR_texture_compression_astc_ldr ANDROID_EMU_host_side_tracing ANDROID_EMU_gles_max_version_3_0 
+10-03 17:41:08.127  2305  2319 W OpenGLRenderer: Failed to initialize 101010-2 format, error = EGL_SUCCESS
+10-03 17:41:08.128  2305  2319 D EGL_emulation: eglCreateContext: 0x7b546731afd0: maj 3 min 0 rcv 3
+10-03 17:41:08.132  2305  2319 D EGL_emulation: eglMakeCurrent: 0x7b546731afd0: ver 3 0 (tinfo 0x7b56907ed080) (first time)
+10-03 17:41:08.153   198   198 I hwservicemanager: getTransport: Cannot find entry android.hardware.graphics.mapper@4.0::IMapper/default in either framework or device VINTF manifest.
+10-03 17:41:08.153  2305  2319 I Gralloc4: mapper 4.x is not supported
+10-03 17:41:08.200   198   198 I hwservicemanager: getTransport: Cannot find entry android.hardware.graphics.allocator@4.0::IAllocator/default in either framework or device VINTF manifest.
+10-03 17:41:08.205   197   197 I servicemanager: Could not find android.hardware.graphics.allocator.IAllocator/default in the VINTF manifest.
+10-03 17:41:08.206  2305  2319 W Gralloc4: allocator 4.x is not supported
+10-03 17:41:08.232  2305  2319 D HostConnection: HostComposition ext ANDROID_EMU_CHECKSUM_HELPER_v1 ANDROID_EMU_native_sync_v2 ANDROID_EMU_dma_v1 ANDROID_EMU_direct_mem ANDROID_EMU_host_composition_v1 ANDROID_EMU_host_composition_v2 ANDROID_EMU_vulkan ANDROID_EMU_deferred_vulkan_commands ANDROID_EMU_vulkan_null_optional_strings ANDROID_EMU_vulkan_create_resources_with_requirements ANDROID_EMU_YUV_Cache ANDROID_EMU_vulkan_ignored_handles ANDROID_EMU_has_shared_slots_host_memory_allocator ANDROID_EMU_vulkan_free_memory_sync ANDROID_EMU_vulkan_shader_float16_int8 ANDROID_EMU_vulkan_async_queue_submit ANDROID_EMU_vulkan_queue_submit_with_commands ANDROID_EMU_sync_buffer_data ANDROID_EMU_vulkan_async_qsri ANDROID_EMU_read_color_buffer_dma ANDROID_EMU_hwc_multi_configs ANDROID_EMU_hwc_color_transform GL_OES_EGL_image_external_essl3 GL_OES_vertex_array_object GL_KHR_texture_compression_astc_ldr ANDROID_EMU_host_side_tracing ANDROID_EMU_gles_max_version_3_0 
+10-03 17:41:09.355  2305  2325 I OpenGLRenderer: Davey! duration=1376ms; Flags=1, FrameTimelineVsyncId=4139, IntendedVsync=98650269179, Vsync=98716935843, InputEventId=0, HandleInputStart=98724119491, AnimationStart=98724121444, PerformTraversalsStart=98724208737, DrawStart=98935796556, FrameDeadline=98666935845, FrameInterval=98724101136, FrameStartTime=16666666, SyncQueued=98947416638, SyncStart=98947771719, IssueDrawCommandsStart=98949017130, SwapBuffers=99810498039, FrameCompleted=100027441452, DequeueBufferDuration=8315, QueueBufferDuration=9567585, GpuCompleted=100027325906, SwapBuffersCompleted=100027441452, DisplayPresentTime=0, CommandSubmissionCompleted=99810498039, 
+10-03 17:41:09.363  2305  2319 W Parcel  : Expecting binder but got null!
+10-03 17:41:09.366  2305  2305 I Choreographer: Skipped 79 frames!  The application may be doing too much work on its main thread.
+10-03 17:41:09.581   218  2109 I keystore2: keystore2::watchdog: Watchdog thread idle -> terminating. Have a great day.
+10-03 17:41:09.694   548   570 W ziparchive: Unable to open '/data/app/~~LAD1qEZ5t8HKUcbxyaz7Rg==/com.alhuda.islamic.app-AsuZwa_EaP7vYQ84NIuiUQ==/base.dm': No such file or directory
+10-03 17:41:09.698   548   570 I ActivityTaskManager: Displayed com.alhuda.islamic.app/.WidgetPreviewActivity: +4s113ms
+10-03 17:41:09.699   548  1749 W system_server: Long monitor contention with owner android.anim (574) at void com.android.server.wm.StartingSurfaceController$StartingSurface.remove(boolean)(StartingSurfaceController.java:272) waiters=1 in void com.android.server.wm.TaskPersister$TaskWriteQueueItem.process() for 321ms
+10-03 17:41:09.722   548   573 W system_server: Long monitor contention with owner android.anim (574) at void com.android.server.wm.StartingSurfaceController$StartingSurface.remove(boolean)(StartingSurfaceController.java:272) waiters=3 in void com.android.server.wm.WindowManagerService$H.handleMessage(android.os.Message) for 239ms
+10-03 17:41:09.974  2305  2325 I OpenGLRenderer: Davey! duration=1885ms; Flags=0, FrameTimelineVsyncId=4154, IntendedVsync=98733602509, Vsync=100050269123, InputEventId=0, HandleInputStart=100066845621, AnimationStart=100066848096, PerformTraversalsStart=100067232102, DrawStart=100067390677, FrameDeadline=100050269123, FrameInterval=100066413847, FrameStartTime=16666666, SyncQueued=100067634552, SyncStart=100067655391, IssueDrawCommandsStart=100067709362, SwapBuffers=100069162781, FrameCompleted=100619612767, DequeueBufferDuration=5851, QueueBufferDuration=191033170, GpuCompleted=100619490880, SwapBuffersCompleted=100619612767, DisplayPresentTime=35188667056128, CommandSubmissionCompleted=100069162781, 
+10-03 17:41:10.277   548  1694 W system_server: Long monitor contention with owner android.anim (574) at void com.android.server.wm.WindowSurfacePlacer$Traverser.run()(WindowSurfacePlacer.java:58) waiters=2 in int com.android.server.wm.WindowManagerService$LocalService.hasInputMethodClientFocus(android.os.IBinder, int, int, int) for 117ms
+10-03 17:41:10.281   548  1694 D CompatibilityChangeReporter: Compat change id reported: 214016041; UID 10126; state: ENABLED
+10-03 17:41:10.333   548  1749 E TaskPersister: File error accessing recents directory (directory doesn't exist?).
+10-03 17:41:10.657   548   625 D OomAdjuster: Not killing cached processes
+10-03 17:41:10.822   768   925 D EGL_emulation: app_time_stats: avg=1324.73ms min=56.78ms max=2753.72ms count=3
+10-03 17:41:10.825   768   844 I Choreographer: Skipped 69 frames!  The application may be doing too much work on its main thread.
+10-03 17:41:10.905   768  1176 I OpenGLRenderer: Davey! duration=1201ms; Flags=0, FrameTimelineVsyncId=4218, IntendedVsync=100266935781, Vsync=100300269113, InputEventId=0, HandleInputStart=100302050916, AnimationStart=100302051157, PerformTraversalsStart=100302204181, DrawStart=100302226583, FrameDeadline=100383602443, FrameInterval=100302049253, FrameStartTime=16666666, SyncQueued=100302300261, SyncStart=100358492387, IssueDrawCommandsStart=100358960009, SwapBuffers=101179862118, FrameCompleted=101524799078, DequeueBufferDuration=10760, QueueBufferDuration=169348890, GpuCompleted=101522073998, SwapBuffersCompleted=101524799078, DisplayPresentTime=0, CommandSubmissionCompleted=101179862118, 
+10-03 17:41:10.957  2305  2325 I OpenGLRenderer: Davey! duration=972ms; Flags=0, FrameTimelineVsyncId=4258, IntendedVsync=100633602433, Vsync=101016935751, InputEventId=0, HandleInputStart=101025902442, AnimationStart=101025907291, PerformTraversalsStart=101025909054, DrawStart=101026045859, FrameDeadline=101066946841, FrameInterval=101025887704, FrameStartTime=16666666, SyncQueued=101026210646, SyncStart=101026254277, IssueDrawCommandsStart=101026391773, SwapBuffers=101360436624, FrameCompleted=101606036291, DequeueBufferDuration=4708, QueueBufferDuration=5322542, GpuCompleted=101605968325, SwapBuffersCompleted=101606036291, DisplayPresentTime=72904454231819792, CommandSubmissionCompleted=101360436624, 
+10-03 17:41:11.061  2305  2311 I uda.islamic.app: Compiler allocated 4160KB to compile void android.widget.TextView.<init>(android.content.Context, android.util.AttributeSet, int, int)
+10-03 17:41:11.098   548   836 W InputManager-JNI: Input channel object 'ef3d903 Splash Screen com.alhuda.islamic.app (client)' was disposed without first being removed with the input manager!
+10-03 17:41:11.106   548  2302 D CoreBackPreview: Window{ef3d903 u0 Splash Screen com.alhuda.islamic.app EXITING}: Setting back callback null
+10-03 17:41:11.147   768   844 W FrameTracker: Missed App frame:JANK_APP_DEADLINE_MISSED, 4205, 0, CUJ=J<SPLASHSCREEN_EXIT_ANIM>
+10-03 17:41:11.148   768   844 W FrameTracker: Missing HWUI jank callback for vsyncId: 4205, CUJ=J<SPLASHSCREEN_EXIT_ANIM>
+10-03 17:41:11.148   768   844 W FrameTracker: Missed App frame:UNKNOWN: 88, 4211, 0, CUJ=J<SPLASHSCREEN_EXIT_ANIM>
+10-03 17:41:11.148   768   844 W FrameTracker: Missed SF frame:UNKNOWN: 88, 4211, 0, CUJ=J<SPLASHSCREEN_EXIT_ANIM>
+10-03 17:41:11.148   768   844 W FrameTracker: Missing HWUI jank callback for vsyncId: 4211, CUJ=J<SPLASHSCREEN_EXIT_ANIM>
+10-03 17:41:11.148   768   844 W FrameTracker: Missed App frame:UNKNOWN: 74, 4218, 0, CUJ=J<SPLASHSCREEN_EXIT_ANIM>
+10-03 17:41:11.148   768   844 W FrameTracker: Missed SF frame:UNKNOWN: 74, 4218, 0, CUJ=J<SPLASHSCREEN_EXIT_ANIM>
+10-03 17:41:11.148   768   844 W FrameTracker: Missing HWUI jank callback for vsyncId: 4218, CUJ=J<SPLASHSCREEN_EXIT_ANIM>
+10-03 17:41:11.148   768   844 W FrameTracker: Missing SF jank callback for vsyncId: 4226, CUJ=J<SPLASHSCREEN_EXIT_ANIM>
+10-03 17:41:11.149   768   802 V PerfettoTrigger: Not triggering com.android.telemetry.interaction-jank-monitor-39 - not enough time since last trigger
+10-03 17:41:11.246   419   437 W TransactionTracing: Could not find layer handle 0x7a7dd7a6e0f0
+10-03 17:41:11.248   419   437 W TransactionTracing: Could not find layer handle 0x7a7dd7a6c4d0
+10-03 17:41:11.248   419   437 W TransactionTracing: Could not find layer handle 0x7a7dd7a6e0f0
+10-03 17:41:11.248   419   437 W TransactionTracing: Could not find layer handle 0x7a7dd7a6d370
+10-03 17:41:11.248   419   437 W TransactionTracing: Could not find layer handle 0x7a7dd7a6d370
+10-03 17:41:11.285  1315  1315 D CompatibilityChangeReporter: Compat change id reported: 150939131; UID 10098; state: DISABLED
+10-03 17:41:11.290  1421  1421 I ProvidersCache: Updating roots due to change on user 0at content://com.android.providers.media.documents/root
+10-03 17:41:11.499   548   568 D WifiNl80211Manager: Scan result ready event
+10-03 17:41:11.500   548   568 D WifiNative: Scan result ready event
+10-03 17:41:13.679  2305  2337 D ProfileInstaller: Installing profile for com.alhuda.islamic.app
+10-03 17:41:14.575   548   635 E ActivityManager: Sending non-protected broadcast com.android.bluetooth.btservice.BLUETOOTH_COUNTER_METRICS_ACTION from system uid 1002 pkg com.android.bluetooth
+10-03 17:41:14.575   548   635 E ActivityManager: java.lang.Throwable
+10-03 17:41:14.575   548   635 E ActivityManager: 	at com.android.server.am.ActivityManagerService.checkBroadcastFromSystem(ActivityManagerService.java:13550)
+10-03 17:41:14.575   548   635 E ActivityManager: 	at com.android.server.am.ActivityManagerService.broadcastIntentLocked(ActivityManagerService.java:14268)
+10-03 17:41:14.575   548   635 E ActivityManager: 	at com.android.server.am.ActivityManagerService.broadcastIntentInPackage(ActivityManagerService.java:14468)
+10-03 17:41:14.575   548   635 E ActivityManager: 	at com.android.server.am.ActivityManagerService$LocalService.broadcastIntentInPackage(ActivityManagerService.java:16971)
+10-03 17:41:14.575   548   635 E ActivityManager: 	at com.android.server.am.PendingIntentRecord.sendInner(PendingIntentRecord.java:526)
+10-03 17:41:14.575   548   635 E ActivityManager: 	at com.android.server.am.PendingIntentRecord.sendWithResult(PendingIntentRecord.java:311)
+10-03 17:41:14.575   548   635 E ActivityManager: 	at com.android.server.am.ActivityManagerService.sendIntentSender(ActivityManagerService.java:5373)
+10-03 17:41:14.575   548   635 E ActivityManager: 	at android.app.PendingIntent.sendAndReturnResult(PendingIntent.java:1012)
+10-03 17:41:14.575   548   635 E ActivityManager: 	at android.app.PendingIntent.send(PendingIntent.java:983)
+10-03 17:41:14.575   548   635 E ActivityManager: 	at com.android.server.alarm.AlarmManagerService$DeliveryTracker.deliverLocked(AlarmManagerService.java:5544)
+10-03 17:41:14.575   548   635 E ActivityManager: 	at com.android.server.alarm.AlarmManagerService.deliverAlarmsLocked(AlarmManagerService.java:4444)
+10-03 17:41:14.575   548   635 E ActivityManager: 	at com.android.server.alarm.AlarmManagerService$AlarmThread.run(AlarmManagerService.java:4755)
+10-03 17:41:14.578   548   710 E WifiHealthMonitor:  Hit PackageManager exception
+10-03 17:41:14.578   548   710 E WifiHealthMonitor: android.content.pm.PackageManager$NameNotFoundException: No module info for package: com.android.wifi
+10-03 17:41:14.578   548   710 E WifiHealthMonitor: 	at android.app.ApplicationPackageManager.getModuleInfo(ApplicationPackageManager.java:1187)
+10-03 17:41:14.578   548   710 E WifiHealthMonitor: 	at com.android.server.wifi.WifiHealthMonitor.getWifiStackVersion(WifiHealthMonitor.java:366)
+10-03 17:41:14.578   548   710 E WifiHealthMonitor: 	at com.android.server.wifi.WifiHealthMonitor.extractCurrentSoftwareBuildInfo(WifiHealthMonitor.java:587)
+10-03 17:41:14.578   548   710 E WifiHealthMonitor: 	at com.android.server.wifi.WifiHealthMonitor.postBootSwBuildCheck(WifiHealthMonitor.java:522)
+10-03 17:41:14.578   548   710 E WifiHealthMonitor: 	at com.android.server.wifi.WifiHealthMonitor.postBootDetectionHandler(WifiHealthMonitor.java:513)
+10-03 17:41:14.578   548   710 E WifiHealthMonitor: 	at com.android.server.wifi.WifiHealthMonitor.-$$Nest$mpostBootDetectionHandler(Unknown Source:0)
+10-03 17:41:14.578   548   710 E WifiHealthMonitor: 	at com.android.server.wifi.WifiHealthMonitor$2.onAlarm(WifiHealthMonitor.java:190)
+10-03 17:41:14.578   548   710 E WifiHealthMonitor: 	at android.app.AlarmManager$ListenerWrapper.run(AlarmManager.java:347)
+10-03 17:41:14.578   548   710 E WifiHealthMonitor: 	at android.os.Handler.handleCallback(Handler.java:942)
+10-03 17:41:14.578   548   710 E WifiHealthMonitor: 	at android.os.Handler.dispatchMessage(Handler.java:99)
+10-03 17:41:14.578   548   710 E WifiHealthMonitor: 	at android.os.Looper.loopOnce(Looper.java:201)
+10-03 17:41:14.578   548   710 E WifiHealthMonitor: 	at android.os.Looper.loop(Looper.java:288)
+10-03 17:41:14.578   548   710 E WifiHealthMonitor: 	at android.os.HandlerThread.run(HandlerThread.java:67)
+10-03 17:41:14.600   927   927 I BluetoothMetricsLogger: drainBufferedCounters().
+10-03 17:41:14.601   548   767 D NetworkStatsObservers: Unregistering RequestInfo from pid/uid:548/1000(android) for DataUsageRequest [ requestId=4, networkTemplate=NetworkTemplate: matchRule=MOBILE, subscriberId=310260..., matchSubscriberIds=[310260...], matchWifiNetworkKeys=[], metered=YES, defaultNetwork=NO, subscriberIdMatchRule=EXACT_MATCH, thresholdInBytes=3456608 ] accessLevel:3
+10-03 17:41:14.601   548   708 D NetworkStatsObservers: Registering observer for RequestInfo from pid/uid:548/1000(android) for DataUsageRequest [ requestId=5, networkTemplate=NetworkTemplate: matchRule=MOBILE, subscriberId=310260..., matchSubscriberIds=[310260...], matchWifiNetworkKeys=[], metered=YES, defaultNetwork=NO, subscriberIdMatchRule=EXACT_MATCH, thresholdInBytes=3433894 ] accessLevel:3
+10-03 17:41:17.097  2340  2340 W ProcessState: Extra binder thread started, but 0 threads requested. Do not use *startThreadPool when zero threads are requested.
+10-03 17:41:17.105   198   198 I hwservicemanager: getTransport: Cannot find entry android.hardware.graphics.mapper@4.0::IMapper/default in either framework or device VINTF manifest.
+10-03 17:41:17.105  2340  2341 I Gralloc4: mapper 4.x is not supported
+10-03 17:41:17.160  2340  2341 D HostConnection: HostComposition ext ANDROID_EMU_CHECKSUM_HELPER_v1 ANDROID_EMU_native_sync_v2 ANDROID_EMU_dma_v1 ANDROID_EMU_direct_mem ANDROID_EMU_host_composition_v1 ANDROID_EMU_host_composition_v2 ANDROID_EMU_vulkan ANDROID_EMU_deferred_vulkan_commands ANDROID_EMU_vulkan_null_optional_strings ANDROID_EMU_vulkan_create_resources_with_requirements ANDROID_EMU_YUV_Cache ANDROID_EMU_vulkan_ignored_handles ANDROID_EMU_has_shared_slots_host_memory_allocator ANDROID_EMU_vulkan_free_memory_sync ANDROID_EMU_vulkan_shader_float16_int8 ANDROID_EMU_vulkan_async_queue_submit ANDROID_EMU_vulkan_queue_submit_with_commands ANDROID_EMU_sync_buffer_data ANDROID_EMU_vulkan_async_qsri ANDROID_EMU_read_color_buffer_dma ANDROID_EMU_hwc_multi_configs ANDROID_EMU_hwc_color_transform GL_OES_EGL_image_external_essl3 GL_OES_vertex_array_object GL_KHR_texture_compression_astc_ldr ANDROID_EMU_host_side_tracing ANDROID_EMU_gles_max_version_3_0 
+10-03 17:41:17.345   768   925 D EGL_emulation: app_time_stats: avg=17299.90ms min=17299.90ms max=17299.90ms count=1
+10-03 17:41:17.505   548   568 I ActivityManager: Force stopping com.alhuda.islamic.app appid=10126 user=0: from pid 2345
+10-03 17:41:17.519   548   568 I ActivityManager: Killing 2305:com.alhuda.islamic.app/u0a126 (adj 0): stop com.alhuda.islamic.app due to from pid 2345
+10-03 17:41:17.522   548   568 W ActivityTaskManager: Force removing ActivityRecord{dca3d26 u0 com.alhuda.islamic.app/.WidgetPreviewActivity} t10 f}}: app died, no saved state
+10-03 17:41:17.543   548   568 W InputManager-JNI: Input channel object '7d4a9c1 com.alhuda.islamic.app/com.alhuda.islamic.app.WidgetPreviewActivity (client)' was disposed without first being removed with the input manager!
+10-03 17:41:17.556   419   437 W TransactionTracing: Could not find layer handle 0x7a7dd7a6e570
+10-03 17:41:17.573   548   573 V WindowManager: Unknown focus tokens, dropping reportFocusChanged
+10-03 17:41:17.574   419   437 W TransactionTracing: Could not find layer handle 0x7a7dd7a6d610
+10-03 17:41:17.577   419   437 W TransactionTracing: Could not find layer handle 0x7a7dd7a6ee70
+10-03 17:41:17.578   548   568 D OomAdjuster: Not killing cached processes
+10-03 17:41:17.627   954   954 D CarrierSvcBindHelper: onHandleForceStop: [com.alhuda.islamic.app]
+10-03 17:41:17.628   954   954 D CarrierSvcBindHelper: No carrier app for: 0
+10-03 17:41:17.660   548   585 I libprocessgroup: Successfully killed process cgroup uid 10126 pid 2305 in 139ms
+10-03 17:41:17.783   548   836 D CompatibilityChangeReporter: Compat change id reported: 161252188; UID 10126; state: ENABLED
+10-03 17:41:17.795   548   836 I ActivityTaskManager: START u0 {flg=0x10000000 cmp=com.alhuda.islamic.app/.WidgetPreviewActivity (has extras)} from uid 2000
+10-03 17:41:17.799   548   836 D CompatibilityChangeReporter: Compat change id reported: 194480991; UID 10126; state: ENABLED
+10-03 17:41:17.886   548   836 D CompatibilityChangeReporter: Compat change id reported: 174042980; UID 10126; state: DISABLED
+10-03 17:41:17.886   548   836 D CompatibilityChangeReporter: Compat change id reported: 184838306; UID 10126; state: DISABLED
+10-03 17:41:17.886   548   836 D CompatibilityChangeReporter: Compat change id reported: 185004937; UID 10126; state: DISABLED
+10-03 17:41:17.887   548   836 D CompatibilityChangeReporter: Compat change id reported: 181136395; UID 10126; state: DISABLED
+10-03 17:41:17.887   548   836 D CompatibilityChangeReporter: Compat change id reported: 174042936; UID 10126; state: DISABLED
+10-03 17:41:17.887   548   836 D CompatibilityChangeReporter: Compat change id reported: 197654537; UID 10126; state: ENABLED
+10-03 17:41:17.890   548   836 D CompatibilityChangeReporter: Compat change id reported: 205907456; UID 10126; state: ENABLED
+--------- beginning of kernel
+10-03 17:41:18.065     0     0 I binder  : undelivered transaction 121818, process died.
+10-03 17:41:18.141     0     0 I binder  : undelivered transaction 121502, process died.
+10-03 17:41:17.981   347   347 I Zygote  : Process 2305 exited due to signal 9 (Killed)
+10-03 17:41:18.149     0     0 I binder  : undelivered transaction 121817, process died.
+10-03 17:41:17.986   548  1694 V ActivityManager: Got obituary of 2305:com.alhuda.islamic.app
+10-03 17:41:18.000   419   419 E BpTransactionCompletedListener: Failed to transact (-32)
+10-03 17:41:18.073   768   845 D SplashScreenView: Build android.window.SplashScreenView{3cea35a V.E...... ......ID 0,0-0,0}
+10-03 17:41:18.073   768   845 D SplashScreenView: Icon: view: android.widget.ImageView{65d298b V.ED..... ......I. 0,0-0,0 #10204dc android:id/splashscreen_icon_view} drawable: com.android.wm.shell.startingsurface.SplashscreenIconDrawableFactory$ImmobileIconDrawable@4d53a68 size: 420
+10-03 17:41:18.073   768   845 D SplashScreenView: Branding: view: android.view.View{b05be81 G.ED..... ......I. 0,0-0,0 #10204db android:id/splashscreen_branding_view} drawable: null size w: 0 h: 0
+10-03 17:41:18.078   548   568 W system_server: Long monitor contention with owner binder:548_7 (836) at com.android.server.wm.StartingSurfaceController$StartingSurface com.android.server.wm.StartingSurfaceController.createSplashScreenStartingSurface(com.android.server.wm.ActivityRecord, int)(StartingSurfaceController.java:87) waiters=0 in boolean com.android.server.wm.WindowManagerService$LocalService.isHardKeyboardAvailable() for 281ms
+10-03 17:41:18.167   548  2302 W system_server: Long monitor contention with owner binder:548_2 (568) at com.android.internal.inputmethod.InputBindResult com.android.server.inputmethod.InputMethodManagerService.startInputOrWindowGainedFocusInternal(int, com.android.internal.view.IInputMethodClient, android.os.IBinder, int, int, int, android.view.inputmethod.EditorInfo, com.android.internal.view.IInputContext, com.android.internal.inputmethod.IRemoteAccessibilityInputConnection, int, android.window.ImeOnBackInvokedDispatcher)(InputMethodManagerService.java:3870) waiters=0 in void com.android.server.inputmethod.InputMethodManagerService.reportFullscreenMode(android.os.IBinder, boolean) for 370ms
+10-03 17:41:18.172   548  1685 W system_server: Long monitor contention with owner binder:548_7 (836) at com.android.server.wm.StartingSurfaceController$StartingSurface com.android.server.wm.StartingSurfaceController.createSplashScreenStartingSurface(com.android.server.wm.ActivityRecord, int)(StartingSurfaceController.java:87) waiters=3 in int com.android.server.wm.WindowManagerService.addWindow(com.android.server.wm.Session, android.view.IWindow, android.view.WindowManager$LayoutParams, int, int, int, android.view.InsetsVisibilities, android.view.InputChannel, android.view.InsetsState, android.view.InsetsSourceControl[], android.graphics.Rect, float[]) for 173ms
+10-03 17:41:18.174   548  1685 D CompatibilityChangeReporter: Compat change id reported: 168419799; UID 10126; state: DISABLED
+10-03 17:41:18.178   548   840 W system_server: Long monitor contention with owner binder:548_7 (836) at com.android.server.wm.StartingSurfaceController$StartingSurface com.android.server.wm.StartingSurfaceController.createSplashScreenStartingSurface(com.android.server.wm.ActivityRecord, int)(StartingSurfaceController.java:87) waiters=2 in void com.android.server.wm.Session.binderDied() for 187ms
+10-03 17:41:18.282   419   437 W TransactionTracing: Could not find layer handle 0x7a7dd7a6d370
+10-03 17:41:18.295   548   573 W ActivityManager: Slow operation: 112ms so far, now at startProcess: done creating new process record
+10-03 17:41:18.295   548   573 W ActivityManager: Slow operation: 113ms so far, now at startProcess: stepping in to startProcess
+10-03 17:41:18.296   548   573 D CompatibilityChangeReporter: Compat change id reported: 135634846; UID 10126; state: DISABLED
+10-03 17:41:18.297   548   573 W ActivityManager: Slow operation: 114ms so far, now at startProcess: done starting proc!
+10-03 17:41:18.298   548   573 W ActivityManager: setHasOverlayUi called on unknown pid: 2305
+10-03 17:41:18.488   548   582 D CompatibilityChangeReporter: Compat change id reported: 143937733; UID 10126; state: ENABLED
+10-03 17:41:18.493   548  1694 D CoreBackPreview: Window{7300a14 u0 Splash Screen com.alhuda.islamic.app}: Setting back callback OnBackInvokedCallbackInfo{mCallback=android.window.IOnBackInvokedCallback$Stub$Proxy@a0db380, mPriority=0}
+10-03 17:41:18.812   768   791 I OpenGLRenderer: Davey! duration=716ms; Flags=1, FrameTimelineVsyncId=4515, IntendedVsync=108700268777, Vsync=108983602099, InputEventId=0, HandleInputStart=108988271168, AnimationStart=108988271630, PerformTraversalsStart=108988301425, DrawStart=109291288147, FrameDeadline=108716935443, FrameInterval=108988268304, FrameStartTime=16666666, SyncQueued=109291468263, SyncStart=109291810110, IssueDrawCommandsStart=109292544900, SwapBuffers=109294681773, FrameCompleted=109416852349, DequeueBufferDuration=15282577, QueueBufferDuration=644141, GpuCompleted=109401513837, SwapBuffersCompleted=109416852349, DisplayPresentTime=0, CommandSubmissionCompleted=109294681773, 
+10-03 17:41:18.817   768   925 W Parcel  : Expecting binder but got null!
+10-03 17:41:18.826   548  2355 W ActivityTaskManager: takeTaskSnapshot: taskId=11 not found or not visible
+10-03 17:41:19.515   347   347 D Zygote  : Forked child process 2357
+10-03 17:41:19.517   548   582 W ActivityManager: Slow operation: 1222ms so far, now at startProcess: returned from zygote!
+10-03 17:41:19.518   548   582 W ActivityManager: Slow operation: 1222ms so far, now at startProcess: done updating battery stats
+10-03 17:41:19.518   548   582 W ActivityManager: Slow operation: 1223ms so far, now at startProcess: building log message
+10-03 17:41:19.518   548   582 I ActivityManager: Start proc 2357:com.alhuda.islamic.app/u0a126 for next-top-activity {com.alhuda.islamic.app/com.alhuda.islamic.app.WidgetPreviewActivity}
+10-03 17:41:19.518   548   582 W ActivityManager: Slow operation: 1223ms so far, now at startProcess: starting to update pids map
+10-03 17:41:19.518   548   582 W ActivityManager: Slow operation: 1223ms so far, now at startProcess: done updating pids map
+10-03 17:41:19.546  2357  2357 I uda.islamic.app: Late-enabling -Xcheck:jni
+10-03 17:41:19.616  2357  2357 W uda.islamic.app: Unexpected CPU variant for x86: x86_64.
+10-03 17:41:19.616  2357  2357 W uda.islamic.app: Known variants: atom, sandybridge, silvermont, kabylake, default
+10-03 17:41:19.635   439   446 I adbd    : jdwp connection from 2357
+10-03 17:41:19.669  2357  2357 D CompatibilityChangeReporter: Compat change id reported: 171979766; UID 10126; state: ENABLED
+10-03 17:41:19.681  2357  2357 W ziparchive: Unable to open '/data/app/~~LAD1qEZ5t8HKUcbxyaz7Rg==/com.alhuda.islamic.app-AsuZwa_EaP7vYQ84NIuiUQ==/base.dm': No such file or directory
+10-03 17:41:19.681  2357  2357 W ziparchive: Unable to open '/data/app/~~LAD1qEZ5t8HKUcbxyaz7Rg==/com.alhuda.islamic.app-AsuZwa_EaP7vYQ84NIuiUQ==/base.dm': No such file or directory
+10-03 17:41:19.890  2357  2357 V GraphicsEnvironment: ANGLE Developer option for 'com.alhuda.islamic.app' set to: 'default'
+10-03 17:41:19.890  2357  2357 V GraphicsEnvironment: ANGLE GameManagerService for com.alhuda.islamic.app: false
+10-03 17:41:19.891  2357  2357 V GraphicsEnvironment: Neither updatable production driver nor prerelease driver is supported.
+10-03 17:41:19.892  2357  2357 D NetworkSecurityConfig: No Network Security Config specified, using platform default
+10-03 17:41:19.893  2357  2357 D NetworkSecurityConfig: No Network Security Config specified, using platform default
+10-03 17:41:19.935  2357  2373 D libEGL  : loaded /vendor/lib64/egl/libEGL_emulation.so
+10-03 17:41:19.941  2357  2357 D CompatibilityChangeReporter: Compat change id reported: 171228096; UID 10126; state: ENABLED
+10-03 17:41:19.948  2357  2373 D libEGL  : loaded /vendor/lib64/egl/libGLESv1_CM_emulation.so
+10-03 17:41:19.949  2357  2357 D CompatibilityChangeReporter: Compat change id reported: 160794467; UID 10126; state: ENABLED
+10-03 17:41:19.955  2357  2373 D libEGL  : loaded /vendor/lib64/egl/libGLESv2_emulation.so
+10-03 17:41:19.959  2357  2357 D CompatibilityChangeReporter: Compat change id reported: 210923482; UID 10126; state: ENABLED
+10-03 17:41:20.005   548   840 D CoreBackPreview: Window{d7fb1c8 u0 com.alhuda.islamic.app/com.alhuda.islamic.app.WidgetPreviewActivity}: Setting back callback OnBackInvokedCallbackInfo{mCallback=android.window.IOnBackInvokedCallback$Stub$Proxy@ebe5186, mPriority=0}
+10-03 17:41:20.085   419   437 W TransactionTracing: Could not find layer handle 0x7a7dd7a6d910
+10-03 17:41:20.085   419   437 W TransactionTracing: Could not find layer handle 0x7a7dd7a6ee10
+10-03 17:41:20.087  2357  2371 D HostConnection: HostComposition ext ANDROID_EMU_CHECKSUM_HELPER_v1 ANDROID_EMU_native_sync_v2 ANDROID_EMU_dma_v1 ANDROID_EMU_direct_mem ANDROID_EMU_host_composition_v1 ANDROID_EMU_host_composition_v2 ANDROID_EMU_vulkan ANDROID_EMU_deferred_vulkan_commands ANDROID_EMU_vulkan_null_optional_strings ANDROID_EMU_vulkan_create_resources_with_requirements ANDROID_EMU_YUV_Cache ANDROID_EMU_vulkan_ignored_handles ANDROID_EMU_has_shared_slots_host_memory_allocator ANDROID_EMU_vulkan_free_memory_sync ANDROID_EMU_vulkan_shader_float16_int8 ANDROID_EMU_vulkan_async_queue_submit ANDROID_EMU_vulkan_queue_submit_with_commands ANDROID_EMU_sync_buffer_data ANDROID_EMU_vulkan_async_qsri ANDROID_EMU_read_color_buffer_dma ANDROID_EMU_hwc_multi_configs ANDROID_EMU_hwc_color_transform GL_OES_EGL_image_external_essl3 GL_OES_vertex_array_object GL_KHR_texture_compression_astc_ldr ANDROID_EMU_host_side_tracing ANDROID_EMU_gles_max_version_3_0 
+10-03 17:41:20.088  2357  2371 W OpenGLRenderer: Failed to initialize 101010-2 format, error = EGL_SUCCESS
+10-03 17:41:20.089  2357  2371 D EGL_emulation: eglCreateContext: 0x7b546731b810: maj 3 min 0 rcv 3
+10-03 17:41:20.091  2357  2371 D EGL_emulation: eglMakeCurrent: 0x7b546731b810: ver 3 0 (tinfo 0x7b56907ed080) (first time)
+10-03 17:41:20.101   198   198 I hwservicemanager: getTransport: Cannot find entry android.hardware.graphics.mapper@4.0::IMapper/default in either framework or device VINTF manifest.
+10-03 17:41:20.101  2357  2371 I Gralloc4: mapper 4.x is not supported
+10-03 17:41:20.138   198   198 I hwservicemanager: getTransport: Cannot find entry android.hardware.graphics.allocator@4.0::IAllocator/default in either framework or device VINTF manifest.
+10-03 17:41:20.150   197   197 I servicemanager: Could not find android.hardware.graphics.allocator.IAllocator/default in the VINTF manifest.
+10-03 17:41:20.152  2357  2371 W Gralloc4: allocator 4.x is not supported
+10-03 17:41:20.181  2357  2371 D HostConnection: HostComposition ext ANDROID_EMU_CHECKSUM_HELPER_v1 ANDROID_EMU_native_sync_v2 ANDROID_EMU_dma_v1 ANDROID_EMU_direct_mem ANDROID_EMU_host_composition_v1 ANDROID_EMU_host_composition_v2 ANDROID_EMU_vulkan ANDROID_EMU_deferred_vulkan_commands ANDROID_EMU_vulkan_null_optional_strings ANDROID_EMU_vulkan_create_resources_with_requirements ANDROID_EMU_YUV_Cache ANDROID_EMU_vulkan_ignored_handles ANDROID_EMU_has_shared_slots_host_memory_allocator ANDROID_EMU_vulkan_free_memory_sync ANDROID_EMU_vulkan_shader_float16_int8 ANDROID_EMU_vulkan_async_queue_submit ANDROID_EMU_vulkan_queue_submit_with_commands ANDROID_EMU_sync_buffer_data ANDROID_EMU_vulkan_async_qsri ANDROID_EMU_read_color_buffer_dma ANDROID_EMU_hwc_multi_configs ANDROID_EMU_hwc_color_transform GL_OES_EGL_image_external_essl3 GL_OES_vertex_array_object GL_KHR_texture_compression_astc_ldr ANDROID_EMU_host_side_tracing ANDROID_EMU_gles_max_version_3_0 
+10-03 17:41:21.098  2357  2371 W Parcel  : Expecting binder but got null!
+10-03 17:41:21.119  2357  2369 I OpenGLRenderer: Davey! duration=1177ms; Flags=1, FrameTimelineVsyncId=4643, IntendedVsync=110616935367, Vsync=110700268697, InputEventId=0, HandleInputStart=110706521898, AnimationStart=110706524022, PerformTraversalsStart=110706617476, DrawStart=110884106129, FrameDeadline=110633602033, FrameInterval=110706503634, FrameStartTime=16666666, SyncQueued=110891150641, SyncStart=110891607633, IssueDrawCommandsStart=110893848490, SwapBuffers=111471076029, FrameCompleted=111794408527, DequeueBufferDuration=5060, QueueBufferDuration=4033910, GpuCompleted=111794323298, SwapBuffersCompleted=111794408527, DisplayPresentTime=0, CommandSubmissionCompleted=111471076029, 
+10-03 17:41:21.148  2357  2357 I Choreographer: Skipped 67 frames!  The application may be doing too much work on its main thread.
+10-03 17:41:21.286   548   571 W Looper  : Slow dispatch took 101ms android.ui h=com.android.server.am.ActivityManagerService$UiHandler c=com.android.server.am.UidObserverController$$ExternalSyntheticLambda0@239c46 m=0
+10-03 17:41:21.606   548   573 W system_server: Long monitor contention with owner android.anim (574) at void com.android.server.wm.WindowSurfacePlacer$Traverser.run()(WindowSurfacePlacer.java:58) waiters=1 in void com.android.server.wm.WindowManagerService$H.handleMessage(android.os.Message) for 477ms
+10-03 17:41:21.607   548  2355 W system_server: Long monitor contention with owner android.anim (574) at void com.android.server.wm.WindowSurfacePlacer$Traverser.run()(WindowSurfacePlacer.java:58) waiters=2 in void com.android.server.wm.ActivityClientController.activityIdle(android.os.IBinder, android.content.res.Configuration, boolean) for 454ms
+10-03 17:41:21.659  2357  2369 I OpenGLRenderer: Davey! duration=1596ms; Flags=0, FrameTimelineVsyncId=4658, IntendedVsync=110716935363, Vsync=111833601985, InputEventId=0, HandleInputStart=111848699500, AnimationStart=111848702415, PerformTraversalsStart=111848996574, DrawStart=111849147555, FrameDeadline=111816935319, FrameInterval=111848265231, FrameStartTime=16666666, SyncQueued=111849547651, SyncStart=111849572888, IssueDrawCommandsStart=111997862662, SwapBuffers=112114603757, FrameCompleted=112313892468, DequeueBufferDuration=3576, QueueBufferDuration=823104, GpuCompleted=112313829059, SwapBuffersCompleted=112313892468, DisplayPresentTime=35188667056128, CommandSubmissionCompleted=112114603757, 
+10-03 17:41:21.677   548  2302 D CompatibilityChangeReporter: Compat change id reported: 214016041; UID 10126; state: ENABLED
+10-03 17:41:21.727   548   574 I Choreographer: Skipped 35 frames!  The application may be doing too much work on its main thread.
+10-03 17:41:22.001   548  1770 W system_server: Long monitor contention with owner binder:548_15 (1694) at void com.android.server.inputmethod.InputMethodManagerService.onSessionCreated(com.android.server.inputmethod.IInputMethodInvoker, com.android.internal.view.IInputMethodSession, android.view.InputChannel)(InputMethodManagerService.java:3023) waiters=0 in void com.android.server.inputmethod.InputMethodManagerService.reportFullscreenMode(android.os.IBinder, boolean) for 299ms
+10-03 17:41:22.032   548   570 W Looper  : Slow dispatch took 866ms android.fg h=android.os.Handler c=com.android.internal.infra.ServiceConnector$Impl$$ExternalSyntheticLambda2@9157f6a m=0
+10-03 17:41:22.033   548   570 W Looper  : Slow delivery took 834ms android.fg h=android.os.Handler c=com.android.server.power.hint.HintManagerService$UidObserver$$ExternalSyntheticLambda1@f5bc5b m=0
+10-03 17:41:22.051   548   570 W ziparchive: Unable to open '/data/app/~~LAD1qEZ5t8HKUcbxyaz7Rg==/com.alhuda.islamic.app-AsuZwa_EaP7vYQ84NIuiUQ==/base.dm': No such file or directory
+10-03 17:41:22.210   548   570 W Looper  : Slow dispatch took 169ms android.fg h=android.os.Handler c=com.android.server.wm.ActivityMetricsLogger$$ExternalSyntheticLambda5@36d10a4 m=0
+10-03 17:41:22.212   548   570 I ActivityTaskManager: Displayed com.alhuda.islamic.app/.WidgetPreviewActivity: +3s521ms
+10-03 17:41:22.213   779   922 I PermissionControllerServiceImpl: Updating user sensitive for user 0
+10-03 17:41:22.229   548   840 W InputManager-JNI: Input channel object '7300a14 Splash Screen com.alhuda.islamic.app (client)' was disposed without first being removed with the input manager!
+10-03 17:41:22.230   548  1694 D CoreBackPreview: Window{7300a14 u0 Splash Screen com.alhuda.islamic.app EXITING}: Setting back callback null
+10-03 17:41:22.293   768   844 W FrameTracker: Missed App frame:UNKNOWN: 10, 4700, 0, CUJ=J<SPLASHSCREEN_EXIT_ANIM>
+10-03 17:41:22.297   768   844 W FrameTracker: Missed SF frame:UNKNOWN: 10, 4700, 0, CUJ=J<SPLASHSCREEN_EXIT_ANIM>
+10-03 17:41:22.297   768   844 W FrameTracker: Missing HWUI jank callback for vsyncId: 4700, CUJ=J<SPLASHSCREEN_EXIT_ANIM>
+10-03 17:41:22.297   768   844 W FrameTracker: Missed App frame:UNKNOWN: 74, 4714, 0, CUJ=J<SPLASHSCREEN_EXIT_ANIM>
+10-03 17:41:22.297   768   844 W FrameTracker: Missed SF frame:UNKNOWN: 74, 4714, 0, CUJ=J<SPLASHSCREEN_EXIT_ANIM>
+10-03 17:41:22.297   768   844 W FrameTracker: Missing HWUI jank callback for vsyncId: 4714, CUJ=J<SPLASHSCREEN_EXIT_ANIM>
+10-03 17:41:22.298   768   844 W FrameTracker: Missed App frame:UNKNOWN: 74, 4721, 224736986, CUJ=J<SPLASHSCREEN_EXIT_ANIM>
+10-03 17:41:22.298   768   844 W FrameTracker: Missed SF frame:UNKNOWN: 74, 4721, 224736986, CUJ=J<SPLASHSCREEN_EXIT_ANIM>
+10-03 17:41:22.298   768   844 W FrameTracker: Missed App frame:UNKNOWN: 74, 4729, 0, CUJ=J<SPLASHSCREEN_EXIT_ANIM>
+10-03 17:41:22.298   768   844 W FrameTracker: Missed SF frame:UNKNOWN: 74, 4729, 0, CUJ=J<SPLASHSCREEN_EXIT_ANIM>
+10-03 17:41:22.298   768   844 W FrameTracker: Missing HWUI jank callback for vsyncId: 4729, CUJ=J<SPLASHSCREEN_EXIT_ANIM>
+10-03 17:41:22.298   768   844 W FrameTracker: Missing SF jank callback for vsyncId: 4737, CUJ=J<SPLASHSCREEN_EXIT_ANIM>
+10-03 17:41:22.361   768   802 V PerfettoTrigger: Not triggering com.android.telemetry.interaction-jank-monitor-39 - not enough time since last trigger
+10-03 17:41:22.518   419   437 W TransactionTracing: Could not find layer handle 0x7a7dd7a6d850
+10-03 17:41:22.518   419   437 W TransactionTracing: Could not find layer handle 0x7a7dd7a6af70
+10-03 17:41:22.519   419   437 W TransactionTracing: Could not find layer handle 0x7a7dd7a6af70
+10-03 17:41:22.599   548   570 W Looper  : Slow dispatch took 387ms android.fg h=android.os.Handler c=android.app.LoadedApk$ServiceDispatcher$RunConnection@3ba5a25 m=0
+10-03 17:41:22.604  2357  2362 I uda.islamic.app: Compiler allocated 4160KB to compile void android.widget.TextView.<init>(android.content.Context, android.util.AttributeSet, int, int)
+10-03 17:41:22.621   548  1694 D OomAdjuster: Not killing cached processes
+10-03 17:41:22.637   419   437 W TransactionTracing: Could not find layer handle 0x7a7dd7a6d610
+10-03 17:41:22.660   548   570 W Looper  : Drained
+10-03 17:41:22.671   548  1749 E TaskPersister: File error accessing recents directory (directory doesn't exist?).
+10-03 17:41:25.866  2357  2381 D ProfileInstaller: Installing profile for com.alhuda.islamic.app
+10-03 17:41:29.141  2384  2384 W ProcessState: Extra binder thread started, but 0 threads requested. Do not use *startThreadPool when zero threads are requested.
+10-03 17:41:29.153   198   198 I hwservicemanager: getTransport: Cannot find entry android.hardware.graphics.mapper@4.0::IMapper/default in either framework or device VINTF manifest.
+10-03 17:41:29.153  2384  2385 I Gralloc4: mapper 4.x is not supported
+10-03 17:41:29.201  2384  2385 D HostConnection: HostComposition ext ANDROID_EMU_CHECKSUM_HELPER_v1 ANDROID_EMU_native_sync_v2 ANDROID_EMU_dma_v1 ANDROID_EMU_direct_mem ANDROID_EMU_host_composition_v1 ANDROID_EMU_host_composition_v2 ANDROID_EMU_vulkan ANDROID_EMU_deferred_vulkan_commands ANDROID_EMU_vulkan_null_optional_strings ANDROID_EMU_vulkan_create_resources_with_requirements ANDROID_EMU_YUV_Cache ANDROID_EMU_vulkan_ignored_handles ANDROID_EMU_has_shared_slots_host_memory_allocator ANDROID_EMU_vulkan_free_memory_sync ANDROID_EMU_vulkan_shader_float16_int8 ANDROID_EMU_vulkan_async_queue_submit ANDROID_EMU_vulkan_queue_submit_with_commands ANDROID_EMU_sync_buffer_data ANDROID_EMU_vulkan_async_qsri ANDROID_EMU_read_color_buffer_dma ANDROID_EMU_hwc_multi_configs ANDROID_EMU_hwc_color_transform GL_OES_EGL_image_external_essl3 GL_OES_vertex_array_object GL_KHR_texture_compression_astc_ldr ANDROID_EMU_host_side_tracing ANDROID_EMU_gles_max_version_3_0 
+10-03 17:41:29.514   548  1770 I ActivityManager: Force stopping com.alhuda.islamic.app appid=10126 user=0: from pid 2389
+10-03 17:41:29.531   548  1770 I ActivityManager: Killing 2357:com.alhuda.islamic.app/u0a126 (adj 0): stop com.alhuda.islamic.app due to from pid 2389
+10-03 17:41:29.534   548  1770 W ActivityTaskManager: Force removing ActivityRecord{5005f68 u0 com.alhuda.islamic.app/.WidgetPreviewActivity} t11 f}}: app died, no saved state
+10-03 17:41:29.565   548  1770 W InputManager-JNI: Input channel object 'd7fb1c8 com.alhuda.islamic.app/com.alhuda.islamic.app.WidgetPreviewActivity (client)' was disposed without first being removed with the input manager!
+10-03 17:41:29.590   419   437 W TransactionTracing: Could not find layer handle 0x7a7dd7a6d2b0
+10-03 17:41:29.598   548   573 V WindowManager: Unknown focus tokens, dropping reportFocusChanged
+10-03 17:41:29.609   419   437 W TransactionTracing: Could not find layer handle 0x7a7dd7a6ef90
+10-03 17:41:29.609   419   437 W TransactionTracing: Could not find layer handle 0x7a7dd7a6ddf0
+10-03 17:41:29.611   548  1770 D OomAdjuster: Not killing cached processes
+10-03 17:41:29.662   954   954 D CarrierSvcBindHelper: onHandleForceStop: [com.alhuda.islamic.app]
+10-03 17:41:29.664   954   954 D CarrierSvcBindHelper: No carrier app for: 0
+10-03 17:41:29.676   548   585 I libprocessgroup: Successfully killed process cgroup uid 10126 pid 2357 in 142ms
+10-03 17:41:29.885   548  1770 D CompatibilityChangeReporter: Compat change id reported: 161252188; UID 10126; state: ENABLED
+10-03 17:41:29.888   548  1770 I ActivityTaskManager: START u0 {flg=0x10000000 cmp=com.alhuda.islamic.app/.WidgetPreviewActivity (has extras)} from uid 2000
+10-03 17:41:29.889   548  1770 D CompatibilityChangeReporter: Compat change id reported: 194480991; UID 10126; state: ENABLED
+10-03 17:41:29.898   548  1770 D CompatibilityChangeReporter: Compat change id reported: 174042980; UID 10126; state: DISABLED
+10-03 17:41:29.899   548  1770 D CompatibilityChangeReporter: Compat change id reported: 184838306; UID 10126; state: DISABLED
+10-03 17:41:29.899   548  1770 D CompatibilityChangeReporter: Compat change id reported: 185004937; UID 10126; state: DISABLED
+10-03 17:41:29.899   548  1770 D CompatibilityChangeReporter: Compat change id reported: 181136395; UID 10126; state: DISABLED
+10-03 17:41:29.900   548  1770 D CompatibilityChangeReporter: Compat change id reported: 174042936; UID 10126; state: DISABLED
+10-03 17:41:30.004   548  1770 D CompatibilityChangeReporter: Compat change id reported: 197654537; UID 10126; state: ENABLED
+10-03 17:41:30.008   548  1770 D CompatibilityChangeReporter: Compat change id reported: 205907456; UID 10126; state: ENABLED
+10-03 17:41:30.277     0     0 I binder  : undelivered transaction 124574, process died.
+10-03 17:41:30.281     0     0 I binder  : undelivered transaction 124295, process died.
+10-03 17:41:30.126   548   836 V ActivityManager: Got obituary of 2357:com.alhuda.islamic.app
+10-03 17:41:30.130   347   347 I Zygote  : Process 2357 exited due to signal 9 (Killed)
+10-03 17:41:30.297     0     0 I binder  : undelivered transaction 124573, process died.
+10-03 17:41:30.150   419   419 E BpTransactionCompletedListener: Failed to transact (-32)
+10-03 17:41:30.231   548   573 W system_server: Long monitor contention with owner binder:548_17 (1770) at com.android.server.wm.StartingSurfaceController$StartingSurface com.android.server.wm.StartingSurfaceController.createSplashScreenStartingSurface(com.android.server.wm.ActivityRecord, int)(StartingSurfaceController.java:87) waiters=2 in void com.android.server.wm.RootWindowContainer$RankTaskLayersRunnable.run() for 226ms
+10-03 17:41:30.263   548  1694 W system_server: Long monitor contention with owner binder:548_17 (1770) at com.android.server.wm.StartingSurfaceController$StartingSurface com.android.server.wm.StartingSurfaceController.createSplashScreenStartingSurface(com.android.server.wm.ActivityRecord, int)(StartingSurfaceController.java:87) waiters=1 in void com.android.server.wm.ActivityClientController.activityIdle(android.os.IBinder, android.content.res.Configuration, boolean) for 368ms
+10-03 17:41:30.263   419   437 W TransactionTracing: Could not find layer handle 0x7a7dd7a6e330
+10-03 17:41:30.264   768   845 D SplashScreenView: Build android.window.SplashScreenView{646970a V.E...... ......ID 0,0-0,0}
+10-03 17:41:30.264   768   845 D SplashScreenView: Icon: view: android.widget.ImageView{9cf8b7b V.ED..... ......I. 0,0-0,0 #10204dc android:id/splashscreen_icon_view} drawable: com.android.wm.shell.startingsurface.SplashscreenIconDrawableFactory$ImmobileIconDrawable@6000d98 size: 420
+10-03 17:41:30.264   768   845 D SplashScreenView: Branding: view: android.view.View{dba49f1 G.ED..... ......I. 0,0-0,0 #10204db android:id/splashscreen_branding_view} drawable: null size w: 0 h: 0
+10-03 17:41:30.265   548  1685 W system_server: Long monitor contention with owner binder:548_17 (1770) at com.android.server.wm.StartingSurfaceController$StartingSurface com.android.server.wm.StartingSurfaceController.createSplashScreenStartingSurface(com.android.server.wm.ActivityRecord, int)(StartingSurfaceController.java:87) waiters=3 in void com.android.server.wm.ActivityClientController.activityTopResumedStateLost() for 255ms
+10-03 17:41:30.267   548  2355 D CompatibilityChangeReporter: Compat change id reported: 168419799; UID 10126; state: DISABLED
+10-03 17:41:30.268   548   573 D CompatibilityChangeReporter: Compat change id reported: 135634846; UID 10126; state: DISABLED
+10-03 17:41:30.276   548  1685 D CoreBackPreview: Window{4375681 u0 Splash Screen com.alhuda.islamic.app}: Setting back callback OnBackInvokedCallbackInfo{mCallback=android.window.IOnBackInvokedCallback$Stub$Proxy@83a2b67, mPriority=0}
+10-03 17:41:30.280   548   582 D CompatibilityChangeReporter: Compat change id reported: 143937733; UID 10126; state: ENABLED
+10-03 17:41:30.465   548   548 W Looper  : Slow dispatch took 100ms main h=android.app.PropertyInvalidatedCache$AutoCorker$1 c=null m=0
+10-03 17:41:30.700   768   925 W Parcel  : Expecting binder but got null!
+10-03 17:41:30.701   548   573 W ActivityManager: setHasOverlayUi called on unknown pid: 2357
+10-03 17:41:31.023   548  1685 W system_server: Long monitor contention with owner android.anim (574) at void com.android.server.wm.WindowSurfacePlacer$Traverser.run()(WindowSurfacePlacer.java:58) waiters=4 in android.app.ActivityTaskManager$RootTaskInfo com.android.server.wm.ActivityTaskManagerService.getFocusedRootTaskInfo() for 216ms
+10-03 17:41:31.032   548  1770 W system_server: Long monitor contention with owner android.anim (574) at void com.android.server.wm.WindowSurfacePlacer$Traverser.run()(WindowSurfacePlacer.java:58) waiters=5 in void java.lang.Object.wait(long, int) for 130ms
+10-03 17:41:31.033   548   568 W system_server: Long monitor contention with owner android.anim (574) at void com.android.server.wm.WindowSurfacePlacer$Traverser.run()(WindowSurfacePlacer.java:58) waiters=2 in android.app.ActivityTaskManager$RootTaskInfo com.android.server.wm.ActivityTaskManagerService.getRootTaskInfo(int, int) for 319ms
+10-03 17:41:31.139   347   347 D Zygote  : Forked child process 2399
+10-03 17:41:31.146   548   582 W ActivityManager: Slow operation: 884ms so far, now at startProcess: returned from zygote!
+10-03 17:41:31.146   548   582 W ActivityManager: Slow operation: 884ms so far, now at startProcess: done updating battery stats
+10-03 17:41:31.147   548   582 W ActivityManager: Slow operation: 884ms so far, now at startProcess: building log message
+10-03 17:41:31.147   548   582 I ActivityManager: Start proc 2399:com.alhuda.islamic.app/u0a126 for next-top-activity {com.alhuda.islamic.app/com.alhuda.islamic.app.WidgetPreviewActivity}
+10-03 17:41:31.147   548   582 W ActivityManager: Slow operation: 885ms so far, now at startProcess: starting to update pids map
+10-03 17:41:31.147   548   582 W ActivityManager: Slow operation: 885ms so far, now at startProcess: done updating pids map
+10-03 17:41:31.171  2399  2399 I uda.islamic.app: Late-enabling -Xcheck:jni
+10-03 17:41:31.208  2399  2399 W uda.islamic.app: Unexpected CPU variant for x86: x86_64.
+10-03 17:41:31.208  2399  2399 W uda.islamic.app: Known variants: atom, sandybridge, silvermont, kabylake, default
+10-03 17:41:31.214   439   446 I adbd    : jdwp connection from 2399
+10-03 17:41:31.233  2399  2399 D CompatibilityChangeReporter: Compat change id reported: 171979766; UID 10126; state: ENABLED
+10-03 17:41:31.247  2399  2399 W ziparchive: Unable to open '/data/app/~~LAD1qEZ5t8HKUcbxyaz7Rg==/com.alhuda.islamic.app-AsuZwa_EaP7vYQ84NIuiUQ==/base.dm': No such file or directory
+10-03 17:41:31.247  2399  2399 W ziparchive: Unable to open '/data/app/~~LAD1qEZ5t8HKUcbxyaz7Rg==/com.alhuda.islamic.app-AsuZwa_EaP7vYQ84NIuiUQ==/base.dm': No such file or directory
+10-03 17:41:31.458  2399  2399 V GraphicsEnvironment: ANGLE Developer option for 'com.alhuda.islamic.app' set to: 'default'
+10-03 17:41:31.458  2399  2399 V GraphicsEnvironment: ANGLE GameManagerService for com.alhuda.islamic.app: false
+10-03 17:41:31.459  2399  2399 V GraphicsEnvironment: Neither updatable production driver nor prerelease driver is supported.
+10-03 17:41:31.460  2399  2399 D NetworkSecurityConfig: No Network Security Config specified, using platform default
+10-03 17:41:31.461  2399  2399 D NetworkSecurityConfig: No Network Security Config specified, using platform default
+10-03 17:41:31.500  2399  2416 D libEGL  : loaded /vendor/lib64/egl/libEGL_emulation.so
+10-03 17:41:31.502  2399  2416 D libEGL  : loaded /vendor/lib64/egl/libGLESv1_CM_emulation.so
+10-03 17:41:31.504  2399  2416 D libEGL  : loaded /vendor/lib64/egl/libGLESv2_emulation.so
+10-03 17:41:31.508  2399  2399 D CompatibilityChangeReporter: Compat change id reported: 171228096; UID 10126; state: ENABLED
+10-03 17:41:31.514  2399  2399 D CompatibilityChangeReporter: Compat change id reported: 160794467; UID 10126; state: ENABLED
+10-03 17:41:31.523  2399  2399 D CompatibilityChangeReporter: Compat change id reported: 210923482; UID 10126; state: ENABLED
+10-03 17:41:31.569   548  1694 D CoreBackPreview: Window{e9956dc u0 com.alhuda.islamic.app/com.alhuda.islamic.app.WidgetPreviewActivity}: Setting back callback OnBackInvokedCallbackInfo{mCallback=android.window.IOnBackInvokedCallback$Stub$Proxy@e390eba, mPriority=0}
+10-03 17:41:31.631   548  1685 W BatteryExternalStatsWorker: error reading Bluetooth stats: 11
+10-03 17:41:31.711  2399  2414 D HostConnection: HostComposition ext ANDROID_EMU_CHECKSUM_HELPER_v1 ANDROID_EMU_native_sync_v2 ANDROID_EMU_dma_v1 ANDROID_EMU_direct_mem ANDROID_EMU_host_composition_v1 ANDROID_EMU_host_composition_v2 ANDROID_EMU_vulkan ANDROID_EMU_deferred_vulkan_commands ANDROID_EMU_vulkan_null_optional_strings ANDROID_EMU_vulkan_create_resources_with_requirements ANDROID_EMU_YUV_Cache ANDROID_EMU_vulkan_ignored_handles ANDROID_EMU_has_shared_slots_host_memory_allocator ANDROID_EMU_vulkan_free_memory_sync ANDROID_EMU_vulkan_shader_float16_int8 ANDROID_EMU_vulkan_async_queue_submit ANDROID_EMU_vulkan_queue_submit_with_commands ANDROID_EMU_sync_buffer_data ANDROID_EMU_vulkan_async_qsri ANDROID_EMU_read_color_buffer_dma ANDROID_EMU_hwc_multi_configs ANDROID_EMU_hwc_color_transform GL_OES_EGL_image_external_essl3 GL_OES_vertex_array_object GL_KHR_texture_compression_astc_ldr ANDROID_EMU_host_side_tracing ANDROID_EMU_gles_max_version_3_0 
+10-03 17:41:31.715  2399  2414 W OpenGLRenderer: Failed to initialize 101010-2 format, error = EGL_SUCCESS
+10-03 17:41:31.716  2399  2414 D EGL_emulation: eglCreateContext: 0x7b546731af10: maj 3 min 0 rcv 3
+10-03 17:41:31.718  2399  2414 D EGL_emulation: eglMakeCurrent: 0x7b546731af10: ver 3 0 (tinfo 0x7b56907bc080) (first time)
+10-03 17:41:31.731   198   198 I hwservicemanager: getTransport: Cannot find entry android.hardware.graphics.mapper@4.0::IMapper/default in either framework or device VINTF manifest.
+10-03 17:41:31.732  2399  2414 I Gralloc4: mapper 4.x is not supported
+10-03 17:41:31.769   198   198 I hwservicemanager: getTransport: Cannot find entry android.hardware.graphics.allocator@4.0::IAllocator/default in either framework or device VINTF manifest.
+10-03 17:41:31.773   197   197 I servicemanager: Could not find android.hardware.graphics.allocator.IAllocator/default in the VINTF manifest.
+10-03 17:41:31.773  2399  2414 W Gralloc4: allocator 4.x is not supported
+10-03 17:41:31.795  2399  2414 D HostConnection: HostComposition ext ANDROID_EMU_CHECKSUM_HELPER_v1 ANDROID_EMU_native_sync_v2 ANDROID_EMU_dma_v1 ANDROID_EMU_direct_mem ANDROID_EMU_host_composition_v1 ANDROID_EMU_host_composition_v2 ANDROID_EMU_vulkan ANDROID_EMU_deferred_vulkan_commands ANDROID_EMU_vulkan_null_optional_strings ANDROID_EMU_vulkan_create_resources_with_requirements ANDROID_EMU_YUV_Cache ANDROID_EMU_vulkan_ignored_handles ANDROID_EMU_has_shared_slots_host_memory_allocator ANDROID_EMU_vulkan_free_memory_sync ANDROID_EMU_vulkan_shader_float16_int8 ANDROID_EMU_vulkan_async_queue_submit ANDROID_EMU_vulkan_queue_submit_with_commands ANDROID_EMU_sync_buffer_data ANDROID_EMU_vulkan_async_qsri ANDROID_EMU_read_color_buffer_dma ANDROID_EMU_hwc_multi_configs ANDROID_EMU_hwc_color_transform GL_OES_EGL_image_external_essl3 GL_OES_vertex_array_object GL_KHR_texture_compression_astc_ldr ANDROID_EMU_host_side_tracing ANDROID_EMU_gles_max_version_3_0 
+10-03 17:41:32.917  2399  2414 W Parcel  : Expecting binder but got null!
+10-03 17:41:32.930  2399  2409 I OpenGLRenderer: Davey! duration=1428ms; Flags=1, FrameTimelineVsyncId=5123, IntendedVsync=122183601571, Vsync=122266934901, InputEventId=0, HandleInputStart=122270202229, AnimationStart=122270203983, PerformTraversalsStart=122270301474, DrawStart=122497979227, FrameDeadline=122200268237, FrameInterval=122270185297, FrameStartTime=16666666, SyncQueued=122511596159, SyncStart=122512177052, IssueDrawCommandsStart=122514521683, SwapBuffers=123368899322, FrameCompleted=123612896182, DequeueBufferDuration=6121, QueueBufferDuration=5075741, GpuCompleted=123612783352, SwapBuffersCompleted=123612896182, DisplayPresentTime=0, CommandSubmissionCompleted=123368899322, 
+10-03 17:41:33.195   548   570 W ziparchive: Unable to open '/data/app/~~LAD1qEZ5t8HKUcbxyaz7Rg==/com.alhuda.islamic.app-AsuZwa_EaP7vYQ84NIuiUQ==/base.dm': No such file or directory
+10-03 17:41:33.203   548   570 I ActivityTaskManager: Displayed com.alhuda.islamic.app/.WidgetPreviewActivity: +3s319ms
+10-03 17:41:33.212  2399  2399 I Choreographer: Skipped 97 frames!  The application may be doing too much work on its main thread.
+10-03 17:41:33.253   548  1749 W system_server: Long monitor contention with owner android.anim (574) at void com.android.server.wm.StartingSurfaceController$StartingSurface.remove(boolean)(StartingSurfaceController.java:272) waiters=2 in void com.android.server.wm.TaskPersister$TaskWriteQueueItem.process() for 124ms
+10-03 17:41:33.614  2399  2409 I OpenGLRenderer: Davey! duration=1963ms; Flags=0, FrameTimelineVsyncId=5138, IntendedVsync=122283601567, Vsync=123900268169, InputEventId=0, HandleInputStart=123912518791, AnimationStart=123912521647, PerformTraversalsStart=123913501483, DrawStart=123913708449, FrameDeadline=123633601513, FrameInterval=123912110059, FrameStartTime=16666666, SyncQueued=123913978061, SyncStart=123914005102, IssueDrawCommandsStart=123914813298, SwapBuffers=124062308902, FrameCompleted=124247534277, DequeueBufferDuration=5931, QueueBufferDuration=75207724, GpuCompleted=124247447836, SwapBuffersCompleted=124247534277, DisplayPresentTime=35188667056128, CommandSubmissionCompleted=124062308902, 
+10-03 17:41:33.766   548  1770 D CompatibilityChangeReporter: Compat change id reported: 214016041; UID 10126; state: ENABLED
+10-03 17:41:33.858  2399  2399 I Choreographer: Skipped 36 frames!  The application may be doing too much work on its main thread.
+10-03 17:41:34.090   548   548 W system_server: Long monitor contention with owner binder:548_2 (568) at boolean android.os.MessageQueue.enqueueMessage(android.os.Message, long)(MessageQueue.java:600) waiters=0 in android.os.Message android.os.MessageQueue.next() for 121ms
+10-03 17:41:34.090   548   573 W system_server: Long monitor contention with owner binder:548_15 (1694) at void com.android.server.inputmethod.InputMethodManagerService.reportStartInput(android.os.IBinder, android.os.IBinder)(InputMethodManagerService.java:3367) waiters=0 in void com.android.server.inputmethod.InputMethodManagerService$LocalServiceImpl.onImeParentChanged() for 129ms
+10-03 17:41:34.096  2399  2409 I OpenGLRenderer: Davey! duration=702ms; Flags=0, FrameTimelineVsyncId=5235, IntendedVsync=123950268167, Vsync=124550268143, InputEventId=0, HandleInputStart=124562806372, AnimationStart=124562813526, PerformTraversalsStart=124562815329, DrawStart=124562957344, FrameDeadline=124500268111, FrameInterval=124558692834, FrameStartTime=16666666, SyncQueued=124563259768, SyncStart=124563278973, IssueDrawCommandsStart=124563334177, SwapBuffers=124573569516, FrameCompleted=124652801821, DequeueBufferDuration=4468, QueueBufferDuration=855925, GpuCompleted=124652801821, SwapBuffersCompleted=124650196024, DisplayPresentTime=0, CommandSubmissionCompleted=124573569516, 
+10-03 17:41:34.141   548   574 W system_server: Long monitor contention with owner binder:548_2 (568) at void com.android.server.wm.ActivityClientController.activityIdle(android.os.IBinder, android.content.res.Configuration, boolean)(ActivityClientController.java:147) waiters=0 in void com.android.server.wm.WindowSurfacePlacer$Traverser.run() for 180ms
+10-03 17:41:34.162   548  1685 W InputManager-JNI: Input channel object '4375681 Splash Screen com.alhuda.islamic.app (client)' was disposed without first being removed with the input manager!
+10-03 17:41:34.222   419   437 W TransactionTracing: Could not find layer handle 0x7a7dd7a6e090
+10-03 17:41:34.222   419   437 W TransactionTracing: Could not find layer handle 0x7a7dd7a6d1f0
+10-03 17:41:34.222   419   437 W TransactionTracing: Could not find layer handle 0x7a7dd7a6deb0
+10-03 17:41:34.222   768   844 W FrameTracker: Missed App frame:UNKNOWN: 10, 5180, 0, CUJ=J<SPLASHSCREEN_EXIT_ANIM>
+10-03 17:41:34.222   768   844 W FrameTracker: Missed SF frame:UNKNOWN: 10, 5180, 0, CUJ=J<SPLASHSCREEN_EXIT_ANIM>
+10-03 17:41:34.222   768   844 W FrameTracker: Missing HWUI jank callback for vsyncId: 5180, CUJ=J<SPLASHSCREEN_EXIT_ANIM>
+10-03 17:41:34.222   768   844 W FrameTracker: Missed App frame:UNKNOWN: 74, 5187, 0, CUJ=J<SPLASHSCREEN_EXIT_ANIM>
+10-03 17:41:34.222   768   844 W FrameTracker: Missed SF frame:UNKNOWN: 74, 5187, 0, CUJ=J<SPLASHSCREEN_EXIT_ANIM>
+10-03 17:41:34.222   768   844 W FrameTracker: Missing HWUI jank callback for vsyncId: 5187, CUJ=J<SPLASHSCREEN_EXIT_ANIM>
+10-03 17:41:34.222   768   844 W FrameTracker: Missed App frame:UNKNOWN: 74, 5194, 0, CUJ=J<SPLASHSCREEN_EXIT_ANIM>
+10-03 17:41:34.222   768   844 W FrameTracker: Missed SF frame:UNKNOWN: 74, 5194, 0, CUJ=J<SPLASHSCREEN_EXIT_ANIM>
+10-03 17:41:34.222   768   844 W FrameTracker: Missing HWUI jank callback for vsyncId: 5194, CUJ=J<SPLASHSCREEN_EXIT_ANIM>
+10-03 17:41:34.222   768   844 W FrameTracker: Missed App frame:UNKNOWN: 74, 5202, 266791683, CUJ=J<SPLASHSCREEN_EXIT_ANIM>
+10-03 17:41:34.222   768   844 W FrameTracker: Missed SF frame:UNKNOWN: 74, 5202, 266791683, CUJ=J<SPLASHSCREEN_EXIT_ANIM>
+10-03 17:41:34.222   768   844 W FrameTracker: Missing SF jank callback for vsyncId: 5210, CUJ=J<SPLASHSCREEN_EXIT_ANIM>
+10-03 17:41:34.224   768   802 V PerfettoTrigger: Not triggering com.android.telemetry.interaction-jank-monitor-39 - not enough time since last trigger
+10-03 17:41:34.225   548   568 W WindowManager: Failed looking up window session=Session{df29e5d 768:u0a10109} callers=com.android.server.wm.WindowManagerService.windowForClientLocked:5972 com.android.server.wm.Session.setOnBackInvokedCallbackInfo:943 android.view.IWindowSession$Stub.onTransact:1180 
+10-03 17:41:34.225   548   568 E WindowManager: setOnBackInvokedCallback(): No window state for package:com.android.systemui
+10-03 17:41:34.231  2399  2404 I uda.islamic.app: Compiler allocated 4160KB to compile void android.widget.TextView.<init>(android.content.Context, android.util.AttributeSet, int, int)
+10-03 17:41:34.314   419   437 W TransactionTracing: Could not find layer handle 0x7a7dd7a6a7f0
+10-03 17:41:34.314   548  1749 E TaskPersister: File error accessing recents directory (directory doesn't exist?).
+10-03 17:41:36.695  2399  2425 D ProfileInstaller: Installing profile for com.alhuda.islamic.app
+10-03 17:41:40.468  2428  2428 W ProcessState: Extra binder thread started, but 0 threads requested. Do not use *startThreadPool when zero threads are requested.
+10-03 17:41:40.479   198   198 I hwservicemanager: getTransport: Cannot find entry android.hardware.graphics.mapper@4.0::IMapper/default in either framework or device VINTF manifest.
+10-03 17:41:40.479  2428  2429 I Gralloc4: mapper 4.x is not supported
+10-03 17:41:40.526  2428  2429 D HostConnection: HostComposition ext ANDROID_EMU_CHECKSUM_HELPER_v1 ANDROID_EMU_native_sync_v2 ANDROID_EMU_dma_v1 ANDROID_EMU_direct_mem ANDROID_EMU_host_composition_v1 ANDROID_EMU_host_composition_v2 ANDROID_EMU_vulkan ANDROID_EMU_deferred_vulkan_commands ANDROID_EMU_vulkan_null_optional_strings ANDROID_EMU_vulkan_create_resources_with_requirements ANDROID_EMU_YUV_Cache ANDROID_EMU_vulkan_ignored_handles ANDROID_EMU_has_shared_slots_host_memory_allocator ANDROID_EMU_vulkan_free_memory_sync ANDROID_EMU_vulkan_shader_float16_int8 ANDROID_EMU_vulkan_async_queue_submit ANDROID_EMU_vulkan_queue_submit_with_commands ANDROID_EMU_sync_buffer_data ANDROID_EMU_vulkan_async_qsri ANDROID_EMU_read_color_buffer_dma ANDROID_EMU_hwc_multi_configs ANDROID_EMU_hwc_color_transform GL_OES_EGL_image_external_essl3 GL_OES_vertex_array_object GL_KHR_texture_compression_astc_ldr ANDROID_EMU_host_side_tracing ANDROID_EMU_gles_max_version_3_0 
+10-03 17:41:40.857   548   568 I ActivityManager: Force stopping com.alhuda.islamic.app appid=10126 user=0: from pid 2433
+10-03 17:41:40.874   548   568 I ActivityManager: Killing 2399:com.alhuda.islamic.app/u0a126 (adj 0): stop com.alhuda.islamic.app due to from pid 2433
+10-03 17:41:40.878   548   568 W ActivityTaskManager: Force removing ActivityRecord{850db5a u0 com.alhuda.islamic.app/.WidgetPreviewActivity} t12 f}}: app died, no saved state
+10-03 17:41:40.900   548   568 W InputManager-JNI: Input channel object 'e9956dc com.alhuda.islamic.app/com.alhuda.islamic.app.WidgetPreviewActivity (client)' was disposed without first being removed with the input manager!
+10-03 17:41:40.923   419   437 W TransactionTracing: Could not find layer handle 0x7a7dd7a6eb70
+10-03 17:41:40.938   548   573 V WindowManager: Unknown focus tokens, dropping reportFocusChanged
+10-03 17:41:40.942   548   568 D OomAdjuster: Not killing cached processes
+10-03 17:41:40.955   419   437 W TransactionTracing: Could not find layer handle 0x7a7dd7a6e8d0
+10-03 17:41:40.955   419   437 W TransactionTracing: Could not find layer handle 0x7a7dd7a6e810
+10-03 17:41:40.998   954   954 D CarrierSvcBindHelper: onHandleForceStop: [com.alhuda.islamic.app]
+10-03 17:41:41.000   954   954 D CarrierSvcBindHelper: No carrier app for: 0
+10-03 17:41:41.016   548   585 I libprocessgroup: Successfully killed process cgroup uid 10126 pid 2399 in 139ms
+10-03 17:41:41.124   548   568 D CompatibilityChangeReporter: Compat change id reported: 161252188; UID 10126; state: ENABLED
+10-03 17:41:41.248   548   568 I ActivityTaskManager: START u0 {flg=0x10000000 cmp=com.alhuda.islamic.app/.WidgetPreviewActivity (has extras)} from uid 2000
+10-03 17:41:41.252   548   568 D CompatibilityChangeReporter: Compat change id reported: 194480991; UID 10126; state: ENABLED
+10-03 17:41:41.259   548   568 D CompatibilityChangeReporter: Compat change id reported: 174042980; UID 10126; state: DISABLED
+10-03 17:41:41.259   548   568 D CompatibilityChangeReporter: Compat change id reported: 184838306; UID 10126; state: DISABLED
+10-03 17:41:41.259   548   568 D CompatibilityChangeReporter: Compat change id reported: 185004937; UID 10126; state: DISABLED
+10-03 17:41:41.259   548   568 D CompatibilityChangeReporter: Compat change id reported: 181136395; UID 10126; state: DISABLED
+10-03 17:41:41.260   548   568 D CompatibilityChangeReporter: Compat change id reported: 174042936; UID 10126; state: DISABLED
+10-03 17:41:41.261   548   568 D CompatibilityChangeReporter: Compat change id reported: 197654537; UID 10126; state: ENABLED
+10-03 17:41:41.428     0     0 I binder  : undelivered transaction 126232, process died.
+10-03 17:41:41.431     0     0 I binder  : undelivered transaction 125939, process died.
+10-03 17:41:41.349   548  1685 V ActivityManager: Got obituary of 2399:com.alhuda.islamic.app
+10-03 17:41:41.357   347   347 I Zygote  : Process 2399 exited due to signal 9 (Killed)
+10-03 17:41:41.523     0     0 I binder  : undelivered transaction 126231, process died.
+10-03 17:41:41.362   548   568 D CompatibilityChangeReporter: Compat change id reported: 205907456; UID 10126; state: ENABLED
+10-03 17:41:41.367   419   419 E BpTransactionCompletedListener: Failed to transact (-32)
+10-03 17:41:41.467   548  2302 W system_server: Long monitor contention with owner binder:548_2 (568) at android.window.TaskSnapshot com.android.server.wm.TaskSnapshotCache.getSnapshot(int, int, boolean, boolean)(TaskSnapshotCache.java:68) waiters=0 in boolean com.android.server.wm.WindowManagerService$LocalService.isHardKeyboardAvailable() for 217ms
+10-03 17:41:41.560   548  2355 W system_server: Long monitor contention with owner binder:548_19 (2302) at com.android.internal.inputmethod.InputBindResult com.android.server.inputmethod.InputMethodManagerService.startInputOrWindowGainedFocusInternal(int, com.android.internal.view.IInputMethodClient, android.os.IBinder, int, int, int, android.view.inputmethod.EditorInfo, com.android.internal.view.IInputContext, com.android.internal.inputmethod.IRemoteAccessibilityInputConnection, int, android.window.ImeOnBackInvokedDispatcher)(InputMethodManagerService.java:3870) waiters=0 in void com.android.server.inputmethod.InputMethodManagerService.reportFullscreenMode(android.os.IBinder, boolean) for 309ms
+10-03 17:41:41.561   548  1685 D CompatibilityChangeReporter: Compat change id reported: 168419799; UID 10126; state: DISABLED
+10-03 17:41:41.652  1014  1014 I Choreographer: Skipped 31 frames!  The application may be doing too much work on its main thread.
+10-03 17:41:41.652   548   573 W system_server: Long monitor contention with owner android.bg (580) at void com.android.server.am.AppProfiler.collectPssInBackground()(AppProfiler.java:535) waiters=0 in void com.android.server.am.ActivityManagerService$LocalService.scheduleAppGcs() for 487ms
+10-03 17:41:41.755   419   437 W TransactionTracing: Could not find layer handle 0x7a7dd7a6e150
+10-03 17:41:41.856   548   573 W ActivityManager: Slow operation: 92ms so far, now at startProcess: done creating new process record
+10-03 17:41:41.861   548   573 W ActivityManager: Slow operation: 96ms so far, now at startProcess: stepping in to startProcess
+10-03 17:41:41.866   548  2442 D CoreBackPreview: Window{2d14496 u0 Splash Screen com.alhuda.islamic.app}: Setting back callback OnBackInvokedCallbackInfo{mCallback=android.window.IOnBackInvokedCallback$Stub$Proxy@e1cc70, mPriority=0}
+10-03 17:41:41.923   548   573 D CompatibilityChangeReporter: Compat change id reported: 135634846; UID 10126; state: DISABLED
+10-03 17:41:41.926   548   573 W ActivityManager: Slow operation: 162ms so far, now at startProcess: done starting proc!
+10-03 17:41:41.930   548   582 W ActivityManager: Slow operation: 66ms so far, now at startProcess: asking zygote to start proc
+10-03 17:41:41.931   548   582 D CompatibilityChangeReporter: Compat change id reported: 143937733; UID 10126; state: ENABLED
+10-03 17:41:42.009   768   845 D SplashScreenView: Build android.window.SplashScreenView{b2fa486 V.E...... ......ID 0,0-0,0}
+10-03 17:41:42.009   768   845 D SplashScreenView: Icon: view: android.widget.ImageView{d0e1147 V.ED..... ......I. 0,0-0,0 #10204dc android:id/splashscreen_icon_view} drawable: com.android.wm.shell.startingsurface.SplashscreenIconDrawableFactory$ImmobileIconDrawable@c2b2d74 size: 420
+10-03 17:41:42.009   768   845 D SplashScreenView: Branding: view: android.view.View{1f3e29d G.ED..... ......I. 0,0-0,0 #10204db android:id/splashscreen_branding_view} drawable: null size w: 0 h: 0
+10-03 17:41:42.012   548   573 W ActivityManager: setHasOverlayUi called on unknown pid: 2399
+10-03 17:41:42.107   548  1676 W ActivityTaskManager: takeTaskSnapshot: taskId=13 not found or not visible
+10-03 17:41:42.108   768   844 I Choreographer: Skipped 32 frames!  The application may be doing too much work on its main thread.
+10-03 17:41:42.295   768   925 W Parcel  : Expecting binder but got null!
+10-03 17:41:42.400   768  1914 I OpenGLRenderer: Davey! duration=733ms; Flags=1, FrameTimelineVsyncId=5468, IntendedVsync=132266934501, Vsync=132800267813, InputEventId=0, HandleInputStart=132810877480, AnimationStart=132810878752, PerformTraversalsStart=132810915932, DrawStart=132975933899, FrameDeadline=132283601167, FrameInterval=132808530676, FrameStartTime=16666666, SyncQueued=132976298188, SyncStart=132976587487, IssueDrawCommandsStart=132976904909, SwapBuffers=132977318970, FrameCompleted=133000417668, DequeueBufferDuration=6446027, QueueBufferDuration=1564456, GpuCompleted=133000417668, SwapBuffersCompleted=132992598443, DisplayPresentTime=0, CommandSubmissionCompleted=132977318970, 
+10-03 17:41:42.568   419   437 W TransactionTracing: Could not find layer handle 0x7a7dd7a6ef90
+10-03 17:41:42.569   419   437 W TransactionTracing: Could not find layer handle 0x7a7dd7a6f050
+10-03 17:41:42.572   419   437 W TransactionTracing: Could not find layer handle 0x7a7dd7a6f050
+10-03 17:41:42.572   419   437 W TransactionTracing: Could not find layer handle 0x7a7dd7a6ef90
+10-03 17:41:42.784   347   347 D Zygote  : Forked child process 2444
+10-03 17:41:42.784   548   582 W ActivityManager: Slow operation: 923ms so far, now at startProcess: returned from zygote!
+10-03 17:41:42.785   548   582 W ActivityManager: Slow operation: 923ms so far, now at startProcess: done updating battery stats
+10-03 17:41:42.785   548   582 W ActivityManager: Slow operation: 923ms so far, now at startProcess: building log message
+10-03 17:41:42.785   548   582 I ActivityManager: Start proc 2444:com.alhuda.islamic.app/u0a126 for next-top-activity {com.alhuda.islamic.app/com.alhuda.islamic.app.WidgetPreviewActivity}
+10-03 17:41:42.785   548   582 W ActivityManager: Slow operation: 923ms so far, now at startProcess: starting to update pids map
+10-03 17:41:42.785   548   582 W ActivityManager: Slow operation: 924ms so far, now at startProcess: done updating pids map
+10-03 17:41:42.808  2444  2444 I uda.islamic.app: Late-enabling -Xcheck:jni
+10-03 17:41:42.847  2444  2444 W uda.islamic.app: Unexpected CPU variant for x86: x86_64.
+10-03 17:41:42.847  2444  2444 W uda.islamic.app: Known variants: atom, sandybridge, silvermont, kabylake, default
+10-03 17:41:42.854   439   446 I adbd    : jdwp connection from 2444
+10-03 17:41:42.881  2444  2444 D CompatibilityChangeReporter: Compat change id reported: 171979766; UID 10126; state: ENABLED
+10-03 17:41:42.896  2444  2444 W ziparchive: Unable to open '/data/app/~~LAD1qEZ5t8HKUcbxyaz7Rg==/com.alhuda.islamic.app-AsuZwa_EaP7vYQ84NIuiUQ==/base.dm': No such file or directory
+10-03 17:41:42.896  2444  2444 W ziparchive: Unable to open '/data/app/~~LAD1qEZ5t8HKUcbxyaz7Rg==/com.alhuda.islamic.app-AsuZwa_EaP7vYQ84NIuiUQ==/base.dm': No such file or directory
+10-03 17:41:43.102  2444  2444 V GraphicsEnvironment: ANGLE Developer option for 'com.alhuda.islamic.app' set to: 'default'
+10-03 17:41:43.103  2444  2444 V GraphicsEnvironment: ANGLE GameManagerService for com.alhuda.islamic.app: false
+10-03 17:41:43.103  2444  2444 V GraphicsEnvironment: Neither updatable production driver nor prerelease driver is supported.
+10-03 17:41:43.104  2444  2444 D NetworkSecurityConfig: No Network Security Config specified, using platform default
+10-03 17:41:43.105  2444  2444 D NetworkSecurityConfig: No Network Security Config specified, using platform default
+10-03 17:41:43.152  2444  2460 D libEGL  : loaded /vendor/lib64/egl/libEGL_emulation.so
+10-03 17:41:43.154  2444  2460 D libEGL  : loaded /vendor/lib64/egl/libGLESv1_CM_emulation.so
+10-03 17:41:43.157  2444  2444 D CompatibilityChangeReporter: Compat change id reported: 171228096; UID 10126; state: ENABLED
+10-03 17:41:43.164  2444  2444 D CompatibilityChangeReporter: Compat change id reported: 160794467; UID 10126; state: ENABLED
+10-03 17:41:43.167  2444  2460 D libEGL  : loaded /vendor/lib64/egl/libGLESv2_emulation.so
+10-03 17:41:43.174  2444  2444 D CompatibilityChangeReporter: Compat change id reported: 210923482; UID 10126; state: ENABLED
+10-03 17:41:43.219   548  1676 D CoreBackPreview: Window{9794b8 u0 com.alhuda.islamic.app/com.alhuda.islamic.app.WidgetPreviewActivity}: Setting back callback OnBackInvokedCallbackInfo{mCallback=android.window.IOnBackInvokedCallback$Stub$Proxy@deec5f6, mPriority=0}
+10-03 17:41:43.288   419   437 W TransactionTracing: Could not find layer handle 0x7a7dd7a6e3f0
+10-03 17:41:43.288   419   437 W TransactionTracing: Could not find layer handle 0x7a7dd7a6d370
+10-03 17:41:43.301  2444  2458 D HostConnection: HostComposition ext ANDROID_EMU_CHECKSUM_HELPER_v1 ANDROID_EMU_native_sync_v2 ANDROID_EMU_dma_v1 ANDROID_EMU_direct_mem ANDROID_EMU_host_composition_v1 ANDROID_EMU_host_composition_v2 ANDROID_EMU_vulkan ANDROID_EMU_deferred_vulkan_commands ANDROID_EMU_vulkan_null_optional_strings ANDROID_EMU_vulkan_create_resources_with_requirements ANDROID_EMU_YUV_Cache ANDROID_EMU_vulkan_ignored_handles ANDROID_EMU_has_shared_slots_host_memory_allocator ANDROID_EMU_vulkan_free_memory_sync ANDROID_EMU_vulkan_shader_float16_int8 ANDROID_EMU_vulkan_async_queue_submit ANDROID_EMU_vulkan_queue_submit_with_commands ANDROID_EMU_sync_buffer_data ANDROID_EMU_vulkan_async_qsri ANDROID_EMU_read_color_buffer_dma ANDROID_EMU_hwc_multi_configs ANDROID_EMU_hwc_color_transform GL_OES_EGL_image_external_essl3 GL_OES_vertex_array_object GL_KHR_texture_compression_astc_ldr ANDROID_EMU_host_side_tracing ANDROID_EMU_gles_max_version_3_0 
+10-03 17:41:43.308  2444  2458 W OpenGLRenderer: Failed to initialize 101010-2 format, error = EGL_SUCCESS
+10-03 17:41:43.309  2444  2458 D EGL_emulation: eglCreateContext: 0x7b546731b810: maj 3 min 0 rcv 3
+10-03 17:41:43.311  2444  2458 D EGL_emulation: eglMakeCurrent: 0x7b546731b810: ver 3 0 (tinfo 0x7b56907ed080) (first time)
+10-03 17:41:43.331   198   198 I hwservicemanager: getTransport: Cannot find entry android.hardware.graphics.mapper@4.0::IMapper/default in either framework or device VINTF manifest.
+10-03 17:41:43.331  2444  2458 I Gralloc4: mapper 4.x is not supported
+10-03 17:41:43.369   198   198 I hwservicemanager: getTransport: Cannot find entry android.hardware.graphics.allocator@4.0::IAllocator/default in either framework or device VINTF manifest.
+10-03 17:41:43.374   197   197 I servicemanager: Could not find android.hardware.graphics.allocator.IAllocator/default in the VINTF manifest.
+10-03 17:41:43.375  2444  2458 W Gralloc4: allocator 4.x is not supported
+10-03 17:41:43.395  2444  2458 D HostConnection: HostComposition ext ANDROID_EMU_CHECKSUM_HELPER_v1 ANDROID_EMU_native_sync_v2 ANDROID_EMU_dma_v1 ANDROID_EMU_direct_mem ANDROID_EMU_host_composition_v1 ANDROID_EMU_host_composition_v2 ANDROID_EMU_vulkan ANDROID_EMU_deferred_vulkan_commands ANDROID_EMU_vulkan_null_optional_strings ANDROID_EMU_vulkan_create_resources_with_requirements ANDROID_EMU_YUV_Cache ANDROID_EMU_vulkan_ignored_handles ANDROID_EMU_has_shared_slots_host_memory_allocator ANDROID_EMU_vulkan_free_memory_sync ANDROID_EMU_vulkan_shader_float16_int8 ANDROID_EMU_vulkan_async_queue_submit ANDROID_EMU_vulkan_queue_submit_with_commands ANDROID_EMU_sync_buffer_data ANDROID_EMU_vulkan_async_qsri ANDROID_EMU_read_color_buffer_dma ANDROID_EMU_hwc_multi_configs ANDROID_EMU_hwc_color_transform GL_OES_EGL_image_external_essl3 GL_OES_vertex_array_object GL_KHR_texture_compression_astc_ldr ANDROID_EMU_host_side_tracing ANDROID_EMU_gles_max_version_3_0 
+10-03 17:41:44.574  2444  2458 W Parcel  : Expecting binder but got null!
+10-03 17:41:44.597  2444  2456 I OpenGLRenderer: Davey! duration=1435ms; Flags=1, FrameTimelineVsyncId=5619, IntendedVsync=133833612184, Vsync=133916945509, InputEventId=0, HandleInputStart=133921451060, AnimationStart=133921453334, PerformTraversalsStart=133921570923, DrawStart=134099580668, FrameDeadline=133850278850, FrameInterval=133921430161, FrameStartTime=16666665, SyncQueued=134112708530, SyncStart=134113207389, IssueDrawCommandsStart=134115577747, SwapBuffers=135005527043, FrameCompleted=135269608763, DequeueBufferDuration=5490, QueueBufferDuration=4299254, GpuCompleted=135269499249, SwapBuffersCompleted=135269608763, DisplayPresentTime=0, CommandSubmissionCompleted=135005527043, 
+10-03 17:41:44.611  2444  2444 I Choreographer: Skipped 82 frames!  The application may be doing too much work on its main thread.
+10-03 17:41:44.777   548   570 W ziparchive: Unable to open '/data/app/~~LAD1qEZ5t8HKUcbxyaz7Rg==/com.alhuda.islamic.app-AsuZwa_EaP7vYQ84NIuiUQ==/base.dm': No such file or directory
+10-03 17:41:44.783   548   570 I ActivityTaskManager: Displayed com.alhuda.islamic.app/.WidgetPreviewActivity: +3s659ms
+10-03 17:41:44.798  2444  2456 I OpenGLRenderer: Davey! duration=1542ms; Flags=0, FrameTimelineVsyncId=5641, IntendedVsync=133933601101, Vsync=135300267713, InputEventId=0, HandleInputStart=135311171082, AnimationStart=135311173857, PerformTraversalsStart=135311398174, DrawStart=135311562391, FrameDeadline=135300278705, FrameInterval=135310789891, FrameStartTime=16666666, SyncQueued=135311816094, SyncStart=135311838545, IssueDrawCommandsStart=135313293097, SwapBuffers=135314629448, FrameCompleted=135476187696, DequeueBufferDuration=4879, QueueBufferDuration=1686264, GpuCompleted=135476086206, SwapBuffersCompleted=135476187696, DisplayPresentTime=35188667056128, CommandSubmissionCompleted=135314629448, 
+10-03 17:41:44.808   768   925 D EGL_emulation: app_time_stats: avg=1256.96ms min=355.60ms max=2158.31ms count=2
+10-03 17:41:45.190   548   570 W Looper  : Slow dispatch took 407ms android.fg h=android.os.Handler c=com.android.server.wm.ActivityMetricsLogger$$ExternalSyntheticLambda6@e5024ef m=0
+10-03 17:41:45.203   548   573 W system_server: Long monitor contention with owner binder:548_12 (1676) at void com.android.server.wm.ActivityClientController.activityIdle(android.os.IBinder, android.content.res.Configuration, boolean)(ActivityClientController.java:147) waiters=1 in void com.android.server.wm.WindowManagerService.reportFocusChanged(android.os.IBinder, android.os.IBinder) for 377ms
+10-03 17:41:45.204   548   574 W system_server: Long monitor contention with owner binder:548_12 (1676) at void com.android.server.wm.ActivityClientController.activityIdle(android.os.IBinder, android.content.res.Configuration, boolean)(ActivityClientController.java:147) waiters=2 in void com.android.server.wm.InputMonitor$UpdateInputWindows.run() for 391ms
+10-03 17:41:45.205   548   574 I Choreographer: Skipped 35 frames!  The application may be doing too much work on its main thread.
+10-03 17:41:45.216   548   568 W system_server: Long monitor contention with owner binder:548_12 (1676) at void com.android.server.wm.ActivityClientController.activityIdle(android.os.IBinder, android.content.res.Configuration, boolean)(ActivityClientController.java:147) waiters=3 in void java.lang.Object.wait(long, int) for 392ms
+10-03 17:41:45.242   548  2442 D CompatibilityChangeReporter: Compat change id reported: 214016041; UID 10126; state: ENABLED
+10-03 17:41:45.483   548  2442 W system_server: Long monitor contention with owner android.anim (574) at void com.android.server.wm.WindowAnimator.lambda$new$1(long)(WindowAnimator.java:110) waiters=1 in void com.android.server.wm.WindowManagerService$LocalService.updateInputMethodTargetWindow(android.os.IBinder, android.os.IBinder) for 174ms
+10-03 17:41:45.585   548  2355 W system_server: Long monitor contention with owner android.anim (574) at void com.android.server.wm.WindowAnimator.lambda$new$1(long)(WindowAnimator.java:110) waiters=2 in int com.android.server.wm.WindowManagerService.relayoutWindow(com.android.server.wm.Session, android.view.IWindow, android.view.WindowManager$LayoutParams, int, int, int, int, int, int, android.window.ClientWindowFrames, android.util.MergedConfiguration, android.view.SurfaceControl, android.view.InsetsState, android.view.InsetsSourceControl[], android.os.Bundle) for 113ms
+10-03 17:41:45.993   548  1685 W InputManager-JNI: Input channel object '2d14496 Splash Screen com.alhuda.islamic.app (client)' was disposed without first being removed with the input manager!
+10-03 17:41:45.997  2444  2458 D EGL_emulation: app_time_stats: avg=356.85ms min=206.55ms max=706.11ms count=4
+10-03 17:41:46.063   768   844 I Choreographer: Skipped 34 frames!  The application may be doing too much work on its main thread.
+10-03 17:41:46.064   768   844 W FrameTracker: Missed App frame:UNKNOWN: 24, 5675, 0, CUJ=J<SPLASHSCREEN_EXIT_ANIM>
+10-03 17:41:46.196   768   844 W FrameTracker: Missed SF frame:UNKNOWN: 24, 5675, 0, CUJ=J<SPLASHSCREEN_EXIT_ANIM>
+10-03 17:41:46.202   768   844 W FrameTracker: Missing HWUI jank callback for vsyncId: 5675, CUJ=J<SPLASHSCREEN_EXIT_ANIM>
+10-03 17:41:46.202   768   844 W FrameTracker: Missed SF frame:UNKNOWN: 66, 5689, 83656785, CUJ=J<SPLASHSCREEN_EXIT_ANIM>
+10-03 17:41:46.202   768   844 W FrameTracker: Missed App frame:UNKNOWN: 74, 5696, 0, CUJ=J<SPLASHSCREEN_EXIT_ANIM>
+10-03 17:41:46.202   768   844 W FrameTracker: Missed SF frame:UNKNOWN: 74, 5696, 0, CUJ=J<SPLASHSCREEN_EXIT_ANIM>
+10-03 17:41:46.207   768   844 W FrameTracker: Missing HWUI jank callback for vsyncId: 5696, CUJ=J<SPLASHSCREEN_EXIT_ANIM>
+10-03 17:41:46.207   768   844 W FrameTracker: Missed App frame:UNKNOWN: 74, 5706, 0, CUJ=J<SPLASHSCREEN_EXIT_ANIM>
+10-03 17:41:46.207   768   844 W FrameTracker: Missed SF frame:UNKNOWN: 74, 5706, 0, CUJ=J<SPLASHSCREEN_EXIT_ANIM>
+10-03 17:41:46.207   768   844 W FrameTracker: Missing HWUI jank callback for vsyncId: 5706, CUJ=J<SPLASHSCREEN_EXIT_ANIM>
+10-03 17:41:46.207   768   844 W FrameTracker: Missing SF jank callback for vsyncId: 5722, CUJ=J<SPLASHSCREEN_EXIT_ANIM>
+10-03 17:41:46.214   768   802 V PerfettoTrigger: Not triggering com.android.telemetry.interaction-jank-monitor-39 - not enough time since last trigger
+10-03 17:41:46.215   548   568 W WindowManager: Failed looking up window session=Session{df29e5d 768:u0a10109} callers=com.android.server.wm.WindowManagerService.windowForClientLocked:5972 com.android.server.wm.Session.setOnBackInvokedCallbackInfo:943 android.view.IWindowSession$Stub.onTransact:1180 
+10-03 17:41:46.215   548   568 E WindowManager: setOnBackInvokedCallback(): No window state for package:com.android.systemui
+10-03 17:41:46.216   548  1676 W system_server: Long monitor contention with owner binder:548_1B (2442) at void com.android.server.inputmethod.InputMethodManagerService.reportStartInput(android.os.IBinder, android.os.IBinder)(InputMethodManagerService.java:3367) waiters=0 in boolean com.android.server.inputmethod.InputMethodManagerService.hideSoftInput(com.android.internal.view.IInputMethodClient, android.os.IBinder, int, android.os.ResultReceiver, int) for 1.014s
+10-03 17:41:46.224  1014  1014 W droid.launcher3: Long monitor contention with owner UiThreadHelper (1044) at boolean android.view.inputmethod.InputMethodManager.hideSoftInputFromWindow(android.os.IBinder, int, android.os.ResultReceiver, int)(InputMethodManager.java:2001) waiters=0 in void android.view.inputmethod.InputMethodManager$H.handleMessage(android.os.Message) for 753ms
+10-03 17:41:46.224   548   573 W system_server: Long monitor contention with owner binder:548_1B (2442) at void com.android.server.inputmethod.InputMethodManagerService.reportStartInput(android.os.IBinder, android.os.IBinder)(InputMethodManagerService.java:3367) waiters=1 in void com.android.server.inputmethod.InputMethodManagerService$LocalServiceImpl.onImeParentChanged() for 632ms
+10-03 17:41:46.227  1014  1014 I Choreographer: Skipped 45 frames!  The application may be doing too much work on its main thread.
+10-03 17:41:46.415   548  2442 D OomAdjuster: Not killing cached processes
+10-03 17:41:46.432  2444  2449 I uda.islamic.app: Compiler allocated 4160KB to compile void android.widget.TextView.<init>(android.content.Context, android.util.AttributeSet, int, int)
+10-03 17:41:46.441   548  1749 E TaskPersister: File error accessing recents directory (directory doesn't exist?).
+10-03 17:41:47.272   768   925 D EGL_emulation: app_time_stats: avg=29926.91ms min=29926.91ms max=29926.91ms count=1
+10-03 17:41:49.115  1242  1967 I Dialer  : OmtpVvmCarrierCfgHlpr - OmtpEvent:CONFIG_STATUS_SMS_TIME_OUT
+10-03 17:41:49.115  1242  1242 I Dialer  : RetryPolicy - discarding deferred status: configuration_state=4
+10-03 17:41:49.118  1242  1242 I Dialer  : VvmTaskExecutor - no more tasks, stopping service if no task are added in 5000 millis
+10-03 17:41:49.118  1242  1242 I Dialer  : VvmTaskReceiver - task received
+10-03 17:41:49.118  1242  1242 I Dialer  : VvmTaskReceiver - TaskExecutor already running
+10-03 17:41:49.118  1242  1242 I Dialer  : Task.createTask - create task:com.android.voicemail.impl.ActivationTask
+10-03 17:41:49.119  1242  1242 I Dialer  : RetryPolicy - retry #1 for com.android.voicemail.impl.ActivationTask@bb2fb42 queued, executing in 5000
+10-03 17:41:49.119  1242  1242 I Dialer  : VvmTaskExecutor - com.android.voicemail.impl.ActivationTask@bb2fb42 added
+10-03 17:41:49.119  1242  1242 I Dialer  : VvmTaskExecutor - minimal wait time:4999
+10-03 17:41:49.119  1242  1242 I Dialer  : VvmTaskExecutor - sleep for 4999 millis
+10-03 17:41:49.221  2444  2468 D ProfileInstaller: Installing profile for com.alhuda.islamic.app
+10-03 17:41:51.507   548  1685 D WifiNl80211Manager: Scan result ready event
+10-03 17:41:51.508   548  1685 D WifiNative: Scan result ready event
+10-03 17:41:52.445  2471  2471 W ProcessState: Extra binder thread started, but 0 threads requested. Do not use *startThreadPool when zero threads are requested.
+10-03 17:41:52.456   198   198 I hwservicemanager: getTransport: Cannot find entry android.hardware.graphics.mapper@4.0::IMapper/default in either framework or device VINTF manifest.
+10-03 17:41:52.456  2471  2472 I Gralloc4: mapper 4.x is not supported
+10-03 17:41:52.513  2471  2472 D HostConnection: HostComposition ext ANDROID_EMU_CHECKSUM_HELPER_v1 ANDROID_EMU_native_sync_v2 ANDROID_EMU_dma_v1 ANDROID_EMU_direct_mem ANDROID_EMU_host_composition_v1 ANDROID_EMU_host_composition_v2 ANDROID_EMU_vulkan ANDROID_EMU_deferred_vulkan_commands ANDROID_EMU_vulkan_null_optional_strings ANDROID_EMU_vulkan_create_resources_with_requirements ANDROID_EMU_YUV_Cache ANDROID_EMU_vulkan_ignored_handles ANDROID_EMU_has_shared_slots_host_memory_allocator ANDROID_EMU_vulkan_free_memory_sync ANDROID_EMU_vulkan_shader_float16_int8 ANDROID_EMU_vulkan_async_queue_submit ANDROID_EMU_vulkan_queue_submit_with_commands ANDROID_EMU_sync_buffer_data ANDROID_EMU_vulkan_async_qsri ANDROID_EMU_read_color_buffer_dma ANDROID_EMU_hwc_multi_configs ANDROID_EMU_hwc_color_transform GL_OES_EGL_image_external_essl3 GL_OES_vertex_array_object GL_KHR_texture_compression_astc_ldr ANDROID_EMU_host_side_tracing ANDROID_EMU_gles_max_version_3_0 
+10-03 17:41:52.855   548  1685 I ActivityManager: Force stopping com.alhuda.islamic.app appid=10126 user=0: from pid 2476
+10-03 17:41:52.871   548  1685 I ActivityManager: Killing 2444:com.alhuda.islamic.app/u0a126 (adj 0): stop com.alhuda.islamic.app due to from pid 2476
+10-03 17:41:52.874   548  1685 W ActivityTaskManager: Force removing ActivityRecord{3c80a58 u0 com.alhuda.islamic.app/.WidgetPreviewActivity} t13 f}}: app died, no saved state
+10-03 17:41:52.890   548  1685 W InputManager-JNI: Input channel object '9794b8 com.alhuda.islamic.app/com.alhuda.islamic.app.WidgetPreviewActivity (client)' was disposed without first being removed with the input manager!
+10-03 17:41:52.910   419   437 W TransactionTracing: Could not find layer handle 0x7a7dd7a6b450
+10-03 17:41:52.914   419   437 W TransactionTracing: Could not find layer handle 0x7a7dd7a6b450
+10-03 17:41:52.928   548   573 V WindowManager: Unknown focus tokens, dropping reportFocusChanged
+10-03 17:41:52.931   548  1685 D OomAdjuster: Not killing cached processes
+10-03 17:41:52.987   954   954 D CarrierSvcBindHelper: onHandleForceStop: [com.alhuda.islamic.app]
+10-03 17:41:52.988   954   954 D CarrierSvcBindHelper: No carrier app for: 0
+10-03 17:41:53.000   548   585 I libprocessgroup: Successfully killed process cgroup uid 10126 pid 2444 in 127ms
+10-03 17:41:53.115   548  1685 D CompatibilityChangeReporter: Compat change id reported: 161252188; UID 10126; state: ENABLED
+10-03 17:41:53.115   548  1685 I ActivityTaskManager: START u0 {flg=0x10000000 cmp=com.alhuda.islamic.app/.WidgetPreviewActivity (has extras)} from uid 2000
+10-03 17:41:53.119   419   437 W TransactionTracing: Could not find layer handle 0x7a7dd7a6c230
+10-03 17:41:53.122   419   437 W TransactionTracing: Could not find layer handle 0x7a7dd7a6e8d0
+10-03 17:41:53.122   419   437 W TransactionTracing: Could not find layer handle 0x7a7dd7a6c230
+10-03 17:41:53.122   548  1685 D CompatibilityChangeReporter: Compat change id reported: 194480991; UID 10126; state: ENABLED
+10-03 17:41:53.129   548  1685 D CompatibilityChangeReporter: Compat change id reported: 174042980; UID 10126; state: DISABLED
+10-03 17:41:53.130   548  1685 D CompatibilityChangeReporter: Compat change id reported: 184838306; UID 10126; state: DISABLED
+10-03 17:41:53.130   548  1685 D CompatibilityChangeReporter: Compat change id reported: 185004937; UID 10126; state: DISABLED
+10-03 17:41:53.130   548  1685 D CompatibilityChangeReporter: Compat change id reported: 181136395; UID 10126; state: DISABLED
+10-03 17:41:53.130   548  1685 D CompatibilityChangeReporter: Compat change id reported: 174042936; UID 10126; state: DISABLED
+10-03 17:41:53.131   548  1685 D CompatibilityChangeReporter: Compat change id reported: 197654537; UID 10126; state: ENABLED
+10-03 17:41:53.243   548  1685 D CompatibilityChangeReporter: Compat change id reported: 205907456; UID 10126; state: ENABLED
+10-03 17:41:53.550     0     0 I binder  : undelivered transaction 127870, process died.
+10-03 17:41:53.552     0     0 I binder  : undelivered transaction 127611, process died.
+10-03 17:41:53.554     0     0 I binder  : undelivered transaction 127869, process died.
+10-03 17:41:53.392   347   347 I Zygote  : Process 2444 exited due to signal 9 (Killed)
+10-03 17:41:53.392   548  2442 V ActivityManager: Got obituary of 2444:com.alhuda.islamic.app
+10-03 17:41:53.400   419   419 E BpTransactionCompletedListener: Failed to transact (-32)
+10-03 17:41:53.451   768   845 D SplashScreenView: Build android.window.SplashScreenView{356626a V.E...... ......ID 0,0-0,0}
+10-03 17:41:53.451   768   845 D SplashScreenView: Icon: view: android.widget.ImageView{5c0635b V.ED..... ......I. 0,0-0,0 #10204dc android:id/splashscreen_icon_view} drawable: com.android.wm.shell.startingsurface.SplashscreenIconDrawableFactory$ImmobileIconDrawable@49237f8 size: 420
+10-03 17:41:53.451   768   845 D SplashScreenView: Branding: view: android.view.View{11f94d1 G.ED..... ......I. 0,0-0,0 #10204db android:id/splashscreen_branding_view} drawable: null size w: 0 h: 0
+10-03 17:41:53.461   548   574 W system_server: Long monitor contention with owner binder:548_14 (1685) at com.android.server.wm.StartingSurfaceController$StartingSurface com.android.server.wm.StartingSurfaceController.createSplashScreenStartingSurface(com.android.server.wm.ActivityRecord, int)(StartingSurfaceController.java:87) waiters=1 in void com.android.server.wm.WindowSurfacePlacer$Traverser.run() for 336ms
+10-03 17:41:53.557   548   573 W ActivityManager: Slow operation: 95ms so far, now at startProcess: done creating new process record
+10-03 17:41:53.558   548   573 W ActivityManager: Slow operation: 95ms so far, now at startProcess: stepping in to startProcess
+10-03 17:41:53.559   548   573 D CompatibilityChangeReporter: Compat change id reported: 135634846; UID 10126; state: DISABLED
+10-03 17:41:53.559   548   573 W ActivityManager: Slow operation: 97ms so far, now at startProcess: done starting proc!
+10-03 17:41:53.560   548   573 W ActivityManager: setHasOverlayUi called on unknown pid: 2444
+10-03 17:41:53.560   548   582 D CompatibilityChangeReporter: Compat change id reported: 143937733; UID 10126; state: ENABLED
+10-03 17:41:53.566   548   568 D CompatibilityChangeReporter: Compat change id reported: 168419799; UID 10126; state: DISABLED
+10-03 17:41:53.641   548  1770 D CoreBackPreview: Window{6a93f90 u0 Splash Screen com.alhuda.islamic.app}: Setting back callback OnBackInvokedCallbackInfo{mCallback=android.window.IOnBackInvokedCallback$Stub$Proxy@8a3c88e, mPriority=0}
+10-03 17:41:53.998   768   925 W Parcel  : Expecting binder but got null!
+10-03 17:41:54.194  1242  1967 I Dialer  : VvmTaskExecutor - executing task com.android.voicemail.impl.ActivationTask@bb2fb42
+10-03 17:41:54.195  1242  1967 I Dialer  : PreOMigrationHandler - ComponentInfo{com.android.phone/com.android.services.telephony.TelephonyConnectionService}, 1, UserHandle{0} already migrated
+10-03 17:41:54.206   548   571 W Looper  : Slow dispatch took 110ms android.ui h=com.android.server.am.ActivityManagerService$UiHandler c=com.android.server.am.UidObserverController$$ExternalSyntheticLambda0@239c46 m=0
+10-03 17:41:54.289   419   437 W TransactionTracing: Could not find layer handle 0x7a7dd7a6df70
+10-03 17:41:54.290   419   437 W TransactionTracing: Could not find layer handle 0x7a7dd7a6d2b0
+10-03 17:41:54.346   548   568 W ContentProviderHelper: Slow operation: 133ms so far, now at getContentProviderImpl: done!
+10-03 17:41:54.667     0     0 W healthd : battery l=100 v=5000 t=25.0 h=2 st=2 c=900000 fc=3000000 cc=10 chg=a
+10-03 17:41:54.522  1457  1951 I VoicemailNotifier: receivers for android.intent.action.PROVIDER_CHANGED :[]
+10-03 17:41:54.530  1242  1967 I Dialer  : VvmActivationTask - VVM content provider configured - vvm_type_cvvm
+10-03 17:41:54.530  1242  1967 I Dialer  : OmtpVvmCarrierCfgHlpr - OmtpEvent:CONFIG_ACTIVATING
+10-03 17:41:54.533  1457  1595 I VoicemailNotifier: receivers for android.intent.action.PROVIDER_CHANGED :[]
+10-03 17:41:54.544   954  1268 D SmsNumberUtils: enter filterDestAddr. destAddr="[BajqU4K5_YhSYbs-7QUn0dOwcmI]"
+10-03 17:41:54.545   954  1268 D SmsNumberUtils: destAddr is not formatted.
+10-03 17:41:54.545   954  1268 D SmsNumberUtils: leave filterDestAddr, new destAddr="[BajqU4K5_YhSYbs-7QUn0dOwcmI]"
+10-03 17:41:54.566   548   581 W BroadcastQueue: Permission Denial: broadcasting Intent { act=com.android.voicemailomtp.sms.REQUEST_SENT flg=0x10 pkg=com.android.dialer } from com.android.dialer (pid=-1, uid=10086) requires com.android.dialer.permission.DIALER_ORIGIN due to registered receiver BroadcastFilter{50a4b9f 10086/u0 ReceiverList{4d9713e 1242 com.android.dialer/10086/u0 remote:b033df9}}
+10-03 17:41:54.567   347   347 D Zygote  : Forked child process 2488
+10-03 17:41:54.570   548   582 W ActivityManager: Slow operation: 1012ms so far, now at startProcess: returned from zygote!
+10-03 17:41:54.570   548   582 W ActivityManager: Slow operation: 1013ms so far, now at startProcess: done updating battery stats
+10-03 17:41:54.570   548   582 W ActivityManager: Slow operation: 1013ms so far, now at startProcess: building log message
+10-03 17:41:54.570   548   582 I ActivityManager: Start proc 2488:com.alhuda.islamic.app/u0a126 for next-top-activity {com.alhuda.islamic.app/com.alhuda.islamic.app.WidgetPreviewActivity}
+10-03 17:41:54.570   548   582 W ActivityManager: Slow operation: 1013ms so far, now at startProcess: starting to update pids map
+10-03 17:41:54.570   548   582 W ActivityManager: Slow operation: 1013ms so far, now at startProcess: done updating pids map
+10-03 17:41:54.582  2488  2488 I uda.islamic.app: Late-enabling -Xcheck:jni
+10-03 17:41:54.613  2488  2488 W uda.islamic.app: Unexpected CPU variant for x86: x86_64.
+10-03 17:41:54.613  2488  2488 W uda.islamic.app: Known variants: atom, sandybridge, silvermont, kabylake, default
+10-03 17:41:54.616   439   446 I adbd    : jdwp connection from 2488
+10-03 17:41:54.636  2488  2488 D CompatibilityChangeReporter: Compat change id reported: 171979766; UID 10126; state: ENABLED
+10-03 17:41:54.647  2488  2488 W ziparchive: Unable to open '/data/app/~~LAD1qEZ5t8HKUcbxyaz7Rg==/com.alhuda.islamic.app-AsuZwa_EaP7vYQ84NIuiUQ==/base.dm': No such file or directory
+10-03 17:41:54.647  2488  2488 W ziparchive: Unable to open '/data/app/~~LAD1qEZ5t8HKUcbxyaz7Rg==/com.alhuda.islamic.app-AsuZwa_EaP7vYQ84NIuiUQ==/base.dm': No such file or directory
+10-03 17:41:54.849  2488  2488 V GraphicsEnvironment: ANGLE Developer option for 'com.alhuda.islamic.app' set to: 'default'
+10-03 17:41:54.850  2488  2488 V GraphicsEnvironment: ANGLE GameManagerService for com.alhuda.islamic.app: false
+10-03 17:41:54.850  2488  2488 V GraphicsEnvironment: Neither updatable production driver nor prerelease driver is supported.
+10-03 17:41:54.852  2488  2488 D NetworkSecurityConfig: No Network Security Config specified, using platform default
+10-03 17:41:54.852  2488  2488 D NetworkSecurityConfig: No Network Security Config specified, using platform default
+10-03 17:41:54.893  2488  2504 D libEGL  : loaded /vendor/lib64/egl/libEGL_emulation.so
+10-03 17:41:54.896  2488  2504 D libEGL  : loaded /vendor/lib64/egl/libGLESv1_CM_emulation.so
+10-03 17:41:54.900  2488  2488 D CompatibilityChangeReporter: Compat change id reported: 171228096; UID 10126; state: ENABLED
+10-03 17:41:54.907  2488  2488 D CompatibilityChangeReporter: Compat change id reported: 160794467; UID 10126; state: ENABLED
+10-03 17:41:54.911  2488  2504 D libEGL  : loaded /vendor/lib64/egl/libGLESv2_emulation.so
+10-03 17:41:54.918  2488  2488 D CompatibilityChangeReporter: Compat change id reported: 210923482; UID 10126; state: ENABLED
+10-03 17:41:54.963   548   568 D CoreBackPreview: Window{7800e33 u0 com.alhuda.islamic.app/com.alhuda.islamic.app.WidgetPreviewActivity}: Setting back callback OnBackInvokedCallbackInfo{mCallback=android.window.IOnBackInvokedCallback$Stub$Proxy@2329769, mPriority=0}
+10-03 17:41:55.055   419   437 W TransactionTracing: Could not find layer handle 0x7a7dd7a6f290
+10-03 17:41:55.055   419   437 W TransactionTracing: Could not find layer handle 0x7a7dd7a6ee10
+10-03 17:41:55.063  2488  2502 D HostConnection: HostComposition ext ANDROID_EMU_CHECKSUM_HELPER_v1 ANDROID_EMU_native_sync_v2 ANDROID_EMU_dma_v1 ANDROID_EMU_direct_mem ANDROID_EMU_host_composition_v1 ANDROID_EMU_host_composition_v2 ANDROID_EMU_vulkan ANDROID_EMU_deferred_vulkan_commands ANDROID_EMU_vulkan_null_optional_strings ANDROID_EMU_vulkan_create_resources_with_requirements ANDROID_EMU_YUV_Cache ANDROID_EMU_vulkan_ignored_handles ANDROID_EMU_has_shared_slots_host_memory_allocator ANDROID_EMU_vulkan_free_memory_sync ANDROID_EMU_vulkan_shader_float16_int8 ANDROID_EMU_vulkan_async_queue_submit ANDROID_EMU_vulkan_queue_submit_with_commands ANDROID_EMU_sync_buffer_data ANDROID_EMU_vulkan_async_qsri ANDROID_EMU_read_color_buffer_dma ANDROID_EMU_hwc_multi_configs ANDROID_EMU_hwc_color_transform GL_OES_EGL_image_external_essl3 GL_OES_vertex_array_object GL_KHR_texture_compression_astc_ldr ANDROID_EMU_host_side_tracing ANDROID_EMU_gles_max_version_3_0 
+10-03 17:41:55.065  2488  2502 W OpenGLRenderer: Failed to initialize 101010-2 format, error = EGL_SUCCESS
+10-03 17:41:55.066  2488  2502 D EGL_emulation: eglCreateContext: 0x7b546731a6d0: maj 3 min 0 rcv 3
+10-03 17:41:55.067  2488  2502 D EGL_emulation: eglMakeCurrent: 0x7b546731a6d0: ver 3 0 (tinfo 0x7b56907ed080) (first time)
+10-03 17:41:55.080   198   198 I hwservicemanager: getTransport: Cannot find entry android.hardware.graphics.mapper@4.0::IMapper/default in either framework or device VINTF manifest.
+10-03 17:41:55.081  2488  2502 I Gralloc4: mapper 4.x is not supported
+10-03 17:41:55.130   198   198 I hwservicemanager: getTransport: Cannot find entry android.hardware.graphics.allocator@4.0::IAllocator/default in either framework or device VINTF manifest.
+10-03 17:41:55.135   197   197 I servicemanager: Could not find android.hardware.graphics.allocator.IAllocator/default in the VINTF manifest.
+10-03 17:41:55.136  2488  2502 W Gralloc4: allocator 4.x is not supported
+10-03 17:41:55.165  2488  2502 D HostConnection: HostComposition ext ANDROID_EMU_CHECKSUM_HELPER_v1 ANDROID_EMU_native_sync_v2 ANDROID_EMU_dma_v1 ANDROID_EMU_direct_mem ANDROID_EMU_host_composition_v1 ANDROID_EMU_host_composition_v2 ANDROID_EMU_vulkan ANDROID_EMU_deferred_vulkan_commands ANDROID_EMU_vulkan_null_optional_strings ANDROID_EMU_vulkan_create_resources_with_requirements ANDROID_EMU_YUV_Cache ANDROID_EMU_vulkan_ignored_handles ANDROID_EMU_has_shared_slots_host_memory_allocator ANDROID_EMU_vulkan_free_memory_sync ANDROID_EMU_vulkan_shader_float16_int8 ANDROID_EMU_vulkan_async_queue_submit ANDROID_EMU_vulkan_queue_submit_with_commands ANDROID_EMU_sync_buffer_data ANDROID_EMU_vulkan_async_qsri ANDROID_EMU_read_color_buffer_dma ANDROID_EMU_hwc_multi_configs ANDROID_EMU_hwc_color_transform GL_OES_EGL_image_external_essl3 GL_OES_vertex_array_object GL_KHR_texture_compression_astc_ldr ANDROID_EMU_host_side_tracing ANDROID_EMU_gles_max_version_3_0 
+10-03 17:41:56.695  2488  2502 W Parcel  : Expecting binder but got null!
+10-03 17:41:56.758   548   570 W ziparchive: Unable to open '/data/app/~~LAD1qEZ5t8HKUcbxyaz7Rg==/com.alhuda.islamic.app-AsuZwa_EaP7vYQ84NIuiUQ==/base.dm': No such file or directory
+10-03 17:41:56.762   548   570 I ActivityTaskManager: Displayed com.alhuda.islamic.app/.WidgetPreviewActivity: +3s639ms
+10-03 17:41:56.762  2488  2488 I Choreographer: Skipped 107 frames!  The application may be doing too much work on its main thread.
+10-03 17:41:57.170   548  1749 E TaskPersister: File error accessing recents directory (directory doesn't exist?).
+10-03 17:41:57.269  2488  2500 I OpenGLRenderer: Davey! duration=1942ms; Flags=0, FrameTimelineVsyncId=6124, IntendedVsync=145666939489, Vsync=147450272644, InputEventId=0, HandleInputStart=147463076541, AnimationStart=147463079256, PerformTraversalsStart=147463274841, DrawStart=147463412287, FrameDeadline=145683606155, FrameInterval=147462560219, FrameStartTime=16666665, SyncQueued=147463675137, SyncStart=147463763522, IssueDrawCommandsStart=147464481841, SwapBuffers=147466590472, FrameCompleted=147609945688, DequeueBufferDuration=5391, QueueBufferDuration=4053907, GpuCompleted=147609875066, SwapBuffersCompleted=147609945688, DisplayPresentTime=35188667056128, CommandSubmissionCompleted=147466590472, 
+10-03 17:41:57.538  2488  2488 I Choreographer: Skipped 30 frames!  The application may be doing too much work on its main thread.
+10-03 17:41:57.574  2488  2500 I OpenGLRenderer: Davey! duration=765ms; Flags=0, FrameTimelineVsyncId=6187, IntendedVsync=147466933893, Vsync=147600267213, InputEventId=0, HandleInputStart=147603702941, AnimationStart=147603707629, PerformTraversalsStart=147603708671, DrawStart=147603823806, FrameDeadline=147633605960, FrameInterval=147603689295, FrameStartTime=16666665, SyncQueued=147604274005, SyncStart=147609958722, IssueDrawCommandsStart=147610108000, SwapBuffers=147970796713, FrameCompleted=148237708298, DequeueBufferDuration=6061, QueueBufferDuration=99417963, GpuCompleted=148237589336, SwapBuffersCompleted=148237708298, DisplayPresentTime=72057628414509141, CommandSubmissionCompleted=147970796713, 
+10-03 17:41:57.777   548   836 W InputManager-JNI: Input channel object '6a93f90 Splash Screen com.alhuda.islamic.app (client)' was disposed without first being removed with the input manager!
+10-03 17:41:57.932   768   844 W FrameTracker: Missed App frame:UNKNOWN: 10, 6164, 0, CUJ=J<SPLASHSCREEN_EXIT_ANIM>
+10-03 17:41:57.935   768   844 W FrameTracker: Missed SF frame:UNKNOWN: 10, 6164, 0, CUJ=J<SPLASHSCREEN_EXIT_ANIM>
+10-03 17:41:57.935   768   844 W FrameTracker: Missing HWUI jank callback for vsyncId: 6164, CUJ=J<SPLASHSCREEN_EXIT_ANIM>
+10-03 17:41:57.935   768   844 W FrameTracker: Missed App frame:UNKNOWN: 88, 6171, 0, CUJ=J<SPLASHSCREEN_EXIT_ANIM>
+10-03 17:41:57.939   768   844 W FrameTracker: Missed SF frame:UNKNOWN: 88, 6171, 0, CUJ=J<SPLASHSCREEN_EXIT_ANIM>
+10-03 17:41:57.939   768   844 W FrameTracker: Missing HWUI jank callback for vsyncId: 6171, CUJ=J<SPLASHSCREEN_EXIT_ANIM>
+10-03 17:41:57.939   768   844 W FrameTracker: Missed App frame:UNKNOWN: 74, 6178, 440321702, CUJ=J<SPLASHSCREEN_EXIT_ANIM>
+10-03 17:41:57.939   768   844 W FrameTracker: Missed SF frame:UNKNOWN: 74, 6178, 440321702, CUJ=J<SPLASHSCREEN_EXIT_ANIM>
+10-03 17:41:57.940   768   802 V PerfettoTrigger: Not triggering com.android.telemetry.interaction-jank-monitor-39 - not enough time since last trigger
+10-03 17:41:57.942   768   768 W ndroid.systemui: Long monitor contention with owner SysUiBg (871) at boolean android.os.MessageQueue.enqueueMessage(android.os.Message, long)(MessageQueue.java:600) waiters=0 in android.os.Message android.os.MessageQueue.next() for 507ms
+10-03 17:41:57.944   548   573 W system_server: Long monitor contention with owner binder:548_7 (836) at void com.android.server.wm.WindowManagerService.removeWindow(com.android.server.wm.Session, android.view.IWindow)(WindowManagerService.java:2050) waiters=1 in void com.android.server.wm.ActivityTaskSupervisor$ActivityTaskSupervisorHandler.handleMessage(android.os.Message) for 165ms
+10-03 17:41:57.947   768  1914 W ndroid.systemui: Long monitor contention with owner SysUiBg (871) at boolean android.os.MessageQueue.enqueueMessage(android.os.Message, long)(MessageQueue.java:600) waiters=1 in void android.os.MessageQueue.removeMessages(android.os.Handler, int, java.lang.Object) for 177ms
+10-03 17:41:57.956   419   437 W TransactionTracing: Could not find layer handle 0x7a7dd7a6e090
+10-03 17:41:57.958  2488  2502 D EGL_emulation: app_time_stats: avg=317.45ms min=206.87ms max=627.74ms count=4
+10-03 17:41:57.958   548   568 W WindowManager: Failed looking up window session=Session{df29e5d 768:u0a10109} callers=com.android.server.wm.WindowManagerService.windowForClientLocked:5972 com.android.server.wm.Session.setOnBackInvokedCallbackInfo:943 android.view.IWindowSession$Stub.onTransact:1180 
+10-03 17:41:57.962   419   437 W TransactionTracing: Could not find layer handle 0x7a7dd7a6f050
+10-03 17:41:57.962   548   568 E WindowManager: setOnBackInvokedCallback(): No window state for package:com.android.systemui
+10-03 17:41:57.962   419   437 W TransactionTracing: Could not find layer handle 0x7a7dd7a6e090
+10-03 17:41:57.962   548  1770 D CompatibilityChangeReporter: Compat change id reported: 214016041; UID 10126; state: ENABLED
+10-03 17:41:57.966   419   437 W TransactionTracing: Could not find layer handle 0x7a7dd7a6a7f0
+10-03 17:41:57.966   419   437 W TransactionTracing: Could not find layer handle 0x7a7dd7a6a7f0
+10-03 17:41:57.966   419   437 W TransactionTracing: Could not find layer handle 0x7a7dd7a6a7f0
+10-03 17:41:58.039  2488  2498 I OpenGLRenderer: Davey! duration=730ms; Flags=0, FrameTimelineVsyncId=6209, IntendedVsync=147733600549, Vsync=148233600529, InputEventId=0, HandleInputStart=148238513309, AnimationStart=148238517266, PerformTraversalsStart=148238518188, DrawStart=148241692916, FrameDeadline=148483600519, FrameInterval=148238190197, FrameStartTime=16666666, SyncQueued=148241965314, SyncStart=148444646239, IssueDrawCommandsStart=148461921232, SwapBuffers=148463995137, FrameCompleted=148667056972, DequeueBufferDuration=6813, QueueBufferDuration=254345, GpuCompleted=148667056972, SwapBuffersCompleted=148658870481, DisplayPresentTime=72904454231819792, CommandSubmissionCompleted=148463995137, 
+10-03 17:41:58.049   548   573 D OomAdjuster: Not killing cached processes
+10-03 17:41:58.107  2488  2493 I uda.islamic.app: Compiler allocated 4160KB to compile void android.widget.TextView.<init>(android.content.Context, android.util.AttributeSet, int, int)
+10-03 17:41:58.198   419   437 W TransactionTracing: Could not find layer handle 0x7a7dd7a6cc50
+10-03 17:41:58.969   346  1825 W resolv  : SSL_connect ssl error =5, mark 0xf0064: Connection refused
+10-03 17:41:58.969   346  1825 W resolv  : TLS Handshake failed
+10-03 17:41:58.969   346  1825 W resolv  : query failed
+10-03 17:41:58.969   346  1825 W resolv  : validateDnsTlsServer returned 0 for 10.0.2.3
+10-03 17:41:58.970   346  1825 W resolv  : Validation failed
+10-03 17:42:00.043   768   925 D EGL_emulation: app_time_stats: avg=12769.90ms min=12769.90ms max=12769.90ms count=1
+10-03 17:42:00.586  2488  2514 D ProfileInstaller: Installing profile for com.alhuda.islamic.app
+10-03 17:42:04.361  2517  2517 W ProcessState: Extra binder thread started, but 0 threads requested. Do not use *startThreadPool when zero threads are requested.
+10-03 17:42:04.370   198   198 I hwservicemanager: getTransport: Cannot find entry android.hardware.graphics.mapper@4.0::IMapper/default in either framework or device VINTF manifest.
+10-03 17:42:04.370  2517  2518 I Gralloc4: mapper 4.x is not supported
+10-03 17:42:04.425  2517  2518 D HostConnection: HostComposition ext ANDROID_EMU_CHECKSUM_HELPER_v1 ANDROID_EMU_native_sync_v2 ANDROID_EMU_dma_v1 ANDROID_EMU_direct_mem ANDROID_EMU_host_composition_v1 ANDROID_EMU_host_composition_v2 ANDROID_EMU_vulkan ANDROID_EMU_deferred_vulkan_commands ANDROID_EMU_vulkan_null_optional_strings ANDROID_EMU_vulkan_create_resources_with_requirements ANDROID_EMU_YUV_Cache ANDROID_EMU_vulkan_ignored_handles ANDROID_EMU_has_shared_slots_host_memory_allocator ANDROID_EMU_vulkan_free_memory_sync ANDROID_EMU_vulkan_shader_float16_int8 ANDROID_EMU_vulkan_async_queue_submit ANDROID_EMU_vulkan_queue_submit_with_commands ANDROID_EMU_sync_buffer_data ANDROID_EMU_vulkan_async_qsri ANDROID_EMU_read_color_buffer_dma ANDROID_EMU_hwc_multi_configs ANDROID_EMU_hwc_color_transform GL_OES_EGL_image_external_essl3 GL_OES_vertex_array_object GL_KHR_texture_compression_astc_ldr ANDROID_EMU_host_side_tracing ANDROID_EMU_gles_max_version_3_0 
+10-03 17:42:04.893     0     0 I logd    : logdr: UID=2000 GID=2000 PID=2520 n tail=0 logMask=99 pid=0 start=0ns deadline=0ns
