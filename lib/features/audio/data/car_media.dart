@@ -31,7 +31,6 @@ class CarMedia {
   // Plain PNG drawables: Android Auto cannot draw the adaptive launcher icon
   // (it showed white squares).
   static Uri _icon(String name) => Uri.parse('android.resource://com.alhuda.islamic.app/drawable/car_$name');
-  static final _quranArt = _icon('quran');
   static final _reciterArt = _icon('reciter');
   static final _radioArt = _icon('radio');
   static final _surahArt = _icon('surah');
@@ -66,9 +65,10 @@ class CarMedia {
   List<MediaItem> children(String parent) {
     if (parent == AudioService.browsableRootId) {
       return [
-        _folder(_quran, 'القرآن الكريم', subtitle: _appReciter.nameAr, art: _quranArt),
-        _folder(_reciters, 'المشايخ', subtitle: 'المصحف كاملًا بأصوات كبار القراء', art: _reciterArt),
-        _folder(_radios, 'الإذاعات', subtitle: 'بث مباشر على مدار الساعة', art: _radioArt),
+        // Root tabs: Android Auto tints these, so they must be white vectors.
+        _folder(_quran, 'القرآن الكريم', subtitle: _appReciter.nameAr, art: _icon('tab_quran')),
+        _folder(_reciters, 'المشايخ', subtitle: 'المصحف كاملًا بأصوات كبار القراء', art: _icon('tab_reciter')),
+        _folder(_radios, 'الإذاعات', subtitle: 'بث مباشر على مدار الساعة', art: _icon('tab_radio')),
       ];
     }
     if (parent == AudioService.recentRootId) {

@@ -36,10 +36,10 @@ class QuranAudioHandler extends BaseAudioHandler with SeekHandler {
       _broadcastState,
       onError: (Object e, StackTrace st) {
         debugPrint('Audio playback error: $e');
-        playbackState.add(playbackState.value.copyWith(
-          processingState: AudioProcessingState.error,
-          errorMessage: e.toString(),
-        ));
+        // A mirror that failed while another is tried, or a load replaced by a
+        // new one, is not an error for the listener.
+        if (e is PlayerInterruptedException || _player.playing) return;
+        _broadcastState(_player.playbackEvent, error: 'تعذر التشغيل، تحقق من الاتصال');
       },
     );
 
@@ -58,6 +58,10 @@ class QuranAudioHandler extends BaseAudioHandler with SeekHandler {
     _player.processingStateStream.listen((state) {
       if (state == ProcessingState.completed) _onRangeCompleted();
     });
+
+    // Advertise the actions (play from the car's library, voice search)
+    // before anything plays.
+    _broadcastState(_player.playbackEvent);
   }
 
   int get loopsRemaining => _loopsRemaining;
@@ -176,19 +180,30 @@ class QuranAudioHandler extends BaseAudioHandler with SeekHandler {
     await _player.stop();
     queue.add(const []);
     mediaItem.add(null);
-    playbackState.add(playbackState.value.copyWith(processingState: AudioProcessingState.idle, playing: false));
+    playbackState.add(PlaybackState(
+      processingState: AudioProcessingState.idle,
+      playing: false,
+      systemActions: const {MediaAction.play, MediaAction.playFromMediaId, MediaAction.playFromSearch},
+    ));
     await super.stop();
   }
 
   @override
   Future<void> onTaskRemoved() => stop();
 
-  void _broadcastState(PlaybackEvent event) {
+  /// A fresh state every time: an old error message must never stick to a
+  /// playing state (Android Auto then shows «Could not load your selection»
+  /// and hides its player even though audio plays).
+  void _broadcastState(PlaybackEvent event, {String? error}) {
     final playing = _player.playing;
     final live = mediaItem.value?.extras?['live'] == true;
+    final previous = playbackState.value;
     // Full set of actions so car screens (Android Auto) and lock screens show
     // a real player: play/pause, stop, previous/next (not for live radio).
-    playbackState.add(playbackState.value.copyWith(
+    playbackState.add(PlaybackState(
+      repeatMode: previous.repeatMode,
+      shuffleMode: previous.shuffleMode,
+      errorMessage: error,
       controls: live
           ? [if (playing) MediaControl.pause else MediaControl.play, MediaControl.stop]
           : [
@@ -214,7 +229,9 @@ class QuranAudioHandler extends BaseAudioHandler with SeekHandler {
         },
       },
       androidCompactActionIndices: live ? const [0, 1] : const [0, 1, 3],
-      processingState: const {
+      processingState: error != null
+          ? AudioProcessingState.error
+          : const {
         ProcessingState.idle: AudioProcessingState.idle,
         ProcessingState.loading: AudioProcessingState.loading,
         ProcessingState.buffering: AudioProcessingState.buffering,
