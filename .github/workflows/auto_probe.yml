@@ -7,7 +7,7 @@ permissions:
 jobs:
   shots:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 90
     steps:
       - name: Free disk space
         run: |
@@ -45,8 +45,8 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
       - name: Screenshots
-        timeout-minutes: 27
-        run: PROBE_SCRIPT=auto_probe.sh timeout 25m bash tool/ci/emulator.sh > shots/emu.txt 2>&1 || true
+        timeout-minutes: 45
+        run: PROBE_SCRIPT=auto_probe.sh timeout 40m bash tool/ci/emulator.sh > shots/emu.txt 2>&1 || true
       - name: Push results
         if: always()
         run: |

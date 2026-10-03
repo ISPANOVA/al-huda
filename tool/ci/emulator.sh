@@ -14,7 +14,7 @@ ls -la /dev/kvm
 emulator -avd shots -no-window -no-boot-anim -gpu swiftshader_indirect -no-snapshot -camera-back none -accel on > shots/emulator_log.txt 2>&1 &
 sleep 20
 tail -20 shots/emulator_log.txt
-for i in $(seq 1 100); do
+for i in $(seq 1 150); do
   [ "$(adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')" = "1" ] && break
   sleep 5
 done
