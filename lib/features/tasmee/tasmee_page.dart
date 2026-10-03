@@ -55,7 +55,7 @@ class _TasmeePageState extends State<TasmeePage> {
   /// speech service only ever reports errors.
   int _earlyErrors = 0;
   bool _gotResult = false;
-  bool _noArabic = false;
+  bool _helpShown = false;
   bool _active = false; // user wants to listen
   bool _listening = false;
   bool _peek = false;
@@ -197,7 +197,7 @@ class _TasmeePageState extends State<TasmeePage> {
     try {
       final locales = await _stt.locales();
       final ar = locales.where((l) => l.localeId.toLowerCase().startsWith('ar')).toList();
-      _noArabic = locales.isNotEmpty && ar.isEmpty;
+
       String? pick(String id) => ar.where((l) => l.localeId.replaceAll('-', '_') == id).firstOrNull?.localeId;
       _localeId = pick('ar_SA') ?? pick('ar_EG') ?? (ar.isNotEmpty ? ar.first.localeId : 'ar_SA');
     } catch (_) {
@@ -225,7 +225,6 @@ class _TasmeePageState extends State<TasmeePage> {
       }
       return;
     }
-    if (_noArabic && mounted) _showSpeechHelp(noArabic: true);
     _active = true;
     _earlyErrors = 0;
     // Android closes each utterance after a pause; keep the mic open while active.
@@ -295,7 +294,17 @@ class _TasmeePageState extends State<TasmeePage> {
     }
     // Other errors (silence, no match, busy) are recovered by the watchdog,
     // unless nothing was ever heard: then the device can't recognise speech.
-    if (!_gotResult && e.errorMsg != 'error_no_match' && e.errorMsg != 'error_speech_timeout') {
+    // Only errors that mean «this device can't recognise speech» count;
+    // silence, no match, busy and client errors happen on every phone.
+    const fatal = {
+      'error_audio',
+      'error_recognizer_disabled',
+      'error_language_not_supported',
+      'error_language_unavailable',
+      'error_server',
+      'error_server_disconnected',
+    };
+    if (!_gotResult && fatal.contains(e.errorMsg)) {
       _earlyErrors++;
       if (_earlyErrors >= 4 && _active) {
         _active = false;
@@ -312,7 +321,9 @@ class _TasmeePageState extends State<TasmeePage> {
 
   /// Why the microphone can't work here and how to fix it (phones without
   /// Google's speech service, emulators such as LDPlayer).
-  void _showSpeechHelp({bool noArabic = false, String? error}) {
+  void _showSpeechHelp({String? error}) {
+    if (_helpShown) return;
+    _helpShown = true;
     final glass = GlassTheme.of(context);
     Widget step(IconData icon, String text) => Padding(
           padding: const EdgeInsets.only(bottom: 12),
@@ -330,7 +341,7 @@ class _TasmeePageState extends State<TasmeePage> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(noArabic ? 'العربية غير مثبتة في التعرف على الكلام' : 'الميكروفون لا يعمل للتسميع',
+          Text('الميكروفون لا يعمل للتسميع',
               style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 18)),
           const SizedBox(height: 8),
           Text(
