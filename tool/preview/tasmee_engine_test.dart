@@ -183,7 +183,7 @@ void main() {
   test('a mistake judged after a pause is cancelled when the word is corrected', () {
     final s = TasmeeSession(_words('وَلَٰكِن لَّا يَعْلَمُونَ قَالُوا', surah: 2, ayah: 13), []);
     s.feed(['ولكن', 'لا', 'يعلم'], isFinal: false);
-    s.feed(['ولكن', 'لا', 'يعلم'], isFinal: true, provisional: true); // pause
+    s.feed(['ولكن', 'لا', 'يعلم'], isFinal: true); // pause
     expect(s.mistakes.length, 1);
     s.feed(['ولكن', 'لا', 'يعلمون'], isFinal: true); // recogniser corrects it
     expect(s.mistakes, isEmpty);
@@ -193,7 +193,7 @@ void main() {
 
   test('a real mistake after a pause stays', () {
     final s = TasmeeSession(_words('وَلَٰكِن لَّا يَعْلَمُونَ قَالُوا', surah: 2, ayah: 13), []);
-    s.feed(['ولكن', 'لا', 'يشعرون'], isFinal: true, provisional: true);
+    s.feed(['ولكن', 'لا', 'يشعرون'], isFinal: true);
     s.feed(['ولكن', 'لا', 'يشعرون'], isFinal: true);
     expect(s.mistakes.length, 1);
   });
@@ -223,5 +223,59 @@ void main() {
     expect(TasmeeMatcher.similar(TasmeeMatcher.key('الذين'), TasmeeMatcher.key('ٱلَّزِينَ')), isTrue);
     expect(TasmeeMatcher.similar(TasmeeMatcher.key('يعلمون'), TasmeeMatcher.key('يَشْعُرُونَ')), isFalse);
     expect(TasmeeMatcher.similar(TasmeeMatcher.key('يعملون'), TasmeeMatcher.key('يَعْلَمُونَ')), isFalse);
+  });
+
+  test('noise between correct words is not a mistake', () {
+    final s = TasmeeSession(_words('ذَهَبَ ٱللَّهُ بِنُورِهِمْ وَتَرَكَهُمْ', surah: 2, ayah: 17), []);
+    s.feed(['ذهب', 'اه', 'الله', 'بنورهم', 'وتركهم'], isFinal: true);
+    expect(s.mistakes, isEmpty);
+    expect(s.done, isTrue);
+  });
+
+  test('a rewritten transcript is judged again from scratch', () {
+    final s = TasmeeSession(_words('صُمٌّ بُكْمٌ عُمْيٌ فَهُمْ لَا يَرْجِعُونَ', surah: 2, ayah: 18), []);
+    s.feed(['صم', 'يبكون', 'عمي'], isFinal: false); // early guess
+    s.feed(['صم', 'بكم', 'عمي', 'فهم'], isFinal: false); // recogniser corrected itself
+    expect(s.mistakes, isEmpty);
+    expect(s.expected, 4);
+    expect(s.words[1].missed, isFalse);
+  });
+
+  test('words are not revealed unless they were heard', () {
+    final s = TasmeeSession(
+      _words('يَكَادُ ٱلْبَرْقُ يَخْطَفُ أَبْصَٰرَهُمْ كُلَّمَآ أَضَآءَ لَهُم مَّشَوْا۟ فِيهِ', surah: 2, ayah: 20),
+      [],
+    );
+    s.feed(['يكاد', 'البرق', 'يخطف'], isFinal: true);
+    expect(s.expected, 3);
+    expect(s.words.skip(3).every((w) => w.state == TasmeeState.hidden), isTrue);
+    s.newUtterance();
+    s.feed(['أبصارهم', 'كلما', 'أضاء', 'لهم', 'مشوا', 'فيه'], isFinal: true);
+    expect(s.mistakes, isEmpty);
+    expect(s.done, isTrue);
+  });
+
+  test('a wrong word followed by the rest of the ayah is shown red and passed', () {
+    final s = TasmeeSession(_words('صُمٌّ بُكْمٌ عُمْيٌ فَهُمْ لَا يَرْجِعُونَ', surah: 2, ayah: 18), []);
+    s.feed(['صم', 'عرج', 'عمي', 'فهم', 'لا', 'يرجعون'], isFinal: true);
+    expect(s.mistakes.length, 1);
+    expect(s.words[1].missed, isTrue);
+    expect(s.done, isTrue);
+  });
+
+  test('growing partial results with half-spoken last words make no mistakes', () {
+    const uthmani = 'مَثَلُهُمْ كَمَثَلِ ٱلَّذِى ٱسْتَوْقَدَ نَارًا فَلَمَّآ أَضَآءَتْ مَا حَوْلَهُۥ ذَهَبَ ٱللَّهُ بِنُورِهِمْ وَتَرَكَهُمْ فِى ظُلُمَٰتٍ لَّا يُبْصِرُونَ';
+    const plain = 'مثلهم كمثل الذي استوقد نارا فلما أضاءت ما حوله ذهب الله بنورهم وتركهم في ظلمات لا يبصرون';
+    final s = TasmeeSession(_words(uthmani, surah: 2, ayah: 17), []);
+    final said = plain.split(' ');
+    for (var n = 1; n <= said.length; n++) {
+      final w = said.sublist(0, n);
+      final half = [...w.sublist(0, n - 1), w.last.substring(0, (w.last.length / 2).ceil())];
+      s.feed(half, isFinal: false); // the word is still being spoken
+      s.feed(w, isFinal: false);
+    }
+    s.feed(said, isFinal: true);
+    expect(s.mistakes, isEmpty);
+    expect(s.done, isTrue);
   });
 }

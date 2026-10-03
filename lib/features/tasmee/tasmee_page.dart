@@ -70,7 +70,11 @@ class _TasmeePageState extends State<TasmeePage> {
   GlobalKey get _currentKey => _wordKeys.putIfAbsent(_loadSeq, () => GlobalKey());
   int _heardCount = 0;
   Timer? _settleTimer;
-  int _revealedTotal = 0;
+  /// Correct words on finished pages, and words shown before the start ayah
+  /// on the current page (not recited, so not counted).
+  int _prevCorrect = 0;
+  int _preRevealed = 0;
+  int get _revealedTotal => _prevCorrect + (_session?.correctCount(_preRevealed) ?? 0);
   bool _leaving = false;
 
   @override
@@ -112,6 +116,9 @@ class _TasmeePageState extends State<TasmeePage> {
         words.add(TasmeeWord(surah: a.surah, ayah: a.numberInSurah, text: parts[i], endsAyah: i == parts.length - 1));
       }
     }
+    final old = _session;
+    if (old != null) _prevCorrect += old.correctCount(_preRevealed);
+    var pre = 0;
     final session = TasmeeSession(words, _mistakes, consumed: consumed);
     if (startAyah != null) {
       final first = ayahs.indexWhere((a) => a.number == startAyah);
@@ -121,13 +128,16 @@ class _TasmeePageState extends State<TasmeePage> {
           if (w.surah == ref.surah && w.ayah == ref.numberInSurah) break;
           w.state = TasmeeState.correct;
           session.expected++;
+          pre++;
         }
+        session.startFrom(session.expected);
       }
     }
     if (!mounted) return;
     setState(() {
       _page = page;
       _session = session;
+      _preRevealed = pre;
       _loadSeq++;
     });
     // A new page always starts from its top.
@@ -195,7 +205,7 @@ class _TasmeePageState extends State<TasmeePage> {
     _active = true;
     // Android closes each utterance after a pause; keep the mic open while active.
     _watchdog?.cancel();
-    _watchdog = Timer.periodic(const Duration(milliseconds: 700), (_) {
+    _watchdog = Timer.periodic(const Duration(milliseconds: 400), (_) {
       if (_active && !_starting && !_stt.isListening) _listen();
     });
     await _listen();
@@ -243,7 +253,7 @@ class _TasmeePageState extends State<TasmeePage> {
         _listening = false;
         _level = 0;
       });
-      if (_active) Future.delayed(const Duration(milliseconds: 150), _listen);
+      if (_active) Future.delayed(const Duration(milliseconds: 40), _listen);
     } else if (status == 'listening') {
       setState(() => _listening = true);
     }
@@ -284,29 +294,26 @@ class _TasmeePageState extends State<TasmeePage> {
     final words = _pendingWords;
     _pendingWords = const [];
     if (words.isEmpty || _session == null || !mounted) return;
-    _apply(words, isFinal: true, provisional: true);
+    _apply(words, isFinal: true);
   }
 
   void _apply(
     List<String> heard, {
     required bool isFinal,
     List<List<String>> alternates = const [],
-    bool provisional = false,
   }) {
     final s = _session;
     if (s == null || !mounted) return;
     final wasDone = s.done;
-    final res = s.feed(heard, isFinal: isFinal, alternates: alternates, provisional: provisional);
-    if (res.mistakes > 0) _onMistake();
-    _revealedTotal += res.revealed;
+    final res = s.feed(heard, isFinal: isFinal, alternates: alternates);
+    if (res.mistakes > 0) _onMistake(res.flash);
     setState(() {});
     _follow();
     if (s.done && !wasDone) _pageDone(s);
   }
 
-  Future<void> _onMistake() async {
+  Future<void> _onMistake(int idx) async {
     HapticFeedback.heavyImpact();
-    final idx = _session?.expected ?? -1;
     _flashTimer?.cancel();
     setState(() => _flashIndex = idx);
     _flashTimer = Timer(const Duration(milliseconds: 900), () {
@@ -331,6 +338,31 @@ class _TasmeePageState extends State<TasmeePage> {
     }
     if (!mounted) return;
     await _loadPage(_page + 1, consumed: finished.consumed);
+  }
+
+  // -------------------------------------------------------- navigation ---
+
+  /// Direction of the last page change (for the slide animation).
+  bool _forward = true;
+
+  void _goTo(int page, {int? startAyah}) {
+    if (page < 1 || page > 604) return;
+    HapticFeedback.selectionClick();
+    _forward = page >= _page;
+    _loadPage(page, startAyah: startAyah);
+  }
+
+  Future<void> _openSearch() async {
+    final target = await showModalBottomSheet<({int surah, int ayah})>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => const _GoToSheet(),
+    );
+    if (target == null || !mounted) return;
+    final repo = context.read<QuranRepository>();
+    final page = repo.pageOf(target.surah, target.ayah);
+    _goTo(page, startAyah: SurahMetadata.globalAyah(target.surah, target.ayah));
   }
 
   // ------------------------------------------------------------- hints ---
@@ -435,6 +467,11 @@ class _TasmeePageState extends State<TasmeePage> {
         title: 'التسميع',
         actions: [
           IconButton(
+            tooltip: 'انتقل إلى سورة أو آية',
+            icon: const Icon(Icons.search_rounded),
+            onPressed: _openSearch,
+          ),
+          IconButton(
             tooltip: _peek ? 'إخفاء النص' : 'إظهار النص للمراجعة',
             icon: Icon(_peek ? Icons.visibility_off_rounded : Icons.visibility_rounded),
             onPressed: () => setState(() => _peek = !_peek),
@@ -455,14 +492,21 @@ class _TasmeePageState extends State<TasmeePage> {
                 children: [
                   _topBar(glass, s),
                   Expanded(
-                    child: SingleChildScrollView(
+                    child: GestureDetector(
+                      // Swipe to turn pages like a mushaf: right = next.
+                      onHorizontalDragEnd: (d) {
+                        final v = d.primaryVelocity ?? 0;
+                        if (v > 350) _goTo(_page + 1);
+                        if (v < -350) _goTo(_page - 1);
+                      },
+                      child: SingleChildScrollView(
                       controller: _scroll,
                       padding: const EdgeInsets.fromLTRB(14, 6, 14, 16),
                       child: AnimatedSwitcher(
                         duration: const Duration(milliseconds: 380),
                         switchInCurve: Curves.easeOutCubic,
                         transitionBuilder: (child, a) => SlideTransition(
-                          position: Tween(begin: const Offset(-0.15, 0), end: Offset.zero).animate(a),
+                          position: Tween(begin: Offset(_forward ? 0.2 : -0.2, 0), end: Offset.zero).animate(a),
                           child: FadeTransition(opacity: a, child: child),
                         ),
                         child: NoorCard(
@@ -471,6 +515,7 @@ class _TasmeePageState extends State<TasmeePage> {
                           child: _pageText(glass, s),
                         ),
                       ),
+                    ),
                     ),
                   ),
                   _controls(glass, s),
@@ -744,23 +789,164 @@ class _TasmeePageState extends State<TasmeePage> {
               ),
             ],
           ),
-          const SizedBox(height: 6),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              TextButton.icon(
-                onPressed: _page > 1 ? () => _loadPage(_page - 1) : null,
-                icon: const Icon(Icons.chevron_right_rounded),
-                label: const Text('السابقة'),
-              ),
-              TextButton.icon(
-                onPressed: _page < 604 ? () => _loadPage(_page + 1) : null,
-                icon: const Icon(Icons.chevron_left_rounded),
-                label: const Text('التالية'),
-              ),
-            ],
-          ),
+          const SizedBox(height: 4),
+          Text('اسحب يمينًا أو يسارًا لتقليب الصفحات',
+              style: TextStyle(fontSize: 11, color: glass.onGlassMuted.withValues(alpha: 0.7))),
         ],
+      ),
+    );
+  }
+}
+
+/// Pick a surah (search by name or number) and optionally an ayah.
+class _GoToSheet extends StatefulWidget {
+  const _GoToSheet();
+
+  @override
+  State<_GoToSheet> createState() => _GoToSheetState();
+}
+
+class _GoToSheetState extends State<_GoToSheet> {
+  String _q = '';
+  SurahInfo? _surah;
+  final _ayah = TextEditingController();
+
+  @override
+  void dispose() {
+    _ayah.dispose();
+    super.dispose();
+  }
+
+  static String _norm(String s) => s
+      .replaceAll(RegExp('[ً-ْٰـ]'), '')
+      .replaceAll(RegExp('[أإآٱ]'), 'ا')
+      .replaceAll('ة', 'ه')
+      .replaceAll('ى', 'ي')
+      .replaceAll(RegExp(r'^(سوره|سورة)\s*'), '')
+      .trim();
+
+  int? _num(String s) {
+    const ar = '٠١٢٣٤٥٦٧٨٩';
+    final western = s.split('').map((c) => ar.contains(c) ? ar.indexOf(c).toString() : c).join();
+    return int.tryParse(western.trim());
+  }
+
+  void _go() {
+    final s = _surah;
+    if (s == null) return;
+    final a = (_num(_ayah.text) ?? 1).clamp(1, s.ayahCount);
+    Navigator.of(context).pop((surah: s.number, ayah: a));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final glass = GlassTheme.of(context);
+    final q = _norm(_q);
+    final n = _num(_q);
+    final list = SurahMetadata.all
+        .where((s) => q.isEmpty || _norm(s.name).contains(q) || (n != null && s.number == n))
+        .toList();
+    return Padding(
+      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+      child: Container(
+        height: MediaQuery.of(context).size.height * 0.75,
+        decoration: BoxDecoration(
+          color: noorSurface(context),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(26)),
+          border: Border.all(color: glass.accent.withValues(alpha: 0.25)),
+        ),
+        padding: const EdgeInsets.fromLTRB(16, 10, 16, 12),
+        child: Column(
+          children: [
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: glass.onGlass.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(_surah == null ? 'انتقل إلى سورة' : 'سورة ${_surah!.name}',
+                style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 17)),
+            const SizedBox(height: 12),
+            if (_surah == null) ...[
+              TextField(
+                autofocus: true,
+                onChanged: (v) => setState(() => _q = v),
+                decoration: InputDecoration(
+                  hintText: 'اسم السورة أو رقمها',
+                  prefixIcon: const Icon(Icons.search_rounded),
+                  filled: true,
+                  fillColor: glass.onGlass.withValues(alpha: 0.05),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Expanded(
+                child: ListView.builder(
+                  itemCount: list.length,
+                  itemBuilder: (_, i) {
+                    final s = list[i];
+                    return ListTile(
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 6),
+                      leading: CircleAvatar(
+                        radius: 17,
+                        backgroundColor: glass.accent.withValues(alpha: 0.14),
+                        child: Text(ArabicUtils.toArabicDigits(s.number),
+                            style: TextStyle(color: glass.accent, fontWeight: FontWeight.w800, fontSize: 13)),
+                      ),
+                      title: Text('سورة ${s.name}', style: const TextStyle(fontWeight: FontWeight.w800)),
+                      subtitle: Text('${s.revelationAr} • ${ArabicUtils.toArabicDigits(s.ayahCount)} آية',
+                          style: TextStyle(color: glass.onGlassMuted, fontSize: 12)),
+                      trailing: TextButton(
+                        onPressed: () => Navigator.of(context).pop((surah: s.number, ayah: 1)),
+                        child: const Text('من أولها'),
+                      ),
+                      onTap: () => setState(() => _surah = s),
+                    );
+                  },
+                ),
+              ),
+            ] else ...[
+              TextField(
+                controller: _ayah,
+                autofocus: true,
+                keyboardType: TextInputType.number,
+                textAlign: TextAlign.center,
+                onSubmitted: (_) => _go(),
+                style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
+                decoration: InputDecoration(
+                  hintText: 'رقم الآية (١ – ${ArabicUtils.toArabicDigits(_surah!.ayahCount)})',
+                  filled: true,
+                  fillColor: glass.onGlass.withValues(alpha: 0.05),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+                ),
+              ),
+              const SizedBox(height: 14),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => setState(() => _surah = null),
+                      child: const Text('رجوع'),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    flex: 2,
+                    child: FilledButton.icon(
+                      onPressed: _go,
+                      icon: const Icon(Icons.play_arrow_rounded),
+                      label: const Text('ابدأ التسميع من هنا'),
+                    ),
+                  ),
+                ],
+              ),
+              const Spacer(),
+            ],
+          ],
+        ),
       ),
     );
   }

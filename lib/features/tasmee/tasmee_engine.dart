@@ -41,9 +41,14 @@ class TasmeeMistake {
 /// Result of feeding recognised speech.
 class TasmeeFeed {
   final int revealed;
+
+  /// New mistakes (not alerted before) found by this result.
   final int mistakes;
 
-  const TasmeeFeed(this.revealed, this.mistakes);
+  /// Index of the latest new mistake (for the red flash), or -1.
+  final int flash;
+
+  const TasmeeFeed(this.revealed, this.mistakes, [this.flash = -1]);
 }
 
 /// Compares what the reciter says with the expected words, tolerating the
@@ -180,303 +185,294 @@ class TasmeeMatcher {
 
 /// Walks the expected words of one page while speech results arrive.
 ///
-/// Forgiving by design:
-/// * going back and reciting again (from the start of the surah or a few
-///   words back) is followed silently and never counted as a mistake;
-/// * the word being spoken right now is shown as soon as it matches, without
-///   waiting for the next word or a pause;
+/// Every recogniser result is re-aligned from the start of the current
+/// utterance, so when the recogniser rewrites its transcript (which it does
+/// constantly while listening) the judgement follows the latest version and
+/// a word is never judged on a stale guess.
+///
+/// Careful by design:
+/// * a word is shown only when it was heard (or confirmed by what follows);
+/// * a mistake needs evidence: a wrong word followed by the next words of the
+///   ayah, or a pause after it; noise between correct words is ignored;
+/// * going back to repeat (a few words or from the start) is followed
+///   silently and never counted;
 /// * small words the recogniser tends to drop (و، في، من…) are not errors.
 class TasmeeSession {
   final List<TasmeeWord> words;
   final List<TasmeeMistake> mistakes;
+
+  /// Next word to recite.
   int expected = 0;
 
-  /// Recognised words already consumed in the current recogniser utterance.
-  int _consumed = 0;
+  /// [expected] when the current segment (utterance part) began.
+  int _base = 0;
 
-  /// While the reciter repeats earlier words: the index they are at.
-  int? _shadow;
+  /// Words of the utterance used before the segment began.
+  int _offset;
 
-  /// Letter names heard so far for disjoint letters split across utterances.
-  String _pending = '';
+  /// Heard words used by the latest alignment (absolute index).
+  int _used;
 
-  /// Keys of the previous result in this utterance, to follow revisions.
-  List<String> _prevKeys = const [];
+  List<String> _lastHeard = const [];
+  List<(TasmeeState, bool)> _snap = const [];
+  final List<TasmeeMistake> _segMistakes = [];
+  final Set<int> _alerted = {};
 
-  /// A mistake decided on a word still being recognised (after a pause): the
-  /// recogniser may still correct that word, which then cancels the mistake.
-  ({int word, int heard, TasmeeMistake mistake})? _provisional;
-
-  TasmeeSession(this.words, this.mistakes, {int consumed = 0}) : _consumed = consumed;
+  TasmeeSession(this.words, this.mistakes, {int consumed = 0})
+      : _offset = consumed,
+        _used = consumed {
+    _snapshot();
+  }
 
   /// Carried into the next page's session within the same utterance.
-  int get consumed => _consumed;
+  int get consumed => _used;
 
   bool get done => expected >= words.length;
 
-  /// Call when the recogniser starts a new utterance (its text restarts).
-  void newUtterance() {
-    _consumed = 0;
-    _prevKeys = const [];
-    _provisional = null;
+  /// Words recited correctly on this page from [from].
+  int correctCount([int from = 0]) {
+    var c = 0;
+    for (var i = from; i < words.length; i++) {
+      if (words[i].state == TasmeeState.correct && !words[i].missed) c++;
+    }
+    return c;
   }
 
-  static bool _sim(String h, TasmeeWord w) => TasmeeMatcher.similar(h, w.key);
+  /// Starts reciting at [index] (words before it are shown as already read).
+  void startFrom(int index) {
+    expected = index;
+    _commit();
+  }
+
+  /// Call when the recogniser starts a new utterance (its text restarts).
+  void newUtterance() {
+    _commit();
+    _offset = 0;
+    _used = 0;
+    _lastHeard = const [];
+  }
+
+  /// Fixes what was judged so far; later results only judge what follows.
+  void _commit() {
+    _segMistakes.clear();
+    _alerted.clear();
+    _base = expected;
+    _snapshot();
+  }
+
+  void _snapshot() {
+    _snap = [for (var i = _base; i < words.length; i++) (words[i].state, words[i].missed)];
+  }
+
+  void _restore() {
+    for (final m in _segMistakes) {
+      mistakes.remove(m);
+    }
+    _segMistakes.clear();
+    for (var i = _base; i < words.length; i++) {
+      final s = _snap[i - _base];
+      words[i].state = s.$1;
+      words[i].missed = s.$2;
+    }
+    expected = _base;
+  }
+
+  bool _m(String h, int j) => j < words.length && TasmeeMatcher.similar(h, words[j].key);
 
   /// [heard]: all words recognised in the current utterance so far.
   /// [alternates]: other transcripts the recogniser considered.
-  /// [provisional]: the utterance hasn't ended; a mistake on its last word
-  /// may be cancelled if the recogniser later corrects that word.
   TasmeeFeed feed(
     List<String> heard, {
     required bool isFinal,
     List<List<String>> alternates = const [],
-    bool provisional = false,
   }) {
-    var revealed = 0;
-    var errors = 0;
-    final keys = [for (final w in heard) TasmeeMatcher.key(w)];
-    _followRevision(keys);
-    revealed += _checkProvisional(keys);
-    if (_consumed > heard.length) _consumed = heard.length;
-    while (_consumed < heard.length && !done) {
-      final last = _consumed == heard.length - 1 && !isFinal; // still being spoken
-      final h = TasmeeMatcher.key(heard[_consumed]);
+    _lastHeard = heard;
+    final before = expected;
+    _restore();
+    final k = [for (final w in heard) TasmeeMatcher.key(w)];
+    final n = words.length;
+    var i = math.min(_offset, k.length);
+    var pos = _base;
+    int? shadow; // reading position while repeating earlier words
+    var newMistakes = 0;
+    var flash = -1;
+
+    void reveal(int j) => words[j].state = TasmeeState.correct;
+    void miss(int j, String said) {
+      final w = words[j];
+      w.missed = true;
+      w.state = TasmeeState.mistake;
+      final m = TasmeeMistake(w.surah, w.ayah, w.text, said);
+      mistakes.add(m);
+      _segMistakes.add(m);
+      if (_alerted.add(j)) {
+        newMistakes++;
+        flash = j;
+      }
+    }
+
+    while (i < k.length && pos < n) {
+      final h = k[i];
       if (h.isEmpty) {
-        _consumed++;
+        i++;
         continue;
       }
-      final hNext = _consumed + 1 < heard.length ? TasmeeMatcher.key(heard[_consumed + 1]) : null;
+      final last = i == k.length - 1 && !isFinal; // still being spoken
+      var ni = i + 1;
+      while (ni < k.length && k[ni].isEmpty) {
+        ni++;
+      }
+      final hNext = ni < k.length ? k[ni] : null;
 
-      // 1) Reciting earlier words again.
-      final sh = _shadow;
+      // Repeating earlier words: follow silently until caught up.
+      final sh = shadow;
       if (sh != null) {
-        if (_sim(h, words[expected])) {
-          _shadow = null; // caught up, fall through to the normal match
-        } else if (sh < expected && _sim(h, words[sh])) {
-          _shadow = sh + 1 >= expected ? null : sh + 1;
-          _consumed++;
+        if (_m(h, pos)) {
+          shadow = null;
+        } else if (sh < pos && _m(h, sh)) {
+          shadow = sh + 1 >= pos ? null : sh + 1;
+          i++;
           continue;
         } else if (last) {
           break;
         } else {
-          final j = _findBack(h, hNext);
-          if (j != null) {
-            _shadow = j + 1 >= expected ? null : j + 1;
-            _consumed++;
-            continue;
-          }
-          _shadow = null;
+          shadow = null;
         }
       }
 
-      final e = words[expected];
-      // 2) The expected word (alone, split in two, or merged with the next).
-      if (_sim(h, e) && _pending.isEmpty) {
-        _reveal(expected);
-        revealed++;
-        _consumed++;
+      final e = words[pos];
+      // Disjoint letters recited by their names («ألف لام ميم»).
+      if (e.spoken != null) {
+        final r = _letters(k, i, e, isFinal, atStart: i == _offset);
+        if (r > 0) {
+          reveal(pos++);
+          i += r;
+          continue;
+        }
+        if (r < 0) break;
+      }
+      // The expected word: alone, split in two, merged with the next one,
+      // or in another transcript of the recogniser.
+      if (_m(h, pos)) {
+        reveal(pos++);
+        i++;
         continue;
       }
       if (hNext != null && TasmeeMatcher.similar(h + hNext, e.key)) {
-        _reveal(expected);
-        revealed++;
-        _consumed += 2;
+        reveal(pos++);
+        i = ni + 1;
         continue;
       }
-      if (expected + 1 < words.length && TasmeeMatcher.similar(h, e.key + words[expected + 1].key)) {
-        _reveal(expected);
-        _reveal(expected);
-        revealed += 2;
-        _consumed++;
+      if (pos + 1 < n && TasmeeMatcher.similar(h, e.key + words[pos + 1].key)) {
+        reveal(pos++);
+        reveal(pos++);
+        i++;
         continue;
       }
-      // Disjoint letters recited by their names: «ألف لام ميم».
-      if (e.spoken != null) {
-        var acc = _pending;
-        var n = 0;
-        var matched = false;
-        for (var i = _consumed; i < heard.length && n < 8; i++) {
-          n++;
-          final k = TasmeeMatcher.key(heard[i]);
-          if (k.isEmpty) continue;
-          acc += k;
-          if (TasmeeMatcher.letters(acc, e)) {
-            matched = true;
-            break;
-          }
-        }
-        if (matched) {
-          _reveal(expected);
-          revealed++;
-          _consumed += n;
-          continue;
-        }
-        if (acc.isNotEmpty && _consumed + n >= heard.length && TasmeeMatcher.lettersPrefix(acc, e)) {
-          if (isFinal) {
-            _pending = acc; // the rest comes in the next utterance
-            _consumed = heard.length;
-          }
-          break;
-        }
-        _pending = '';
+      if (_inAlternates(alternates, i, e)) {
+        reveal(pos++);
+        i++;
+        continue;
       }
-      // A partial word that doesn't match yet may still be completed.
+      // Not decided while the word is still being spoken.
       if (last) break;
 
-      // 3) Words dropped by the recogniser or skipped by the reciter.
-      final skip = _skipTo(h);
-      if (skip != null) {
-        for (var k = expected; k < skip; k++) {
-          final w = words[k];
-          if (w.key.length > 3) {
-            _miss(w, '');
-            errors++;
-          }
-          w.state = TasmeeState.correct;
-        }
-        expected = skip;
-        _reveal(expected);
-        revealed++;
-        _consumed++;
+      // Noise or a self-correction just before the expected word.
+      if (hNext != null && _m(hNext, pos)) {
+        i++;
         continue;
       }
-
-      // 4) Going back to repeat.
-      final j = _findBack(h, hNext);
+      // Going back to repeat.
+      final j = _findBack(h, hNext, pos);
       if (j != null) {
-        _shadow = j + 1 >= expected ? null : j + 1;
-        _consumed++;
+        shadow = j + 1 >= pos ? null : j + 1;
+        i++;
         continue;
       }
-
-      // 5) Isti'adha / basmala before an ayah.
-      if (TasmeeMatcher.ignorable.contains(h) && _atAyahStart()) {
-        _consumed++;
-        continue;
-      }
-
-      // 6) A long word the recogniser slightly misheard.
-      if (TasmeeMatcher.close(h, e.key)) {
-        _reveal(expected);
-        revealed++;
-        _consumed++;
-        continue;
-      }
-
-      // 7) What another transcript of the recogniser heard here.
-      if (_inAlternates(alternates, _consumed, e)) {
-        _reveal(expected);
-        revealed++;
-        _consumed++;
-        continue;
-      }
-
-      // 8) A wrong word.
-      if (e.state != TasmeeState.mistake) {
-        _miss(e, heard[_consumed]);
-        if (provisional && _consumed == heard.length - 1) {
-          _provisional = (word: expected, heard: _consumed, mistake: mistakes.last);
+      // Words skipped (by the reciter, or dropped by the recogniser).
+      final to = _skipTo(h, hNext, pos, isFinal);
+      if (to != null) {
+        for (var s = pos; s < to; s++) {
+          if (words[s].key.length > 3) {
+            miss(s, '');
+          }
+          words[s].state = TasmeeState.correct;
         }
-        errors++;
+        pos = to;
+        reveal(pos++);
+        i++;
+        continue;
       }
-      _consumed++;
+      // Isti'adha / basmala before an ayah.
+      if (TasmeeMatcher.ignorable.contains(h) && (pos == 0 || words[pos - 1].endsAyah)) {
+        i++;
+        continue;
+      }
+      // A one-letter fragment is recogniser noise.
+      if (h.length <= 1 && e.key.length > 1) {
+        i++;
+        continue;
+      }
+      // A wrong word. If the reciter carried on with the next words, show it
+      // in red and move on; otherwise wait for them to say it correctly.
+      if (e.state != TasmeeState.mistake) miss(pos, heard[i]);
+      if (hNext != null && (_m(hNext, pos + 1) || _m(hNext, pos + 2))) {
+        words[pos].state = TasmeeState.correct;
+        pos++;
+      }
+      i++;
     }
-    _prevKeys = keys;
-    return TasmeeFeed(revealed, errors);
+    expected = pos;
+    _used = i;
+    return TasmeeFeed(math.max(0, expected - before), newMistakes, flash);
   }
 
-  /// The recogniser rewrites its transcript while listening (merging or
-  /// splitting words). Keep [_consumed] pointing at the same speech.
-  void _followRevision(List<String> keys) {
-    final old = _prevKeys;
-    if (old.isEmpty) return;
-    var p = 0;
-    while (p < old.length && p < keys.length && old[p] == keys[p]) {
-      p++;
+  /// Heard words from [i] spelling the disjoint letters of [e]: the count
+  /// used, -1 to wait for more, 0 when they don't.
+  int _letters(List<String> k, int i, TasmeeWord e, bool isFinal, {required bool atStart}) {
+    var acc = '';
+    var used = 0;
+    for (var j = i; j < k.length && used < 8; j++) {
+      used++;
+      if (k[j].isEmpty) continue;
+      acc += k[j];
+      if (TasmeeMatcher.letters(acc, e)) return used;
+      // The first letters said before a pause, the rest now.
+      if (atStart && acc.length >= 3 && e.spoken!.endsWith(acc)) return used;
     }
-    if (p >= old.length || _consumed <= p) return;
-    // Same letters, different word boundaries: find where the consumed
-    // letters end in the new transcript.
-    final target = old.take(_consumed).join().length;
-    var acc = 0;
-    var n = 0;
-    while (n < keys.length && acc + keys[n].length <= target) {
-      acc += keys[n].length;
-      n++;
-    }
-    if (n < keys.length && acc < target && (target - acc) * 2 >= keys[n].length) n++;
-    _consumed = n.clamp(p, keys.length);
-  }
-
-  /// Cancels a mistake judged after a pause if the word was corrected.
-  int _checkProvisional(List<String> keys) {
-    final pv = _provisional;
-    if (pv == null || pv.heard >= keys.length) return 0;
-    final w = words[pv.word];
-    final h = keys[pv.heard];
-    final ok = TasmeeMatcher.similar(h, w.key) ||
-        (pv.heard + 1 < keys.length && TasmeeMatcher.similar(h + keys[pv.heard + 1], w.key));
-    if (h.isEmpty || !ok) {
-      if (keys[pv.heard] != _prevKeys.elementAtOrNull(pv.heard)) _provisional = null;
-      return 0;
-    }
-    _provisional = null;
-    mistakes.remove(pv.mistake);
-    w.missed = false;
-    if (w.state == TasmeeState.mistake) {
-      w.state = TasmeeState.correct;
-      if (expected == pv.word) expected = pv.word + 1;
-      return 1;
-    }
+    if (acc.isNotEmpty && !isFinal && i + used >= k.length && TasmeeMatcher.lettersPrefix(acc, e)) return -1;
     return 0;
+  }
+
+  /// Earlier word the reciter went back to: the word just recited, or one
+  /// whose following word is heard next. A wrong word that merely exists
+  /// earlier on the page (يشعرون instead of يعلمون) stays a mistake.
+  int? _findBack(String h, String? hNext, int pos) {
+    if (h.length < 2) return null;
+    for (var j = pos - 1; j >= 0 && j >= pos - 40; j--) {
+      if (!_m(h, j)) continue;
+      if (j == pos - 1) return j;
+      if (hNext != null && _m(hNext, j + 1)) return j;
+    }
+    return null;
+  }
+
+  /// Word 1–3 ahead that [h] is, confirmed by the next heard word (or by the
+  /// end of speech right after a single dropped word).
+  int? _skipTo(String h, String? hNext, int pos, bool isFinal) {
+    for (var t = pos + 1; t <= pos + 3 && t < words.length; t++) {
+      if (words[t].key.length < 2 || !_m(h, t)) continue;
+      if (hNext != null && (t + 1 >= words.length || _m(hNext, t + 1))) return t;
+      if (hNext == null && isFinal && t == pos + 1) return t;
+    }
+    return null;
   }
 
   bool _inAlternates(List<List<String>> alternates, int at, TasmeeWord e) {
     for (final alt in alternates) {
-      for (var i = math.max(0, at - 1); i <= at + 1 && i < alt.length; i++) {
-        final k = TasmeeMatcher.key(alt[i]);
-        if (_sim(k, e)) return true;
-        if (i + 1 < alt.length && TasmeeMatcher.similar(k + TasmeeMatcher.key(alt[i + 1]), e.key)) return true;
-      }
+      if (at < alt.length && TasmeeMatcher.similar(TasmeeMatcher.key(alt[at]), e.key)) return true;
     }
     return false;
-  }
-
-  /// Latest earlier word (this page, last ~40 words) the reciter went back
-  /// to. Only a real repeat counts: the word just recited, or a word whose
-  /// following word is heard next. A wrong word that merely exists earlier
-  /// on the page (يشعرون instead of يعلمون) stays a mistake.
-  int? _findBack(String h, String? hNext) {
-    if (h.length < 2) return null;
-    for (var j = expected - 1; j >= 0 && j >= expected - 40; j--) {
-      if (!_sim(h, words[j])) continue;
-      if (j == expected - 1) return j;
-      if (hNext != null && _sim(hNext, words[j + 1])) return j;
-    }
-    return null;
-  }
-
-  /// Index of the word ahead (1–2 words) that [h] matches, if any.
-  int? _skipTo(String h) {
-    for (var k = expected + 1; k <= expected + 2 && k < words.length; k++) {
-      if (words[k].key.length > 2 && _sim(h, words[k])) return k;
-    }
-    return null;
-  }
-
-  bool _atAyahStart() => expected == 0 || words[expected - 1].endsAyah;
-
-  void _reveal(int index) {
-    _pending = '';
-    words[index].state = TasmeeState.correct;
-    expected = index + 1;
-  }
-
-  void _miss(TasmeeWord w, String heard) {
-    w.missed = true;
-    w.state = TasmeeState.mistake;
-    mistakes.add(TasmeeMistake(w.surah, w.ayah, w.text, heard));
   }
 
   /// Shows the next word (counts as a hint, not a mistake).
@@ -484,8 +480,7 @@ class TasmeeSession {
     if (done) return;
     words[expected].state = TasmeeState.hinted;
     expected++;
-    _shadow = null;
-    _pending = '';
+    _afterHint();
   }
 
   /// Shows the rest of the current ayah.
@@ -496,7 +491,13 @@ class TasmeeSession {
       expected++;
       if (w.endsAyah) break;
     }
-    _shadow = null;
-    _pending = '';
+    _afterHint();
+  }
+
+  /// What was said before a hint is settled; listening continues after it.
+  void _afterHint() {
+    _offset = _lastHeard.length;
+    _used = _offset;
+    _commit();
   }
 }
