@@ -245,14 +245,22 @@ class _Timeline extends StatelessWidget {
     final cubit = context.read<SettingsCubit>();
     if (p == PrayerName.sunrise) {
       cubit.setSunriseAlert(!sunrise);
-      showGlassSnack(context, sunrise ? 'أُوقف تنبيه الشروق' : 'سيصلك تنبيه عند الشروق');
+      showGlassSnack(
+        context,
+        sunrise ? 'تم إيقاف تنبيه الشروق' : 'تم تفعيل تنبيه الشروق',
+        icon: sunrise ? Icons.notifications_off_rounded : Icons.wb_twilight_rounded,
+      );
       return;
     }
     final idx = PrayerName.values.where((e) => e.isPrayer).toList().indexOf(p);
     final on = enabled && _alertOn(alerts, p);
     if (!enabled) cubit.setPrayerNotifications(true);
     cubit.setPrayerAlert(idx, !on);
-    showGlassSnack(context, on ? 'أُوقف أذان ${p.nameAr}' : 'سيُرفع أذان ${p.nameAr}');
+    showGlassSnack(
+      context,
+      on ? 'تم إيقاف أذان ${p.nameAr}' : 'تم تفعيل أذان ${p.nameAr} في موعده',
+      icon: on ? Icons.notifications_off_rounded : Icons.notifications_active_rounded,
+    );
   }
 
   bool _alertOn(List<bool> alerts, PrayerName p) {

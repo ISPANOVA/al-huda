@@ -205,10 +205,21 @@ class _AdhanSettingsCardState extends State<AdhanSettingsCard> {
                     const Divider(height: 22),
                     SwitchListTile(
                       contentPadding: EdgeInsets.zero,
+                      secondary: Icon(Icons.groups_rounded, color: glass.accent),
+                      title: const Text('تذكير بالإقامة', style: TextStyle(fontWeight: FontWeight.w700)),
+                      subtitle: Text(s.iqamaReminder
+                          ? 'تنبيه صامت: الفجر بعد ٢٠ د، المغرب ١٠ د، وباقي الصلوات ١٥ د'
+                          : 'غير مفعّل'),
+                      value: s.iqamaReminder,
+                      onChanged: cubit.setIqamaReminder,
+                    ),
+                    const Divider(height: 22),
+                    SwitchListTile(
+                      contentPadding: EdgeInsets.zero,
                       secondary: Icon(Icons.volunteer_activism_outlined, color: glass.accent),
                       title: const Text('تذكير بأذكار بعد الصلاة', style: TextStyle(fontWeight: FontWeight.w700)),
                       subtitle: Text(s.postPrayerAthkar
-                          ? 'بعد الأذان بـ ${ArabicUtils.toArabicDigits(s.postPrayerMinutes)} دقيقة'
+                          ? 'بعد الأذان بـ ${ArabicUtils.minutes(s.postPrayerMinutes, afterPreposition: true)}'
                           : 'غير مفعّل'),
                       value: s.postPrayerAthkar,
                       onChanged: cubit.setPostPrayerAthkar,
@@ -231,7 +242,7 @@ class _AdhanSettingsCardState extends State<AdhanSettingsCard> {
                       secondary: Icon(Icons.alarm_rounded, color: glass.accent),
                       title: const Text('تنبيه قبل الأذان', style: TextStyle(fontWeight: FontWeight.w700)),
                       subtitle: Text(s.preAdhanEnabled
-                          ? 'قبل الأذان بـ ${ArabicUtils.toArabicDigits(s.preAdhanMinutes)} دقيقة'
+                          ? 'قبل الأذان بـ ${ArabicUtils.minutes(s.preAdhanMinutes, afterPreposition: true)}'
                           : 'غير مفعّل'),
                       value: s.preAdhanEnabled,
                       onChanged: cubit.setPreAdhanEnabled,

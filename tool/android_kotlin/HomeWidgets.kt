@@ -182,11 +182,19 @@ object WidgetStore {
         val h = mins / 60
         val m = mins % 60
         val text = when {
-            h == 0 -> "بعد $m دقيقة"
-            m == 0 -> if (h == 1) "بعد ساعة" else "بعد $h ساعات"
+            h == 0 -> "بعد " + count(m, "دقيقة", "دقيقتين", "دقائق")
+            m == 0 -> "بعد " + count(h, "ساعة", "ساعتين", "ساعات")
             else -> "بعد $h س $m د"
         }
         return arabicDigits(text)
+    }
+
+    /** Arabic counting: ١ دقيقة، دقيقتين، ٣–١٠ دقائق، ١١ فأكثر دقيقة. */
+    private fun count(n: Int, one: String, two: String, few: String): String = when {
+        n == 1 -> one
+        n == 2 -> two
+        n % 100 in 3..10 -> "$n $few"
+        else -> "$n $one"
     }
 
     fun dayKey(millis: Long): String = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date(millis))

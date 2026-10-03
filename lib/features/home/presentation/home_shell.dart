@@ -20,6 +20,7 @@ import '../../audio/presentation/widgets/mini_player.dart';
 import '../../prayer/presentation/pages/prayer_times_page.dart';
 import '../../quran/presentation/cubit/quran_nav_cubit.dart';
 import '../../quran/presentation/mushaf/mushaf_reader_page.dart';
+import '../../quran/presentation/mushaf/reader_guide.dart';
 import '../../stats/presentation/stats_page.dart';
 import 'dashboard_page.dart';
 import 'more_page.dart';
@@ -61,6 +62,7 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
     // location prompt is triggered by PrayerCubit when it locates the user.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _askAlertPermissions();
+      if (mounted && _index == quranTab) _guide();
       _onNotificationOpen();
       if (mounted) _pushDailyAyahs();
       if (mounted) {
@@ -117,6 +119,13 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
 
   void _onImmersive() {}
 
+  /// First visit to the Mushaf: a short tour of how it works.
+  void _guide() {
+    Future.delayed(const Duration(milliseconds: 450), () {
+      if (mounted && _index == quranTab) ReaderGuide.showOnce(context);
+    });
+  }
+
   /// Opens the screen a tapped notification points to.
   void _onNotificationOpen() {
     final payload = NotificationService.openRequest.value;
@@ -139,6 +148,7 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
     MushafReaderPage.setImmersive(false);
     setState(() => _index = i);
     context.read<StorageService>().settings.put(_lastTabKey, i);
+    if (i == quranTab) _guide();
   }
 
   @override

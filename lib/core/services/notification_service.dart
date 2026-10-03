@@ -171,6 +171,37 @@ class NotificationService {
     await _schedule(id, title, body, when, NotificationDetails(android: _preAdhanChannel, iOS: _darwin));
   }
 
+  /// Silent reminder at iqama time (no sound, no vibration).
+  Future<void> scheduleIqama({
+    required int id,
+    required String title,
+    required String body,
+    required DateTime when,
+  }) async {
+    if (when.isBefore(DateTime.now())) return;
+    await _schedule(
+      id,
+      title,
+      body,
+      when,
+      NotificationDetails(
+        android: AndroidNotificationDetails(
+          'alhuda_iqama_silent',
+          'تذكير الإقامة',
+          channelDescription: 'تنبيه صامت بموعد إقامة الصلاة',
+          importance: Importance.high,
+          priority: Priority.high,
+          playSound: false,
+          enableVibration: false,
+          category: AndroidNotificationCategory.reminder,
+          icon: smallIcon,
+          color: accent,
+        ),
+        iOS: const DarwinNotificationDetails(presentAlert: true, presentSound: false, presentBadge: false),
+      ),
+    );
+  }
+
   AndroidNotificationDetails get _preAdhanChannel => AndroidNotificationDetails(
         'alhuda_pre_adhan',
         'تنبيه قبل الأذان',

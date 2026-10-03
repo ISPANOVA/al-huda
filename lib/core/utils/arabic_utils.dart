@@ -75,6 +75,23 @@ class ArabicUtils {
     return toArabicDigits(raw);
   }
 
+  /// Arabic counting: دقيقة، دقيقتان (دقيقتين after a preposition),
+  /// ٣–١٠ دقائق، ١١ فأكثر دقيقة.
+  static String minutes(int n, {bool afterPreposition = false}) =>
+      _count(n, 'دقيقة', afterPreposition ? 'دقيقتين' : 'دقيقتان', 'دقائق');
+
+  static String hours(int n, {bool afterPreposition = false}) =>
+      _count(n, 'ساعة', afterPreposition ? 'ساعتين' : 'ساعتان', 'ساعات');
+
+  static String _count(int n, String one, String two, String few) {
+    if (n == 1) return one;
+    if (n == 2) return two;
+    final d = toArabicDigits(n);
+    final r = n % 100;
+    if (r >= 3 && r <= 10) return '$d $few';
+    return '$d $one';
+  }
+
   static String formatTime(DateTime t) {
     final hour12 = t.hour % 12 == 0 ? 12 : t.hour % 12;
     final period = t.hour < 12 ? 'ص' : 'م';

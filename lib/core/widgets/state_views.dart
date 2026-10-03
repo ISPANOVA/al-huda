@@ -78,10 +78,37 @@ class MessageView extends StatelessWidget {
   }
 }
 
-void showGlassSnack(BuildContext context, String message) {
+void showGlassSnack(BuildContext context, String message, {IconData? icon}) {
+  final glass = GlassTheme.of(context);
   ScaffoldMessenger.of(context)
     ..hideCurrentSnackBar()
-    ..showSnackBar(SnackBar(content: Text(message)));
+    ..showSnackBar(SnackBar(
+      behavior: SnackBarBehavior.floating,
+      elevation: 0,
+      backgroundColor: Colors.transparent,
+      padding: EdgeInsets.zero,
+      margin: const EdgeInsets.fromLTRB(16, 0, 16, 18),
+      duration: const Duration(milliseconds: 2400),
+      content: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
+        decoration: BoxDecoration(
+          color: sheetSurface(context),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: glass.accent.withValues(alpha: 0.35)),
+          boxShadow: const [BoxShadow(color: Color(0x55000000), blurRadius: 18, offset: Offset(0, 6))],
+        ),
+        child: Row(
+          children: [
+            Icon(icon ?? Icons.check_circle_rounded, color: glass.accent, size: 22),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(message,
+                  style: TextStyle(color: glass.onGlass, fontWeight: FontWeight.w700, fontSize: 14, height: 1.4)),
+            ),
+          ],
+        ),
+      ),
+    ));
 }
 
 /// Solid surface colour for sheets and dialogs, derived from the current theme.

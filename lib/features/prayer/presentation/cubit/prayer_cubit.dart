@@ -106,7 +106,16 @@ class PrayerCubit extends Cubit<PrayerState> {
   String _settingsKey(SettingsState s) =>
       '${s.calcMethod}|${s.madhab}|${s.prayerNotifications}|${s.prayerAdjustments.join(',')}|'
       '${s.adhanVoice}|${s.adhanFull}|${s.preAdhanEnabled}|${s.preAdhanMinutes}|${s.prayerAlerts.join(',')}|'
-      '${s.postPrayerAthkar}|${s.postPrayerMinutes}|${s.adhanAlwaysPlay}|${s.sunriseAlert}';
+      '${s.postPrayerAthkar}|${s.postPrayerMinutes}|${s.adhanAlwaysPlay}|${s.sunriseAlert}|${s.iqamaReminder}';
+
+  /// Usual time between adhan and iqama in mosques (Egypt's common practice).
+  static const iqamaMinutes = {
+    PrayerName.fajr: 20,
+    PrayerName.dhuhr: 15,
+    PrayerName.asr: 15,
+    PrayerName.maghrib: 10,
+    PrayerName.isha: 15,
+  };
 
   Future<void> refreshLocation({bool silent = false}) async {
     if (!silent) emit(state.copyWith(loading: true, clearError: true));
@@ -206,7 +215,7 @@ class PrayerCubit extends Cubit<PrayerState> {
     _scheduledSignature = signature;
 
     // 3 days × 5 prayers × (adhan, pre-adhan, post-prayer athkar).
-    await _notifications.cancelPendingRange(base, 60);
+    await _notifications.cancelPendingRange(base, 100);
     if (!s.prayerNotifications || loc == null) {
       await AdhanNative.cancelAll();
       return;
@@ -236,7 +245,7 @@ class PrayerCubit extends Cubit<PrayerState> {
     for (final day in days) {
       if (s.sunriseAlert) {
         await _notifications.scheduleReminderAt(
-          id: base + 50 + dayIndex,
+          id: base + 80 + dayIndex,
           title: 'أشرقت الشمس ☀️',
           body: 'حان وقت الشروق ${ArabicUtils.formatTime(day[PrayerName.sunrise])} • تبدأ صلاة الضحى بعد ارتفاع الشمس بربع ساعة',
           when: day[PrayerName.sunrise],
@@ -276,11 +285,21 @@ class PrayerCubit extends Cubit<PrayerState> {
             when: day[p].add(Duration(minutes: s.postPrayerMinutes)),
           );
         }
+        // Silent reminder at the usual iqama time (not for Jumu'ah).
+        if (s.iqamaReminder && !jumuah) {
+          final after = iqamaMinutes[p] ?? 15;
+          await _notifications.scheduleIqama(
+            id: base + 60 + slot,
+            title: 'حان وقت إقامة صلاة ${p.nameOn(day.date)}',
+            body: 'تُقام الصلاة عادةً بعد الأذان بـ ${ArabicUtils.minutes(after, afterPreposition: true)} • قم إلى صلاتك',
+            when: day[p].add(Duration(minutes: after)),
+          );
+        }
         if (s.preAdhanEnabled) {
           await _notifications.schedulePreAdhan(
             id: base + 20 + slot,
             title: 'اقترب موعد صلاة ${p.nameOn(day.date)}',
-            body: 'باقي ${ArabicUtils.toArabicDigits(s.preAdhanMinutes)} دقيقة على الأذان • ${ArabicUtils.formatTime(day[p])}',
+            body: 'باقي ${ArabicUtils.minutes(s.preAdhanMinutes)} على الأذان • ${ArabicUtils.formatTime(day[p])}',
             when: day[p].subtract(Duration(minutes: s.preAdhanMinutes)),
           );
         }

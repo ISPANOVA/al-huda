@@ -35,6 +35,9 @@ class SettingsState extends Equatable {
 
   /// Reminder to read the post-prayer athkar N minutes after each adhan.
   final bool postPrayerAthkar;
+
+  /// Silent reminder at the usual iqama time.
+  final bool iqamaReminder;
   final int postPrayerMinutes;
 
   /// Smart daily wird: pages per day (0 = off).
@@ -83,6 +86,7 @@ class SettingsState extends Equatable {
     this.preAdhanMinutes = 10,
     this.prayerAlerts = const [true, true, true, true, true],
     this.postPrayerAthkar = true,
+    this.iqamaReminder = true,
     this.postPrayerMinutes = 15,
     this.wirdPages = 0,
     this.customPrimary = 0xFFC9A44C,
@@ -118,6 +122,7 @@ class SettingsState extends Equatable {
     int? preAdhanMinutes,
     List<bool>? prayerAlerts,
     bool? postPrayerAthkar,
+    bool? iqamaReminder,
     int? postPrayerMinutes,
     int? wirdPages,
     int? customPrimary,
@@ -152,6 +157,7 @@ class SettingsState extends Equatable {
       preAdhanMinutes: preAdhanMinutes ?? this.preAdhanMinutes,
       prayerAlerts: prayerAlerts ?? this.prayerAlerts,
       postPrayerAthkar: postPrayerAthkar ?? this.postPrayerAthkar,
+      iqamaReminder: iqamaReminder ?? this.iqamaReminder,
       postPrayerMinutes: postPrayerMinutes ?? this.postPrayerMinutes,
       wirdPages: wirdPages ?? this.wirdPages,
       customPrimary: customPrimary ?? this.customPrimary,
@@ -188,6 +194,7 @@ class SettingsState extends Equatable {
         'preAdhanMinutes': preAdhanMinutes,
         'prayerAlerts': prayerAlerts,
         'postPrayerAthkar': postPrayerAthkar,
+        'iqamaReminder': iqamaReminder,
         'postPrayerMinutes': postPrayerMinutes,
         'wirdPages': wirdPages,
         'customPrimary': customPrimary,
@@ -231,6 +238,7 @@ class SettingsState extends Equatable {
           ? (m['prayerAlerts'] as List).map((e) => e == true).toList()
           : d.prayerAlerts,
       postPrayerAthkar: m['postPrayerAthkar'] as bool? ?? d.postPrayerAthkar,
+      iqamaReminder: m['iqamaReminder'] as bool? ?? d.iqamaReminder,
       postPrayerMinutes: (m['postPrayerMinutes'] as num?)?.toInt() ?? d.postPrayerMinutes,
       wirdPages: (m['wirdPages'] as num?)?.toInt() ?? d.wirdPages,
       customPrimary: (m['customPrimary'] as num?)?.toInt() ?? d.customPrimary,
@@ -268,6 +276,7 @@ class SettingsState extends Equatable {
         preAdhanMinutes,
         prayerAlerts,
         postPrayerAthkar,
+        iqamaReminder,
         postPrayerMinutes,
         wirdPages,
         customPrimary,
