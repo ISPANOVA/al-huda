@@ -9,7 +9,16 @@ import android.app.Service
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.content.pm.ServiceInfo
+import android.hardware.Sensor
+import android.hardware.SensorEvent
+import android.hardware.SensorEventListener
+import android.hardware.SensorManager
+import android.media.VolumeProvider
+import android.media.session.MediaSession
+import android.media.session.PlaybackState
+import android.os.SystemClock
 import android.media.AudioAttributes
 import android.media.AudioFocusRequest
 import android.media.AudioManager
@@ -160,6 +169,121 @@ class AdhanService : Service() {
     private var player: MediaPlayer? = null
     private var focus: AudioFocusRequest? = null
 
+    // Quick ways to silence the adhan without opening the notification:
+    // a volume key press, or turning the phone face down.
+    private var session: MediaSession? = null
+    private var volumeReceiver: BroadcastReceiver? = null
+    private var sensors: SensorManager? = null
+    private var startedAt = 0L
+    private var alarmVolume = -1
+    private var sawFaceUp = false
+    private var faceDownSince = 0L
+
+    private val flipListener = object : SensorEventListener {
+        override fun onSensorChanged(e: SensorEvent) {
+            val z = e.values[2]
+            val now = SystemClock.elapsedRealtime()
+            if (z > 3f) {
+                sawFaceUp = true
+                faceDownSince = 0L
+            } else if (z < -8f && sawFaceUp) {
+                if (faceDownSince == 0L) faceDownSince = now
+                if (now - faceDownSince > 600) finish()
+            } else {
+                faceDownSince = 0L
+            }
+        }
+
+        override fun onAccuracyChanged(s: Sensor?, a: Int) {}
+    }
+
+    private fun armQuickStop() {
+        disarmQuickStop()
+        startedAt = SystemClock.elapsedRealtime()
+        sawFaceUp = false
+        faceDownSince = 0L
+        val am = getSystemService(Context.AUDIO_SERVICE) as AudioManager
+        alarmVolume = am.getStreamVolume(AudioManager.STREAM_ALARM)
+        // Volume keys go to the active media session while the adhan plays.
+        try {
+            session = MediaSession(this, "AlHudaAdhan").apply {
+                setPlaybackToRemote(object : VolumeProvider(VolumeProvider.VOLUME_CONTROL_RELATIVE, 10, 5) {
+                    override fun onAdjustVolume(direction: Int) {
+                        if (direction != 0) quickStop()
+                    }
+                })
+                setPlaybackState(
+                    PlaybackState.Builder()
+                        .setState(PlaybackState.STATE_PLAYING, 0, 1f)
+                        .setActions(PlaybackState.ACTION_STOP or PlaybackState.ACTION_PAUSE)
+                        .build()
+                )
+                setCallback(object : MediaSession.Callback() {
+                    override fun onStop() = quickStop()
+                    override fun onPause() = quickStop()
+                })
+                isActive = true
+            }
+        } catch (_: Exception) {
+        }
+        // Fallback: any change of a volume stream (some phones keep the keys).
+        volumeReceiver = object : BroadcastReceiver() {
+            override fun onReceive(c: Context, i: Intent) = quickStop()
+        }
+        try {
+            val filter = IntentFilter("android.media.VOLUME_CHANGED_ACTION")
+            if (Build.VERSION.SDK_INT >= 33) {
+                registerReceiver(volumeReceiver, filter, Context.RECEIVER_EXPORTED)
+            } else {
+                registerReceiver(volumeReceiver, filter)
+            }
+        } catch (_: Exception) {
+            volumeReceiver = null
+        }
+        // Turning the phone face down.
+        sensors = (getSystemService(Context.SENSOR_SERVICE) as SensorManager).also { sm ->
+            sm.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)?.let {
+                sm.registerListener(flipListener, it, SensorManager.SENSOR_DELAY_NORMAL)
+            }
+        }
+    }
+
+    private fun quickStop() {
+        // Ignore anything in the first moment (focus changes, the tap that woke the screen).
+        if (SystemClock.elapsedRealtime() - startedAt < 800) return
+        if (player == null) return
+        finish()
+    }
+
+    private fun disarmQuickStop() {
+        try {
+            session?.isActive = false
+            session?.release()
+        } catch (_: Exception) {
+        }
+        session = null
+        volumeReceiver?.let {
+            try {
+                unregisterReceiver(it)
+            } catch (_: Exception) {
+            }
+        }
+        volumeReceiver = null
+        sensors?.unregisterListener(flipListener)
+        sensors = null
+        // A key press may have lowered the alarm volume: put it back.
+        if (alarmVolume >= 0) {
+            try {
+                val am = getSystemService(Context.AUDIO_SERVICE) as AudioManager
+                if (am.getStreamVolume(AudioManager.STREAM_ALARM) != alarmVolume) {
+                    am.setStreamVolume(AudioManager.STREAM_ALARM, alarmVolume, 0)
+                }
+            } catch (_: Exception) {
+            }
+        }
+        alarmVolume = -1
+    }
+
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -209,6 +333,7 @@ class AdhanService : Service() {
                 prepare()
                 start()
             }
+            armQuickStop()
         } catch (_: Exception) {
             finish()
         }
@@ -242,6 +367,7 @@ class AdhanService : Service() {
             .setSmallIcon(icon)
             .setContentTitle(title)
             .setContentText(body)
+            .setSubText("لإيقافه: اضغط زر الصوت أو اقلب الهاتف على وجهه")
             .setCategory(Notification.CATEGORY_ALARM)
             .setColor(0xFFC9A44C.toInt())
             .setOngoing(true)
@@ -252,6 +378,7 @@ class AdhanService : Service() {
     }
 
     private fun releasePlayer() {
+        disarmQuickStop()
         try {
             player?.stop()
         } catch (_: Exception) {
