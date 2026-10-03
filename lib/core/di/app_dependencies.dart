@@ -48,11 +48,9 @@ class AppDependencies {
   });
 
   static Future<AppDependencies> init() async {
-    debugPrint('ALHUDA init: storage');
     final storage = StorageService();
     await storage.init();
 
-    debugPrint('ALHUDA init: notifications');
     final notifications = NotificationService();
     try {
       await notifications.init();
@@ -67,11 +65,9 @@ class AppDependencies {
       headers: {'User-Agent': 'AlHuda/1.0 (com.alhuda.islamic.app)'},
     ));
 
-    debugPrint('ALHUDA init: downloads');
     final downloads = AudioDownloadService(dio, storage);
     await downloads.init();
 
-    debugPrint('ALHUDA init: audio service');
     final handler = await AudioService.init<QuranAudioHandler>(
       builder: QuranAudioHandler.new,
       config: const AudioServiceConfig(
@@ -91,7 +87,6 @@ class AppDependencies {
     );
     final playlistBuilder = PlaylistBuilder(downloads);
     handler.car = CarMedia(handler, playlistBuilder, storage);
-    debugPrint('ALHUDA init: audio ready');
 
     // The Mushaf ships inside the app: start parsing it in the background now so
     // the Quran opens instantly. Old downloaded text cache is no longer needed.

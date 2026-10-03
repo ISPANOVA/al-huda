@@ -59,7 +59,8 @@ class QuranAudioHandler extends BaseAudioHandler with SeekHandler {
 
     _player.durationStream.listen((duration) {
       final item = mediaItem.value;
-      if (item != null && duration != null && item.duration != duration) {
+      // Live radio has no length: don't resend its metadata on every chunk.
+      if (item != null && item.extras?['live'] != true && duration != null && item.duration != duration) {
         mediaItem.add(item.copyWith(duration: duration));
       }
     });
