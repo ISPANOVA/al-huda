@@ -279,7 +279,7 @@ void _configureAndroidResources() {
     ..parent.createSync(recursive: true)
     ..writeAsStringSync('<?xml version="1.0" encoding="utf-8"?>\n'
         '<resources xmlns:tools="http://schemas.android.com/tools" '
-        'tools:keep="@drawable/ic_stat_alhuda,@drawable/launch_background,@drawable/widget_*,@layout/widget_*,@xml/widget_*,@xml/automotive_app_desc,@drawable/car_*,@font/hafs,@raw/adhan_*,@raw/takbeer_*" />\n');
+        'tools:keep="@drawable/ic_stat_alhuda,@drawable/launch_background,@drawable/widget_*,@layout/widget_*,@xml/widget_*,@xml/automotive_app_desc,@drawable/car_*,@drawable/audio_service_*,@font/hafs,@raw/adhan_*,@raw/takbeer_*" />\n');
   File('$res/values/alhuda_colors.xml')
     ..parent.createSync(recursive: true)
     ..writeAsStringSync('<?xml version="1.0" encoding="utf-8"?>\n<resources>\n'

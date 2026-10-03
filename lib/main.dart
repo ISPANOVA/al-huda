@@ -8,17 +8,25 @@ import 'features/onboarding/splash_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
-  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-    statusBarColor: Colors.transparent,
-    systemNavigationBarColor: Colors.transparent,
-  ));
-  SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-  // Services start here, not from the first frame: when Android Auto (or a
-  // headset button) starts the app without a screen there is no frame, and
-  // the audio service must still come up to answer the car.
+  // Services start first and never wait for the screen: when Android Auto
+  // (or a headset button) starts the app there is no Activity, the calls
+  // below have nobody to answer them, and the audio service must still
+  // come up to answer the car.
   final deps = initializeDateFormatting('ar').then((_) => AppDependencies.init());
+  _ui(() => SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]));
+  _ui(() async => SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        systemNavigationBarColor: Colors.transparent,
+      )));
+  _ui(() => SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge));
   runApp(_Bootstrap(deps));
+}
+
+/// Screen-only calls: fire and forget, never fatal without a screen.
+void _ui(Future<void> Function() call) {
+  try {
+    call().catchError((Object _) {});
+  } catch (_) {}
 }
 
 /// Shows the animated splash while services start, then fades into the app.

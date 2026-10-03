@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:audio_service/audio_service.dart';
 import 'package:dio/dio.dart';
 
@@ -47,11 +48,17 @@ class AppDependencies {
   });
 
   static Future<AppDependencies> init() async {
+    debugPrint('ALHUDA init: storage');
     final storage = StorageService();
     await storage.init();
 
+    debugPrint('ALHUDA init: notifications');
     final notifications = NotificationService();
-    await notifications.init();
+    try {
+      await notifications.init();
+    } catch (e) {
+      debugPrint('ALHUDA notifications init failed: $e');
+    }
 
     final dio = Dio(BaseOptions(
       connectTimeout: const Duration(seconds: 20),
@@ -60,9 +67,11 @@ class AppDependencies {
       headers: {'User-Agent': 'AlHuda/1.0 (com.alhuda.islamic.app)'},
     ));
 
+    debugPrint('ALHUDA init: downloads');
     final downloads = AudioDownloadService(dio, storage);
     await downloads.init();
 
+    debugPrint('ALHUDA init: audio service');
     final handler = await AudioService.init<QuranAudioHandler>(
       builder: QuranAudioHandler.new,
       config: const AudioServiceConfig(
@@ -82,6 +91,7 @@ class AppDependencies {
     );
     final playlistBuilder = PlaylistBuilder(downloads);
     handler.car = CarMedia(handler, playlistBuilder, storage);
+    debugPrint('ALHUDA init: audio ready');
 
     // The Mushaf ships inside the app: start parsing it in the background now so
     // the Quran opens instantly. Old downloaded text cache is no longer needed.

@@ -15,7 +15,7 @@ run() {
   done
   sleep 30
   adb logcat -d > shots/${name}_logcat.txt
-  grep -E "AUTOPROBE|flutter|AudioService|ExoPlayer|AndroidRuntime|audio_service|MediaSession|MediaBrowser" shots/${name}_logcat.txt > shots/${name}_probe.txt
+  grep -E "AUTOPROBE|ALHUDA|System.err|flutter|AudioService|ExoPlayer|AndroidRuntime|audio_service|MediaSession|MediaBrowser" shots/${name}_logcat.txt > shots/${name}_probe.txt
   bash tool/ci/push_shots.sh "$name"
 }
 run closed
