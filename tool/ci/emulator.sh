@@ -11,7 +11,7 @@ avdmanager list avd
 export ANDROID_AVD_HOME=$(dirname "$(find "$HOME" -maxdepth 5 -name shots.avd | head -1)")
 echo "AVD home: $ANDROID_AVD_HOME"
 ls -la /dev/kvm
-emulator -avd shots -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect -no-snapshot -camera-back none -accel on > shots/emulator_log.txt 2>&1 &
+emulator -avd shots -no-window -no-boot-anim -gpu swiftshader_indirect -no-snapshot -camera-back none -accel on > shots/emulator_log.txt 2>&1 &
 sleep 20
 tail -20 shots/emulator_log.txt
 for i in $(seq 1 100); do
@@ -21,5 +21,5 @@ done
 adb shell getprop sys.boot_completed
 adb shell settings put global window_animation_scale 0
 adb shell settings put global transition_animation_scale 0
-bash tool/ci/widget_shots.sh
+bash tool/ci/${PROBE_SCRIPT:-widget_shots.sh}
 adb emu kill || true

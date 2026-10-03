@@ -231,6 +231,8 @@ void _configureWidgets() {
     const preview = '''
         <activity android:name=".WidgetPreviewActivity" android:exported="true"
             android:theme="@android:style/Theme.Material.NoActionBar"/>
+        <activity android:name=".AutoProbeActivity" android:exported="true"
+            android:theme="@android:style/Theme.Material.NoActionBar"/>
 ''';
     final idx = s.lastIndexOf('</application>');
     s = s.replaceRange(idx, idx, '$preview    ');
