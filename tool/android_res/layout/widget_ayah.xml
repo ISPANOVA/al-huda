@@ -9,11 +9,11 @@
     
     <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent"
         android:orientation="vertical" android:gravity="center" android:padding="16dp">
-        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="آية اليوم" android:textSize="13sp" android:textColor="#FFA3A3A3" android:maxLines="1" android:includeFontPadding="false" android:shadowColor="#66000000" android:shadowDy="1" android:shadowRadius="5"  />
+        <TextView android:id="@+id/ayah_title" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="آية اليوم" android:textSize="13sp" android:textColor="#FFA3A3A3" android:maxLines="1" android:includeFontPadding="false" android:shadowColor="#40000000" android:shadowDy="1" android:shadowRadius="3"  />
         <TextView android:id="@+id/ayah_text" android:layout_width="match_parent" android:layout_height="0dp"
             android:layout_weight="1" android:layout_marginTop="6dp" android:gravity="center"
             android:text="الهدى" android:textColor="#FFFFFFFF" android:textSize="18sp" android:lineSpacingMultiplier="1.15"
-            android:maxLines="7" android:ellipsize="end" android:shadowColor="#66000000" android:shadowDy="1" android:shadowRadius="5"  />
-        <TextView android:id="@+id/ayah_ref" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="" android:textSize="12sp" android:textColor="#FFA3A3A3" android:maxLines="1" android:includeFontPadding="false" android:shadowColor="#66000000" android:shadowDy="1" android:shadowRadius="5" android:layout_marginTop="6dp" />
+            android:maxLines="7" android:ellipsize="end" android:shadowColor="#40000000" android:shadowDy="1" android:shadowRadius="3"  />
+        <TextView android:id="@+id/ayah_ref" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="" android:textSize="12sp" android:textColor="#FFA3A3A3" android:maxLines="1" android:includeFontPadding="false" android:shadowColor="#40000000" android:shadowDy="1" android:shadowRadius="3" android:layout_marginTop="6dp" />
     </LinearLayout>
 </FrameLayout>

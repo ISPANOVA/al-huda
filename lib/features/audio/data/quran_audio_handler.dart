@@ -2,7 +2,11 @@ import 'dart:async';
 
 import 'package:audio_service/audio_service.dart';
 import 'package:audio_session/audio_session.dart';
+import 'dart:io';
+
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:just_audio/just_audio.dart';
 
 import 'car_media.dart';
@@ -34,7 +38,28 @@ class QuranAudioHandler extends BaseAudioHandler with SeekHandler {
     _init();
   }
 
+  /// The app's logo as a local file: artwork for the notification, lock
+  /// screen and Android Auto's player.
+  Uri? _art;
+
+  Future<void> _prepareArtwork() async {
+    try {
+      final dir = await getTemporaryDirectory();
+      final file = File('${dir.path}/alhuda_now_playing.png');
+      if (!await file.exists()) {
+        final data = await rootBundle.load('assets/icon/app_icon.png');
+        await file.writeAsBytes(data.buffer.asUint8List(), flush: true);
+      }
+      _art = Uri.file(file.path);
+    } catch (e) {
+      debugPrint('Artwork unavailable: $e');
+    }
+  }
+
+  MediaItem _withArt(MediaItem item) => item.artUri == null && _art != null ? item.copyWith(artUri: _art) : item;
+
   Future<void> _init() async {
+    unawaited(_prepareArtwork());
     final session = await AudioSession.instance;
     await session.configure(const AudioSessionConfiguration.speech());
 
@@ -94,6 +119,8 @@ class QuranAudioHandler extends BaseAudioHandler with SeekHandler {
 
     final start = initialIndex.clamp(0, items.length - 1);
     _active = true;
+    if (_art == null) await _prepareArtwork();
+    items = [for (final i in items) _withArt(i)];
     queue.add(items);
     mediaItem.add(items[start]);
     _broadcastState(_player.playbackEvent); // «loading» with the new item
@@ -112,7 +139,7 @@ class QuranAudioHandler extends BaseAudioHandler with SeekHandler {
     _infiniteLoop = false;
     _loopsRemaining = 0;
     _emitLoopState();
-    final item = MediaItem(
+    final live = MediaItem(
       id: url,
       title: title,
       artist: artist,
@@ -120,6 +147,8 @@ class QuranAudioHandler extends BaseAudioHandler with SeekHandler {
       extras: <String, dynamic>{'live': true},
     );
     _active = true;
+    if (_art == null) await _prepareArtwork();
+    final item = _withArt(live);
     queue.add([item]);
     mediaItem.add(item);
     _broadcastState(_player.playbackEvent);

@@ -64,6 +64,9 @@ class SettingsState extends Equatable {
   /// Home-screen widgets background: 0 = transparent, 1 = solid card.
   final double widgetOpacity;
 
+  /// Home-screen widgets text colour (ARGB).
+  final int widgetTextColor;
+
   const SettingsState({
     this.themeType = AppThemeType.noirGold,
     this.themeMode = ThemeMode.dark,
@@ -98,6 +101,7 @@ class SettingsState extends Equatable {
     this.sunriseAlert = false,
     this.patternStrength = 1.0,
     this.widgetOpacity = 1.0,
+    this.widgetTextColor = 0xFFFFFFFF,
   });
 
   SettingsState copyWith({
@@ -134,6 +138,7 @@ class SettingsState extends Equatable {
     bool? sunriseAlert,
     double? patternStrength,
     double? widgetOpacity,
+    int? widgetTextColor,
   }) {
     return SettingsState(
       themeType: themeType ?? this.themeType,
@@ -169,6 +174,7 @@ class SettingsState extends Equatable {
       sunriseAlert: sunriseAlert ?? this.sunriseAlert,
       patternStrength: patternStrength ?? this.patternStrength,
       widgetOpacity: widgetOpacity ?? this.widgetOpacity,
+      widgetTextColor: widgetTextColor ?? this.widgetTextColor,
     );
   }
 
@@ -206,6 +212,7 @@ class SettingsState extends Equatable {
         'sunriseAlert': sunriseAlert,
         'patternStrength': patternStrength,
         'widgetOpacity': widgetOpacity,
+        'widgetTextColor': widgetTextColor,
       };
 
   factory SettingsState.fromMap(Map<String, dynamic> m) {
@@ -250,6 +257,7 @@ class SettingsState extends Equatable {
       sunriseAlert: m['sunriseAlert'] as bool? ?? d.sunriseAlert,
       patternStrength: (m['patternStrength'] as num?)?.toDouble() ?? d.patternStrength,
       widgetOpacity: (m['widgetOpacity'] as num?)?.toDouble() ?? d.widgetOpacity,
+      widgetTextColor: (m['widgetTextColor'] as num?)?.toInt() ?? d.widgetTextColor,
     );
   }
 
@@ -288,5 +296,6 @@ class SettingsState extends Equatable {
         sunriseAlert,
         patternStrength,
         widgetOpacity,
+        widgetTextColor,
       ];
 }
