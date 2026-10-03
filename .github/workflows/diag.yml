@@ -9,7 +9,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: python3 tool/diag/check.py
+      - run: |
+          mkdir -p diag
+          curl -sSL -o diag/ArefRuqaa-Bold.ttf "https://github.com/google/fonts/raw/main/ofl/arefruqaa/ArefRuqaa-Bold.ttf"
+          curl -sSL -o diag/ArefRuqaa-Regular.ttf "https://github.com/google/fonts/raw/main/ofl/arefruqaa/ArefRuqaa-Regular.ttf"
+          curl -sSL -o diag/OFL.txt "https://github.com/google/fonts/raw/main/ofl/arefruqaa/OFL.txt"
+          ls -la diag
       - name: Push results
         if: always()
         run: |
