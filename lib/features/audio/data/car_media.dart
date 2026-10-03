@@ -28,7 +28,14 @@ class CarMedia {
   static const _reciters = 'reciters';
   static const _radios = 'radios';
 
-  static final _art = Uri.parse('android.resource://com.alhuda.islamic.app/mipmap/ic_launcher');
+  // Plain PNG drawables: Android Auto cannot draw the adaptive launcher icon
+  // (it showed white squares).
+  static Uri _icon(String name) => Uri.parse('android.resource://com.alhuda.islamic.app/drawable/car_$name');
+  static final _quranArt = _icon('quran');
+  static final _reciterArt = _icon('reciter');
+  static final _radioArt = _icon('radio');
+  static final _surahArt = _icon('surah');
+  static final _art = _surahArt;
 
   static List<MediaRadio> get _allRadios => [...kOfficialRadios, ...kReciterRadios, ...kThemeRadios];
 
@@ -41,8 +48,8 @@ class CarMedia {
 
   double get _speed => (_settings['playbackSpeed'] as num?)?.toDouble() ?? 1.0;
 
-  MediaItem _folder(String id, String title, {String? subtitle}) =>
-      MediaItem(id: id, title: title, displaySubtitle: subtitle, artUri: _art, playable: false);
+  MediaItem _folder(String id, String title, {String? subtitle, Uri? art}) =>
+      MediaItem(id: id, title: title, displaySubtitle: subtitle, artUri: art ?? _art, playable: false);
 
   MediaItem _surahItem(String id, int surah, String reciter) {
     final info = SurahMetadata.surah(surah);
@@ -59,9 +66,9 @@ class CarMedia {
   List<MediaItem> children(String parent) {
     if (parent == AudioService.browsableRootId) {
       return [
-        _folder(_quran, 'القرآن الكريم', subtitle: _appReciter.nameAr),
-        _folder(_reciters, 'المشايخ', subtitle: 'المصحف كاملًا بأصوات كبار القراء'),
-        _folder(_radios, 'الإذاعات', subtitle: 'بث مباشر على مدار الساعة'),
+        _folder(_quran, 'القرآن الكريم', subtitle: _appReciter.nameAr, art: _quranArt),
+        _folder(_reciters, 'المشايخ', subtitle: 'المصحف كاملًا بأصوات كبار القراء', art: _reciterArt),
+        _folder(_radios, 'الإذاعات', subtitle: 'بث مباشر على مدار الساعة', art: _radioArt),
       ];
     }
     if (parent == AudioService.recentRootId) {
@@ -75,7 +82,7 @@ class CarMedia {
     if (parent == _reciters) {
       return [
         for (final r in MediaCatalog.reciters)
-          _folder('reciter:${r.key}', r.name, subtitle: r.style),
+          _folder('reciter:${r.key}', r.name, subtitle: r.style, art: _reciterArt),
       ];
     }
     if (parent.startsWith('reciter:')) {
@@ -91,7 +98,7 @@ class CarMedia {
             id: 'radio:$i',
             title: all[i].name,
             displaySubtitle: all[i].subtitle ?? 'بث مباشر',
-            artUri: _art,
+            artUri: _radioArt,
             playable: true,
           ),
       ];
@@ -154,7 +161,7 @@ class CarMedia {
     final radios = _allRadios;
     for (var i = 0; i < radios.length; i++) {
       if (ArabicUtils.normalize(radios[i].name).contains(q)) {
-        out.add(MediaItem(id: 'radio:$i', title: radios[i].name, artUri: _art, playable: true));
+        out.add(MediaItem(id: 'radio:$i', title: radios[i].name, artUri: _radioArt, playable: true));
       }
     }
     return out;
@@ -206,7 +213,6 @@ class CarMedia {
         title: 'سورة ${info.name}',
         album: 'القرآن الكريم',
         artist: reciter.mujawwad ? '${reciter.name} • ${reciter.style}' : reciter.name,
-        artUri: _art,
         extras: <String, dynamic>{'surah': s, 'reciter': reciter.id},
       );
       final local = MediaDownloads.instance.localPath(reciter, s);
@@ -219,7 +225,11 @@ class CarMedia {
   Future<void> _playRadio(MediaRadio radio) async {
     for (final url in radio.urls) {
       try {
-        await _handler.playStream(url: url, title: radio.name, artist: radio.subtitle ?? 'بث مباشر');
+        await _handler.playStream(
+          url: url,
+          title: radio.name,
+          artist: radio.subtitle ?? 'بث مباشر',
+        );
         return;
       } catch (_) {
         // next mirror

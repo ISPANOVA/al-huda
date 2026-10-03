@@ -185,15 +185,35 @@ class QuranAudioHandler extends BaseAudioHandler with SeekHandler {
 
   void _broadcastState(PlaybackEvent event) {
     final playing = _player.playing;
+    final live = mediaItem.value?.extras?['live'] == true;
+    // Full set of actions so car screens (Android Auto) and lock screens show
+    // a real player: play/pause, stop, previous/next (not for live radio).
     playbackState.add(playbackState.value.copyWith(
-      controls: [
-        MediaControl.skipToPrevious,
-        if (playing) MediaControl.pause else MediaControl.play,
-        MediaControl.stop,
-        MediaControl.skipToNext,
-      ],
-      systemActions: const {MediaAction.seek, MediaAction.seekForward, MediaAction.seekBackward},
-      androidCompactActionIndices: const [0, 1, 3],
+      controls: live
+          ? [if (playing) MediaControl.pause else MediaControl.play, MediaControl.stop]
+          : [
+              MediaControl.skipToPrevious,
+              if (playing) MediaControl.pause else MediaControl.play,
+              MediaControl.stop,
+              MediaControl.skipToNext,
+            ],
+      systemActions: {
+        MediaAction.play,
+        MediaAction.pause,
+        MediaAction.playPause,
+        MediaAction.stop,
+        MediaAction.playFromMediaId,
+        MediaAction.playFromSearch,
+        if (!live) ...{
+          MediaAction.seek,
+          MediaAction.seekForward,
+          MediaAction.seekBackward,
+          MediaAction.skipToNext,
+          MediaAction.skipToPrevious,
+          MediaAction.skipToQueueItem,
+        },
+      },
+      androidCompactActionIndices: live ? const [0, 1] : const [0, 1, 3],
       processingState: const {
         ProcessingState.idle: AudioProcessingState.idle,
         ProcessingState.loading: AudioProcessingState.loading,
