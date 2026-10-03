@@ -40,6 +40,21 @@ jobs:
             flutter build web --release --base-href / --no-web-resources-cdn --pwa-strategy=none
           } 2>&1 | tee "$RUNNER_TEMP/web_log.txt" || echo failed > "$RUNNER_TEMP/failed"
 
+      - name: Deploy to Cloudflare Pages (main only)
+        if: github.ref_name == 'main' && hashFiles('build/web/index.html') != ''
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
+            echo "::notice::Add CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID secrets to publish the site."
+            exit 0
+          fi
+          printf '/index.html\n  Cache-Control: no-cache\n/flutter_bootstrap.js\n  Cache-Control: no-cache\n/main.dart.js\n  Cache-Control: no-cache\n' > build/web/_headers
+          npx --yes wrangler@4 pages project create al-huda --production-branch main 2>&1 | tail -3 || true
+          npx --yes wrangler@4 pages deploy build/web --project-name al-huda --branch main --commit-dirty=true 2>&1 | tee "$RUNNER_TEMP/deploy.txt"
+          grep -o 'https://[a-z0-9.-]*pages.dev' "$RUNNER_TEMP/deploy.txt" | tail -1 > "$RUNNER_TEMP/url.txt" || true
+
       - name: Publish to branch
         if: always()
         run: |
@@ -52,10 +67,9 @@ jobs:
             TARGET="$TARGET-log"
           else
             cp -r build/web/. "$OUT/"
-            # Cloudflare Pages: always check for a newer app shell.
-            printf '/*\n  X-Content-Type-Options: nosniff\n/index.html\n  Cache-Control: no-cache\n/flutter_bootstrap.js\n  Cache-Control: no-cache\n/main.dart.js\n  Cache-Control: no-cache\n' > "$OUT/_headers"
           fi
           cp "$RUNNER_TEMP/web_log.txt" "$OUT/build_log.txt" 2>/dev/null || true
+          cp "$RUNNER_TEMP/deploy.txt" "$OUT/deploy_log.txt" 2>/dev/null || true
           echo "${GITHUB_SHA}" > "$OUT/SHA.txt"
           cd "$OUT"
           git init -q -b "$TARGET"
