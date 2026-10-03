@@ -277,7 +277,10 @@ class _PermissionsView extends StatelessWidget {
           Text('خطوة أخيرة',
               style: TextStyle(fontSize: 26, fontWeight: FontWeight.w900, color: glass.onGlass)),
           const SizedBox(height: 10),
-          Text('اسمح بالإشعارات والموقع ليعمل الأذان وتذكير الختمة وتُحسب المواقيت تلقائيًا حسب مدينتك.',
+          Text(
+              kIsWeb
+                  ? 'اسمح بالموقع لتُحسب المواقيت واتجاه القبلة تلقائيًا حسب مدينتك.'
+                  : 'اسمح بالإشعارات والموقع ليعمل الأذان وتذكير الختمة وتُحسب المواقيت تلقائيًا حسب مدينتك.',
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 15, height: 1.8, color: glass.onGlassMuted)),
           const SizedBox(height: 28),

@@ -37,7 +37,7 @@ jobs:
           {
             flutter --version
             flutter pub get
-            flutter build web --release --base-href / --pwa-strategy=none
+            flutter build web --release --base-href / --no-web-resources-cdn --pwa-strategy=none
           } 2>&1 | tee "$RUNNER_TEMP/web_log.txt" || echo failed > "$RUNNER_TEMP/failed"
 
       - name: Publish to branch
