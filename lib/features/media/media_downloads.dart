@@ -29,8 +29,11 @@ class MediaDownloads extends ChangeNotifier {
   static String _k(MediaReciter r, int s) => '${r.key}/$s';
   static String _file(int s) => '${s.toString().padLeft(3, '0')}.mp3';
 
+  /// No file system on the web: recitations always stream there.
+  static bool get supported => !kIsWeb;
+
   Future<void> init() async {
-    if (_root != null) return;
+    if (_root != null || !supported) return;
     final docs = await getApplicationDocumentsDirectory();
     _root = '${docs.path}/media';
     final dir = Directory(_root!);
@@ -65,6 +68,7 @@ class MediaDownloads extends ChangeNotifier {
   int get totalCount => _done.length;
 
   Future<void> download(MediaReciter r, int s) async {
+    if (!supported) return;
     await init();
     final k = _k(r, s);
     if (_done.contains(k) || _tokens.containsKey(k)) return;
@@ -108,6 +112,7 @@ class MediaDownloads extends ChangeNotifier {
   void cancel(MediaReciter r, int s) => _tokens[_k(r, s)]?.cancel();
 
   Future<void> delete(MediaReciter r, int s) async {
+    if (!supported) return;
     await init();
     final f = File('$_root/${r.key}/${_file(s)}');
     if (f.existsSync()) await f.delete();
@@ -116,6 +121,7 @@ class MediaDownloads extends ChangeNotifier {
   }
 
   Future<int> totalBytes() async {
+    if (!supported) return 0;
     await init();
     var total = 0;
     await for (final e in Directory(_root!).list(recursive: true, followLinks: false)) {

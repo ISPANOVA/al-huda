@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:path_provider/path_provider.dart';
@@ -59,6 +60,15 @@ class _AyahImagePageState extends State<AyahImagePage> {
       final data = await image.toByteData(format: ui.ImageByteFormat.png);
       image.dispose();
       if (data == null) return;
+      if (kIsWeb) {
+        final name = 'alhuda_${widget.ayah.surah}_${widget.ayah.numberInSurah}.png';
+        await SharePlus.instance.share(ShareParams(
+          files: [XFile.fromData(data.buffer.asUint8List(), name: name, mimeType: 'image/png')],
+          fileNameOverrides: [name],
+          text: '${_reference()} — تطبيق الهدى',
+        ));
+        return;
+      }
       final dir = await getTemporaryDirectory();
       final file = File('${dir.path}/alhuda_${widget.ayah.surah}_${widget.ayah.numberInSurah}.png');
       await file.writeAsBytes(data.buffer.asUint8List(), flush: true);

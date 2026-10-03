@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -5,9 +6,12 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'app.dart';
 import 'core/di/app_dependencies.dart';
 import 'features/onboarding/splash_screen.dart';
+import 'features/tasmee/web_speech.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  // Browser build: the Tasmee listens through the browser's recognizer.
+  if (kIsWeb) installWebSpeech();
   // Services start first and never wait for the screen: when Android Auto
   // (or a headset button) starts the app there is no Activity, the calls
   // below have nobody to answer them, and the audio service must still

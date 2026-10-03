@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -280,15 +281,17 @@ class _PermissionsView extends StatelessWidget {
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 15, height: 1.8, color: glass.onGlassMuted)),
           const SizedBox(height: 28),
-          _PermissionTile(
-            icon: Icons.notifications_active_rounded,
-            title: 'الإشعارات',
-            subtitle: 'تنبيه الأذان والأذكار والختمة',
-            granted: notifGranted,
-            busy: busy,
-            onTap: onNotifications,
-          ),
-          const SizedBox(height: 12),
+          if (!kIsWeb) ...[
+            _PermissionTile(
+              icon: Icons.notifications_active_rounded,
+              title: 'الإشعارات',
+              subtitle: 'تنبيه الأذان والأذكار والختمة',
+              granted: notifGranted,
+              busy: busy,
+              onTap: onNotifications,
+            ),
+            const SizedBox(height: 12),
+          ],
           _PermissionTile(
             icon: Icons.my_location_rounded,
             title: 'الموقع',

@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
@@ -46,9 +47,19 @@ class BackupService {
 
   /// Writes the backup and opens the share sheet (save to Drive, Files, WhatsApp…).
   Future<void> export() async {
-    final dir = await getTemporaryDirectory();
     final d = DateTime.now();
     final name = 'alhuda_backup_${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}.json';
+    if (kIsWeb) {
+      // No file system in the browser: share (or download) the bytes.
+      final bytes = utf8.encode(const JsonEncoder.withIndent(' ').convert(snapshot()));
+      await SharePlus.instance.share(ShareParams(
+        files: [XFile.fromData(bytes, name: name, mimeType: 'application/json')],
+        fileNameOverrides: [name],
+        text: 'نسخة احتياطية من تطبيق الهدى',
+      ));
+      return;
+    }
+    final dir = await getTemporaryDirectory();
     final file = File('${dir.path}/$name');
     await file.writeAsString(const JsonEncoder.withIndent(' ').convert(snapshot()), flush: true);
     await SharePlus.instance.share(ShareParams(

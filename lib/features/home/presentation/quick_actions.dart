@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -48,7 +49,7 @@ final List<QuickActionDef> kQuickActions = [
   const QuickActionDef('calendar', Icons.calendar_month_rounded, 'التقويم', route: CalendarPage.route),
   const QuickActionDef('review', Icons.psychology_rounded, 'مراجعة الحفظ', route: HifzReviewPage.route),
   const QuickActionDef('player', Icons.headphones_rounded, 'المشغل', route: PlayerPage.route),
-  const QuickActionDef('downloads', Icons.download_for_offline_rounded, 'التحميلات', route: DownloadsPage.route),
+  if (!kIsWeb) const QuickActionDef('downloads', Icons.download_for_offline_rounded, 'التحميلات', route: DownloadsPage.route),
   const QuickActionDef('stats', Icons.insights_rounded, 'إحصائياتي', route: StatsPage.route),
   const QuickActionDef('settings', Icons.settings_rounded, 'الإعدادات', route: SettingsPage.route),
 ];

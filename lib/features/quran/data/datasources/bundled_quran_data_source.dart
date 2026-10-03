@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'dart:isolate';
+import 'package:flutter/foundation.dart';
 
 import 'package:flutter/services.dart';
 
@@ -39,7 +39,8 @@ class BundledQuranDataSource {
 
   Future<QuranBundle> _load() async {
     final raw = await rootBundle.loadString(assetPath, cache: false);
-    final bundle = await Isolate.run(() => parseQuranBundle(raw));
+    // compute(): a background isolate on phones, inline on the web.
+    final bundle = await compute(parseQuranBundle, raw);
     current = bundle;
     return bundle;
   }

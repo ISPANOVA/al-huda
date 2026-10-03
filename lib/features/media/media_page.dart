@@ -129,6 +129,7 @@ class MediaHeader extends StatelessWidget {
               ],
             ),
           ),
+          if (MediaDownloads.supported)
           ListenableBuilder(
             listenable: MediaDownloads.instance,
             builder: (context, _) {

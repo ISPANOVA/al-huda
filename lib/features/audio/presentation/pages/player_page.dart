@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -31,6 +32,7 @@ class PlayerPage extends StatelessWidget {
     return GlassScaffold(
       title: 'المشغل',
       actions: [
+        if (!kIsWeb) // no offline files in the browser
         IconButton(
           tooltip: 'التحميلات',
           icon: const Icon(Icons.download_for_offline_outlined),

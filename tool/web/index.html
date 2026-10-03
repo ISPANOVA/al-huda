@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <base href="$FLUTTER_BASE_HREF">
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="description" content="الهدى: القرآن الكريم والتسميع ومواقيت الصلاة والأذكار">
+  <meta name="theme-color" content="#000000">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="الهدى">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="favicon.png">
+  <link rel="manifest" href="manifest.json">
+  <title>الهدى</title>
+  <style>
+    html, body { margin: 0; height: 100%; background: #000; overflow: hidden; }
+    #splash {
+      position: fixed; inset: 0; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 28px;
+      background: radial-gradient(circle at 50% 45%, #1d160a 0%, #000 62%);
+      transition: opacity .45s ease;
+    }
+    #splash img { width: 150px; height: 150px; filter: drop-shadow(0 0 28px rgba(201,164,76,.45));
+      animation: breathe 2.4s ease-in-out infinite; }
+    #splash .dots { display: flex; gap: 9px; }
+    #splash .dots i { width: 8px; height: 8px; border-radius: 50%; background: #C9A44C; opacity: .25;
+      animation: dot 1.2s infinite; }
+    #splash .dots i:nth-child(2) { animation-delay: .2s; }
+    #splash .dots i:nth-child(3) { animation-delay: .4s; }
+    #splash p { margin: 0; color: #8f7a48; font: 14px/1.6 system-ui, -apple-system, "Segoe UI", Tahoma, sans-serif; }
+    @keyframes breathe { 50% { transform: scale(1.04); filter: drop-shadow(0 0 40px rgba(201,164,76,.6)); } }
+    @keyframes dot { 30% { opacity: 1; transform: translateY(-4px); } }
+  </style>
+</head>
+<body>
+  <div id="splash">
+    <img src="icons/splash.png" alt="الهدى">
+    <div class="dots"><i></i><i></i><i></i></div>
+    <p>جارٍ التحميل… أول مرة قد تأخذ دقيقة</p>
+  </div>
+  <script>
+    window.addEventListener('flutter-first-frame', function () {
+      var s = document.getElementById('splash');
+      if (!s) return;
+      s.style.opacity = '0';
+      setTimeout(function () { s.remove(); }, 500);
+    });
+  </script>
+  <script src="flutter_bootstrap.js" async></script>
+</body>
+</html>

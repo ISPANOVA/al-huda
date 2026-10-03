@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
@@ -49,28 +50,55 @@ class LocationService {
       );
     } catch (e) {
       debugPrint('GPS fix failed, trying last known: $e');
-      position = await Geolocator.getLastKnownPosition();
+      position = kIsWeb ? null : await Geolocator.getLastKnownPosition();
     }
     if (position == null) throw const LocationException('تعذر تحديد موقعك الحالي.');
 
     String? city;
-    try {
-      await setLocaleIdentifier('ar');
-      final marks = await placemarkFromCoordinates(position.latitude, position.longitude);
-      if (marks.isNotEmpty) {
-        final m = marks.first;
-        city = [m.locality, m.administrativeArea, m.country]
-            .whereType<String>()
-            .where((s) => s.trim().isNotEmpty)
-            .take(2)
-            .join('، ');
+    if (kIsWeb) {
+      city = await _webCity(position.latitude, position.longitude);
+    } else {
+      try {
+        await setLocaleIdentifier('ar');
+        final marks = await placemarkFromCoordinates(position.latitude, position.longitude);
+        if (marks.isNotEmpty) {
+          final m = marks.first;
+          city = [m.locality, m.administrativeArea, m.country]
+              .whereType<String>()
+              .where((s) => s.trim().isNotEmpty)
+              .take(2)
+              .join('، ');
+        }
+      } catch (e) {
+        debugPrint('Reverse geocoding failed: $e');
       }
-    } catch (e) {
-      debugPrint('Reverse geocoding failed: $e');
     }
 
     final location = UserLocation(latitude: position.latitude, longitude: position.longitude, city: city);
     await _storage.settings.put(_cacheKey, location.toMap());
     return location;
+  }
+
+  /// City name in the browser (the geocoding plugin is phone-only): a free
+  /// reverse-geocoding service that allows calls from web pages.
+  Future<String?> _webCity(double lat, double lng) async {
+    try {
+      final res = await Dio(BaseOptions(connectTimeout: const Duration(seconds: 10))).get<Map<String, dynamic>>(
+        'https://api.bigdatacloud.net/data/reverse-geocode-client',
+        queryParameters: {'latitude': lat, 'longitude': lng, 'localityLanguage': 'ar'},
+      );
+      final d = res.data ?? const {};
+      final parts = [d['city'], d['locality'], d['principalSubdivision'], d['countryName']]
+          .whereType<String>()
+          .map((s) => s.trim())
+          .where((s) => s.isNotEmpty)
+          .toSet()
+          .take(2)
+          .toList();
+      return parts.isEmpty ? null : parts.join('، ');
+    } catch (e) {
+      debugPrint('Web reverse geocoding failed: $e');
+      return null;
+    }
   }
 }

@@ -1,0 +1,65 @@
+name: Web build (iPhone & browsers)
+
+# Separate from the Android build: it never touches the APK/AAB job.
+# main        -> branch web-dist          (published site)
+# web-preview -> branch web-dist-preview  (testing only)
+on:
+  push:
+    branches: [main, web-preview]
+    paths-ignore:
+      - '**.md'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: web-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  web:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.47.5
+          channel: stable
+          cache: true
+
+      - name: Build
+        run: |
+          set -o pipefail
+          mkdir -p web && cp -r tool/web/. web/
+          {
+            flutter --version
+            flutter pub get
+            flutter build web --release --base-href / --pwa-strategy=none
+          } 2>&1 | tee "$RUNNER_TEMP/web_log.txt" || echo failed > "$RUNNER_TEMP/failed"
+
+      - name: Publish to branch
+        if: always()
+        run: |
+          TARGET=web-dist
+          [ "${GITHUB_REF_NAME}" = "main" ] || TARGET=web-dist-preview
+          OUT="$RUNNER_TEMP/site"
+          mkdir -p "$OUT"
+          if [ -f "$RUNNER_TEMP/failed" ] || [ ! -f build/web/index.html ]; then
+            # Keep the last good site; publish only the log for diagnosis.
+            TARGET="$TARGET-log"
+          else
+            cp -r build/web/. "$OUT/"
+            # Cloudflare Pages: always check for a newer app shell.
+            printf '/*\n  X-Content-Type-Options: nosniff\n/index.html\n  Cache-Control: no-cache\n/flutter_bootstrap.js\n  Cache-Control: no-cache\n/main.dart.js\n  Cache-Control: no-cache\n' > "$OUT/_headers"
+          fi
+          cp "$RUNNER_TEMP/web_log.txt" "$OUT/build_log.txt" 2>/dev/null || true
+          echo "${GITHUB_SHA}" > "$OUT/SHA.txt"
+          cd "$OUT"
+          git init -q -b "$TARGET"
+          git config user.name ci-bot && git config user.email ci-bot@users.noreply.github.com
+          git add -A && git commit -qm "web ${GITHUB_RUN_NUMBER} (${GITHUB_SHA::7})"
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${GITHUB_REPOSITORY}.git" "HEAD:$TARGET"
+          [ ! -f "$RUNNER_TEMP/failed" ]

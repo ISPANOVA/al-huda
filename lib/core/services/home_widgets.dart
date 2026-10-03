@@ -20,7 +20,7 @@ class HomeWidgets {
 
   /// Background of all widgets: 0 = transparent, 1 = solid card.
   static Future<void> setStyle({required double opacity, int textColor = 0xFFFFFFFF}) async {
-    if (!Platform.isAndroid) return;
+    if (kIsWeb || !Platform.isAndroid) return;
     try {
       await _channel.invokeMethod('update', {
         'style': jsonEncode({'opacity': opacity, 'text': textColor}),
@@ -35,7 +35,7 @@ class HomeWidgets {
     required String city,
     required List<({DateTime date, List<(String, DateTime)> prayers, DateTime sunrise})> days,
   }) async {
-    if (!Platform.isAndroid) return;
+    if (kIsWeb || !Platform.isAndroid) return;
     final payload = jsonEncode({
       'city': city,
       'days': [
@@ -57,7 +57,7 @@ class HomeWidgets {
 
   /// Daily ayahs for the next [count] days.
   static Future<void> updateAyahs(List<({DateTime date, String text, int surah, int ayah})> items) async {
-    if (!Platform.isAndroid) return;
+    if (kIsWeb || !Platform.isAndroid) return;
     final payload = jsonEncode([
       for (final a in items)
         {

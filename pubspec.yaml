@@ -52,6 +52,10 @@ dependencies:
   flutter_tts: ">=4.0.0 <6.0.0"
   speech_to_text: ^7.0.0
 
+  # Web build only (browser speech recognition, compass, page helpers)
+  web: ^1.1.0
+  speech_to_text_platform_interface: any
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

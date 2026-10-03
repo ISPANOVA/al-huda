@@ -1,7 +1,7 @@
 name: Analyze (check branch)
 on:
   push:
-    branches: [check]
+    branches: [check, web-preview]
 permissions:
   contents: write
 jobs:
