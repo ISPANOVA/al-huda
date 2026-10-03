@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:audio_service/audio_service.dart';
 import 'package:dio/dio.dart';
 
@@ -51,7 +52,11 @@ class AppDependencies {
     await storage.init();
 
     final notifications = NotificationService();
-    await notifications.init();
+    try {
+      await notifications.init();
+    } catch (e) {
+      debugPrint('ALHUDA notifications init failed: $e');
+    }
 
     final dio = Dio(BaseOptions(
       connectTimeout: const Duration(seconds: 20),

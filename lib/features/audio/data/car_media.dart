@@ -191,9 +191,9 @@ class CarMedia {
   MediaReciter? _findReciter(String q) {
     for (final r in MediaCatalog.reciters) {
       final parts = ArabicUtils.normalize(r.name).split(' ');
-      // The family name is what people say: «المنشاوي»، «الحصري»، «العفاسي».
-      final last = parts.last;
-      if (last.length >= 4 && q.contains(last)) return r;
+      // The family name is what people say: «المنشاوي»، «للحصري»، «العفاسي».
+      final last = parts.last.startsWith('ال') ? parts.last.substring(2) : parts.last;
+      if (last.length >= 3 && q.contains(last)) return r;
       if (q.contains(ArabicUtils.normalize(r.name))) return r;
     }
     return null;
