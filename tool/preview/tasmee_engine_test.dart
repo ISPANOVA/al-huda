@@ -278,4 +278,32 @@ void main() {
     expect(s.mistakes, isEmpty);
     expect(s.done, isTrue);
   });
+
+  test('a fresh transcript mid-listening continues instead of starting over', () {
+    final s = TasmeeSession(
+      _words('قُلْ هُوَ ٱللَّهُ أَحَدٌ ٱللَّهُ ٱلصَّمَدُ', surah: 112) +
+          _words('قُلْ أَعُوذُ بِرَبِّ ٱلْفَلَقِ', surah: 113),
+      [],
+    );
+    s.feed('قل هو الله أحد الله الصمد'.split(' '), isFinal: false);
+    expect(s.expected, 6);
+    // The recogniser now reports only the new sentence (same utterance).
+    s.feed(['قل'], isFinal: false);
+    s.feed('قل أعوذ برب الفلق'.split(' '), isFinal: false);
+    expect(s.mistakes, isEmpty);
+    expect(s.done, isTrue);
+    expect(s.words[1].state, TasmeeState.correct);
+  });
+
+  test('a fresh transcript right after a page change is read from its start', () {
+    final first = TasmeeSession(_words('قُلْ هُوَ ٱللَّهُ ٱلصَّمَدُ', surah: 112), []);
+    first.feed('قل هو الله الصمد'.split(' '), isFinal: false);
+    expect(first.done, isTrue);
+    final s = TasmeeSession(_words('قُلْ أَعُوذُ بِرَبِّ ٱلْفَلَقِ', surah: 113), [],
+        consumed: first.consumed, heard: first.lastHeard);
+    s.feed('قل أعوذ'.split(' '), isFinal: false);
+    s.feed('قل أعوذ برب الفلق'.split(' '), isFinal: false);
+    expect(s.mistakes, isEmpty);
+    expect(s.done, isTrue);
+  });
 }

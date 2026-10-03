@@ -213,16 +213,22 @@ class TasmeeSession {
   /// Heard words used by the latest alignment (absolute index).
   int _used;
 
-  List<String> _lastHeard = const [];
+  List<String> _lastHeard;
   List<(TasmeeState, bool)> _snap = const [];
   final List<TasmeeMistake> _segMistakes = [];
   final Set<int> _alerted = {};
 
-  TasmeeSession(this.words, this.mistakes, {int consumed = 0})
+  /// [consumed] words of the current utterance belong to the previous page,
+  /// whose latest transcript is [heard].
+  TasmeeSession(this.words, this.mistakes, {int consumed = 0, List<String> heard = const []})
       : _offset = consumed,
-        _used = consumed {
+        _used = consumed,
+        _lastHeard = heard {
     _snapshot();
   }
+
+  /// The latest transcript of the current utterance.
+  List<String> get lastHeard => _lastHeard;
 
   /// Carried into the next page's session within the same utterance.
   int get consumed => _used;
@@ -285,6 +291,46 @@ class TasmeeSession {
     List<String> heard, {
     required bool isFinal,
     List<List<String>> alternates = const [],
+  }) {
+    // Some recognisers start a fresh transcript in the middle of listening
+    // (only the latest sentence, e.g. «قل اعوذ برب الفلق» after the whole of
+    // Al-Ikhlas). That is a new segment, not a rewrite of what was judged:
+    // settle the previous one and continue from where it reached.
+    var extra = 0;
+    var extraFlash = -1;
+    final prev = _lastHeard;
+    if (prev.length >= 3 && heard.isNotEmpty && heard.length < prev.length) {
+      var p = 0;
+      while (p < prev.length &&
+          p < heard.length &&
+          TasmeeMatcher.key(prev[p]) == TasmeeMatcher.key(heard[p])) {
+        p++;
+      }
+      if (p * 2 < prev.length) {
+        final settled =
+            prev.length > _offset ? _align(prev, isFinal: true, alternates: const []) : const TasmeeFeed(0, 0);
+        extra = settled.mistakes;
+        extraFlash = settled.flash;
+        _commit();
+        _offset = 0;
+        _used = 0;
+      }
+    }
+    if (heard.length < _offset) {
+      // Shorter than what the previous page used: a fresh transcript too.
+      _commit();
+      _offset = 0;
+      _used = 0;
+    }
+    final r = _align(heard, isFinal: isFinal, alternates: alternates);
+    if (extra == 0) return r;
+    return TasmeeFeed(r.revealed, r.mistakes + extra, r.flash >= 0 ? r.flash : extraFlash);
+  }
+
+  TasmeeFeed _align(
+    List<String> heard, {
+    required bool isFinal,
+    required List<List<String>> alternates,
   }) {
     _lastHeard = heard;
     final before = expected;

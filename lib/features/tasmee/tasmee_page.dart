@@ -119,7 +119,7 @@ class _TasmeePageState extends State<TasmeePage> {
     final old = _session;
     if (old != null) _prevCorrect += old.correctCount(_preRevealed);
     var pre = 0;
-    final session = TasmeeSession(words, _mistakes, consumed: consumed);
+    final session = TasmeeSession(words, _mistakes, consumed: consumed, heard: old?.lastHeard ?? const []);
     if (startAyah != null) {
       final first = ayahs.indexWhere((a) => a.number == startAyah);
       if (first > 0) {
