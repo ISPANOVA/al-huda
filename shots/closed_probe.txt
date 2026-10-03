@@ -1,0 +1,318 @@
+10-03 16:44:21.269  2007  2007 D MediaBrowserCompat: Connecting to a MediaBrowserService.
+10-03 16:44:21.329  2007  2048 I flutter : [IMPORTANT:flutter/shell/platform/android/android_context_gl_impeller.cc(104)] Using the Impeller rendering backend (OpenGLES).
+10-03 16:44:21.622  2007  2007 I System.out: flutterEngine warmed up
+10-03 16:44:21.678  2007  2007 I flutter : Unsupported operation: Infinity or NaN toInt
+10-03 16:44:21.680  2007  2007 I flutter : #0      _LatticePainter.paint (package:al_huda/features/onboarding/splash_screen.dart)
+10-03 16:44:21.687  2007  2007 I flutter : #1      RenderCustomPaint._paintWithPainter (package:flutter/src/rendering/custom_paint.dart:593)
+10-03 16:44:21.687  2007  2007 I flutter : #2      RenderCustomPaint.paint (package:flutter/src/rendering/custom_paint.dart:641)
+10-03 16:44:21.687  2007  2007 I flutter : #3      RenderObject._paintWithContext (package:flutter/src/rendering/object.dart:3580)
+10-03 16:44:21.687  2007  2007 I flutter : #4      PaintingContext.paintChild (package:flutter/src/rendering/object.dart:265)
+10-03 16:44:21.687  2007  2007 I flutter : #5      RenderBoxContainerDefaultsMixin.defaultPaint (package:flutter/src/rendering/box.dart:3390)
+10-03 16:44:21.687  2007  2007 I flutter : #6      RenderStack.paintStack (package:flutter/src/rendering/stack.dart:713)
+10-03 16:44:21.688  2007  2007 I flutter : #7      PaintingContext.pushLayer (package:flutter/src/rendering/object.dart:522)
+10-03 16:44:21.688  2007  2007 I flutter : #8      PaintingContext.pushClipRect (package:flutter/src/rendering/object.dart:589)
+10-03 16:44:21.688  2007  2007 I flutter : #9      RenderStack.paint (package:flutter/src/rendering/stack.dart:719)
+10-03 16:44:21.688  2007  2007 I flutter : #10     RenderObject._paintWithContext (package:flutter/src/rendering/object.dart:3580)
+10-03 16:44:21.688  2007  2007 I flutter : #11     PaintingContext.paintChild (package:flutter/src/rendering/object.dart:265)
+10-03 16:44:21.688  2007  2007 I flutter : #12     RenderShiftedBox.paint (package:flutter/src/rendering/shifted_box.dart:98)
+10-03 16:44:21.688  2007  2007 I flutter : #13     RenderObject._paintWithContext (package:flutter/src/rendering/object.dart:3580)
+10-03 16:44:21.688  2007  2007 I flutter : #14     PaintingContext.paintChild (package:flutter/src/rendering/object.dart:265)
+10-03 16:44:21.688  2007  2007 I flutter : #15     RenderProxyBoxMixin.paint (package:flutter/src/rendering/proxy_box.dart:143)
+10-03 16:44:21.688  2007  2007 I flutter : #16     RenderDecoratedBox.paint (package:flutter/src/rendering/proxy_box.dart:2512)
+10-03 16:44:21.688  2007  2007 I flutter : #17     RenderObject._paintWithContext (package:flutter/src/rendering/object.dart:3580)
+10-03 16:44:21.688  2007  2007 I flutter : #18     PaintingContext.paintChild (package:flutter/src/rendering/object.dart:265)
+10-03 16:44:21.688  2007  2007 I flutter : #19     _RenderColoredBox.paint (package:flutter/src/widgets/basic.dart:8472)
+10-03 16:44:21.688  2007  2007 I flutter : #20     RenderObject._paintWithContext (package:flutter/src/rendering/object.dart:3580)
+10-03 16:44:21.688  2007  2007 I flutter : #21     PaintingContext.paintChild (package:flutter/src/rendering/object.dart:265)
+10-03 16:44:21.688  2007  2007 I flutter : #22     RenderProxyBoxMixin.paint (package:flutter/src/rendering/proxy_box.dart:143)
+10-03 16:44:21.688  2007  2007 I flutter : #23     RenderAnimatedOpacityMixin.paint (package:flutter/src/rendering/proxy_box.dart:1079)
+10-03 16:44:21.688  2007  2007 I flutter : #24     RenderObject._paintWithContext (package:flutter/src/rendering/object.dart:3580)
+10-03 16:44:21.688  2007  2007 I flutter : #25     PaintingContext._repaintCompositedChild (package:flutter/src/rendering/object.dart:180)
+10-03 16:44:21.688  2007  2007 I flutter : #26     PaintingContext.repaintCompositedChild (package:flutter/src/rendering/object.dart:125)
+10-03 16:44:21.688  2007  2007 I flutter : #27     PaintingContext._compositeChild (package:flutter/src/rendering/object.dart:276)
+10-03 16:44:21.688  2007  2007 I flutter : #28     PaintingContext.paintChild (package:flutter/src/rendering/object.dart:257)
+10-03 16:44:21.688  2007  2007 I flutter : #29     RenderBoxContainerDefaultsMixin.defaultPaint (package:flutter/src/rendering/box.dart:3390)
+10-03 16:44:21.688  2007  2007 I flutter : #30     RenderStack.paintStack (package:flutter/src/rendering/stack.dart:713)
+10-03 16:44:21.688  2007  2007 I flutter : #31     RenderStack.paint (package:flutter/src/rendering/stack.dart:729)
+10-03 16:44:21.688  2007  2007 I flutter : #32     RenderObject._paintWithContext (package:flutter/src/rendering/object.dart:3580)
+10-03 16:44:21.688  2007  2007 I flutter : #33     PaintingContext.paintChild (package:flutter/src/rendering/object.dart:265)
+10-03 16:44:21.688  2007  2007 I flutter : #34     RenderView.paint (package:flutter/src/rendering/view.dart:320)
+10-03 16:44:21.688  2007  2007 I flutter : #35     RenderObject._paintWithContext (package:flutter/src/rendering/object.dart:3580)
+10-03 16:44:21.689  2007  2007 I flutter : #36     PaintingContext._repaintCompositedChild (package:flutter/src/rendering/object.dart:180)
+10-03 16:44:21.689  2007  2007 I flutter : #37     PaintingContext.repaintCompositedChild (package:flutter/src/rendering/object.dart:125)
+10-03 16:44:21.689  2007  2007 I flutter : #38     PipelineOwner.flushPaint (package:flutter/src/rendering/object.dart:1325)
+10-03 16:44:21.689  2007  2007 I flutter : #39     PipelineOwner.flushPaint (package:flutter/src/rendering/object.dart:1335)
+10-03 16:44:21.689  2007  2007 I flutter : #40     RendererBinding.drawFrame (package:flutter/src/rendering/binding.dart:694)
+10-03 16:44:21.689  2007  2007 I flutter : #41     WidgetsBinding.drawFrame (package:flutter/src/widgets/binding.dart:1573)
+10-03 16:44:21.689  2007  2007 I flutter : #42     RendererBinding._handlePersistentFrameCallback (package:flutter/src/rendering/binding.dart:558)
+10-03 16:44:21.689  2007  2007 I flutter : #43     SchedulerBinding._invokeFrameCallback (package:flutter/src/scheduler/binding.dart:1430)
+10-03 16:44:21.689  2007  2007 I flutter : #44     SchedulerBinding.handleDrawFrame (package:flutter/src/scheduler/binding.dart:1345)
+10-03 16:44:21.689  2007  2007 I flutter : #45     SchedulerBinding.scheduleWarmUpFrame.<anonymous closure> (package:flutter/src/scheduler/binding.dart:1055)
+10-03 16:44:21.689  2007  2007 I flutter : #46     PlatformDispatcher.scheduleWarmUpFrame.<anonymous closure> (dart:ui/platform_dispatcher.dart:912)
+10-03 16:44:21.689  2007  2007 I flutter : #50     _RawReceivePort._handleMessage (dart:isolate-patch/isolate_patch.dart:192)
+10-03 16:44:21.689  2007  2007 I flutter : (elided 3 frames from class _Timer and dart:async-patch)
+10-03 16:44:21.747   545  2059 D SystemServerTimingAsync: ssm.onCompletedEventUser-0_{|Unlocked|}_com.android.server.audio.AudioService$Lifecycle
+10-03 16:44:21.747   545  2059 V SystemServerTimingAsync: ssm.onCompletedEventUser-0_{|Unlocked|}_com.android.server.audio.AudioService$Lifecycle took to complete: 0ms
+10-03 16:44:21.801  2007  2007 I AUTOPROBE: CONNECTED root=root
+10-03 16:44:21.841  2007  2007 I AUTOPROBE: INITIAL state=NONE actions=3669711
+10-03 16:44:21.862   545  2059 D SystemServerTimingAsync: ssm.onCompletedEventUser-0_{|Unlocked|}_com.android.server.media.MediaSessionService
+10-03 16:44:21.862   545  2059 V SystemServerTimingAsync: ssm.onCompletedEventUser-0_{|Unlocked|}_com.android.server.media.MediaSessionService took to complete: 0ms
+10-03 16:44:22.229  2007  2007 I AUTOPROBE: CHILDREN root n=3 first=[quran|القرآن الكريم|android.resource://com.alhuda.islamic.app/drawable/car_tab_quran|playable=false, reciters|المشايخ|android.resource://com.alhuda.islamic.app/drawable/car_tab_reciter|playable=false, radios|الإذاعات|android.resource://com.alhuda.islamic.app/drawable/car_tab_radio|playable=false]
+10-03 16:44:22.230  2007  2007 I AUTOPROBE: STATE NONE pos=0 err=null actions=3669711
+10-03 16:44:22.273  2007  2007 I AUTOPROBE: STATE NONE pos=0 err=null actions=16252927
+10-03 16:44:22.313  2007  2007 I AUTOPROBE: STATE NONE pos=0 err=null actions=16252927
+10-03 16:44:22.314  2007  2007 I AUTOPROBE: CHILDREN root n=3 first=[quran|القرآن الكريم|android.resource://com.alhuda.islamic.app/drawable/car_tab_quran|playable=false, reciters|المشايخ|android.resource://com.alhuda.islamic.app/drawable/car_tab_reciter|playable=false, radios|الإذاعات|android.resource://com.alhuda.islamic.app/drawable/car_tab_radio|playable=false]
+10-03 16:44:24.845  2007  2007 I AUTOPROBE: CHILDREN radios n=33 first=[radio:0|إذاعة القرآن الكريم من القاهرة|android.resource://com.alhuda.islamic.app/drawable/car_radio|playable=true, radio:1|إذاعة القرآن الكريم من السعودية|android.resource://com.alhuda.islamic.app/drawable/car_radio|playable=true, radio:2|عبد الباسط عبد الصمد|android.resource://com.alhuda.islamic.app/drawable/car_radio|playable=true]
+10-03 16:44:24.846  2007  2007 I AUTOPROBE: CHILDREN radios n=33 first=[radio:0|إذاعة القرآن الكريم من القاهرة|android.resource://com.alhuda.islamic.app/drawable/car_radio|playable=true, radio:1|إذاعة القرآن الكريم من السعودية|android.resource://com.alhuda.islamic.app/drawable/car_radio|playable=true, radio:2|عبد الباسط عبد الصمد|android.resource://com.alhuda.islamic.app/drawable/car_radio|playable=true]
+10-03 16:44:26.842  2007  2007 I AUTOPROBE: STEP play radio:0
+10-03 16:44:26.843  2007  2007 I AUTOPROBE: TICK 5s state=NONE pos=0 err=null title=null
+10-03 16:44:26.847  2007  2007 I AUTOPROBE: META id=https://stream.radiojar.com/8s5u5tpdtwzuv title=إذاعة القرآن الكريم من القاهرة
+10-03 16:44:26.847  2007  2007 I AUTOPROBE: STATE CONNECTING pos=0 err=null actions=3669711
+10-03 16:44:26.847  2007  2007 I AUTOPROBE: STATE CONNECTING pos=0 err=null actions=3669711
+10-03 16:44:26.848  2007  2007 I ExoPlayerImpl: Init 9d856e2 [AndroidXMedia3/1.9.2] [emulator64_x86_64, Android SDK built for x86_64, unknown, 33]
+10-03 16:44:26.853  2007  2007 I AUTOPROBE: STATE CONNECTING pos=0 err=null actions=3669711
+10-03 16:44:26.884  2007  2007 I AUTOPROBE: STATE CONNECTING pos=0 err=null actions=3669711
+10-03 16:44:26.886  2007  2007 I AUTOPROBE: META id=https://stream.radiojar.com/8s5u5tpdtwzuv title=إذاعة القرآن الكريم من القاهرة
+10-03 16:44:26.888  2007  2007 I AUTOPROBE: META id=https://stream.radiojar.com/8s5u5tpdtwzuv title=إذاعة القرآن الكريم من القاهرة
+10-03 16:44:26.888  2007  2007 I AUTOPROBE: META id=https://stream.radiojar.com/8s5u5tpdtwzuv title=إذاعة القرآن الكريم من القاهرة
+10-03 16:44:26.898  2007  2007 I AUTOPROBE: META id=https://stream.radiojar.com/8s5u5tpdtwzuv title=إذاعة القرآن الكريم من القاهرة
+10-03 16:44:26.903  2007  2007 I AUTOPROBE: STATE CONNECTING pos=0 err=null actions=3669711
+10-03 16:44:26.905  2007  2007 I AUTOPROBE: META id=https://stream.radiojar.com/8s5u5tpdtwzuv title=إذاعة القرآن الكريم من القاهرة
+10-03 16:44:28.610  2007  2007 I AUTOPROBE: STATE CONNECTING pos=0 err=null actions=3669711
+10-03 16:44:28.614  2007  2007 I AUTOPROBE: META id=https://stream.radiojar.com/8s5u5tpdtwzuv title=إذاعة القرآن الكريم من القاهرة
+10-03 16:44:28.653  2007  2007 I AUTOPROBE: STATE CONNECTING pos=0 err=null actions=3669711
+10-03 16:44:28.654  2007  2007 I AUTOPROBE: META id=https://stream.radiojar.com/8s5u5tpdtwzuv title=إذاعة القرآن الكريم من القاهرة
+10-03 16:44:28.693   545  1022 I AudioService.FadeOutManager: unfadeOutUid() uid:10126
+10-03 16:44:28.694  2007  2007 I AUTOPROBE: STATE PAUSED pos=0 err=null actions=3669711
+10-03 16:44:28.742  2007  2007 I AUTOPROBE: STATE PLAYING pos=0 err=null actions=3669711
+10-03 16:44:28.753  2007  2007 I AUTOPROBE: META id=https://stream.radiojar.com/8s5u5tpdtwzuv title=إذاعة القرآن الكريم من القاهرة
+10-03 16:44:28.755  2007  2007 I AUTOPROBE: META id=https://stream.radiojar.com/8s5u5tpdtwzuv title=إذاعة القرآن الكريم من القاهرة
+10-03 16:44:28.773   545   545 D MediaSessionService: Media button session is changed to com.alhuda.islamic.app/media-session (userId=0)
+10-03 16:44:28.835  2007  2007 I AUTOPROBE: STATE PLAYING pos=12 err=null actions=3669711
+10-03 16:44:28.836  2007  2007 I AUTOPROBE: META id=https://stream.radiojar.com/8s5u5tpdtwzuv title=إذاعة القرآن الكريم من القاهرة
+10-03 16:44:28.928   765   883 D MediaResumeListener: Testing if we can connect to ComponentInfo{com.alhuda.islamic.app/com.ryanheise.audioservice.AudioService}
+10-03 16:44:28.987   765   883 D ResumeMediaBrowser: Service connected for ComponentInfo{com.alhuda.islamic.app/com.ryanheise.audioservice.AudioService}
+10-03 16:44:29.033   765   883 D MediaResumeListener: Connected to ComponentInfo{com.alhuda.islamic.app/com.ryanheise.audioservice.AudioService}
+10-03 16:44:29.451   765   883 D MediaResumeListener: Can get resumable media from ComponentInfo{com.alhuda.islamic.app/com.ryanheise.audioservice.AudioService}
+10-03 16:44:29.700  2007  2007 I AUTOPROBE: STATE PLAYING pos=874 err=null actions=3669711
+10-03 16:44:29.703  2007  2007 I AUTOPROBE: META id=https://stream.radiojar.com/8s5u5tpdtwzuv title=إذاعة القرآن الكريم من القاهرة
+10-03 16:44:30.198  2007  2007 I AUTOPROBE: STATE PLAYING pos=1375 err=null actions=3669711
+10-03 16:44:30.204  2007  2007 I AUTOPROBE: META id=https://stream.radiojar.com/8s5u5tpdtwzuv title=إذاعة القرآن الكريم من القاهرة
+10-03 16:44:30.698  2007  2007 I AUTOPROBE: STATE PLAYING pos=1876 err=null actions=3669711
+10-03 16:44:30.700  2007  2007 I AUTOPROBE: META id=https://stream.radiojar.com/8s5u5tpdtwzuv title=إذاعة القرآن الكريم من القاهرة
+10-03 16:44:31.202  2007  2007 I AUTOPROBE: STATE PLAYING pos=2377 err=null actions=3669711
+10-03 16:44:31.203  2007  2007 I AUTOPROBE: META id=https://stream.radiojar.com/8s5u5tpdtwzuv title=إذاعة القرآن الكريم من القاهرة
+10-03 16:44:31.701  2007  2007 I AUTOPROBE: STATE PLAYING pos=2878 err=null actions=3669711
+10-03 16:44:31.705  2007  2007 I AUTOPROBE: META id=https://stream.radiojar.com/8s5u5tpdtwzuv title=إذاعة القرآن الكريم من القاهرة
+10-03 16:44:31.841  2007  2007 I AUTOPROBE: TICK 10s state=PLAYING pos=3021 err=null title=إذاعة القرآن الكريم من القاهرة
+10-03 16:44:32.201  2007  2007 I AUTOPROBE: STATE PLAYING pos=3378 err=null actions=3669711
+10-03 16:44:32.205  2007  2007 I AUTOPROBE: META id=https://stream.radiojar.com/8s5u5tpdtwzuv title=إذاعة القرآن الكريم من القاهرة
+10-03 16:44:32.702  2007  2007 I AUTOPROBE: STATE PLAYING pos=3879 err=null actions=3669711
+10-03 16:44:32.703  2007  2007 I AUTOPROBE: META id=https://stream.radiojar.com/8s5u5tpdtwzuv title=إذاعة القرآن الكريم من القاهرة
+10-03 16:44:33.205  2007  2007 I AUTOPROBE: STATE PLAYING pos=4380 err=null actions=3669711
+10-03 16:44:33.207  2007  2007 I AUTOPROBE: META id=https://stream.radiojar.com/8s5u5tpdtwzuv title=إذاعة القرآن الكريم من القاهرة
+10-03 16:44:33.703  2007  2007 I AUTOPROBE: STATE PLAYING pos=4881 err=null actions=3669711
+10-03 16:44:33.706  2007  2007 I AUTOPROBE: META id=https://stream.radiojar.com/8s5u5tpdtwzuv title=إذاعة القرآن الكريم من القاهرة
+10-03 16:44:34.204  2007  2007 I AUTOPROBE: STATE PLAYING pos=5381 err=null actions=3669711
+10-03 16:44:34.206  2007  2007 I AUTOPROBE: META id=https://stream.radiojar.com/8s5u5tpdtwzuv title=إذاعة القرآن الكريم من القاهرة
+10-03 16:44:34.704  2007  2007 I AUTOPROBE: STATE PLAYING pos=5881 err=null actions=3669711
+10-03 16:44:34.708  2007  2007 I AUTOPROBE: META id=https://stream.radiojar.com/8s5u5tpdtwzuv title=إذاعة القرآن الكريم من القاهرة
+10-03 16:44:35.205  2007  2007 I AUTOPROBE: STATE PLAYING pos=6382 err=null actions=3669711
+10-03 16:44:35.208  2007  2007 I AUTOPROBE: META id=https://stream.radiojar.com/8s5u5tpdtwzuv title=إذاعة القرآن الكريم من القاهرة
+10-03 16:44:35.705  2007  2007 I AUTOPROBE: STATE PLAYING pos=6883 err=null actions=3669711
+10-03 16:44:35.709  2007  2007 I AUTOPROBE: META id=https://stream.radiojar.com/8s5u5tpdtwzuv title=إذاعة القرآن الكريم من القاهرة
+10-03 16:44:36.207  2007  2007 I AUTOPROBE: STATE PLAYING pos=7384 err=null actions=3669711
+10-03 16:44:36.211  2007  2007 I AUTOPROBE: META id=https://stream.radiojar.com/8s5u5tpdtwzuv title=إذاعة القرآن الكريم من القاهرة
+10-03 16:44:36.707  2007  2007 I AUTOPROBE: STATE PLAYING pos=7885 err=null actions=3669711
+10-03 16:44:36.710  2007  2007 I AUTOPROBE: META id=https://stream.radiojar.com/8s5u5tpdtwzuv title=إذاعة القرآن الكريم من القاهرة
+10-03 16:44:36.841  2007  2007 I AUTOPROBE: TICK 15s state=PLAYING pos=8021 err=null title=إذاعة القرآن الكريم من القاهرة
+10-03 16:44:37.208  2007  2007 I AUTOPROBE: STATE PLAYING pos=8385 err=null actions=3669711
+10-03 16:44:37.210  2007  2007 I AUTOPROBE: META id=https://stream.radiojar.com/8s5u5tpdtwzuv title=إذاعة القرآن الكريم من القاهرة
+10-03 16:44:37.710  2007  2007 I AUTOPROBE: STATE PLAYING pos=8886 err=null actions=3669711
+10-03 16:44:37.711  2007  2007 I AUTOPROBE: META id=https://stream.radiojar.com/8s5u5tpdtwzuv title=إذاعة القرآن الكريم من القاهرة
+10-03 16:44:38.211  2007  2007 I AUTOPROBE: STATE PLAYING pos=9387 err=null actions=3669711
+10-03 16:44:38.213  2007  2007 I AUTOPROBE: META id=https://stream.radiojar.com/8s5u5tpdtwzuv title=إذاعة القرآن الكريم من القاهرة
+10-03 16:44:38.710  2007  2007 I AUTOPROBE: STATE PLAYING pos=9888 err=null actions=3669711
+10-03 16:44:38.713  2007  2007 I AUTOPROBE: META id=https://stream.radiojar.com/8s5u5tpdtwzuv title=إذاعة القرآن الكريم من القاهرة
+10-03 16:44:39.216  2007  2007 I AUTOPROBE: STATE PLAYING pos=10391 err=null actions=3669711
+10-03 16:44:39.219  2007  2007 I AUTOPROBE: META id=https://stream.radiojar.com/8s5u5tpdtwzuv title=إذاعة القرآن الكريم من القاهرة
+10-03 16:44:39.713  2007  2007 I AUTOPROBE: STATE PLAYING pos=10891 err=null actions=3669711
+10-03 16:44:39.715  2007  2007 I AUTOPROBE: META id=https://stream.radiojar.com/8s5u5tpdtwzuv title=إذاعة القرآن الكريم من القاهرة
+10-03 16:44:40.214  2007  2007 I AUTOPROBE: STATE PLAYING pos=11392 err=null actions=3669711
+10-03 16:44:40.216  2007  2007 I AUTOPROBE: META id=https://stream.radiojar.com/8s5u5tpdtwzuv title=إذاعة القرآن الكريم من القاهرة
+10-03 16:44:40.716  2007  2007 I AUTOPROBE: STATE PLAYING pos=11893 err=null actions=3669711
+10-03 16:44:40.718  2007  2007 I AUTOPROBE: META id=https://stream.radiojar.com/8s5u5tpdtwzuv title=إذاعة القرآن الكريم من القاهرة
+10-03 16:44:41.218  2007  2007 I AUTOPROBE: STATE PLAYING pos=12393 err=null actions=3669711
+10-03 16:44:41.220  2007  2007 I AUTOPROBE: META id=https://stream.radiojar.com/8s5u5tpdtwzuv title=إذاعة القرآن الكريم من القاهرة
+10-03 16:44:41.717  2007  2007 I AUTOPROBE: STATE PLAYING pos=12894 err=null actions=3669711
+10-03 16:44:41.722  2007  2007 I AUTOPROBE: META id=https://stream.radiojar.com/8s5u5tpdtwzuv title=إذاعة القرآن الكريم من القاهرة
+10-03 16:44:41.841  2007  2007 I AUTOPROBE: TICK 20s state=PLAYING pos=13021 err=null title=إذاعة القرآن الكريم من القاهرة
+10-03 16:44:42.218  2007  2007 I AUTOPROBE: STATE PLAYING pos=13395 err=null actions=3669711
+10-03 16:44:42.219  2007  2007 I AUTOPROBE: META id=https://stream.radiojar.com/8s5u5tpdtwzuv title=إذاعة القرآن الكريم من القاهرة
+10-03 16:44:42.720  2007  2007 I AUTOPROBE: STATE PLAYING pos=13896 err=null actions=3669711
+10-03 16:44:42.722  2007  2007 I AUTOPROBE: META id=https://stream.radiojar.com/8s5u5tpdtwzuv title=إذاعة القرآن الكريم من القاهرة
+10-03 16:44:43.218  2007  2007 I AUTOPROBE: STATE PLAYING pos=14396 err=null actions=3669711
+10-03 16:44:43.221  2007  2007 I AUTOPROBE: META id=https://stream.radiojar.com/8s5u5tpdtwzuv title=إذاعة القرآن الكريم من القاهرة
+10-03 16:44:43.719  2007  2007 I AUTOPROBE: STATE PLAYING pos=14897 err=null actions=3669711
+10-03 16:44:43.721  2007  2007 I AUTOPROBE: META id=https://stream.radiojar.com/8s5u5tpdtwzuv title=إذاعة القرآن الكريم من القاهرة
+10-03 16:44:44.219  2007  2007 I AUTOPROBE: STATE PLAYING pos=15397 err=null actions=3669711
+10-03 16:44:44.220  2007  2007 I AUTOPROBE: META id=https://stream.radiojar.com/8s5u5tpdtwzuv title=إذاعة القرآن الكريم من القاهرة
+10-03 16:44:44.721  2007  2007 I AUTOPROBE: STATE PLAYING pos=15898 err=null actions=3669711
+10-03 16:44:44.724  2007  2007 I AUTOPROBE: META id=https://stream.radiojar.com/8s5u5tpdtwzuv title=إذاعة القرآن الكريم من القاهرة
+10-03 16:44:45.222  2007  2007 I AUTOPROBE: STATE PLAYING pos=16399 err=null actions=3669711
+10-03 16:44:45.224  2007  2007 I AUTOPROBE: META id=https://stream.radiojar.com/8s5u5tpdtwzuv title=إذاعة القرآن الكريم من القاهرة
+10-03 16:44:45.722  2007  2007 I AUTOPROBE: STATE PLAYING pos=16899 err=null actions=3669711
+10-03 16:44:45.726  2007  2007 I AUTOPROBE: META id=https://stream.radiojar.com/8s5u5tpdtwzuv title=إذاعة القرآن الكريم من القاهرة
+10-03 16:44:46.223  2007  2007 I AUTOPROBE: STATE PLAYING pos=17400 err=null actions=3669711
+10-03 16:44:46.226  2007  2007 I AUTOPROBE: META id=https://stream.radiojar.com/8s5u5tpdtwzuv title=إذاعة القرآن الكريم من القاهرة
+10-03 16:44:46.724  2007  2007 I AUTOPROBE: STATE PLAYING pos=17900 err=null actions=3669711
+10-03 16:44:46.729  2007  2007 I AUTOPROBE: META id=https://stream.radiojar.com/8s5u5tpdtwzuv title=إذاعة القرآن الكريم من القاهرة
+10-03 16:44:46.841  2007  2007 I AUTOPROBE: STEP pause
+10-03 16:44:46.842  2007  2007 I AUTOPROBE: TICK 25s state=PLAYING pos=18022 err=null title=إذاعة القرآن الكريم من القاهرة
+10-03 16:44:46.851  2007  2007 I AUTOPROBE: STATE PAUSED pos=18022 err=null actions=3669711
+10-03 16:44:46.854  2007  2007 I AUTOPROBE: META id=https://stream.radiojar.com/8s5u5tpdtwzuv title=إذاعة القرآن الكريم من القاهرة
+10-03 16:44:46.856  2007  2007 I AUTOPROBE: STATE PAUSED pos=18037 err=null actions=3669711
+10-03 16:44:46.856  2007  2007 I AUTOPROBE: META id=https://stream.radiojar.com/8s5u5tpdtwzuv title=إذاعة القرآن الكريم من القاهرة
+10-03 16:44:48.224  2007  2007 I AUTOPROBE: STATE PAUSED pos=18037 err=null actions=3669711
+10-03 16:44:48.226  2007  2007 I AUTOPROBE: META id=https://stream.radiojar.com/8s5u5tpdtwzuv title=إذاعة القرآن الكريم من القاهرة
+10-03 16:44:49.226  2007  2007 I AUTOPROBE: STATE PAUSED pos=18037 err=null actions=3669711
+10-03 16:44:49.227  2007  2007 I AUTOPROBE: META id=https://stream.radiojar.com/8s5u5tpdtwzuv title=إذاعة القرآن الكريم من القاهرة
+10-03 16:44:50.226  2007  2007 I AUTOPROBE: STATE PAUSED pos=18037 err=null actions=3669711
+10-03 16:44:50.228  2007  2007 I AUTOPROBE: META id=https://stream.radiojar.com/8s5u5tpdtwzuv title=إذاعة القرآن الكريم من القاهرة
+10-03 16:44:51.229  2007  2007 I AUTOPROBE: STATE PAUSED pos=18037 err=null actions=3669711
+10-03 16:44:51.231  2007  2007 I AUTOPROBE: META id=https://stream.radiojar.com/8s5u5tpdtwzuv title=إذاعة القرآن الكريم من القاهرة
+10-03 16:44:51.842  2007  2007 I AUTOPROBE: STEP play
+10-03 16:44:51.842  2007  2007 I AUTOPROBE: TICK 30s state=PAUSED pos=18037 err=null title=إذاعة القرآن الكريم من القاهرة
+10-03 16:44:51.857  2007  2007 I AUTOPROBE: STATE PLAYING pos=18037 err=null actions=3669711
+10-03 16:44:51.865  2007  2007 I AUTOPROBE: STATE PLAYING pos=18077 err=null actions=3669711
+10-03 16:44:51.882  2007  2007 I AUTOPROBE: META id=https://stream.radiojar.com/8s5u5tpdtwzuv title=إذاعة القرآن الكريم من القاهرة
+10-03 16:44:51.885  2007  2007 I AUTOPROBE: META id=https://stream.radiojar.com/8s5u5tpdtwzuv title=إذاعة القرآن الكريم من القاهرة
+10-03 16:44:52.228  2007  2007 I AUTOPROBE: STATE PLAYING pos=18440 err=null actions=3669711
+10-03 16:44:52.230  2007  2007 I AUTOPROBE: META id=https://stream.radiojar.com/8s5u5tpdtwzuv title=إذاعة القرآن الكريم من القاهرة
+10-03 16:44:52.731  2007  2007 I AUTOPROBE: STATE PLAYING pos=18941 err=null actions=3669711
+10-03 16:44:52.732  2007  2007 I AUTOPROBE: META id=https://stream.radiojar.com/8s5u5tpdtwzuv title=إذاعة القرآن الكريم من القاهرة
+10-03 16:44:53.229  2007  2007 I AUTOPROBE: STATE PLAYING pos=19442 err=null actions=3669711
+10-03 16:44:53.233  2007  2007 I AUTOPROBE: META id=https://stream.radiojar.com/8s5u5tpdtwzuv title=إذاعة القرآن الكريم من القاهرة
+10-03 16:44:54.233  2007  2007 I AUTOPROBE: STATE PLAYING pos=20443 err=null actions=3669711
+10-03 16:44:54.235  2007  2007 I AUTOPROBE: META id=https://stream.radiojar.com/8s5u5tpdtwzuv title=إذاعة القرآن الكريم من القاهرة
+10-03 16:44:54.732  2007  2007 I AUTOPROBE: STATE PLAYING pos=20944 err=null actions=3669711
+10-03 16:44:54.737  2007  2007 I AUTOPROBE: META id=https://stream.radiojar.com/8s5u5tpdtwzuv title=إذاعة القرآن الكريم من القاهرة
+10-03 16:44:55.233  2007  2007 I AUTOPROBE: STATE PLAYING pos=21445 err=null actions=3669711
+10-03 16:44:55.236  2007  2007 I AUTOPROBE: META id=https://stream.radiojar.com/8s5u5tpdtwzuv title=إذاعة القرآن الكريم من القاهرة
+10-03 16:44:55.734  2007  2007 I AUTOPROBE: STATE PLAYING pos=21946 err=null actions=3669711
+10-03 16:44:55.738  2007  2007 I AUTOPROBE: META id=https://stream.radiojar.com/8s5u5tpdtwzuv title=إذاعة القرآن الكريم من القاهرة
+10-03 16:44:56.233  2007  2007 I AUTOPROBE: STATE PLAYING pos=22446 err=null actions=3669711
+10-03 16:44:56.235  2007  2007 I AUTOPROBE: META id=https://stream.radiojar.com/8s5u5tpdtwzuv title=إذاعة القرآن الكريم من القاهرة
+10-03 16:44:56.736  2007  2007 I AUTOPROBE: STATE PLAYING pos=22945 err=null actions=3669711
+10-03 16:44:56.737  2007  2007 I AUTOPROBE: META id=https://stream.radiojar.com/8s5u5tpdtwzuv title=إذاعة القرآن الكريم من القاهرة
+10-03 16:44:56.842  2007  2007 I AUTOPROBE: TICK 35s state=PLAYING pos=23057 err=null title=إذاعة القرآن الكريم من القاهرة
+10-03 16:44:57.233  2007  2007 I AUTOPROBE: STATE PLAYING pos=23446 err=null actions=3669711
+10-03 16:44:57.237  2007  2007 I AUTOPROBE: META id=https://stream.radiojar.com/8s5u5tpdtwzuv title=إذاعة القرآن الكريم من القاهرة
+10-03 16:44:57.735  2007  2007 I AUTOPROBE: STATE PLAYING pos=23946 err=null actions=3669711
+10-03 16:44:57.738  2007  2007 I AUTOPROBE: META id=https://stream.radiojar.com/8s5u5tpdtwzuv title=إذاعة القرآن الكريم من القاهرة
+10-03 16:44:58.234  2007  2007 I AUTOPROBE: STATE PLAYING pos=24447 err=null actions=3669711
+10-03 16:44:58.239  2007  2007 I AUTOPROBE: META id=https://stream.radiojar.com/8s5u5tpdtwzuv title=إذاعة القرآن الكريم من القاهرة
+10-03 16:44:58.736  2007  2007 I AUTOPROBE: STATE PLAYING pos=24948 err=null actions=3669711
+10-03 16:44:58.740  2007  2007 I AUTOPROBE: META id=https://stream.radiojar.com/8s5u5tpdtwzuv title=إذاعة القرآن الكريم من القاهرة
+10-03 16:44:59.236  2007  2007 I AUTOPROBE: STATE PLAYING pos=25449 err=null actions=3669711
+10-03 16:44:59.241  2007  2007 I AUTOPROBE: META id=https://stream.radiojar.com/8s5u5tpdtwzuv title=إذاعة القرآن الكريم من القاهرة
+10-03 16:44:59.738  2007  2007 I AUTOPROBE: STATE PLAYING pos=25949 err=null actions=3669711
+10-03 16:44:59.742  2007  2007 I AUTOPROBE: META id=https://stream.radiojar.com/8s5u5tpdtwzuv title=إذاعة القرآن الكريم من القاهرة
+10-03 16:45:00.238  2007  2007 I AUTOPROBE: STATE PLAYING pos=26450 err=null actions=3669711
+10-03 16:45:00.240  2007  2007 I AUTOPROBE: META id=https://stream.radiojar.com/8s5u5tpdtwzuv title=إذاعة القرآن الكريم من القاهرة
+10-03 16:45:00.740  2007  2007 I AUTOPROBE: STATE PLAYING pos=26951 err=null actions=3669711
+10-03 16:45:00.742  2007  2007 I AUTOPROBE: META id=https://stream.radiojar.com/8s5u5tpdtwzuv title=إذاعة القرآن الكريم من القاهرة
+10-03 16:45:01.741  2007  2007 I AUTOPROBE: STATE PLAYING pos=27952 err=null actions=3669711
+10-03 16:45:01.743  2007  2007 I AUTOPROBE: META id=https://stream.radiojar.com/8s5u5tpdtwzuv title=إذاعة القرآن الكريم من القاهرة
+10-03 16:45:01.841  2007  2007 I AUTOPROBE: STEP play msurah:basit:1
+10-03 16:45:01.842  2007  2007 I AUTOPROBE: TICK 40s state=PLAYING pos=28057 err=null title=إذاعة القرآن الكريم من القاهرة
+10-03 16:45:01.853  2007  2007 I AUTOPROBE: STATE PLAYING pos=28060 err=null actions=16252927
+10-03 16:45:01.859  2007  2007 I AUTOPROBE: STATE PLAYING pos=28060 err=null actions=16252927
+10-03 16:45:01.880  2007  2007 I AUTOPROBE: STATE CONNECTING pos=0 err=null actions=16252927
+10-03 16:45:01.891  2007  2007 I AUTOPROBE: META id=mp3q:basit:1 title=سورة الفاتحة
+10-03 16:45:01.897  2007  2007 I AUTOPROBE: META id=mp3q:basit:1 title=سورة الفاتحة
+10-03 16:45:01.897  2007  2007 I AUTOPROBE: META id=mp3q:basit:1 title=سورة الفاتحة
+10-03 16:45:01.897  2007  2007 I AUTOPROBE: META id=mp3q:basit:1 title=سورة الفاتحة
+10-03 16:45:01.901  2007  2007 I AUTOPROBE: META id=mp3q:basit:1 title=سورة الفاتحة
+10-03 16:45:03.314  2007  2007 I AUTOPROBE: STATE PLAYING pos=0 err=null actions=16252927
+10-03 16:45:03.317  2007  2007 I AUTOPROBE: META id=mp3q:basit:1 title=سورة الفاتحة
+10-03 16:45:03.325  2007  2007 I AUTOPROBE: META id=mp3q:basit:1 title=سورة الفاتحة
+10-03 16:45:03.370  2007  2007 I AUTOPROBE: STATE PLAYING pos=10 err=null actions=16252927
+10-03 16:45:03.372  2007  2007 I AUTOPROBE: META id=mp3q:basit:1 title=سورة الفاتحة
+10-03 16:45:06.841  2007  2007 I AUTOPROBE: TICK 45s state=PLAYING pos=3484 err=null title=سورة الفاتحة
+10-03 16:45:11.841  2007  2007 I AUTOPROBE: TICK 50s state=PLAYING pos=8484 err=null title=سورة الفاتحة
+10-03 16:45:16.842  2007  2007 I AUTOPROBE: TICK 55s state=PLAYING pos=13485 err=null title=سورة الفاتحة
+10-03 16:45:21.841  2007  2007 I AUTOPROBE: STEP next
+10-03 16:45:21.842  2007  2007 I AUTOPROBE: TICK 60s state=PLAYING pos=18485 err=null title=سورة الفاتحة
+10-03 16:45:21.851  2007  2007 I AUTOPROBE: STATE PLAYING pos=0 err=null actions=16252927
+10-03 16:45:21.856  2007  2007 I AUTOPROBE: META id=mp3q:basit:1 title=سورة الفاتحة
+10-03 16:45:21.869  2007  2007 I AUTOPROBE: STATE PLAYING pos=1 err=null actions=16252927
+10-03 16:45:21.869  2007  2007 I AUTOPROBE: META id=mp3q:basit:2 title=سورة البقرة
+10-03 16:45:21.874  2007  2007 I AUTOPROBE: META id=mp3q:basit:2 title=سورة البقرة
+10-03 16:45:21.891  2007  2007 I AUTOPROBE: META id=mp3q:basit:1 title=سورة الفاتحة
+10-03 16:45:21.892  2007  2007 I AUTOPROBE: STATE BUFFERING pos=0 err=null actions=16252927
+10-03 16:45:21.901  2007  2007 I AUTOPROBE: STATE PLAYING pos=0 err=null actions=16252927
+10-03 16:45:21.916  2007  2007 I AUTOPROBE: META id=mp3q:basit:2 title=سورة البقرة
+10-03 16:45:21.934  2007  2007 I AUTOPROBE: STATE PLAYING pos=9 err=null actions=16252927
+10-03 16:45:21.936  2007  2007 I AUTOPROBE: META id=mp3q:basit:2 title=سورة البقرة
+10-03 16:45:26.841  2007  2007 I AUTOPROBE: TICK 65s state=PLAYING pos=4918 err=null title=سورة البقرة
+10-03 16:45:31.841  2007  2007 I AUTOPROBE: TICK 70s state=PLAYING pos=9918 err=null title=سورة البقرة
+10-03 16:45:36.841  2007  2007 I AUTOPROBE: STEP play surah:112
+10-03 16:45:36.842  2007  2007 I AUTOPROBE: TICK 75s state=PLAYING pos=14919 err=null title=سورة البقرة
+10-03 16:45:36.852  2007  2007 I AUTOPROBE: STATE PLAYING pos=14920 err=null actions=16252927
+10-03 16:45:36.854  2007  2007 I AUTOPROBE: META id=ar.alafasy:1:0 title=سورة الإخلاص • البسملة
+10-03 16:45:36.858  2007  2007 I AUTOPROBE: META id=ar.alafasy:6222:1 title=سورة الإخلاص • الآية ١
+10-03 16:45:36.881  2007  2007 I AUTOPROBE: STATE PLAYING pos=14920 err=null actions=16252927
+10-03 16:45:36.902  2007  2007 I AUTOPROBE: META id=ar.alafasy:6222:1 title=سورة الإخلاص • الآية ١
+10-03 16:45:36.902  2007  2007 I AUTOPROBE: META id=ar.alafasy:6222:1 title=سورة الإخلاص • الآية ١
+10-03 16:45:36.905  2007  2007 I AUTOPROBE: STATE CONNECTING pos=0 err=null actions=16252927
+10-03 16:45:36.917  2007  2007 I AUTOPROBE: META id=ar.alafasy:1:0 title=سورة الإخلاص • البسملة
+10-03 16:45:37.742  2007  2007 I AUTOPROBE: STATE PLAYING pos=1 err=null actions=16252927
+10-03 16:45:37.751  2007  2007 I AUTOPROBE: META id=ar.alafasy:1:0 title=سورة الإخلاص • البسملة
+10-03 16:45:37.757  2007  2007 I AUTOPROBE: META id=ar.alafasy:1:0 title=سورة الإخلاص • البسملة
+10-03 16:45:37.798  2007  2007 I AUTOPROBE: STATE PLAYING pos=13 err=null actions=16252927
+10-03 16:45:37.802  2007  2007 I AUTOPROBE: META id=ar.alafasy:1:0 title=سورة الإخلاص • البسملة
+10-03 16:45:41.841  2007  2007 I AUTOPROBE: TICK 80s state=PLAYING pos=4062 err=null title=سورة الإخلاص • البسملة
+10-03 16:45:43.924  2007  2007 I AUTOPROBE: STATE PLAYING pos=17 err=null actions=16252927
+10-03 16:45:43.929  2007  2007 I AUTOPROBE: META id=ar.alafasy:6222:1 title=سورة الإخلاص • الآية ١
+10-03 16:45:43.934  2007  2007 I AUTOPROBE: META id=ar.alafasy:1:0 title=سورة الإخلاص • البسملة
+10-03 16:45:46.836  2007  2007 I AUTOPROBE: STATE PLAYING pos=11 err=null actions=16252927
+10-03 16:45:46.840  2007  2007 I AUTOPROBE: META id=ar.alafasy:6223:2 title=سورة الإخلاص • الآية ٢
+10-03 16:45:46.847  2007  2007 I AUTOPROBE: TICK 85s state=PLAYING pos=23 err=null title=سورة الإخلاص • الآية ١
+10-03 16:45:46.847  2007  2007 I AUTOPROBE: META id=ar.alafasy:6222:1 title=سورة الإخلاص • الآية ١
+10-03 16:45:49.328  2007  2007 I AUTOPROBE: STATE PLAYING pos=17 err=null actions=16252927
+10-03 16:45:49.332  2007  2007 I AUTOPROBE: META id=ar.alafasy:6224:3 title=سورة الإخلاص • الآية ٣
+10-03 16:45:49.338  2007  2007 I AUTOPROBE: META id=ar.alafasy:6223:2 title=سورة الإخلاص • الآية ٢
+10-03 16:45:51.842  2007  2007 I AUTOPROBE: TICK 90s state=PLAYING pos=2534 err=null title=سورة الإخلاص • الآية ٢
+10-03 16:45:52.242  2007  2007 I AUTOPROBE: STATE PLAYING pos=14 err=null actions=16252927
+10-03 16:45:52.245  2007  2007 I AUTOPROBE: META id=ar.alafasy:6225:4 title=سورة الإخلاص • الآية ٤
+10-03 16:45:52.253  2007  2007 I AUTOPROBE: META id=ar.alafasy:6224:3 title=سورة الإخلاص • الآية ٣
+10-03 16:45:56.842  2007  2007 I AUTOPROBE: STEP search
+10-03 16:45:56.842  2007  2007 I AUTOPROBE: TICK 95s state=PLAYING pos=4619 err=null title=سورة الإخلاص • الآية ٣
+10-03 16:45:56.848  2007  2007 I AUTOPROBE: STATE PLAYING pos=4621 err=null actions=16252927
+10-03 16:45:56.858  2007  2007 I AUTOPROBE: STATE PLAYING pos=4621 err=null actions=16252927
+10-03 16:45:56.863  2007  2007 I AUTOPROBE: STATE CONNECTING pos=0 err=null actions=16252927
+10-03 16:45:56.868  2007  2007 I AUTOPROBE: META id=mp3q:minsh:18 title=سورة الكهف
+10-03 16:45:56.875  2007  2007 I AUTOPROBE: META id=mp3q:minsh:22 title=سورة الحج
+10-03 16:45:56.875  2007  2007 I AUTOPROBE: META id=mp3q:minsh:22 title=سورة الحج
+10-03 16:45:56.875  2007  2007 I AUTOPROBE: META id=mp3q:minsh:22 title=سورة الحج
+10-03 16:45:56.878  2007  2007 I AUTOPROBE: META id=mp3q:minsh:18 title=سورة الكهف
+10-03 16:45:58.265  2007  2007 I AUTOPROBE: STATE PLAYING pos=2 err=null actions=16252927
+10-03 16:45:58.302  2007  2007 I AUTOPROBE: STATE PLAYING pos=12 err=null actions=16252927
+10-03 16:45:58.315  2007  2007 I AUTOPROBE: META id=mp3q:minsh:18 title=سورة الكهف
+10-03 16:45:58.328  2007  2007 I AUTOPROBE: META id=mp3q:minsh:18 title=سورة الكهف
+10-03 16:45:58.328  2007  2007 I AUTOPROBE: META id=mp3q:minsh:18 title=سورة الكهف
+10-03 16:45:58.769  2007  2007 I AUTOPROBE: STATE PLAYING pos=483 err=null actions=16252927
+10-03 16:45:58.772  2007  2007 I AUTOPROBE: META id=mp3q:minsh:18 title=سورة الكهف
+10-03 16:46:01.841  2007  2007 I AUTOPROBE: TICK 100s state=PLAYING pos=3557 err=null title=سورة الكهف
+10-03 16:46:06.842  2007  2007 I AUTOPROBE: TICK 105s state=PLAYING pos=8558 err=null title=سورة الكهف
+10-03 16:46:11.841  2007  2007 I AUTOPROBE: STEP stop
+10-03 16:46:11.842  2007  2007 I AUTOPROBE: TICK 110s state=PLAYING pos=13558 err=null title=سورة الكهف
+10-03 16:46:11.843  2007  2007 I ExoPlayerImpl: Release 9d856e2 [AndroidXMedia3/1.9.2] [emulator64_x86_64, Android SDK built for x86_64, unknown, 33] [media3.common, media3.exoplayer, media3.decoder, media3.datasource, media3.extractor]
+10-03 16:46:11.871  2007  2007 I AUTOPROBE: STATE NONE pos=13559 err=null actions=16252927
+10-03 16:46:11.874  2007  2007 I AUTOPROBE: STATE NONE pos=0 err=null actions=3669711
+10-03 16:46:11.876  2007  2007 I AUTOPROBE: STATE NONE pos=0 err=null actions=3669711
+10-03 16:46:11.893  2007  2007 I AUTOPROBE: META id=mp3q:minsh:18 title=سورة الكهف
+10-03 16:46:11.942  2007  2007 I AUTOPROBE: META id=mp3q:minsh:18 title=سورة الكهف
+10-03 16:46:16.845  2007  2007 I AUTOPROBE: DONE
+10-03 16:46:16.846  2007  2007 I AUTOPROBE: TICK 115s state=NONE pos=0 err=null title=سورة الكهف
