@@ -336,4 +336,17 @@ void main() {
     expect(s.expected, greaterThanOrEqualTo(6));
     expect(s.words.take(6).every((w) => w.state == TasmeeState.correct), isTrue);
   });
+
+  test('a clearly different word is a mistake while still being spoken', () {
+    final s = TasmeeSession(_words('ٱلْحَمْدُ لِلَّهِ رَبِّ ٱلْعَٰلَمِينَ'), []);
+    final r = s.feed(['الحمد', 'لله', 'رب', 'الكافرين'], isFinal: false);
+    expect(r.mistakes, 1);
+    expect(s.words[3].state, TasmeeState.mistake);
+  });
+
+  test('the beginning of the expected word is not a mistake', () {
+    final s = TasmeeSession(_words('ٱلْحَمْدُ لِلَّهِ رَبِّ ٱلْعَٰلَمِينَ'), []);
+    s.feed(['الحمد', 'لله', 'رب', 'العا'], isFinal: false);
+    expect(s.mistakes, isEmpty);
+  });
 }

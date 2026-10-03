@@ -66,6 +66,30 @@ class MushafStyle {
 
 final RegExp _ayahNumber = RegExp(' ([٠-٩]+)\$');
 
+/// How the recitation test (التسميع) draws one word of the page.
+class MushafWordPaint {
+  /// Not shown: only a placeholder line (and the ayah medallion) is drawn.
+  final bool hidden;
+
+  /// Hidden words drawn faintly (review mode).
+  final double peekOpacity;
+
+  /// Text colour instead of the page ink (mistakes, hints).
+  final Color? color;
+  final Color? underline;
+  final double underlineWidth;
+  final Color? background;
+
+  const MushafWordPaint({
+    this.hidden = false,
+    this.peekOpacity = 0,
+    this.color,
+    this.underline,
+    this.underlineWidth = 1.2,
+    this.background,
+  });
+}
+
 /// A laid-out word (paragraph + position) on a page.
 class _Word {
   final ui.Paragraph paragraph;
@@ -74,8 +98,12 @@ class _Word {
   final double height;
   final int ayah;
   final int line;
+  final String text;
 
-  _Word(this.paragraph, this.offset, this.width, this.height, this.ayah, this.line);
+  /// The same word with only its ayah medallion visible (built when needed).
+  ui.Paragraph? markerOnly;
+
+  _Word(this.paragraph, this.offset, this.width, this.height, this.ayah, this.line, [this.text = '']);
 }
 
 /// Per-line horizontal condensing (scale around the right edge).
@@ -138,6 +166,11 @@ class MushafPageView extends StatelessWidget {
   /// Long-press on an ayah.
   final ValueChanged<int> onAyahTap;
 
+  /// Recitation test: how to draw the n-th word of the page (basmala and
+  /// banners excluded). [revision] changes whenever the result changes.
+  final MushafWordPaint? Function(int index)? wordPaint;
+  final int revision;
+
   const MushafPageView({
     super.key,
     required this.page,
@@ -147,6 +180,8 @@ class MushafPageView extends StatelessWidget {
     required this.onAyahTap,
     this.highlightedAyah,
     this.selectedAyah,
+    this.wordPaint,
+    this.revision = 0,
   });
 
   static _Geometry? _lastGeometry;
@@ -260,7 +295,8 @@ class MushafPageView extends StatelessWidget {
           for (var i = 0; i < n; i++) {
             final p = ps[i];
             final left = right - ws[i];
-            words.add(_Word(p, Offset(left, top + (lineH - p.height) / 2), ws[i], p.height, line.words[i].ayah, li));
+            words.add(_Word(p, Offset(left, top + (lineH - p.height) / 2), ws[i], p.height, line.words[i].ayah, li,
+                line.words[i].text));
             right = left - gap;
           }
           lineInfo.add(_Line(scale));
@@ -295,6 +331,9 @@ class MushafPageView extends StatelessWidget {
                   selected: selectedAyah,
                   highlightColor: style.highlight,
                   selectionColor: style.selection,
+                  wordPaint: wordPaint,
+                  revision: revision,
+                  accent: style.accent,
                 ),
               ),
             ),
@@ -331,19 +370,87 @@ class _PagePainter extends CustomPainter {
   final Color highlightColor;
   final Color selectionColor;
 
+  final MushafWordPaint? Function(int index)? wordPaint;
+  final int revision;
+  final Color accent;
+
   _PagePainter(
     this.layout, {
     required this.highlighted,
     required this.selected,
     required this.highlightColor,
     required this.selectionColor,
+    this.wordPaint,
+    this.revision = 0,
+    this.accent = const Color(0xFFC9A44C),
   });
+
+  static final RegExp _number = RegExp('([\\s\u00A0]+[٠-٩]+)\$');
+
+  ui.Paragraph? _marker(_Word word) {
+    if (word.markerOnly != null) return word.markerOnly;
+    final m = _number.firstMatch(word.text);
+    if (m == null) return null;
+    final fs = layout.fontSize;
+    final b = ui.ParagraphBuilder(ui.ParagraphStyle(
+      textDirection: TextDirection.rtl,
+      fontFamily: kMushafFont,
+      fontSize: fs,
+      fontWeight: FontWeight.w700,
+      maxLines: 1,
+    ));
+    b.pushStyle(ui.TextStyle(color: const Color(0x00000000), fontFamily: kMushafFont, fontSize: fs, fontWeight: FontWeight.w700));
+    b.addText(word.text.substring(0, m.start));
+    b.pushStyle(ui.TextStyle(color: accent));
+    b.addText(word.text.substring(m.start));
+    final p = b.build()..layout(ui.ParagraphConstraints(width: word.width));
+    return word.markerOnly = p;
+  }
+
+  /// Draws a word through the recitation-test rules.
+  void _paintTest(Canvas canvas, _Word word, MushafWordPaint paint) {
+    final rect = Rect.fromLTWH(word.offset.dx, word.offset.dy, word.width, word.height);
+    if (paint.background != null) {
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(rect.inflate(3), Radius.circular(layout.fontSize * 0.3)),
+        Paint()..color = paint.background!,
+      );
+    }
+    if (paint.hidden) {
+      if (paint.peekOpacity > 0) {
+        canvas.saveLayer(rect.inflate(6), Paint()..color = Color.fromRGBO(0, 0, 0, paint.peekOpacity));
+        canvas.drawParagraph(word.paragraph, word.offset);
+        canvas.restore();
+      } else {
+        final marker = _marker(word);
+        if (marker != null) canvas.drawParagraph(marker, word.offset);
+      }
+    } else if (paint.color != null) {
+      canvas.saveLayer(rect.inflate(6), Paint()..colorFilter = ColorFilter.mode(paint.color!, BlendMode.srcIn));
+      canvas.drawParagraph(word.paragraph, word.offset);
+      canvas.restore();
+    } else {
+      canvas.drawParagraph(word.paragraph, word.offset);
+    }
+    if (paint.underline != null) {
+      final y = word.offset.dy + word.height * 0.9;
+      canvas.drawLine(
+        Offset(word.offset.dx + 3, y),
+        Offset(word.offset.dx + word.width - 3, y),
+        Paint()
+          ..color = paint.underline!
+          ..strokeWidth = paint.underlineWidth
+          ..strokeCap = StrokeCap.round,
+      );
+    }
+  }
 
   @override
   void paint(Canvas canvas, Size size) {
     final w = layout.width;
     var currentLine = -1;
     var scaled = false;
+    var index = 0;
     for (final word in layout.words) {
       if (word.line != currentLine) {
         if (scaled) canvas.restore();
@@ -355,6 +462,13 @@ class _PagePainter extends CustomPainter {
           canvas.translate(w, 0);
           canvas.scale(scale, 1);
           canvas.translate(-w, 0);
+        }
+      }
+      if (wordPaint != null && word.ayah != 0) {
+        final p = wordPaint!(index++);
+        if (p != null) {
+          _paintTest(canvas, word, p);
+          continue;
         }
       }
       final bg = word.ayah == 0
@@ -382,7 +496,9 @@ class _PagePainter extends CustomPainter {
       old.highlighted != highlighted ||
       old.selected != selected ||
       old.highlightColor != highlightColor ||
-      old.selectionColor != selectionColor;
+      old.selectionColor != selectionColor ||
+      old.revision != revision ||
+      (old.wordPaint == null) != (wordPaint == null);
 }
 
 /// Surah title frame: an ornamented band in theme colours with the name

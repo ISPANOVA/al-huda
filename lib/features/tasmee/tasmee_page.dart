@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:just_audio/just_audio.dart';
@@ -17,7 +16,8 @@ import '../../core/widgets/noor_ui.dart';
 import '../../core/widgets/state_views.dart';
 import '../audio/presentation/cubit/audio_cubit.dart';
 import '../quran/domain/repositories/quran_repository.dart';
-import '../quran/presentation/mushaf/mushaf_page.dart' show kBasmala;
+import '../quran/domain/entities/mushaf_line.dart';
+import '../quran/presentation/mushaf/mushaf_page.dart' show MushafPageView, MushafStyle, MushafWordPaint;
 import 'tasmee_engine.dart';
 
 /// التسميع: the page's words are hidden; recite from memory and each word
@@ -50,6 +50,12 @@ class _TasmeePageState extends State<TasmeePage> {
   late int _page = widget.startPage;
   TasmeeSession? _session;
   bool _ready = false;
+
+  /// Errors before any word was heard: a phone or emulator without a working
+  /// speech service only ever reports errors.
+  int _earlyErrors = 0;
+  bool _gotResult = false;
+  bool _noArabic = false;
   bool _active = false; // user wants to listen
   bool _listening = false;
   bool _peek = false;
@@ -64,10 +70,13 @@ class _TasmeePageState extends State<TasmeePage> {
   List<String> _pendingWords = const [];
 
   /// Keeps the word being recited in view, so the reciter never scrolls.
-  final _scroll = ScrollController();
-  int _loadSeq = 0;
-  final _wordKeys = <int, GlobalKey>{};
-  GlobalKey get _currentKey => _wordKeys.putIfAbsent(_loadSeq, () => GlobalKey());
+  /// Pages are swiped like the Mushaf; [_turning] marks a page change made
+  /// by the app (auto-advance, search) so it isn't taken for a manual swipe.
+  late final PageController _pages = PageController(initialPage: widget.startPage - 1);
+  int? _turning;
+
+  /// Changes whenever the drawing of the current page must refresh.
+  int _revision = 0;
   int _heardCount = 0;
   Timer? _settleTimer;
   /// Correct words on finished pages, and words shown before the start ayah
@@ -92,7 +101,7 @@ class _TasmeePageState extends State<TasmeePage> {
     _flashTimer?.cancel();
     _settleTimer?.cancel();
     _stt.cancel();
-    _scroll.dispose();
+    _pages.dispose();
     _fx.dispose();
     super.dispose();
   }
@@ -108,12 +117,22 @@ class _TasmeePageState extends State<TasmeePage> {
     consumed ??= _heardCount;
     final repo = context.read<QuranRepository>();
     await repo.ensureLoaded();
-    final ayahs = repo.ayahsOnPage(page);
+    // The words exactly as the Mushaf page draws them (same order).
     final words = <TasmeeWord>[];
-    for (final a in ayahs) {
-      final parts = a.text.split(' ').where((w) => w.trim().isNotEmpty).toList();
-      for (var i = 0; i < parts.length; i++) {
-        words.add(TasmeeWord(surah: a.surah, ayah: a.numberInSurah, text: parts[i], endsAyah: i == parts.length - 1));
+    final globals = <int>[];
+    for (final line in repo.linesOnPage(page)) {
+      if (line.type != MushafLineType.text && line.type != MushafLineType.centered) continue;
+      for (final w in line.words) {
+        if (w.ayah == 0) continue;
+        final ref = SurahMetadata.fromGlobal(w.ayah);
+        final number = _ayahNumber.firstMatch(w.text);
+        words.add(TasmeeWord(
+          surah: ref.surah,
+          ayah: ref.ayah,
+          text: number == null ? w.text : w.text.substring(0, number.start),
+          endsAyah: number != null,
+        ));
+        globals.add(w.ayah);
       }
     }
     final old = _session;
@@ -121,16 +140,14 @@ class _TasmeePageState extends State<TasmeePage> {
     var pre = 0;
     final session = TasmeeSession(words, _mistakes, consumed: consumed, heard: old?.lastHeard ?? const []);
     if (startAyah != null) {
-      final first = ayahs.indexWhere((a) => a.number == startAyah);
+      final first = globals.indexOf(startAyah);
       if (first > 0) {
-        final ref = ayahs[first];
-        for (final w in words) {
-          if (w.surah == ref.surah && w.ayah == ref.numberInSurah) break;
-          w.state = TasmeeState.correct;
-          session.expected++;
-          pre++;
+        for (var i = 0; i < first; i++) {
+          words[i].state = TasmeeState.correct;
         }
-        session.startFrom(session.expected);
+        pre = first;
+        session.expected = first;
+        session.startFrom(first);
       }
     }
     if (!mounted) return;
@@ -138,43 +155,49 @@ class _TasmeePageState extends State<TasmeePage> {
       _page = page;
       _session = session;
       _preRevealed = pre;
-      _loadSeq++;
-    });
-    // A new page always starts from its top.
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted || !_scroll.hasClients) return;
-      _scroll.jumpTo(0);
-      _follow();
+      _revision++;
     });
   }
 
-  /// Scrolls so the next word to recite stays in the upper part of the view.
-  void _follow() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted || !_scroll.hasClients) return;
-      final box = _currentKey.currentContext?.findRenderObject();
-      if (box is! RenderBox || !box.attached) return;
-      final viewport = RenderAbstractViewport.maybeOf(box);
-      if (viewport == null) return;
-      final top = viewport.getOffsetToReveal(box, 0).offset; // word at the top
-      final view = _scroll.position.viewportDimension;
-      final y = top - _scroll.offset; // word position inside the view
-      if (y >= 0 && y <= view * 0.55) return;
-      final target = (top - view * 0.28).clamp(0.0, _scroll.position.maxScrollExtent);
-      if ((target - _scroll.offset).abs() < 4) return;
-      _scroll.animateTo(target, duration: const Duration(milliseconds: 420), curve: Curves.easeOutCubic);
-    });
+  static final _ayahNumber = RegExp('[\\s\u00A0]+[٠-٩]+\$');
+
+  /// Turns the Mushaf to [page] (as the app, not a swipe).
+  void _showPage(int page, {bool animate = true}) {
+    if (!_pages.hasClients) return;
+    final target = page - 1;
+    if ((_pages.page ?? target).round() == target) return;
+    _turning = target;
+    if (animate && ((_pages.page ?? 0) - target).abs() <= 1.5) {
+      _pages.animateToPage(target, duration: const Duration(milliseconds: 320), curve: Curves.easeOutCubic);
+    } else {
+      _pages.jumpToPage(target);
+    }
+  }
+
+  void _onSwiped(int index) {
+    if (_turning != null) {
+      if (index == _turning) _turning = null;
+      return;
+    }
+    if (index + 1 != _page) _loadPage(index + 1);
   }
 
   // ------------------------------------------------------------ speech ---
 
   Future<bool> _init() async {
     if (_ready) return true;
-    _ready = await _stt.initialize(onStatus: _onStatus, onError: _onError);
+    try {
+      _ready = await _stt
+          .initialize(onStatus: _onStatus, onError: _onError)
+          .timeout(const Duration(seconds: 8), onTimeout: () => false);
+    } catch (_) {
+      _ready = false;
+    }
     if (!_ready) return false;
     try {
       final locales = await _stt.locales();
       final ar = locales.where((l) => l.localeId.toLowerCase().startsWith('ar')).toList();
+      _noArabic = locales.isNotEmpty && ar.isEmpty;
       String? pick(String id) => ar.where((l) => l.localeId.replaceAll('-', '_') == id).firstOrNull?.localeId;
       _localeId = pick('ar_SA') ?? pick('ar_EG') ?? (ar.isNotEmpty ? ar.first.localeId : 'ar_SA');
     } catch (_) {
@@ -197,12 +220,14 @@ class _TasmeePageState extends State<TasmeePage> {
     }
     if (!await _init()) {
       if (mounted) {
-        setState(() => _status = 'تعذر تشغيل التعرف على الصوت. اسمح للتطبيق باستخدام الميكروفون، '
-            'وتأكد من وجود خدمة Google للتعرف على الكلام.');
+        setState(() => _status = 'تعذر تشغيل التعرف على الصوت على هذا الجهاز');
+        _showSpeechHelp();
       }
       return;
     }
+    if (_noArabic && mounted) _showSpeechHelp(noArabic: true);
     _active = true;
+    _earlyErrors = 0;
     // Android closes each utterance after a pause; keep the mic open while active.
     _watchdog?.cancel();
     _watchdog = Timer.periodic(const Duration(milliseconds: 400), (_) {
@@ -265,12 +290,76 @@ class _TasmeePageState extends State<TasmeePage> {
       _active = false;
       _watchdog?.cancel();
       setState(() => _status = 'يحتاج التسميع إذن الميكروفون من إعدادات التطبيق');
+      _showSpeechHelp();
+      return;
     }
-    // Other errors (silence, no match, busy) are recovered by the watchdog.
+    // Other errors (silence, no match, busy) are recovered by the watchdog,
+    // unless nothing was ever heard: then the device can't recognise speech.
+    if (!_gotResult && e.errorMsg != 'error_no_match' && e.errorMsg != 'error_speech_timeout') {
+      _earlyErrors++;
+      if (_earlyErrors >= 4 && _active) {
+        _active = false;
+        _watchdog?.cancel();
+        _stt.stop();
+        setState(() {
+          _listening = false;
+          _status = 'خدمة التعرف على الكلام لا تعمل على هذا الجهاز';
+        });
+        _showSpeechHelp(error: e.errorMsg);
+      }
+    }
+  }
+
+  /// Why the microphone can't work here and how to fix it (phones without
+  /// Google's speech service, emulators such as LDPlayer).
+  void _showSpeechHelp({bool noArabic = false, String? error}) {
+    final glass = GlassTheme.of(context);
+    Widget step(IconData icon, String text) => Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(icon, color: glass.accent, size: 22),
+              const SizedBox(width: 12),
+              Expanded(child: Text(text, style: TextStyle(height: 1.6, color: glass.onGlass))),
+            ],
+          ),
+        );
+    showGlassSheet<void>(context, builder: (ctx) {
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(noArabic ? 'العربية غير مثبتة في التعرف على الكلام' : 'الميكروفون لا يعمل للتسميع',
+              style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 18)),
+          const SizedBox(height: 8),
+          Text(
+            'التسميع يعتمد على خدمة «التعرف على الكلام» من Google الموجودة في الهاتف. '
+            'غالبًا تكون غير موجودة أو متوقفة، خصوصًا في المحاكيات مثل LDPlayer.',
+            style: TextStyle(color: glass.onGlassMuted, height: 1.6),
+          ),
+          const SizedBox(height: 16),
+          step(Icons.shop_rounded, 'ثبّت أو حدّث تطبيق «Google» و«خدمات الكلام من Google» من متجر Play.'),
+          step(Icons.translate_rounded,
+              'أضف العربية: تطبيق Google ← الإعدادات ← الصوت ← لغات التعرف على الصوت ← العربية.'),
+          step(Icons.mic_rounded, 'اسمح للتطبيق باستخدام الميكروفون من إعدادات الهاتف ← التطبيقات ← الهدى ← الأذونات.'),
+          step(Icons.computer_rounded,
+              'على المحاكي (LDPlayer وغيره): فعّل الميكروفون من إعدادات المحاكي، وتأكد أن ويندوز يسمح له باستخدام الميكروفون.'),
+          if (error != null)
+            Text('رمز الخطأ: $error', style: TextStyle(fontSize: 11, color: glass.onGlassMuted)),
+          const SizedBox(height: 8),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton(onPressed: () => Navigator.of(ctx).pop(), child: const Text('حسنًا')),
+          ),
+        ],
+      );
+    });
   }
 
   void _onResult(SpeechRecognitionResult r) {
     if (_session == null || !mounted) return;
+    if (r.recognizedWords.trim().isNotEmpty) _gotResult = true;
     _heard = r.recognizedWords;
     final heard = r.recognizedWords.split(RegExp(r'\s+')).where((w) => w.isNotEmpty).toList();
     _heardCount = heard.length;
@@ -279,7 +368,7 @@ class _TasmeePageState extends State<TasmeePage> {
       _pendingWords = const [];
     } else {
       _pendingWords = heard;
-      _settleTimer = Timer(const Duration(milliseconds: 1800), _settle);
+      _settleTimer = Timer(const Duration(milliseconds: 1000), _settle);
     }
     final alternates = [
       for (final a in r.alternates.skip(1))
@@ -307,8 +396,7 @@ class _TasmeePageState extends State<TasmeePage> {
     final wasDone = s.done;
     final res = s.feed(heard, isFinal: isFinal, alternates: alternates);
     if (res.mistakes > 0) _onMistake(res.flash);
-    setState(() {});
-    _follow();
+    setState(() => _revision++);
     if (s.done && !wasDone) _pageDone(s);
   }
 
@@ -337,19 +425,18 @@ class _TasmeePageState extends State<TasmeePage> {
       return;
     }
     if (!mounted) return;
-    await _loadPage(_page + 1, consumed: finished.consumed);
+    final next = _page + 1;
+    await _loadPage(next, consumed: finished.consumed);
+    _showPage(next);
   }
 
   // -------------------------------------------------------- navigation ---
 
-  /// Direction of the last page change (for the slide animation).
-  bool _forward = true;
-
   void _goTo(int page, {int? startAyah}) {
     if (page < 1 || page > 604) return;
     HapticFeedback.selectionClick();
-    _forward = page >= _page;
     _loadPage(page, startAyah: startAyah);
+    _showPage(page, animate: false);
   }
 
   Future<void> _openSearch() async {
@@ -370,16 +457,14 @@ class _TasmeePageState extends State<TasmeePage> {
   void _hintWord() {
     _session?.hintNext();
     HapticFeedback.selectionClick();
-    setState(() {});
-    _follow();
+    setState(() => _revision++);
     if (_session?.done ?? false) _pageDone(_session!);
   }
 
   void _hintAyah() {
     _session?.revealAyah();
     HapticFeedback.selectionClick();
-    setState(() {});
-    _follow();
+    setState(() => _revision++);
     if (_session?.done ?? false) _pageDone(_session!);
   }
 
@@ -491,33 +576,7 @@ class _TasmeePageState extends State<TasmeePage> {
             : Column(
                 children: [
                   _topBar(glass, s),
-                  Expanded(
-                    child: GestureDetector(
-                      // Swipe to turn pages like a mushaf: right = next.
-                      onHorizontalDragEnd: (d) {
-                        final v = d.primaryVelocity ?? 0;
-                        if (v > 350) _goTo(_page + 1);
-                        if (v < -350) _goTo(_page - 1);
-                      },
-                      child: SingleChildScrollView(
-                      controller: _scroll,
-                      padding: const EdgeInsets.fromLTRB(14, 6, 14, 16),
-                      child: AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 380),
-                        switchInCurve: Curves.easeOutCubic,
-                        transitionBuilder: (child, a) => SlideTransition(
-                          position: Tween(begin: Offset(_forward ? 0.2 : -0.2, 0), end: Offset.zero).animate(a),
-                          child: FadeTransition(opacity: a, child: child),
-                        ),
-                        child: NoorCard(
-                          key: ValueKey(_page),
-                          padding: const EdgeInsets.fromLTRB(14, 18, 14, 18),
-                          child: _pageText(glass, s),
-                        ),
-                      ),
-                    ),
-                    ),
-                  ),
+                  Expanded(child: _mushaf(glass)),
                   _controls(glass, s),
                 ],
               ),
@@ -583,100 +642,62 @@ class _TasmeePageState extends State<TasmeePage> {
     );
   }
 
-  Widget _pageText(GlassTheme glass, TasmeeSession s) {
-    final base = QuranFont.amiriQuran.style(fontSize: 23, height: 2.0, color: glass.onGlass);
-    final children = <Widget>[];
-    var line = <Widget>[];
-    void flush() {
-      if (line.isEmpty) return;
-      children.add(Wrap(
-        alignment: WrapAlignment.center,
-        runAlignment: WrapAlignment.center,
-        spacing: 7,
-        runSpacing: 2,
-        children: line,
-      ));
-      line = <Widget>[];
-    }
-
-    for (var i = 0; i < s.words.length; i++) {
-      final w = s.words[i];
-      final startsSurah = w.ayah == 1 && (i == 0 || s.words[i - 1].ayah != 1 || s.words[i - 1].surah != w.surah);
-      if (startsSurah && (i == 0 || s.words[i - 1].endsAyah)) {
-        flush();
-        children.add(_surahBanner(glass, w.surah));
-      }
-      final word = _word(glass, base, w, i == s.expected && _active, i == _flashIndex);
-      line.add(i == s.expected ? KeyedSubtree(key: _currentKey, child: word) : word);
-      if (w.endsAyah) {
-        line.add(Text(ArabicUtils.ornateAyahMarker(w.ayah), style: base.copyWith(color: glass.accent)));
-      }
-    }
-    flush();
-    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: children);
-  }
-
-  Widget _surahBanner(GlassTheme glass, int surah) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 6, top: 4),
-      child: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(vertical: 6),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(14),
-              color: glass.accent.withValues(alpha: 0.12),
-              border: Border.all(color: glass.accent.withValues(alpha: 0.4)),
+  /// The Mushaf itself, page by page, swiped exactly like the reader.
+  Widget _mushaf(GlassTheme glass) {
+    final repo = context.read<QuranRepository>();
+    final style = MushafStyle.of(context);
+    return PageView.builder(
+      controller: _pages,
+      itemCount: 604,
+      allowImplicitScrolling: true,
+      onPageChanged: _onSwiped,
+      itemBuilder: (context, i) {
+        final page = i + 1;
+        final s = _session;
+        final current = s != null && page == _page;
+        return RepaintBoundary(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(10, 4, 10, 6),
+            child: MushafPageView(
+              page: page,
+              lines: repo.linesOnPage(page),
+              referenceWidth: repo.referenceLineWidth,
+              style: style,
+              onAyahTap: (_) {},
+              revision: current ? _revision * 4 + (_peek ? 1 : 0) + (_active ? 2 : 0) : (_peek ? 1 : 0),
+              wordPaint: current ? (k) => _paintWord(glass, s, k) : (_) => _hiddenPaint(glass),
             ),
-            alignment: Alignment.center,
-            child: Text('سورة ${SurahMetadata.surah(surah).name}',
-                style: QuranFont.amiriQuran.style(fontSize: 22, height: 1.6, color: glass.accent)),
           ),
-          if (surah != 1 && surah != 9)
-            Text(kBasmala,
-                textAlign: TextAlign.center,
-                style: QuranFont.amiriQuran.style(fontSize: 21, height: 2, color: glass.onGlass)),
-        ],
-      ),
+        );
+      },
     );
   }
 
-  Widget _word(GlassTheme glass, TextStyle base, TasmeeWord w, bool current, bool flash) {
+  MushafWordPaint _hiddenPaint(GlassTheme glass) => MushafWordPaint(
+        hidden: true,
+        peekOpacity: _peek ? 0.28 : 0,
+        underline: glass.onGlass.withValues(alpha: 0.22),
+      );
+
+  MushafWordPaint? _paintWord(GlassTheme glass, TasmeeSession s, int k) {
+    if (k >= s.words.length) return _hiddenPaint(glass);
     const red = Color(0xFFE5484D);
-    final hidden = !w.revealed;
-    Color color;
-    if (!hidden) {
-      color = w.missed ? red : (w.state == TasmeeState.hinted ? glass.accent : glass.onGlass);
-    } else {
-      color = _peek ? glass.onGlass.withValues(alpha: 0.28) : Colors.transparent;
+    final w = s.words[k];
+    final flash = k == _flashIndex;
+    final current = k == s.expected && _active;
+    final bg = flash ? red.withValues(alpha: 0.18) : (current ? glass.accent.withValues(alpha: 0.10) : null);
+    if (w.revealed) {
+      if (w.missed) return MushafWordPaint(color: red, background: bg);
+      if (w.state == TasmeeState.hinted) return MushafWordPaint(color: glass.accent, background: bg);
+      return bg == null ? null : MushafWordPaint(background: bg);
     }
     final mistake = w.state == TasmeeState.mistake;
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 220),
-      padding: const EdgeInsets.symmetric(horizontal: 2),
-      decoration: BoxDecoration(
-        color: flash
-            ? red.withValues(alpha: 0.18)
-            : current
-                ? glass.accent.withValues(alpha: 0.10)
-                : null,
-        borderRadius: BorderRadius.circular(6),
-        border: Border(
-          bottom: BorderSide(
-            color: mistake || flash
-                ? red
-                : hidden
-                    ? (current ? glass.accent : glass.onGlass.withValues(alpha: 0.22))
-                    : Colors.transparent,
-            width: mistake || flash || current ? 2.4 : 1.2,
-          ),
-        ),
-      ),
-      child: AnimatedDefaultTextStyle(
-        duration: const Duration(milliseconds: 260),
-        style: base.copyWith(color: color),
-        child: Text(w.text),
-      ),
+    return MushafWordPaint(
+      hidden: true,
+      peekOpacity: _peek ? 0.28 : 0,
+      background: bg,
+      underline: mistake || flash ? red : (current ? glass.accent : glass.onGlass.withValues(alpha: 0.22)),
+      underlineWidth: mistake || flash || current ? 2.4 : 1.2,
     );
   }
 

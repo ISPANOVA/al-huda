@@ -433,8 +433,15 @@ class TasmeeSession {
         i++;
         continue;
       }
-      // Not decided while the word is still being spoken.
-      if (last) break;
+      // Still being spoken: wait, unless it is clearly another word (not the
+      // beginning of the expected one, nor a nearby word) — then say so now.
+      if (last) {
+        if (_clearlyWrong(h, pos)) {
+          if (e.state != TasmeeState.mistake) miss(pos, heard[i]);
+          i++;
+        }
+        break;
+      }
 
       // Noise or a self-correction just before the expected word.
       if (hNext != null && _m(hNext, pos)) {
@@ -501,6 +508,22 @@ class TasmeeSession {
     }
     if (acc.isNotEmpty && !isFinal && i + used >= k.length && TasmeeMatcher.lettersPrefix(acc, e)) return -1;
     return 0;
+  }
+
+  /// [h] (still being spoken) can't become the expected word or a word the
+  /// reciter may be skipping to or repeating.
+  bool _clearlyWrong(String h, int pos) {
+    if (h.length < 3) return false;
+    final e = words[pos].key;
+    final head = e.length > h.length ? e.substring(0, h.length) : e;
+    if (TasmeeMatcher.similar(h, head) || TasmeeMatcher.similar(h, e)) return false;
+    if (TasmeeMatcher.ignorable.contains(h)) return false;
+    for (var j = math.max(0, pos - 40); j < math.min(words.length, pos + 4); j++) {
+      final k = words[j].key;
+      final kh = k.length > h.length ? k.substring(0, h.length) : k;
+      if (TasmeeMatcher.similar(h, kh)) return false;
+    }
+    return true;
   }
 
   /// Earlier word the reciter went back to: the word just recited, or one
