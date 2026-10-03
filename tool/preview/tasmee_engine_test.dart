@@ -144,10 +144,39 @@ void main() {
     });
   });
 
-  test('a slightly misheard word between correct ones is not a mistake', () {
-    final s = TasmeeSession(_words('ٱلَّذِينَ يُؤْمِنُونَ بِٱلْغَيْبِ وَيُقِيمُونَ ٱلصَّلَوٰةَ', surah: 2, ayah: 3), []);
-    s.feed(['الذين', 'يؤمنون', 'بالغيب', 'وتقيم', 'الصلاة'], isFinal: true);
+  test('a similar but different word is a mistake', () {
+    final s = TasmeeSession(_words('وَلَٰكِن لَّا يَعْلَمُونَ', surah: 2, ayah: 13), []);
+    s.feed(['ولكن', 'لا', 'يعملون'], isFinal: true);
+    expect(s.mistakes.length, 1);
+    expect(s.words[2].state, TasmeeState.mistake);
+  });
+
+  test('a wrong word that appears earlier on the page is a mistake', () {
+    final w = [
+      ..._words('وَمَا يَشْعُرُونَ', surah: 2, ayah: 12),
+      ..._words('وَلَٰكِن لَّا يَعْلَمُونَ', surah: 2, ayah: 13),
+    ];
+    final s = TasmeeSession(w, []);
+    s.feed(['وما', 'يشعرون', 'ولكن', 'لا'], isFinal: false);
+    s.feed(['وما', 'يشعرون', 'ولكن', 'لا', 'يشعرون'], isFinal: false);
+    expect(s.mistakes, isEmpty); // still being spoken
+    s.feed(['وما', 'يشعرون', 'ولكن', 'لا', 'يشعرون'], isFinal: true); // pause
+    expect(s.mistakes.length, 1);
+    expect(s.words[4].state, TasmeeState.mistake);
+  });
+
+  test('wrong word then correcting it', () {
+    final s = TasmeeSession(
+      _words('ٱلْحَمْدُ لِلَّهِ رَبِّ ٱلْعَٰلَمِينَ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ مَٰلِكِ يَوْمِ ٱلدِّينِ'),
+      [],
+    );
+    s.feed('الحمد لله رب العالمين الرحمن الغفور'.split(' '), isFinal: true);
+    expect(s.mistakes.length, 1);
+    expect(s.words[5].state, TasmeeState.mistake);
+    s.newUtterance();
+    s.feed('الرحمن الرحيم مالك يوم الدين'.split(' '), isFinal: true);
     expect(s.done, isTrue);
-    expect(s.mistakes, isEmpty);
+    expect(s.mistakes.length, 1);
+    expect(s.words[5].missed, isTrue);
   });
 }

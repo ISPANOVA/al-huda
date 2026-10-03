@@ -89,7 +89,9 @@ class TasmeeMatcher {
   static bool similar(String h, String e) {
     if (h.isEmpty || e.isEmpty) return false;
     if (h == e) return true;
-    final tol = e.length <= 2 ? 0 : (e.length <= 5 ? 1 : 2);
+    // Strict enough that a different Quranic word (يعلمون/يشعرون، يعلمون/يعملون)
+    // is never accepted, loose enough for Uthmani vs plain spelling.
+    final tol = e.length <= 2 ? 0 : (e.length <= 6 ? 1 : 2);
     return distance(h, e) <= tol;
   }
 
@@ -132,9 +134,7 @@ class TasmeeMatcher {
   /// A looser match used when the recogniser probably misheard a correct word.
   static bool close(String h, String e) {
     if (similar(h, e)) return true;
-    if (e.length < 5) return false;
-    final tol = e.length <= 7 ? 2 : 3;
-    return distance(h, e) <= tol;
+    return e.length >= 8 && distance(h, e) <= 3;
   }
 
   /// Words people say around a recitation (isti'adha, basmala, closing) that
@@ -204,7 +204,7 @@ class TasmeeSession {
         } else if (last) {
           break;
         } else {
-          final j = _findBack(h);
+          final j = _findBack(h, hNext);
           if (j != null) {
             _shadow = j + 1 >= expected ? null : j + 1;
             _consumed++;
@@ -287,7 +287,7 @@ class TasmeeSession {
       }
 
       // 4) Going back to repeat.
-      final j = _findBack(h);
+      final j = _findBack(h, hNext);
       if (j != null) {
         _shadow = j + 1 >= expected ? null : j + 1;
         _consumed++;
@@ -300,11 +300,8 @@ class TasmeeSession {
         continue;
       }
 
-      // 6) Probably misheard: close to the expected word, or the next heard
-      //    word is the next expected one.
-      final nextOk = hNext != null && expected + 1 < words.length && _sim(hNext, words[expected + 1]);
-      if (TasmeeMatcher.close(h, e.key) ||
-          (nextOk && TasmeeMatcher.distance(h, e.key) <= math.max(2, e.key.length ~/ 2))) {
+      // 6) A long word the recogniser slightly misheard.
+      if (TasmeeMatcher.close(h, e.key)) {
         _reveal(expected);
         revealed++;
         _consumed++;
@@ -321,11 +318,16 @@ class TasmeeSession {
     return TasmeeFeed(revealed, errors);
   }
 
-  /// Latest earlier word (this page, last ~40 words) that [h] could be.
-  int? _findBack(String h) {
+  /// Latest earlier word (this page, last ~40 words) the reciter went back
+  /// to. Only a real repeat counts: the word just recited, or a word whose
+  /// following word is heard next. A wrong word that merely exists earlier
+  /// on the page (يشعرون instead of يعلمون) stays a mistake.
+  int? _findBack(String h, String? hNext) {
     if (h.length < 2) return null;
     for (var j = expected - 1; j >= 0 && j >= expected - 40; j--) {
-      if (_sim(h, words[j])) return j;
+      if (!_sim(h, words[j])) continue;
+      if (j == expected - 1) return j;
+      if (hNext != null && _sim(hNext, words[j + 1])) return j;
     }
     return null;
   }

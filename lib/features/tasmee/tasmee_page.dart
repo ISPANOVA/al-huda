@@ -56,6 +56,13 @@ class _TasmeePageState extends State<TasmeePage> {
   String? _localeId;
   int _flashIndex = -1;
   Timer? _flashTimer;
+
+  /// Last partial result of the current utterance. Android often closes an
+  /// utterance after a pause without a final result, so the last word said
+  /// before the pause is judged when speech settles (or the utterance ends).
+  List<String> _pendingWords = const [];
+  int _heardCount = 0;
+  Timer? _settleTimer;
   int _revealedTotal = 0;
   bool _leaving = false;
 
@@ -72,12 +79,21 @@ class _TasmeePageState extends State<TasmeePage> {
     _active = false;
     _watchdog?.cancel();
     _flashTimer?.cancel();
+    _settleTimer?.cancel();
     _stt.cancel();
     _fx.dispose();
     super.dispose();
   }
 
-  Future<void> _loadPage(int page, {int? startAyah, int consumed = 0}) async {
+  /// [consumed]: words of the current utterance already used. Null when the
+  /// reciter changes page by hand: everything heard so far belongs to the old
+  /// page.
+  Future<void> _loadPage(int page, {int? startAyah, int? consumed}) async {
+    if (consumed == null) {
+      _settleTimer?.cancel();
+      _pendingWords = const [];
+    }
+    consumed ??= _heardCount;
     final repo = context.read<QuranRepository>();
     await repo.ensureLoaded();
     final ayahs = repo.ayahsOnPage(page);
@@ -155,7 +171,9 @@ class _TasmeePageState extends State<TasmeePage> {
   Future<void> _listen() async {
     if (!_active || !mounted || _starting) return;
     _starting = true;
+    _settle();
     _session?.newUtterance();
+    _heardCount = 0;
     try {
       await _stt.listen(
         onResult: _onResult,
@@ -187,6 +205,7 @@ class _TasmeePageState extends State<TasmeePage> {
   void _onStatus(String status) {
     if (!mounted) return;
     if (status == 'done' || status == 'notListening') {
+      _settle();
       setState(() {
         _listening = false;
         _level = 0;
@@ -208,12 +227,34 @@ class _TasmeePageState extends State<TasmeePage> {
   }
 
   void _onResult(SpeechRecognitionResult r) {
-    final s = _session;
-    if (s == null || !mounted) return;
+    if (_session == null || !mounted) return;
     _heard = r.recognizedWords;
     final heard = r.recognizedWords.split(RegExp(r'\s+')).where((w) => w.isNotEmpty).toList();
+    _heardCount = heard.length;
+    _settleTimer?.cancel();
+    if (r.finalResult) {
+      _pendingWords = const [];
+    } else {
+      _pendingWords = heard;
+      _settleTimer = Timer(const Duration(milliseconds: 1400), _settle);
+    }
+    _apply(heard, isFinal: r.finalResult);
+  }
+
+  /// Judges the last word heard once the reciter paused after it.
+  void _settle() {
+    _settleTimer?.cancel();
+    final words = _pendingWords;
+    _pendingWords = const [];
+    if (words.isEmpty || _session == null || !mounted) return;
+    _apply(words, isFinal: true);
+  }
+
+  void _apply(List<String> heard, {required bool isFinal}) {
+    final s = _session;
+    if (s == null || !mounted) return;
     final wasDone = s.done;
-    final res = s.feed(heard, isFinal: r.finalResult);
+    final res = s.feed(heard, isFinal: isFinal);
     if (res.mistakes > 0) _onMistake();
     _revealedTotal += res.revealed;
     setState(() {});
