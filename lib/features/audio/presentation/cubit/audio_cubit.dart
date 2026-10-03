@@ -103,12 +103,16 @@ class AudioCubit extends Cubit<AudioState> {
     final playlist = _builder.build(reciter: r, fromGlobal: fromGlobal, toGlobal: toGlobal, ayahRepeat: ayahRepeat);
     if (playlist.isEmpty) return;
     emit(state.copyWith(isMemorization: memorization, reciterId: r.id, clearError: true));
-    await _handler.loadPlaylist(
-      items: playlist.items,
-      sources: playlist.sources,
-      rangeRepeat: rangeRepeat,
-      speed: _settings.state.playbackSpeed,
-    );
+    try {
+      await _handler.loadPlaylist(
+        items: playlist.items,
+        sources: playlist.sources,
+        rangeRepeat: rangeRepeat,
+        speed: _settings.state.playbackSpeed,
+      );
+    } catch (_) {
+      emit(state.copyWith(error: 'تعذر تشغيل التلاوة، تحقق من الاتصال'));
+    }
   }
 
   /// Plays a whole surah starting at [fromAyah].
@@ -181,7 +185,11 @@ class AudioCubit extends Cubit<AudioState> {
       sources.add(local != null ? AudioSource.file(local, tag: item) : AudioSource.uri(Uri.parse(reciter.urlFor(s)), tag: item));
     }
     emit(state.copyWith(isMemorization: false, reciterId: reciter.id, clearError: true));
-    await _handler.loadPlaylist(items: items, sources: sources, speed: _settings.state.playbackSpeed);
+    try {
+      await _handler.loadPlaylist(items: items, sources: sources, speed: _settings.state.playbackSpeed);
+    } catch (_) {
+      emit(state.copyWith(error: 'تعذر تشغيل التلاوة، تحقق من الاتصال'));
+    }
   }
 
   /// Whole surah with a given reciter (media section).

@@ -122,6 +122,14 @@ class CarMedia {
   }
 
   Future<void> play(String id) async {
+    try {
+      await _play(id);
+    } catch (_) {
+      _handler.reportError('تعذر التشغيل الآن، تحقق من الاتصال');
+    }
+  }
+
+  Future<void> _play(String id) async {
     final p = id.split(':');
     switch (p.first) {
       case 'surah':
@@ -235,5 +243,6 @@ class CarMedia {
         // next mirror
       }
     }
+    _handler.reportError('تعذر تشغيل ${radio.name} الآن، تحقق من الاتصال');
   }
 }

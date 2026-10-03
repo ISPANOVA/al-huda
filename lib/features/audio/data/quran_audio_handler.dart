@@ -18,6 +18,15 @@ class QuranAudioHandler extends BaseAudioHandler with SeekHandler {
   /// Library for Android Auto / media browsers (set once dependencies exist).
   CarMedia? car;
 
+  /// Something is loaded and was not stopped. While true the session never
+  /// reports «idle»: audio_service treats idle as stop — it deactivates the
+  /// media session and stops the service, so Android Auto lost the player
+  /// («Could not load your selection») every time a new item was loading.
+  bool _active = false;
+
+  /// A load in progress (mirrors may fail and be retried: not an error yet).
+  int _loading = 0;
+
   int _loopsRemaining = 0;
   bool _infiniteLoop = false;
 
@@ -38,7 +47,7 @@ class QuranAudioHandler extends BaseAudioHandler with SeekHandler {
         debugPrint('Audio playback error: $e');
         // A mirror that failed while another is tried, or a load replaced by a
         // new one, is not an error for the listener.
-        if (e is PlayerInterruptedException || _player.playing) return;
+        if (e is PlayerInterruptedException || _player.playing || _loading > 0) return;
         _broadcastState(_player.playbackEvent, error: 'تعذر التشغيل، تحقق من الاتصال');
       },
     );
@@ -83,10 +92,17 @@ class QuranAudioHandler extends BaseAudioHandler with SeekHandler {
     _emitLoopState();
 
     final start = initialIndex.clamp(0, items.length - 1);
+    _active = true;
     queue.add(items);
     mediaItem.add(items[start]);
-    await _player.setSpeed(speed);
-    await _player.setAudioSources(sources, initialIndex: start, initialPosition: Duration.zero);
+    _broadcastState(_player.playbackEvent); // «loading» with the new item
+    _loading++;
+    try {
+      await _player.setSpeed(speed);
+      await _player.setAudioSources(sources, initialIndex: start, initialPosition: Duration.zero);
+    } finally {
+      _loading--;
+    }
     if (autoPlay) unawaited(_player.play());
   }
 
@@ -102,11 +118,23 @@ class QuranAudioHandler extends BaseAudioHandler with SeekHandler {
       album: 'بث مباشر',
       extras: <String, dynamic>{'live': true},
     );
+    _active = true;
     queue.add([item]);
     mediaItem.add(item);
-    await _player.setSpeed(1);
-    await _player.setAudioSource(AudioSource.uri(Uri.parse(url), tag: item));
+    _broadcastState(_player.playbackEvent);
+    _loading++;
+    try {
+      await _player.setSpeed(1);
+      await _player.setAudioSource(AudioSource.uri(Uri.parse(url), tag: item));
+    } finally {
+      _loading--;
+    }
     unawaited(_player.play());
+  }
+
+  /// Shown on the lock screen / car when nothing could be played.
+  void reportError(String message) {
+    _broadcastState(_player.playbackEvent, error: message);
   }
 
   Future<void> _onRangeCompleted() async {
@@ -177,6 +205,7 @@ class QuranAudioHandler extends BaseAudioHandler with SeekHandler {
 
   @override
   Future<void> stop() async {
+    _active = false;
     await _player.stop();
     queue.add(const []);
     mediaItem.add(null);
@@ -231,13 +260,15 @@ class QuranAudioHandler extends BaseAudioHandler with SeekHandler {
       androidCompactActionIndices: live ? const [0, 1] : const [0, 1, 3],
       processingState: error != null
           ? AudioProcessingState.error
-          : const {
-        ProcessingState.idle: AudioProcessingState.idle,
-        ProcessingState.loading: AudioProcessingState.loading,
-        ProcessingState.buffering: AudioProcessingState.buffering,
-        ProcessingState.ready: AudioProcessingState.ready,
-        ProcessingState.completed: AudioProcessingState.completed,
-      }[_player.processingState]!,
+          : switch (_player.processingState) {
+              // Between two items or while switching the player is briefly
+              // idle: report loading, never idle, while something is active.
+              ProcessingState.idle => _active ? AudioProcessingState.loading : AudioProcessingState.idle,
+              ProcessingState.loading => AudioProcessingState.loading,
+              ProcessingState.buffering => AudioProcessingState.buffering,
+              ProcessingState.ready => AudioProcessingState.ready,
+              ProcessingState.completed => AudioProcessingState.completed,
+            },
       playing: playing,
       updatePosition: _player.position,
       bufferedPosition: _player.bufferedPosition,
