@@ -277,7 +277,7 @@ void _configureAndroidResources() {
     ..parent.createSync(recursive: true)
     ..writeAsStringSync('<?xml version="1.0" encoding="utf-8"?>\n'
         '<resources xmlns:tools="http://schemas.android.com/tools" '
-        'tools:keep="@drawable/ic_stat_alhuda,@drawable/launch_background,@drawable/widget_*,@layout/widget_*,@xml/widget_*,@font/hafs,@raw/adhan_*,@raw/takbeer_*" />\n');
+        'tools:keep="@drawable/ic_stat_alhuda,@drawable/launch_background,@drawable/widget_*,@layout/widget_*,@xml/widget_*,@xml/automotive_app_desc,@font/hafs,@raw/adhan_*,@raw/takbeer_*" />\n');
   File('$res/values/alhuda_colors.xml')
     ..parent.createSync(recursive: true)
     ..writeAsStringSync('<?xml version="1.0" encoding="utf-8"?>\n<resources>\n'
@@ -443,6 +443,15 @@ void _configureManifest() {
   // Some live Haram streams are plain http.
   if (!s.contains('usesCleartextTraffic')) {
     s = s.replaceFirst('<application', '<application\n        android:usesCleartextTraffic="true"');
+  }
+
+  // Android Auto: the app appears as a media source (Quran, reciters, radios).
+  if (!s.contains('com.google.android.gms.car.application')) {
+    final idx = s.lastIndexOf('</application>');
+    s = s.replaceRange(idx, idx, '''        <meta-data
+            android:name="com.google.android.gms.car.application"
+            android:resource="@xml/automotive_app_desc"/>
+    ''');
   }
 
   if (!s.contains('com.ryanheise.audioservice.AudioService')) {

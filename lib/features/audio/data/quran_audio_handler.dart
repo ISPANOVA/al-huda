@@ -5,6 +5,8 @@ import 'package:audio_session/audio_session.dart';
 import 'package:flutter/foundation.dart';
 import 'package:just_audio/just_audio.dart';
 
+import 'car_media.dart';
+
 /// Background-capable player exposed to the OS media session
 /// (notification, lock screen, headset buttons, Bluetooth controls).
 ///
@@ -12,6 +14,9 @@ import 'package:just_audio/just_audio.dart';
 /// verse-level synchronisation for highlighting, plus memorization loops.
 class QuranAudioHandler extends BaseAudioHandler with SeekHandler {
   final AudioPlayer _player = AudioPlayer();
+
+  /// Library for Android Auto / media browsers (set once dependencies exist).
+  CarMedia? car;
 
   int _loopsRemaining = 0;
   bool _infiniteLoop = false;
@@ -116,6 +121,25 @@ class QuranAudioHandler extends BaseAudioHandler with SeekHandler {
   void _emitLoopState() {
     customState.add(<String, dynamic>{'loopsRemaining': _loopsRemaining, 'infinite': _infiniteLoop});
   }
+
+  // ----------------------------------------------- Android Auto browsing ---
+
+  @override
+  Future<List<MediaItem>> getChildren(String parentMediaId, [Map<String, dynamic>? options]) async =>
+      car?.children(parentMediaId) ?? const [];
+
+  @override
+  Future<MediaItem?> getMediaItem(String mediaId) async => car?.item(mediaId);
+
+  @override
+  Future<void> playFromMediaId(String mediaId, [Map<String, dynamic>? extras]) async => car?.play(mediaId);
+
+  @override
+  Future<void> playFromSearch(String query, [Map<String, dynamic>? extras]) async => car?.search(query);
+
+  @override
+  Future<List<MediaItem>> search(String query, [Map<String, dynamic>? extras]) async =>
+      car?.searchItems(query) ?? const [];
 
   @override
   Future<void> play() => _player.play();

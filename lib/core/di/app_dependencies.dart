@@ -2,6 +2,7 @@ import 'package:audio_service/audio_service.dart';
 import 'package:dio/dio.dart';
 
 import '../../features/audio/data/audio_download_service.dart';
+import '../../features/audio/data/car_media.dart';
 import '../../features/audio/data/playlist_builder.dart';
 import '../../features/audio/data/quran_audio_handler.dart';
 import '../../features/khatmah/data/khatmah_repository.dart';
@@ -70,8 +71,17 @@ class AppDependencies {
         androidNotificationOngoing: true,
         androidStopForegroundOnPause: true,
         androidNotificationIcon: 'drawable/ic_stat_alhuda',
+        // Android Auto: list style, voice search.
+        androidBrowsableRootExtras: {
+          'android.media.browse.SEARCH_SUPPORTED': true,
+          'android.media.browse.CONTENT_STYLE_SUPPORTED': true,
+          'android.media.browse.CONTENT_STYLE_BROWSABLE_HINT': 1,
+          'android.media.browse.CONTENT_STYLE_PLAYABLE_HINT': 1,
+        },
       ),
     );
+    final playlistBuilder = PlaylistBuilder(downloads);
+    handler.car = CarMedia(handler, playlistBuilder, storage);
 
     // The Mushaf ships inside the app: start parsing it in the background now so
     // the Quran opens instantly. Old downloaded text cache is no longer needed.
@@ -88,7 +98,7 @@ class AppDependencies {
       statsRepository: StatsRepository(storage),
       khatmahRepository: KhatmahRepository(storage),
       downloadService: downloads,
-      playlistBuilder: PlaylistBuilder(downloads),
+      playlistBuilder: playlistBuilder,
       audioHandler: handler,
       locationService: LocationService(storage),
       prayerRepository: PrayerRepository(),
