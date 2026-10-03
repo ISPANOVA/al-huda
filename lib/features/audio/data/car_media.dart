@@ -82,7 +82,9 @@ class CarMedia {
     if (parent == _reciters) {
       return [
         for (final r in MediaCatalog.reciters)
-          _folder('reciter:${r.key}', r.name, subtitle: r.style, art: _reciterArt),
+          // Same reciter, two recitations: name the style so they differ.
+          _folder('reciter:${r.key}', r.mujawwad ? '${r.name} • ${r.style}' : r.name,
+              subtitle: r.style, art: _reciterArt),
       ];
     }
     if (parent.startsWith('reciter:')) {

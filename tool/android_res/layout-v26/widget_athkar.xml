@@ -11,13 +11,13 @@
         android:orientation="vertical" android:padding="16dp">
         <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
             android:orientation="horizontal" android:gravity="center_vertical">
-            <TextView android:id="@+id/athkar_title" android:layout_width="0dp" android:layout_height="wrap_content" android:text="أذكار" android:textSize="15sp" android:textColor="#FFFFFFFF" android:maxLines="1" android:includeFontPadding="false" android:shadowColor="#66000000" android:shadowDy="1" android:shadowRadius="5" android:textStyle="bold" android:layout_weight="1" />
-            <TextView android:id="@+id/athkar_step" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="" android:textSize="12sp" android:textColor="#FFA3A3A3" android:maxLines="1" android:includeFontPadding="false" android:shadowColor="#66000000" android:shadowDy="1" android:shadowRadius="5"  />
+            <TextView android:id="@+id/athkar_title" android:layout_width="0dp" android:layout_height="wrap_content" android:text="أذكار" android:textSize="15sp" android:textColor="#FFFFFFFF" android:maxLines="1" android:includeFontPadding="false" android:shadowColor="#40000000" android:shadowDy="1" android:shadowRadius="3" android:textStyle="bold" android:layout_weight="1" />
+            <TextView android:id="@+id/athkar_step" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="" android:textSize="12sp" android:textColor="#FFA3A3A3" android:maxLines="1" android:includeFontPadding="false" android:shadowColor="#40000000" android:shadowDy="1" android:shadowRadius="3"  />
         </LinearLayout>
         <TextView android:id="@+id/athkar_text" android:layout_width="match_parent" android:layout_height="0dp"
             android:layout_weight="1" android:layout_marginTop="6dp" android:gravity="center"
             android:maxLines="5" android:ellipsize="end" android:lineSpacingMultiplier="1.25"
-            android:text="سبحان الله وبحمده" android:textColor="#FFFFFFFF" android:textSize="17sp" android:shadowColor="#66000000" android:shadowDy="1" android:shadowRadius="5" />
+            android:text="سبحان الله وبحمده" android:textColor="#FFFFFFFF" android:textSize="17sp" android:shadowColor="#40000000" android:shadowDy="1" android:shadowRadius="3" />
         <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
             android:layout_marginTop="8dp" android:orientation="horizontal" android:gravity="center_vertical">
             <TextView android:id="@+id/athkar_count" android:layout_width="0dp" android:layout_height="40dp"

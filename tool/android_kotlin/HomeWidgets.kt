@@ -23,9 +23,34 @@ object WidgetStore {
     private const val PREFS = "alhuda_widgets"
     const val ACTION_TICK = "com.alhuda.islamic.app.WIDGET_TICK"
 
-    val WHITE = Color.WHITE
-    val DIM = Color.parseColor("#FFB8B8B8")
-    val MUTED = Color.parseColor("#FFA3A3A3")
+    // Text colours, from the colour chosen in the app (white by default):
+    // main text, dimmer secondary text, and the faintest labels.
+    var WHITE = Color.WHITE
+    var DIM = Color.parseColor("#FFB8B8B8")
+    var MUTED = Color.parseColor("#FFA3A3A3")
+
+    private fun withAlpha(c: Int, a: Int) = (c and 0x00FFFFFF) or (a shl 24)
+
+    private fun style(context: Context): JSONObject = try {
+        JSONObject(context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getString("style", null) ?: "{}")
+    } catch (e: Exception) {
+        JSONObject()
+    }
+
+    fun loadColors(context: Context) {
+        val c = style(context).optLong("text", 0xFFFFFFFFL).toInt() or (0xFF shl 24)
+        WHITE = c
+        DIM = withAlpha(c, 0xC4)
+        MUTED = withAlpha(c, 0xA8)
+    }
+
+    /** Applies the chosen text colour to [ids] (main), [dim] and [muted]. */
+    fun paint(v: RemoteViews, main: IntArray = intArrayOf(), dim: IntArray = intArrayOf(), muted: IntArray = intArrayOf(), icons: IntArray = intArrayOf()) {
+        for (id in main) v.setTextColor(id, WHITE)
+        for (id in dim) v.setTextColor(id, DIM)
+        for (id in muted) v.setTextColor(id, MUTED)
+        for (id in icons) v.setInt(id, "setColorFilter", WHITE)
+    }
 
     fun save(context: Context, prayers: String?, ayahs: String?, style: String? = null) {
         val e = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
@@ -42,14 +67,10 @@ object WidgetStore {
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getString("ayahs", null)
 
     /** Background opacity chosen in the app: 0 = transparent, 1 = solid. */
-    fun opacity(context: Context): Float = try {
-        val raw = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getString("style", null)
-        JSONObject(raw ?: "{}").optDouble("opacity", 1.0).toFloat().coerceIn(0f, 1f)
-    } catch (e: Exception) {
-        1f
-    }
+    fun opacity(context: Context): Float = style(context).optDouble("opacity", 1.0).toFloat().coerceIn(0f, 1f)
 
     fun applyStyle(context: Context, views: RemoteViews) {
+        loadColors(context)
         views.setInt(R.id.widget_bg, "setImageAlpha", (opacity(context) * 255).toInt())
         views.setOnClickPendingIntent(R.id.widget_root, openAppIntent(context))
     }
@@ -309,6 +330,7 @@ object PrayerViews {
         v.setTextViewText(R.id.next_name, PrayerData.calligraphy(snap.next.name))
         v.setTextViewText(R.id.next_time, WidgetStore.clock(snap.next.at))
         v.setTextViewText(R.id.next_in, WidgetStore.countdown(snap.next.at, now))
+        WidgetStore.paint(v, main = intArrayOf(R.id.next_name, R.id.next_time), muted = intArrayOf(R.id.next_in))
         return v
     }
 
@@ -330,6 +352,12 @@ object PrayerViews {
         v.setTextViewText(R.id.next_name, snap.next.name)
         v.setTextViewText(R.id.next_in, WidgetStore.countdown(snap.next.at, now))
         v.setTextViewText(R.id.next_time, WidgetStore.clock(snap.next.at))
+        WidgetStore.paint(
+            v,
+            main = intArrayOf(R.id.next_name, R.id.next_time),
+            dim = intArrayOf(R.id.prev_name, R.id.prev_time, R.id.next_in),
+            icons = intArrayOf(R.id.prev_dot, R.id.next_dot),
+        )
         return v
     }
 
@@ -357,6 +385,14 @@ object PrayerViews {
             v.setTextColor(nameIds[j], if (on) WidgetStore.WHITE else WidgetStore.MUTED)
             v.setTextColor(timeIds[j], if (on) WidgetStore.WHITE else WidgetStore.DIM)
             v.setInt(dotIds[j], "setImageAlpha", if (on) 255 else 110)
+            v.setInt(dotIds[j], "setColorFilter", WidgetStore.WHITE)
+        }
+        if (Build.VERSION.SDK_INT >= 31) {
+            v.setColorStateList(R.id.day_progress, "setProgressTintList", android.content.res.ColorStateList.valueOf(WidgetStore.WHITE))
+            v.setColorStateList(
+                R.id.day_progress, "setProgressBackgroundTintList",
+                android.content.res.ColorStateList.valueOf((WidgetStore.WHITE and 0x00FFFFFF) or (0x59 shl 24)),
+            )
         }
         // Progress between column centres: 0 at Fajr, 1000 at Isha.
         var progress = 0.0
@@ -387,6 +423,7 @@ object PrayerViews {
         v.setTextViewText(R.id.top_name, snap.next.name)
         v.setTextViewText(R.id.top_in, WidgetStore.countdown(snap.next.at, now))
         v.setTextViewText(R.id.top_time, WidgetStore.clock(snap.next.at))
+        WidgetStore.paint(v, main = intArrayOf(R.id.top_in, R.id.top_time), dim = intArrayOf(R.id.top_name))
         for (j in 0 until 6) {
             val e = snap.day.getOrNull(j)
             if (e == null) {
@@ -397,6 +434,7 @@ object PrayerViews {
             val on = e == snap.next
             v.setImageViewResource(rowIcons[j], PrayerData.icon(e.kind))
             v.setInt(rowIcons[j], "setImageAlpha", if (on) 255 else 170)
+            v.setInt(rowIcons[j], "setColorFilter", WidgetStore.WHITE)
             v.setTextViewText(rowNames[j], e.name)
             v.setTextViewText(rowTimes[j], WidgetStore.clock(e.at))
             v.setTextColor(rowNames[j], if (on) WidgetStore.WHITE else WidgetStore.DIM)
@@ -419,6 +457,13 @@ object PrayerViews {
         v.setTextViewText(R.id.tile_name, snap.next.name)
         v.setTextViewText(R.id.tile_time, WidgetStore.clock(snap.next.at))
         v.setTextViewText(R.id.tile_in, WidgetStore.countdown(snap.next.at, now))
+        WidgetStore.paint(
+            v,
+            main = intArrayOf(R.id.tile_time),
+            dim = intArrayOf(R.id.tile_name),
+            muted = intArrayOf(R.id.tile_in),
+            icons = intArrayOf(R.id.tile_icon),
+        )
         return v
     }
 }
@@ -481,6 +526,7 @@ class AyahWidgetProvider : AppWidgetProvider() {
                 views.setTextViewText(R.id.ayah_text, "افتح تطبيق الهدى لعرض آية اليوم")
                 views.setTextViewText(R.id.ayah_ref, "")
             }
+            WidgetStore.paint(views, main = intArrayOf(R.id.ayah_text), muted = intArrayOf(R.id.ayah_title, R.id.ayah_ref))
             return views
         }
 
@@ -601,6 +647,11 @@ class AthkarWidgetProvider : AppWidgetProvider() {
             views.setOnClickPendingIntent(R.id.athkar_count, broadcast(context, ACTION_TAP, 4201))
             views.setOnClickPendingIntent(R.id.athkar_next, broadcast(context, ACTION_NEXT, 4202))
             views.setOnClickPendingIntent(R.id.athkar_text, WidgetStore.openAppIntent(context))
+            WidgetStore.paint(
+                views,
+                main = intArrayOf(R.id.athkar_title, R.id.athkar_text, R.id.athkar_next),
+                muted = intArrayOf(R.id.athkar_step),
+            )
             return views
         }
     }

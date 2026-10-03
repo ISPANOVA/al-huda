@@ -19,10 +19,12 @@ class HomeWidgets {
       '${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
 
   /// Background of all widgets: 0 = transparent, 1 = solid card.
-  static Future<void> setStyle({required double opacity}) async {
+  static Future<void> setStyle({required double opacity, int textColor = 0xFFFFFFFF}) async {
     if (!Platform.isAndroid) return;
     try {
-      await _channel.invokeMethod('update', {'style': jsonEncode({'opacity': opacity})});
+      await _channel.invokeMethod('update', {
+        'style': jsonEncode({'opacity': opacity, 'text': textColor}),
+      });
     } catch (e) {
       debugPrint('Widget update failed: $e');
     }

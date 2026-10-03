@@ -10,11 +10,11 @@
     <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent"
         android:orientation="horizontal" android:gravity="center_vertical"
         android:paddingStart="24dp" android:paddingEnd="24dp" android:paddingTop="10dp" android:paddingBottom="10dp">
-        <TextView android:id="@+id/next_name" android:layout_width="0dp" android:layout_height="wrap_content" android:text="الظُّهْر" android:textSize="46sp" android:textColor="#FFFFFFFF" android:maxLines="1" android:includeFontPadding="false" android:shadowColor="#66000000" android:shadowDy="1" android:shadowRadius="5"  android:layout_weight="1" android:gravity="start|center_vertical" />
+        <TextView android:id="@+id/next_name" android:layout_width="0dp" android:layout_height="wrap_content" android:text="الظُّهْر" android:textSize="46sp" android:textColor="#FFFFFFFF" android:maxLines="1" android:includeFontPadding="false" android:shadowColor="#40000000" android:shadowDy="1" android:shadowRadius="3"  android:layout_weight="1" android:gravity="start|center_vertical" />
         <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content"
             android:orientation="vertical" android:gravity="left">
-            <TextView android:id="@+id/next_time" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="١٢:٣٤" android:textSize="28sp" android:textColor="#FFFFFFFF" android:maxLines="1" android:includeFontPadding="false" android:shadowColor="#66000000" android:shadowDy="1" android:shadowRadius="5" android:textStyle="bold"  />
-            <TextView android:id="@+id/next_in" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="بعد ٣ س ٤٣ د" android:textSize="20sp" android:textColor="#FFA3A3A3" android:maxLines="1" android:includeFontPadding="false" android:shadowColor="#66000000" android:shadowDy="1" android:shadowRadius="5" android:layout_marginTop="6dp" />
+            <TextView android:id="@+id/next_time" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="١٢:٣٤" android:textSize="28sp" android:textColor="#FFFFFFFF" android:maxLines="1" android:includeFontPadding="false" android:shadowColor="#40000000" android:shadowDy="1" android:shadowRadius="3" android:textStyle="bold"  />
+            <TextView android:id="@+id/next_in" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="بعد ٣ س ٤٣ د" android:textSize="20sp" android:textColor="#FFA3A3A3" android:maxLines="1" android:includeFontPadding="false" android:shadowColor="#40000000" android:shadowDy="1" android:shadowRadius="3" android:layout_marginTop="6dp" />
         </LinearLayout>
     </LinearLayout>
 </FrameLayout>

@@ -125,7 +125,7 @@ class AppearancePage extends StatelessWidget {
                       ),
               ),
               const SizedBox(height: 22),
-              _WidgetStyleCard(opacity: s.widgetOpacity),
+              _WidgetStyleCard(opacity: s.widgetOpacity, textColor: Color(s.widgetTextColor)),
             ],
           );
         },
@@ -137,8 +137,9 @@ class AppearancePage extends StatelessWidget {
 /// Background of the home-screen widgets: transparent, half or solid.
 class _WidgetStyleCard extends StatefulWidget {
   final double opacity;
+  final Color textColor;
 
-  const _WidgetStyleCard({required this.opacity});
+  const _WidgetStyleCard({required this.opacity, required this.textColor});
 
   @override
   State<_WidgetStyleCard> createState() => _WidgetStyleCardState();
@@ -195,7 +196,7 @@ class _WidgetStyleCardState extends State<_WidgetStyleCard> {
             ],
           ),
           const SizedBox(height: 12),
-          _WidgetPreview(opacity: _v),
+          _WidgetPreview(opacity: _v, textColor: widget.textColor),
           const SizedBox(height: 12),
           Row(children: [chip('شفافة', 0), chip('نصف شفافة', 0.5), chip('بخلفية', 1)]),
           Slider(
@@ -203,6 +204,38 @@ class _WidgetStyleCardState extends State<_WidgetStyleCard> {
             onChanged: (v) => setState(() => _v = v),
             onChangeEnd: cubit.setWidgetOpacity,
           ),
+          Text('لون الكتابة', style: TextStyle(fontWeight: FontWeight.w800, color: glass.onGlass)),
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: [
+              for (final c in _textColors)
+                GestureDetector(
+                  onTap: () => cubit.setWidgetTextColor(c),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 180),
+                    width: 38,
+                    height: 38,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: c,
+                      border: Border.all(
+                        color: c.toARGB32() == widget.textColor.toARGB32()
+                            ? glass.accent
+                            : glass.onGlass.withValues(alpha: 0.25),
+                        width: c.toARGB32() == widget.textColor.toARGB32() ? 3 : 1,
+                      ),
+                    ),
+                    child: c.toARGB32() == widget.textColor.toARGB32()
+                        ? Icon(Icons.check_rounded,
+                            size: 20, color: c.computeLuminance() > 0.5 ? Colors.black : Colors.white)
+                        : null,
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 12),
           Text(
             'لإضافة ويدجت: اضغط مطولًا على الشاشة الرئيسية ← الأدوات (Widgets) ← الهدى. '
             'فيه ٥ أشكال لمواقيت الصلاة بالإضافة لآية اليوم والأذكار.',
@@ -214,11 +247,23 @@ class _WidgetStyleCardState extends State<_WidgetStyleCard> {
   }
 }
 
+const _textColors = [
+  Color(0xFFFFFFFF),
+  Color(0xFF121212),
+  Color(0xFFE2C275),
+  Color(0xFFCFD8DC),
+  Color(0xFF8FE3B0),
+  Color(0xFF8EC5FF),
+  Color(0xFFFFB3C7),
+  Color(0xFFFFCC80),
+];
+
 /// A look-alike of the "next prayer" widget over a wallpaper.
 class _WidgetPreview extends StatelessWidget {
   final double opacity;
+  final Color textColor;
 
-  const _WidgetPreview({required this.opacity});
+  const _WidgetPreview({required this.opacity, required this.textColor});
 
   @override
   Widget build(BuildContext context) {
@@ -253,25 +298,25 @@ class _WidgetPreview extends StatelessWidget {
                 style: QuranFont.amiriQuran.style(
                   fontSize: 34,
                   height: 1.4,
-                  color: Colors.white,
+                  color: textColor,
                 ).copyWith(shadows: const [Shadow(color: Color(0x66000000), blurRadius: 5)])),
             const Spacer(),
-            const Column(
+            Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text('١٢:٣٤',
                     style: TextStyle(
-                        color: Colors.white,
+                        color: textColor,
                         fontSize: 22,
                         fontWeight: FontWeight.w800,
-                        shadows: [Shadow(color: Color(0x66000000), blurRadius: 5)])),
-                SizedBox(height: 2),
+                        shadows: const [Shadow(color: Color(0x66000000), blurRadius: 5)])),
+                const SizedBox(height: 2),
                 Text('بعد ٣ س ٤٣ د',
                     style: TextStyle(
-                        color: Color(0xFFA3A3A3),
+                        color: textColor.withValues(alpha: 0.66),
                         fontSize: 15,
-                        shadows: [Shadow(color: Color(0x66000000), blurRadius: 5)])),
+                        shadows: const [Shadow(color: Color(0x66000000), blurRadius: 5)])),
               ],
             ),
           ],

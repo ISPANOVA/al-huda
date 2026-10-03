@@ -29,14 +29,21 @@ class SettingsCubit extends Cubit<SettingsState> {
       }
     }
     _notifications.accent = AppThemes.palette(state.themeType).primary;
-    HomeWidgets.setStyle(opacity: state.widgetOpacity);
+    HomeWidgets.setStyle(opacity: state.widgetOpacity, textColor: state.widgetTextColor);
   }
 
   /// Home-screen widgets background (0 transparent … 1 solid).
   Future<void> setWidgetOpacity(double v) async {
     final next = state.copyWith(widgetOpacity: v.clamp(0.0, 1.0));
     await _save(next);
-    await HomeWidgets.setStyle(opacity: next.widgetOpacity);
+    await HomeWidgets.setStyle(opacity: next.widgetOpacity, textColor: next.widgetTextColor);
+  }
+
+  /// Home-screen widgets text colour (to suit the wallpaper).
+  Future<void> setWidgetTextColor(Color c) async {
+    final next = state.copyWith(widgetTextColor: c.toARGB32());
+    await _save(next);
+    await HomeWidgets.setStyle(opacity: next.widgetOpacity, textColor: next.widgetTextColor);
   }
 
   static void _applyCustom(SettingsState s) {
