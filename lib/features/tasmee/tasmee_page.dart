@@ -386,12 +386,12 @@ class _TasmeePageState extends State<TasmeePage> {
       ),
       const SizedBox(height: 16),
       if (ios) ...[
-        step(Icons.public_rounded, 'افتح الصفحة من Safari نفسه (المتصفحات الأخرى على آيفون لا تدعم التسميع).'),
-        step(Icons.keyboard_voice_rounded, 'فعّل الإملاء: الإعدادات ← عام ← لوحة المفاتيح ← تفعيل الإملاء.'),
-        step(Icons.mic_rounded, 'اسمح بالميكروفون: الإعدادات ← Safari ← الميكروفون ← سماح، ثم أعد تحميل الصفحة.'),
+        step(Icons.public_rounded, 'افتح الصفحة من Safari نفسه، فهو الأضمن للتسميع على آيفون.'),
+        step(Icons.keyboard_voice_rounded, 'فعّل الإملاء: الإعدادات، ثم عام، ثم لوحة المفاتيح، ثم «تفعيل الإملاء».'),
+        step(Icons.mic_rounded, 'اسمح بالميكروفون: الإعدادات، ثم Safari، ثم الميكروفون، ثم «سماح»، وبعدها أعد تحميل الصفحة.'),
       ] else ...[
         step(Icons.public_rounded, 'استخدم Google Chrome أو Microsoft Edge (فايرفوكس لا يدعم التسميع).'),
-        step(Icons.mic_rounded, 'اسمح بالميكروفون: اضغط على رمز القفل بجوار عنوان الصفحة ← الميكروفون ← سماح، ثم أعد تحميل الصفحة.'),
+        step(Icons.mic_rounded, 'اسمح بالميكروفون: اضغط رمز القفل بجوار عنوان الصفحة، ثم الميكروفون، ثم «سماح»، وبعدها أعد تحميل الصفحة.'),
       ],
       step(Icons.wifi_rounded, 'تأكد من الاتصال بالإنترنت.'),
     ];
