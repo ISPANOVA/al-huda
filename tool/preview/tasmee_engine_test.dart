@@ -306,4 +306,34 @@ void main() {
     expect(s.mistakes, isEmpty);
     expect(s.done, isTrue);
   });
+
+  List<TasmeeWord> ikhlasFalaq() =>
+      _words('قُلْ هُوَ ٱللَّهُ أَحَدٌ ٱللَّهُ ٱلصَّمَدُ', surah: 112) + _words('قُلْ أَعُوذُ بِرَبِّ ٱلْفَلَقِ', surah: 113);
+
+  test('an empty result between sentences does not erase progress', () {
+    final s = TasmeeSession(ikhlasFalaq(), []);
+    s.feed('قل هو الله أحد الله الصمد'.split(' '), isFinal: false);
+    s.feed([], isFinal: false);
+    s.feed('أعوذ برب الفلق'.split(' '), isFinal: false);
+    expect(s.words.take(6).every((w) => w.state == TasmeeState.correct), isTrue);
+    expect(s.mistakes, isEmpty);
+    expect(s.done, isTrue);
+  });
+
+  test('listening restarted while the transcript continues', () {
+    final s = TasmeeSession(ikhlasFalaq(), []);
+    s.feed('قل هو الله أحد الله الصمد'.split(' '), isFinal: false);
+    s.newUtterance();
+    s.feed('قل هو الله أحد الله الصمد قل أعوذ برب الفلق'.split(' '), isFinal: false);
+    expect(s.mistakes, isEmpty);
+    expect(s.done, isTrue);
+  });
+
+  test('progress never goes back to an earlier surah', () {
+    final s = TasmeeSession(ikhlasFalaq(), []);
+    s.feed('قل هو الله أحد الله الصمد'.split(' '), isFinal: false);
+    s.feed('قل هو أعوذ برب'.split(' '), isFinal: false); // odd rewrite
+    expect(s.expected, greaterThanOrEqualTo(6));
+    expect(s.words.take(6).every((w) => w.state == TasmeeState.correct), isTrue);
+  });
 }

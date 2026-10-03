@@ -251,11 +251,13 @@ class TasmeeSession {
   }
 
   /// Call when the recogniser starts a new utterance (its text restarts).
+  /// The transcript is kept: if the next result simply continues it (the
+  /// listening was restarted while the recogniser kept its text), only the
+  /// new words are judged; if it starts over, it is detected in [feed].
   void newUtterance() {
     _commit();
-    _offset = 0;
-    _used = 0;
-    _lastHeard = const [];
+    _offset = _lastHeard.length;
+    _used = _offset;
   }
 
   /// Fixes what was judged so far; later results only judge what follows.
@@ -292,37 +294,48 @@ class TasmeeSession {
     required bool isFinal,
     List<List<String>> alternates = const [],
   }) {
-    // Some recognisers start a fresh transcript in the middle of listening
-    // (only the latest sentence, e.g. «قل اعوذ برب الفلق» after the whole of
-    // Al-Ikhlas). That is a new segment, not a rewrite of what was judged:
-    // settle the previous one and continue from where it reached.
+    // An empty result (sent by some recognisers between sentences) carries
+    // nothing; it must not erase the transcript that was judged.
+    if (heard.isEmpty) return const TasmeeFeed(0, 0);
     var extra = 0;
     var extraFlash = -1;
     final prev = _lastHeard;
-    if (prev.length >= 3 && heard.isNotEmpty && heard.length < prev.length) {
-      var p = 0;
-      while (p < prev.length &&
-          p < heard.length &&
-          TasmeeMatcher.key(prev[p]) == TasmeeMatcher.key(heard[p])) {
-        p++;
+
+    // Some recognisers start a fresh transcript in the middle of listening
+    // (only the latest sentence, e.g. «اعوذ برب الفلق» after the whole of
+    // Al-Ikhlas). That is a new segment, not a rewrite of what was judged:
+    // settle the previous one and continue from where it reached.
+    void settlePrevious() {
+      if (prev.length > _offset) {
+        final r = _align(prev, isFinal: false, alternates: const []);
+        extra += r.mistakes;
+        if (r.flash >= 0) extraFlash = r.flash;
       }
-      if (p * 2 < prev.length) {
-        final settled =
-            prev.length > _offset ? _align(prev, isFinal: true, alternates: const []) : const TasmeeFeed(0, 0);
-        extra = settled.mistakes;
-        extraFlash = settled.flash;
-        _commit();
-        _offset = 0;
-        _used = 0;
-      }
-    }
-    if (heard.length < _offset) {
-      // Shorter than what the previous page used: a fresh transcript too.
       _commit();
       _offset = 0;
       _used = 0;
     }
-    final r = _align(heard, isFinal: isFinal, alternates: alternates);
+
+    var fresh = false;
+    if (prev.isNotEmpty) {
+      // A rewrite keeps most words in place; a fresh transcript doesn't.
+      var same = 0;
+      for (var p = 0; p < prev.length && p < heard.length; p++) {
+        if (TasmeeMatcher.key(prev[p]) == TasmeeMatcher.key(heard[p])) same++;
+      }
+      fresh = same * 2 < prev.length;
+    }
+    if (!fresh && heard.length < _offset) fresh = true;
+    if (fresh) settlePrevious();
+
+    final before = expected;
+    var r = _align(heard, isFinal: isFinal, alternates: alternates);
+    // Never lose what was already recited: a transcript that would move the
+    // reciter back is a fresh one, not a correction.
+    if (!fresh && prev.isNotEmpty && expected + 2 < before) {
+      settlePrevious();
+      r = _align(heard, isFinal: isFinal, alternates: alternates);
+    }
     if (extra == 0) return r;
     return TasmeeFeed(r.revealed, r.mistakes + extra, r.flash >= 0 ? r.flash : extraFlash);
   }
