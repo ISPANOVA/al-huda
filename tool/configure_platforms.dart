@@ -137,6 +137,12 @@ void _configureWidgets() {
       f.copySync('${dest.path}/${f.uri.pathSegments.last}');
     }
   }
+  final preview = Directory('tool/android_kotlin_preview');
+  if (Platform.environment['PREVIEW_WIDGETS'] == '1' && preview.existsSync()) {
+    for (final f in preview.listSync().whereType<File>().where((f) => f.path.endsWith('.kt'))) {
+      f.copySync('${dest.path}/${f.uri.pathSegments.last}');
+    }
+  }
   final manifest = File('android/app/src/main/AndroidManifest.xml');
   var s = manifest.readAsStringSync();
   if (!s.contains('PrayerWidgetProvider')) {
@@ -189,6 +195,47 @@ void _configureWidgets() {
     s = s.replaceRange(idx, idx, '$athkar    ');
     manifest.writeAsStringSync(s);
   }
+  // Widgets are laid out right-to-left (android:layoutDirection="rtl"),
+  // which Android only honours when the app declares RTL support.
+  if (!s.contains('supportsRtl')) {
+    s = s.replaceFirst('<application', '<application\n        android:supportsRtl="true"');
+  }
+  // Prayer widget designs (same receiver shape, different layouts).
+  const designs = {
+    'PrayerNextWidgetProvider': 'widget_prayer_next',
+    'PrayerMinimalWidgetProvider': 'widget_prayer_minimal',
+    'PrayerListWidgetProvider': 'widget_prayer_list',
+    'PrayerTileWidgetProvider': 'widget_prayer_tile',
+  };
+  designs.forEach((cls, res) {
+    if (s.contains('.$cls"')) return;
+    final receiver = '''
+        <receiver
+            android:name=".$cls"
+            android:exported="false"
+            android:label="@string/${res}_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/${res}_info"/>
+        </receiver>
+''';
+    final idx = s.lastIndexOf('</application>');
+    if (idx < 0) throw '</application> not found';
+    s = s.replaceRange(idx, idx, '$receiver    ');
+  });
+  // CI only: a screen that renders every widget, for screenshots.
+  if (Platform.environment['PREVIEW_WIDGETS'] == '1' && !s.contains('WidgetPreviewActivity')) {
+    const preview = '''
+        <activity android:name=".WidgetPreviewActivity" android:exported="true"
+            android:theme="@android:style/Theme.Material.NoActionBar"/>
+''';
+    final idx = s.lastIndexOf('</application>');
+    s = s.replaceRange(idx, idx, '$preview    ');
+  }
+  manifest.writeAsStringSync(s);
   if (!s.contains('AdhanService')) {
     const adhan = '''
         <!-- Adhan that plays even in silent/vibrate mode (alarm stream) -->
@@ -297,7 +344,7 @@ class MainActivity : AudioServiceActivity() {
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "alhuda/widgets").setMethodCallHandler { call, result ->
             when (call.method) {
                 "update" -> {
-                    WidgetStore.save(this, call.argument<String>("prayers"), call.argument<String>("ayahs"))
+                    WidgetStore.save(this, call.argument<String>("prayers"), call.argument<String>("ayahs"), call.argument<String>("style"))
                     WidgetStore.updateAll(this)
                     result.success(true)
                 }

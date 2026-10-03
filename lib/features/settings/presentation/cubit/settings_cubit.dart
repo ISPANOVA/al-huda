@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/constants/app_constants.dart';
+import '../../../../core/services/home_widgets.dart';
 import '../../../../core/services/notification_service.dart';
 import '../../../../core/services/storage_service.dart';
 import '../../../../core/theme/app_themes.dart';
@@ -28,6 +29,14 @@ class SettingsCubit extends Cubit<SettingsState> {
       }
     }
     _notifications.accent = AppThemes.palette(state.themeType).primary;
+    HomeWidgets.setStyle(opacity: state.widgetOpacity);
+  }
+
+  /// Home-screen widgets background (0 transparent … 1 solid).
+  Future<void> setWidgetOpacity(double v) async {
+    final next = state.copyWith(widgetOpacity: v.clamp(0.0, 1.0));
+    await _save(next);
+    await HomeWidgets.setStyle(opacity: next.widgetOpacity);
   }
 
   static void _applyCustom(SettingsState s) {

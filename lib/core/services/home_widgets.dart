@@ -18,10 +18,20 @@ class HomeWidgets {
   static String _day(DateTime d) =>
       '${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
 
-  /// [days]: for each day, the five prayers as (name, time).
+  /// Background of all widgets: 0 = transparent, 1 = solid card.
+  static Future<void> setStyle({required double opacity}) async {
+    if (!Platform.isAndroid) return;
+    try {
+      await _channel.invokeMethod('update', {'style': jsonEncode({'opacity': opacity})});
+    } catch (e) {
+      debugPrint('Widget update failed: $e');
+    }
+  }
+
+  /// [days]: for each day, the five prayers as (name, time), plus sunrise.
   static Future<void> updatePrayers({
     required String city,
-    required List<({DateTime date, List<(String, DateTime)> prayers})> days,
+    required List<({DateTime date, List<(String, DateTime)> prayers, DateTime sunrise})> days,
   }) async {
     if (!Platform.isAndroid) return;
     final payload = jsonEncode({
@@ -32,6 +42,7 @@ class HomeWidgets {
             'd': _day(d.date),
             'n': [for (final p in d.prayers) p.$1],
             't': [for (final p in d.prayers) p.$2.millisecondsSinceEpoch],
+            's': d.sunrise.millisecondsSinceEpoch,
           },
       ],
     });

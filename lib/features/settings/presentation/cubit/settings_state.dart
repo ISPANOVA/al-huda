@@ -58,6 +58,9 @@ class SettingsState extends Equatable {
   final bool sunriseAlert;
   final double patternStrength;
 
+  /// Home-screen widgets background: 0 = transparent, 1 = solid card.
+  final double widgetOpacity;
+
   const SettingsState({
     this.themeType = AppThemeType.noirGold,
     this.themeMode = ThemeMode.dark,
@@ -90,6 +93,7 @@ class SettingsState extends Equatable {
     this.occasionReminders = true,
     this.sunriseAlert = false,
     this.patternStrength = 1.0,
+    this.widgetOpacity = 1.0,
   });
 
   SettingsState copyWith({
@@ -124,6 +128,7 @@ class SettingsState extends Equatable {
     bool? occasionReminders,
     bool? sunriseAlert,
     double? patternStrength,
+    double? widgetOpacity,
   }) {
     return SettingsState(
       themeType: themeType ?? this.themeType,
@@ -157,6 +162,7 @@ class SettingsState extends Equatable {
       occasionReminders: occasionReminders ?? this.occasionReminders,
       sunriseAlert: sunriseAlert ?? this.sunriseAlert,
       patternStrength: patternStrength ?? this.patternStrength,
+      widgetOpacity: widgetOpacity ?? this.widgetOpacity,
     );
   }
 
@@ -192,6 +198,7 @@ class SettingsState extends Equatable {
         'occasionReminders': occasionReminders,
         'sunriseAlert': sunriseAlert,
         'patternStrength': patternStrength,
+        'widgetOpacity': widgetOpacity,
       };
 
   factory SettingsState.fromMap(Map<String, dynamic> m) {
@@ -234,6 +241,7 @@ class SettingsState extends Equatable {
       occasionReminders: m['occasionReminders'] as bool? ?? d.occasionReminders,
       sunriseAlert: m['sunriseAlert'] as bool? ?? d.sunriseAlert,
       patternStrength: (m['patternStrength'] as num?)?.toDouble() ?? d.patternStrength,
+      widgetOpacity: (m['widgetOpacity'] as num?)?.toDouble() ?? d.widgetOpacity,
     );
   }
 
@@ -270,5 +278,6 @@ class SettingsState extends Equatable {
         occasionReminders,
         sunriseAlert,
         patternStrength,
+        widgetOpacity,
       ];
 }

@@ -1,7 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="widget_prayer_name">مواقيت الصلاة</string>
-    <string name="widget_prayer_desc">مواقيت الصلاة والوقت المتبقي على الصلاة القادمة</string>
+    <string name="widget_prayer_name">مواقيت الصلاة • شريط اليوم</string>
+    <string name="widget_prayer_desc">الصلوات الخمس مع شريط تقدّم اليوم</string>
+    <string name="widget_prayer_next_name">الصلاة القادمة</string>
+    <string name="widget_prayer_next_desc">اسم الصلاة القادمة بخط جميل مع موعدها والوقت المتبقي</string>
+    <string name="widget_prayer_minimal_name">الصلاة الحالية والقادمة</string>
+    <string name="widget_prayer_minimal_desc">الصلاة الحالية والقادمة مع الوقت المتبقي</string>
+    <string name="widget_prayer_list_name">مواقيت اليوم كاملة</string>
+    <string name="widget_prayer_list_desc">كل مواقيت اليوم مع الصلاة القادمة بالأعلى</string>
+    <string name="widget_prayer_tile_name">الصلاة القادمة • صغير</string>
+    <string name="widget_prayer_tile_desc">مربع صغير للصلاة القادمة</string>
     <string name="widget_ayah_name">آية اليوم</string>
     <string name="widget_ayah_desc">آية جديدة من القرآن الكريم كل يوم</string>
     <string name="widget_athkar_name">الأذكار</string>

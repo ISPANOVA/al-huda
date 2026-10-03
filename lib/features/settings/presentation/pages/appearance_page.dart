@@ -124,9 +124,158 @@ class AppearancePage extends StatelessWidget {
                         ),
                       ),
               ),
+              const SizedBox(height: 22),
+              _WidgetStyleCard(opacity: s.widgetOpacity),
             ],
           );
         },
+      ),
+    );
+  }
+}
+
+/// Background of the home-screen widgets: transparent, half or solid.
+class _WidgetStyleCard extends StatefulWidget {
+  final double opacity;
+
+  const _WidgetStyleCard({required this.opacity});
+
+  @override
+  State<_WidgetStyleCard> createState() => _WidgetStyleCardState();
+}
+
+class _WidgetStyleCardState extends State<_WidgetStyleCard> {
+  late double _v = widget.opacity;
+
+  @override
+  void didUpdateWidget(covariant _WidgetStyleCard old) {
+    super.didUpdateWidget(old);
+    if (old.opacity != widget.opacity) _v = widget.opacity;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final glass = GlassTheme.of(context);
+    final cubit = context.read<SettingsCubit>();
+    Widget chip(String label, double value) {
+      final on = (_v - value).abs() < 0.01;
+      return Expanded(
+        child: GestureDetector(
+          onTap: () {
+            setState(() => _v = value);
+            cubit.setWidgetOpacity(value);
+          },
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            padding: const EdgeInsets.symmetric(vertical: 9),
+            margin: const EdgeInsets.symmetric(horizontal: 4),
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(14),
+              color: on ? glass.accent.withValues(alpha: 0.18) : glass.onGlass.withValues(alpha: 0.05),
+              border: Border.all(color: on ? glass.accent : glass.onGlass.withValues(alpha: 0.12)),
+            ),
+            child: Text(label,
+                style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13, color: on ? glass.accent : glass.onGlass)),
+          ),
+        ),
+      );
+    }
+
+    return GlassContainer(
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.widgets_rounded, color: glass.accent),
+              const SizedBox(width: 8),
+              const Text('ويدجت الشاشة الرئيسية', style: TextStyle(fontWeight: FontWeight.w800)),
+            ],
+          ),
+          const SizedBox(height: 12),
+          _WidgetPreview(opacity: _v),
+          const SizedBox(height: 12),
+          Row(children: [chip('شفافة', 0), chip('نصف شفافة', 0.5), chip('بخلفية', 1)]),
+          Slider(
+            value: _v,
+            onChanged: (v) => setState(() => _v = v),
+            onChangeEnd: cubit.setWidgetOpacity,
+          ),
+          Text(
+            'لإضافة ويدجت: اضغط مطولًا على الشاشة الرئيسية ← الأدوات (Widgets) ← الهدى. '
+            'فيه ٥ أشكال لمواقيت الصلاة بالإضافة لآية اليوم والأذكار.',
+            style: TextStyle(fontSize: 12, height: 1.6, color: glass.onGlassMuted),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// A look-alike of the "next prayer" widget over a wallpaper.
+class _WidgetPreview extends StatelessWidget {
+  final double opacity;
+
+  const _WidgetPreview({required this.opacity});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(22),
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF3B2A6B), Color(0xFFB4553D), Color(0xFF1E6B73)],
+        ),
+      ),
+      child: Container(
+        height: 92,
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(26),
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              const Color(0xFF2A2A2A).withValues(alpha: opacity),
+              const Color(0xFF1B1B1B).withValues(alpha: opacity),
+            ],
+          ),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.12 * opacity)),
+        ),
+        child: Row(
+          children: [
+            Text('الظُّهْر',
+                style: QuranFont.amiriQuran.style(
+                  fontSize: 34,
+                  height: 1.4,
+                  color: Colors.white,
+                ).copyWith(shadows: const [Shadow(color: Color(0x66000000), blurRadius: 5)])),
+            const Spacer(),
+            const Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text('١٢:٣٤',
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 22,
+                        fontWeight: FontWeight.w800,
+                        shadows: [Shadow(color: Color(0x66000000), blurRadius: 5)])),
+                SizedBox(height: 2),
+                Text('بعد ٣ س ٤٣ د',
+                    style: TextStyle(
+                        color: Color(0xFFA3A3A3),
+                        fontSize: 15,
+                        shadows: [Shadow(color: Color(0x66000000), blurRadius: 5)])),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

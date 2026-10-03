@@ -9,7 +9,6 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Color
 import android.os.Build
-import android.os.SystemClock
 import android.view.View
 import android.widget.RemoteViews
 import org.json.JSONArray
@@ -22,11 +21,17 @@ import java.util.Locale
 /** Data written by the Flutter app (see lib/core/services/home_widgets.dart). */
 object WidgetStore {
     private const val PREFS = "alhuda_widgets"
+    const val ACTION_TICK = "com.alhuda.islamic.app.WIDGET_TICK"
 
-    fun save(context: Context, prayers: String?, ayahs: String?) {
+    val WHITE = Color.WHITE
+    val DIM = Color.parseColor("#FFB8B8B8")
+    val MUTED = Color.parseColor("#FFA3A3A3")
+
+    fun save(context: Context, prayers: String?, ayahs: String?, style: String? = null) {
         val e = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
         if (prayers != null) e.putString("prayers", prayers)
         if (ayahs != null) e.putString("ayahs", ayahs)
+        if (style != null) e.putString("style", style)
         e.apply()
     }
 
@@ -36,13 +41,54 @@ object WidgetStore {
     fun ayahs(context: Context): String? =
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getString("ayahs", null)
 
-    fun updateAll(context: Context) {
+    /** Background opacity chosen in the app: 0 = transparent, 1 = solid. */
+    fun opacity(context: Context): Float = try {
+        val raw = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getString("style", null)
+        JSONObject(raw ?: "{}").optDouble("opacity", 1.0).toFloat().coerceIn(0f, 1f)
+    } catch (e: Exception) {
+        1f
+    }
+
+    fun applyStyle(context: Context, views: RemoteViews) {
+        views.setInt(R.id.widget_bg, "setImageAlpha", (opacity(context) * 255).toInt())
+        views.setOnClickPendingIntent(R.id.widget_root, openAppIntent(context))
+    }
+
+    val prayerProviders: List<Class<*>> = listOf(
+        PrayerWidgetProvider::class.java,
+        PrayerNextWidgetProvider::class.java,
+        PrayerMinimalWidgetProvider::class.java,
+        PrayerListWidgetProvider::class.java,
+        PrayerTileWidgetProvider::class.java,
+    )
+
+    fun ids(context: Context, provider: Class<*>): IntArray =
+        AppWidgetManager.getInstance(context).getAppWidgetIds(ComponentName(context, provider))
+
+    fun updatePrayerWidgets(context: Context) {
         val mgr = AppWidgetManager.getInstance(context)
-        val prayerIds = mgr.getAppWidgetIds(ComponentName(context, PrayerWidgetProvider::class.java))
-        if (prayerIds.isNotEmpty()) PrayerWidgetProvider.render(context, mgr, prayerIds)
-        val ayahIds = mgr.getAppWidgetIds(ComponentName(context, AyahWidgetProvider::class.java))
+        val now = System.currentTimeMillis()
+        val snap = PrayerData.snapshot(context, now)
+        var any = false
+        for (p in prayerProviders) {
+            val ids = ids(context, p)
+            if (ids.isEmpty()) continue
+            any = true
+            mgr.updateAppWidget(ids, PrayerViews.build(context, p, snap, now))
+        }
+        if (!any) return
+        // Wake exactly at the next prayer, and refresh the countdown every
+        // minute while the screen is on (non-wakeup alarm: no battery cost).
+        if (snap != null) scheduleWake(context, snap.next.at + 1000)
+        scheduleTick(context, now)
+    }
+
+    fun updateAll(context: Context) {
+        updatePrayerWidgets(context)
+        val mgr = AppWidgetManager.getInstance(context)
+        val ayahIds = ids(context, AyahWidgetProvider::class.java)
         if (ayahIds.isNotEmpty()) AyahWidgetProvider.render(context, mgr, ayahIds)
-        val athkarIds = mgr.getAppWidgetIds(ComponentName(context, AthkarWidgetProvider::class.java))
+        val athkarIds = ids(context, AthkarWidgetProvider::class.java)
         if (athkarIds.isNotEmpty()) AthkarWidgetProvider.render(context, mgr, athkarIds)
     }
 
@@ -56,19 +102,20 @@ object WidgetStore {
         )
     }
 
+    private fun canExact(am: AlarmManager) =
+        Build.VERSION.SDK_INT < Build.VERSION_CODES.S || am.canScheduleExactAlarms()
+
     /** Wakes [provider] at [atMillis] so the widget moves to the next prayer / day. */
     fun scheduleUpdate(context: Context, provider: Class<*>, requestCode: Int, atMillis: Long) {
         val am = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
         val intent = Intent(context, provider).apply { action = AppWidgetManager.ACTION_APPWIDGET_UPDATE }
-        val ids = AppWidgetManager.getInstance(context).getAppWidgetIds(ComponentName(context, provider))
-        intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, ids)
+        intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, ids(context, provider))
         val pi = PendingIntent.getBroadcast(
             context, requestCode, intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
         try {
-            val exactOk = Build.VERSION.SDK_INT < Build.VERSION_CODES.S || am.canScheduleExactAlarms()
-            if (exactOk) {
+            if (canExact(am)) {
                 am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, atMillis, pi)
             } else {
                 am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, atMillis, pi)
@@ -78,105 +125,337 @@ object WidgetStore {
         }
     }
 
+    /** Wakes the prayer widgets at a prayer time (even in doze). */
+    private fun scheduleWake(context: Context, atMillis: Long) {
+        val am = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        val intent = Intent(context, PrayerWidgetProvider::class.java).setAction(ACTION_TICK)
+        val pi = PendingIntent.getBroadcast(
+            context, 4101, intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+        try {
+            if (canExact(am)) am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, atMillis, pi)
+            else am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, atMillis, pi)
+        } catch (e: Exception) {
+            am.set(AlarmManager.RTC_WAKEUP, atMillis, pi)
+        }
+    }
+
+    /** Next minute boundary, delivered only while the device is awake. */
+    private fun scheduleTick(context: Context, now: Long) {
+        val am = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        val intent = Intent(context, PrayerWidgetProvider::class.java).setAction(ACTION_TICK)
+        val pi = PendingIntent.getBroadcast(
+            context, 4110, intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+        val at = (now / 60_000L + 1) * 60_000L + 500
+        try {
+            if (canExact(am)) am.setExact(AlarmManager.RTC, at, pi) else am.set(AlarmManager.RTC, at, pi)
+        } catch (e: Exception) {
+            am.set(AlarmManager.RTC, at, pi)
+        }
+    }
+
     private val digits = charArrayOf('٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩')
 
     fun arabicDigits(s: String): String =
         s.map { if (it in '0'..'9') digits[it - '0'] else it }.joinToString("")
 
-    fun formatTime(millis: Long): String {
+    /** 12-hour clock without AM/PM, Arabic digits: ١٢:٣٤ */
+    fun clock(millis: Long): String {
         val cal = Calendar.getInstance().apply { timeInMillis = millis }
         val h = cal.get(Calendar.HOUR).let { if (it == 0) 12 else it }
-        val m = cal.get(Calendar.MINUTE)
+        return arabicDigits(String.format(Locale.US, "%d:%02d", h, cal.get(Calendar.MINUTE)))
+    }
+
+    fun formatTime(millis: Long): String {
+        val cal = Calendar.getInstance().apply { timeInMillis = millis }
         val suffix = if (cal.get(Calendar.AM_PM) == Calendar.AM) "ص" else "م"
-        return arabicDigits(String.format(Locale.US, "%d:%02d", h, m)) + " " + suffix
+        return clock(millis) + " " + suffix
+    }
+
+    /** "بعد ٣ س ٤٣ د" / "بعد ٢٥ دقيقة" / "حان الآن". */
+    fun countdown(at: Long, now: Long): String {
+        val mins = ((at - now + 59_999L) / 60_000L).toInt()
+        if (mins <= 0) return "حان الآن"
+        val h = mins / 60
+        val m = mins % 60
+        val text = when {
+            h == 0 -> "بعد $m دقيقة"
+            m == 0 -> if (h == 1) "بعد ساعة" else "بعد $h ساعات"
+            else -> "بعد $h س $m د"
+        }
+        return arabicDigits(text)
     }
 
     fun dayKey(millis: Long): String = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date(millis))
 }
 
-/** Horizontal prayer-times widget with a live countdown to the next prayer. */
-class PrayerWidgetProvider : AppWidgetProvider() {
-    override fun onUpdate(context: Context, mgr: AppWidgetManager, ids: IntArray) = render(context, mgr, ids)
-
+/** One prayer (or sunrise) at a moment. */
+data class PrayerEvent(val kind: Int, val name: String, val at: Long) {
     companion object {
-        private val nameIds = intArrayOf(R.id.p0_name, R.id.p1_name, R.id.p2_name, R.id.p3_name, R.id.p4_name)
-        private val timeIds = intArrayOf(R.id.p0_time, R.id.p1_time, R.id.p2_time, R.id.p3_time, R.id.p4_time)
-        private val cellIds = intArrayOf(R.id.p0, R.id.p1, R.id.p2, R.id.p3, R.id.p4)
-
-        fun render(context: Context, mgr: AppWidgetManager, ids: IntArray) {
-            val views = RemoteViews(context.packageName, R.layout.widget_prayer)
-            views.setOnClickPendingIntent(R.id.widget_root, WidgetStore.openAppIntent(context))
-            val now = System.currentTimeMillis()
-
-            // {"city": "...", "days": [{"d": "yyyy-MM-dd", "n": [5 names], "t": [5 millis]}]}
-            val raw = WidgetStore.prayers(context)
-            var nextAt = -1L
-            try {
-                val root = JSONObject(raw ?: "{}")
-                val days: JSONArray = root.optJSONArray("days") ?: JSONArray()
-                var dayIndex = -1
-                var nextIndex = -1
-                loop@ for (i in 0 until days.length()) {
-                    val t = days.getJSONObject(i).getJSONArray("t")
-                    for (j in 0 until t.length()) {
-                        if (t.getLong(j) > now) {
-                            dayIndex = i; nextIndex = j; nextAt = t.getLong(j)
-                            break@loop
-                        }
-                    }
-                }
-                if (dayIndex < 0) throw IllegalStateException("no data")
-                val day = days.getJSONObject(dayIndex)
-                val names = day.getJSONArray("n")
-                val times = day.getJSONArray("t")
-                for (j in 0 until 5) {
-                    views.setTextViewText(nameIds[j], names.optString(j))
-                    views.setTextViewText(timeIds[j], WidgetStore.formatTime(times.getLong(j)))
-                    val next = j == nextIndex
-                    views.setInt(cellIds[j], "setBackgroundResource", if (next) R.drawable.widget_highlight else 0)
-                    views.setTextColor(nameIds[j], if (next) Color.parseColor("#F3DDA6") else Color.parseColor("#B8C2C8"))
-                    views.setTextColor(timeIds[j], if (next) Color.WHITE else Color.parseColor("#E6ECEF"))
-                }
-                // Living sky: background follows the part of the day.
-                val today = days.getJSONObject(0).getJSONArray("t")
-                val fajr = today.getLong(0); val dhuhr = today.getLong(1)
-                val maghrib = today.getLong(3); val isha = today.getLong(4)
-                val sky = when {
-                    now < fajr || now >= isha -> R.drawable.widget_sky_night
-                    now < fajr + 80 * 60_000L -> R.drawable.widget_sky_dawn
-                    now < dhuhr -> R.drawable.widget_sky_morning
-                    now < maghrib - 40 * 60_000L -> R.drawable.widget_sky_afternoon
-                    else -> R.drawable.widget_sky_sunset
-                }
-                views.setInt(R.id.widget_root, "setBackgroundResource", sky)
-                val boundaries = longArrayOf(fajr + 80 * 60_000L, maghrib - 40 * 60_000L)
-                for (b in boundaries) if (b > now && (nextAt <= 0 || b < nextAt)) nextAt = b
-                views.setTextViewText(R.id.next_label, "المتبقي على صلاة " + names.optString(nextIndex))
-                val prayerAt = times.getLong(nextIndex)
-                views.setChronometer(R.id.countdown, SystemClock.elapsedRealtime() + (prayerAt - now), null, true)
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) views.setChronometerCountDown(R.id.countdown, true)
-                views.setViewVisibility(R.id.countdown, View.VISIBLE)
-                views.setTextViewText(R.id.city, root.optString("city", "الهدى"))
-            } catch (e: Exception) {
-                views.setTextViewText(R.id.next_label, "افتح تطبيق الهدى لتحديث المواقيت")
-                views.setViewVisibility(R.id.countdown, View.GONE)
-            }
-            mgr.updateAppWidget(ids, views)
-            if (nextAt > 0) {
-                WidgetStore.scheduleUpdate(context, PrayerWidgetProvider::class.java, 4101, nextAt + 1000)
-            }
-        }
+        const val FAJR = 0
+        const val SUNRISE = 1
+        const val DHUHR = 2
+        const val ASR = 3
+        const val MAGHRIB = 4
+        const val ISHA = 5
     }
 }
+
+object PrayerData {
+    /** The day of the next event, its events (sunrise included when known), and neighbours. */
+    class Snapshot(
+        val day: List<PrayerEvent>,
+        val next: PrayerEvent,
+        val prev: PrayerEvent?,
+        val city: String,
+    ) {
+        val prayers get() = day.filter { it.kind != PrayerEvent.SUNRISE }
+    }
+
+    private val kinds = intArrayOf(PrayerEvent.FAJR, PrayerEvent.DHUHR, PrayerEvent.ASR, PrayerEvent.MAGHRIB, PrayerEvent.ISHA)
+
+    fun snapshot(context: Context, now: Long): Snapshot? = try {
+        // {"city": "...", "days": [{"d": "yyyy-MM-dd", "n": [5 names], "t": [5 millis], "s": sunrise}]}
+        val root = JSONObject(WidgetStore.prayers(context) ?: "{}")
+        val days = root.optJSONArray("days") ?: JSONArray()
+        val all = mutableListOf<List<PrayerEvent>>()
+        for (i in 0 until days.length()) {
+            val d = days.getJSONObject(i)
+            val n = d.getJSONArray("n")
+            val t = d.getJSONArray("t")
+            val list = mutableListOf<PrayerEvent>()
+            for (j in 0 until minOf(5, t.length())) list.add(PrayerEvent(kinds[j], n.optString(j), t.getLong(j)))
+            val s = d.optLong("s", 0L)
+            if (s > 0) list.add(1, PrayerEvent(PrayerEvent.SUNRISE, "الشروق", s))
+            all.add(list)
+        }
+        var result: Snapshot? = null
+        loop@ for (i in all.indices) {
+            val day = all[i]
+            for (j in day.indices) {
+                if (day[j].at > now) {
+                    val prev = when {
+                        j > 0 -> day[j - 1]
+                        i > 0 -> all[i - 1].last()
+                        else -> day.last().let { PrayerEvent(it.kind, it.name, it.at - 86_400_000L) }
+                    }
+                    result = Snapshot(day, day[j], prev, root.optString("city", "الهدى"))
+                    break@loop
+                }
+            }
+        }
+        result
+    } catch (e: Exception) {
+        null
+    }
+
+    /** The prayer name written with its vowels, the way calligraphy shows it. */
+    fun voweled(name: String): String = when (name) {
+        "الفجر" -> "الفَجْر"
+        "الشروق" -> "الشُّرُوق"
+        "الظهر" -> "الظُّهْر"
+        "الجمعة" -> "الجُمُعَة"
+        "العصر" -> "العَصْر"
+        "المغرب" -> "المَغْرِب"
+        "العشاء" -> "العِشَاء"
+        else -> name
+    }
+
+    /** The calligraphic name (vowels kept in the same run so they sit right). */
+    fun calligraphy(name: String): CharSequence = voweled(name)
+
+    fun icon(kind: Int): Int = when (kind) {
+        PrayerEvent.FAJR -> R.drawable.widget_ic_fajr
+        PrayerEvent.SUNRISE -> R.drawable.widget_ic_sunrise
+        PrayerEvent.DHUHR -> R.drawable.widget_ic_dhuhr
+        PrayerEvent.ASR -> R.drawable.widget_ic_asr
+        PrayerEvent.MAGHRIB -> R.drawable.widget_ic_maghrib
+        else -> R.drawable.widget_ic_isha
+    }
+}
+
+/** Builds the views of every prayer widget design from one snapshot. */
+object PrayerViews {
+    private const val NO_DATA = "افتح تطبيق الهدى لتحديث المواقيت"
+
+    fun build(context: Context, provider: Class<*>, snap: PrayerData.Snapshot?, now: Long): RemoteViews = when (provider) {
+        PrayerNextWidgetProvider::class.java -> next(context, snap, now)
+        PrayerMinimalWidgetProvider::class.java -> minimal(context, snap, now)
+        PrayerListWidgetProvider::class.java -> list(context, snap, now)
+        PrayerTileWidgetProvider::class.java -> tile(context, snap, now)
+        else -> timeline(context, snap, now)
+    }
+
+    private fun next(context: Context, snap: PrayerData.Snapshot?, now: Long): RemoteViews {
+        val v = RemoteViews(context.packageName, R.layout.widget_prayer_next)
+        WidgetStore.applyStyle(context, v)
+        if (snap == null) {
+            v.setTextViewText(R.id.next_name, "الهدى")
+            v.setTextViewText(R.id.next_time, "")
+            v.setTextViewText(R.id.next_in, NO_DATA)
+            return v
+        }
+        v.setTextViewText(R.id.next_name, PrayerData.calligraphy(snap.next.name))
+        v.setTextViewText(R.id.next_time, WidgetStore.clock(snap.next.at))
+        v.setTextViewText(R.id.next_in, WidgetStore.countdown(snap.next.at, now))
+        return v
+    }
+
+    private fun minimal(context: Context, snap: PrayerData.Snapshot?, now: Long): RemoteViews {
+        val v = RemoteViews(context.packageName, R.layout.widget_prayer_minimal)
+        WidgetStore.applyStyle(context, v)
+        if (snap == null) {
+            v.setTextViewText(R.id.prev_name, NO_DATA)
+            v.setTextViewText(R.id.prev_time, "")
+            v.setTextViewText(R.id.next_name, "")
+            v.setTextViewText(R.id.next_in, "")
+            v.setTextViewText(R.id.next_time, "")
+            return v
+        }
+        val prev = snap.prev
+        v.setTextViewText(R.id.prev_name, prev?.name ?: "")
+        v.setTextViewText(R.id.prev_time, if (prev != null) WidgetStore.clock(prev.at) else "")
+        v.setInt(R.id.prev_dot, "setImageAlpha", 150)
+        v.setTextViewText(R.id.next_name, snap.next.name)
+        v.setTextViewText(R.id.next_in, WidgetStore.countdown(snap.next.at, now))
+        v.setTextViewText(R.id.next_time, WidgetStore.clock(snap.next.at))
+        return v
+    }
+
+    private val colIds = intArrayOf(R.id.p0, R.id.p1, R.id.p2, R.id.p3, R.id.p4)
+    private val dotIds = intArrayOf(R.id.p0_dot, R.id.p1_dot, R.id.p2_dot, R.id.p3_dot, R.id.p4_dot)
+    private val nameIds = intArrayOf(R.id.p0_name, R.id.p1_name, R.id.p2_name, R.id.p3_name, R.id.p4_name)
+    private val timeIds = intArrayOf(R.id.p0_time, R.id.p1_time, R.id.p2_time, R.id.p3_time, R.id.p4_time)
+
+    private fun timeline(context: Context, snap: PrayerData.Snapshot?, now: Long): RemoteViews {
+        val v = RemoteViews(context.packageName, R.layout.widget_prayer)
+        WidgetStore.applyStyle(context, v)
+        if (snap == null) {
+            v.setTextViewText(R.id.p2_name, NO_DATA)
+            v.setProgressBar(R.id.day_progress, 1000, 0, false)
+            return v
+        }
+        val prayers = snap.prayers
+        // The highlighted prayer is the next one (sunrise counts as Dhuhr's turn).
+        val nextIdx = prayers.indexOfFirst { it.at > now }.let { if (it < 0) prayers.size - 1 else it }
+        for (j in 0 until 5) {
+            val p = prayers.getOrNull(j)
+            val on = j == nextIdx
+            v.setTextViewText(nameIds[j], p?.name ?: "")
+            v.setTextViewText(timeIds[j], if (p != null) WidgetStore.clock(p.at) else "")
+            v.setTextColor(nameIds[j], if (on) WidgetStore.WHITE else WidgetStore.MUTED)
+            v.setTextColor(timeIds[j], if (on) WidgetStore.WHITE else WidgetStore.DIM)
+            v.setInt(dotIds[j], "setImageAlpha", if (on) 255 else 110)
+        }
+        // Progress between column centres: 0 at Fajr, 1000 at Isha.
+        var progress = 0.0
+        for (j in 0 until prayers.size - 1) {
+            val a = prayers[j].at
+            val b = prayers[j + 1].at
+            if (now >= b) progress = (j + 1).toDouble()
+            else if (now > a) progress = j + (now - a).toDouble() / (b - a)
+        }
+        v.setProgressBar(R.id.day_progress, 1000, (progress / (prayers.size - 1) * 1000).toInt().coerceIn(0, 1000), false)
+        return v
+    }
+
+    private val rowIds = intArrayOf(R.id.r0, R.id.r1, R.id.r2, R.id.r3, R.id.r4, R.id.r5)
+    private val rowIcons = intArrayOf(R.id.r0_icon, R.id.r1_icon, R.id.r2_icon, R.id.r3_icon, R.id.r4_icon, R.id.r5_icon)
+    private val rowNames = intArrayOf(R.id.r0_name, R.id.r1_name, R.id.r2_name, R.id.r3_name, R.id.r4_name, R.id.r5_name)
+    private val rowTimes = intArrayOf(R.id.r0_time, R.id.r1_time, R.id.r2_time, R.id.r3_time, R.id.r4_time, R.id.r5_time)
+
+    private fun list(context: Context, snap: PrayerData.Snapshot?, now: Long): RemoteViews {
+        val v = RemoteViews(context.packageName, R.layout.widget_prayer_list)
+        WidgetStore.applyStyle(context, v)
+        if (snap == null) {
+            v.setTextViewText(R.id.top_name, "الهدى")
+            v.setTextViewText(R.id.top_in, NO_DATA)
+            v.setTextViewText(R.id.top_time, "")
+            return v
+        }
+        v.setTextViewText(R.id.top_name, snap.next.name)
+        v.setTextViewText(R.id.top_in, WidgetStore.countdown(snap.next.at, now))
+        v.setTextViewText(R.id.top_time, WidgetStore.clock(snap.next.at))
+        for (j in 0 until 6) {
+            val e = snap.day.getOrNull(j)
+            if (e == null) {
+                v.setViewVisibility(rowIds[j], View.GONE)
+                continue
+            }
+            v.setViewVisibility(rowIds[j], View.VISIBLE)
+            val on = e == snap.next
+            v.setImageViewResource(rowIcons[j], PrayerData.icon(e.kind))
+            v.setInt(rowIcons[j], "setImageAlpha", if (on) 255 else 170)
+            v.setTextViewText(rowNames[j], e.name)
+            v.setTextViewText(rowTimes[j], WidgetStore.clock(e.at))
+            v.setTextColor(rowNames[j], if (on) WidgetStore.WHITE else WidgetStore.DIM)
+            v.setTextColor(rowTimes[j], if (on) WidgetStore.WHITE else WidgetStore.DIM)
+            v.setInt(rowIds[j], "setBackgroundResource", if (on) R.drawable.widget_row else 0)
+        }
+        return v
+    }
+
+    private fun tile(context: Context, snap: PrayerData.Snapshot?, now: Long): RemoteViews {
+        val v = RemoteViews(context.packageName, R.layout.widget_prayer_tile)
+        WidgetStore.applyStyle(context, v)
+        if (snap == null) {
+            v.setTextViewText(R.id.tile_name, "الهدى")
+            v.setTextViewText(R.id.tile_time, "--:--")
+            v.setTextViewText(R.id.tile_in, "افتح التطبيق")
+            return v
+        }
+        v.setImageViewResource(R.id.tile_icon, PrayerData.icon(snap.next.kind))
+        v.setTextViewText(R.id.tile_name, snap.next.name)
+        v.setTextViewText(R.id.tile_time, WidgetStore.clock(snap.next.at))
+        v.setTextViewText(R.id.tile_in, WidgetStore.countdown(snap.next.at, now))
+        return v
+    }
+}
+
+/** Shared behaviour of the prayer widgets: every update refreshes all designs. */
+abstract class PrayerWidgetBase : AppWidgetProvider() {
+    override fun onUpdate(context: Context, mgr: AppWidgetManager, ids: IntArray) =
+        WidgetStore.updatePrayerWidgets(context)
+
+    override fun onReceive(context: Context, intent: Intent) {
+        if (intent.action == WidgetStore.ACTION_TICK) {
+            WidgetStore.updatePrayerWidgets(context)
+            return
+        }
+        super.onReceive(context, intent)
+    }
+
+    override fun onAppWidgetOptionsChanged(
+        context: Context, mgr: AppWidgetManager, id: Int, options: android.os.Bundle
+    ) = WidgetStore.updatePrayerWidgets(context)
+}
+
+/** Five prayers with the day's progress bar. */
+class PrayerWidgetProvider : PrayerWidgetBase()
+
+/** Next prayer: calligraphic name, time and countdown. */
+class PrayerNextWidgetProvider : PrayerWidgetBase()
+
+/** Current and next prayer on two lines. */
+class PrayerMinimalWidgetProvider : PrayerWidgetBase()
+
+/** The whole day, next prayer on top. */
+class PrayerListWidgetProvider : PrayerWidgetBase()
+
+/** Small square: next prayer. */
+class PrayerTileWidgetProvider : PrayerWidgetBase()
 
 /** "آية اليوم" widget: a new verse every day, chosen by the app in advance. */
 class AyahWidgetProvider : AppWidgetProvider() {
     override fun onUpdate(context: Context, mgr: AppWidgetManager, ids: IntArray) = render(context, mgr, ids)
 
     companion object {
-        fun render(context: Context, mgr: AppWidgetManager, ids: IntArray) {
+        fun build(context: Context): RemoteViews {
             val views = RemoteViews(context.packageName, R.layout.widget_ayah)
-            views.setOnClickPendingIntent(R.id.widget_root, WidgetStore.openAppIntent(context))
+            WidgetStore.applyStyle(context, views)
             val today = WidgetStore.dayKey(System.currentTimeMillis())
             try {
                 // [{"d": "yyyy-MM-dd", "t": "...", "r": "سورة ... • ..."}]
@@ -194,7 +473,11 @@ class AyahWidgetProvider : AppWidgetProvider() {
                 views.setTextViewText(R.id.ayah_text, "افتح تطبيق الهدى لعرض آية اليوم")
                 views.setTextViewText(R.id.ayah_ref, "")
             }
-            mgr.updateAppWidget(ids, views)
+            return views
+        }
+
+        fun render(context: Context, mgr: AppWidgetManager, ids: IntArray) {
+            mgr.updateAppWidget(ids, build(context))
             // Refresh shortly after midnight.
             val cal = Calendar.getInstance().apply {
                 add(Calendar.DAY_OF_YEAR, 1)
@@ -283,6 +566,15 @@ class AthkarWidgetProvider : AppWidgetProvider() {
         }
 
         fun render(context: Context, mgr: AppWidgetManager, ids: IntArray) {
+            mgr.updateAppWidget(ids, build(context))
+            // Re-render on the next hour so the category follows the time of day.
+            val cal = Calendar.getInstance().apply {
+                add(Calendar.HOUR_OF_DAY, 1); set(Calendar.MINUTE, 0); set(Calendar.SECOND, 5)
+            }
+            WidgetStore.scheduleUpdate(context, AthkarWidgetProvider::class.java, 4103, cal.timeInMillis)
+        }
+
+        fun build(context: Context): RemoteViews {
             val views = RemoteViews(context.packageName, R.layout.widget_athkar)
             val (title, list, key) = current()
             val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
@@ -290,13 +582,7 @@ class AthkarWidgetProvider : AppWidgetProvider() {
             val index = if (same) prefs.getInt("index", 0).coerceIn(0, list.size - 1) else 0
             val count = if (same) prefs.getInt("count", 0) else 0
             val t = list[index]
-            val bg = when (key.first()) {
-                'm' -> R.drawable.widget_sky_morning
-                'e' -> R.drawable.widget_sky_sunset
-                's' -> R.drawable.widget_sky_night
-                else -> R.drawable.widget_bg
-            }
-            views.setInt(R.id.widget_root, "setBackgroundResource", bg)
+            WidgetStore.applyStyle(context, views)
             views.setTextViewText(R.id.athkar_title, title)
             views.setTextViewText(R.id.athkar_step, WidgetStore.arabicDigits("${index + 1}/${list.size}"))
             views.setTextViewText(R.id.athkar_text, t.text)
@@ -307,12 +593,7 @@ class AthkarWidgetProvider : AppWidgetProvider() {
             views.setOnClickPendingIntent(R.id.athkar_count, broadcast(context, ACTION_TAP, 4201))
             views.setOnClickPendingIntent(R.id.athkar_next, broadcast(context, ACTION_NEXT, 4202))
             views.setOnClickPendingIntent(R.id.athkar_text, WidgetStore.openAppIntent(context))
-            mgr.updateAppWidget(ids, views)
-            // Re-render on the next hour so the category follows the time of day.
-            val cal = Calendar.getInstance().apply {
-                add(Calendar.HOUR_OF_DAY, 1); set(Calendar.MINUTE, 0); set(Calendar.SECOND, 5)
-            }
-            WidgetStore.scheduleUpdate(context, AthkarWidgetProvider::class.java, 4103, cal.timeInMillis)
+            return views
         }
     }
 }

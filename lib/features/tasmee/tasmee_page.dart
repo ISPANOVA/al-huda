@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:just_audio/just_audio.dart';
@@ -61,6 +62,12 @@ class _TasmeePageState extends State<TasmeePage> {
   /// utterance after a pause without a final result, so the last word said
   /// before the pause is judged when speech settles (or the utterance ends).
   List<String> _pendingWords = const [];
+
+  /// Keeps the word being recited in view, so the reciter never scrolls.
+  final _scroll = ScrollController();
+  int _loadSeq = 0;
+  final _wordKeys = <int, GlobalKey>{};
+  GlobalKey get _currentKey => _wordKeys.putIfAbsent(_loadSeq, () => GlobalKey());
   int _heardCount = 0;
   Timer? _settleTimer;
   int _revealedTotal = 0;
@@ -81,6 +88,7 @@ class _TasmeePageState extends State<TasmeePage> {
     _flashTimer?.cancel();
     _settleTimer?.cancel();
     _stt.cancel();
+    _scroll.dispose();
     _fx.dispose();
     super.dispose();
   }
@@ -120,6 +128,31 @@ class _TasmeePageState extends State<TasmeePage> {
     setState(() {
       _page = page;
       _session = session;
+      _loadSeq++;
+    });
+    // A new page always starts from its top.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_scroll.hasClients) return;
+      _scroll.jumpTo(0);
+      _follow();
+    });
+  }
+
+  /// Scrolls so the next word to recite stays in the upper part of the view.
+  void _follow() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_scroll.hasClients) return;
+      final box = _currentKey.currentContext?.findRenderObject();
+      if (box is! RenderBox || !box.attached) return;
+      final viewport = RenderAbstractViewport.maybeOf(box);
+      if (viewport == null) return;
+      final top = viewport.getOffsetToReveal(box, 0).offset; // word at the top
+      final view = _scroll.position.viewportDimension;
+      final y = top - _scroll.offset; // word position inside the view
+      if (y >= 0 && y <= view * 0.55) return;
+      final target = (top - view * 0.28).clamp(0.0, _scroll.position.maxScrollExtent);
+      if ((target - _scroll.offset).abs() < 4) return;
+      _scroll.animateTo(target, duration: const Duration(milliseconds: 420), curve: Curves.easeOutCubic);
     });
   }
 
@@ -236,9 +269,13 @@ class _TasmeePageState extends State<TasmeePage> {
       _pendingWords = const [];
     } else {
       _pendingWords = heard;
-      _settleTimer = Timer(const Duration(milliseconds: 1400), _settle);
+      _settleTimer = Timer(const Duration(milliseconds: 1800), _settle);
     }
-    _apply(heard, isFinal: r.finalResult);
+    final alternates = [
+      for (final a in r.alternates.skip(1))
+        a.recognizedWords.split(RegExp(r'\s+')).where((w) => w.isNotEmpty).toList(),
+    ];
+    _apply(heard, isFinal: r.finalResult, alternates: alternates);
   }
 
   /// Judges the last word heard once the reciter paused after it.
@@ -247,17 +284,23 @@ class _TasmeePageState extends State<TasmeePage> {
     final words = _pendingWords;
     _pendingWords = const [];
     if (words.isEmpty || _session == null || !mounted) return;
-    _apply(words, isFinal: true);
+    _apply(words, isFinal: true, provisional: true);
   }
 
-  void _apply(List<String> heard, {required bool isFinal}) {
+  void _apply(
+    List<String> heard, {
+    required bool isFinal,
+    List<List<String>> alternates = const [],
+    bool provisional = false,
+  }) {
     final s = _session;
     if (s == null || !mounted) return;
     final wasDone = s.done;
-    final res = s.feed(heard, isFinal: isFinal);
+    final res = s.feed(heard, isFinal: isFinal, alternates: alternates, provisional: provisional);
     if (res.mistakes > 0) _onMistake();
     _revealedTotal += res.revealed;
     setState(() {});
+    _follow();
     if (s.done && !wasDone) _pageDone(s);
   }
 
@@ -296,6 +339,7 @@ class _TasmeePageState extends State<TasmeePage> {
     _session?.hintNext();
     HapticFeedback.selectionClick();
     setState(() {});
+    _follow();
     if (_session?.done ?? false) _pageDone(_session!);
   }
 
@@ -303,6 +347,7 @@ class _TasmeePageState extends State<TasmeePage> {
     _session?.revealAyah();
     HapticFeedback.selectionClick();
     setState(() {});
+    _follow();
     if (_session?.done ?? false) _pageDone(_session!);
   }
 
@@ -411,6 +456,7 @@ class _TasmeePageState extends State<TasmeePage> {
                   _topBar(glass, s),
                   Expanded(
                     child: SingleChildScrollView(
+                      controller: _scroll,
                       padding: const EdgeInsets.fromLTRB(14, 6, 14, 16),
                       child: AnimatedSwitcher(
                         duration: const Duration(milliseconds: 380),
@@ -515,7 +561,8 @@ class _TasmeePageState extends State<TasmeePage> {
         flush();
         children.add(_surahBanner(glass, w.surah));
       }
-      line.add(_word(glass, base, w, i == s.expected && _active, i == _flashIndex));
+      final word = _word(glass, base, w, i == s.expected && _active, i == _flashIndex);
+      line.add(i == s.expected ? KeyedSubtree(key: _currentKey, child: word) : word);
       if (w.endsAyah) {
         line.add(Text(ArabicUtils.ornateAyahMarker(w.ayah), style: base.copyWith(color: glass.accent)));
       }

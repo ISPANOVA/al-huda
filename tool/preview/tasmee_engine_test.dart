@@ -179,4 +179,49 @@ void main() {
     expect(s.mistakes.length, 1);
     expect(s.words[5].missed, isTrue);
   });
+
+  test('a mistake judged after a pause is cancelled when the word is corrected', () {
+    final s = TasmeeSession(_words('وَلَٰكِن لَّا يَعْلَمُونَ قَالُوا', surah: 2, ayah: 13), []);
+    s.feed(['ولكن', 'لا', 'يعلم'], isFinal: false);
+    s.feed(['ولكن', 'لا', 'يعلم'], isFinal: true, provisional: true); // pause
+    expect(s.mistakes.length, 1);
+    s.feed(['ولكن', 'لا', 'يعلمون'], isFinal: true); // recogniser corrects it
+    expect(s.mistakes, isEmpty);
+    expect(s.words[2].missed, isFalse);
+    expect(s.expected, 3);
+  });
+
+  test('a real mistake after a pause stays', () {
+    final s = TasmeeSession(_words('وَلَٰكِن لَّا يَعْلَمُونَ قَالُوا', surah: 2, ayah: 13), []);
+    s.feed(['ولكن', 'لا', 'يشعرون'], isFinal: true, provisional: true);
+    s.feed(['ولكن', 'لا', 'يشعرون'], isFinal: true);
+    expect(s.mistakes.length, 1);
+  });
+
+  test('recogniser merging words does not shift the position', () {
+    final s = TasmeeSession(_words('يَٰٓأَيُّهَا ٱلنَّاسُ ٱعْبُدُوا۟ رَبَّكُمُ ٱلَّذِى خَلَقَكُمْ', surah: 2, ayah: 21), []);
+    s.feed(['يا', 'أيها', 'الناس'], isFinal: false);
+    s.feed(['ياأيها', 'الناس', 'اعبدوا', 'ربكم', 'الذي', 'خلقكم'], isFinal: true);
+    expect(s.mistakes, isEmpty);
+    expect(s.done, isTrue);
+  });
+
+  test('another transcript of the recogniser is accepted', () {
+    final s = TasmeeSession(_words('ٱلْحَمْدُ لِلَّهِ رَبِّ ٱلْعَٰلَمِينَ'), []);
+    s.feed(
+      ['الحمد', 'لله', 'رب', 'العاملين'],
+      isFinal: true,
+      alternates: [
+        ['الحمد', 'لله', 'رب', 'العالمين'],
+      ],
+    );
+    expect(s.mistakes, isEmpty);
+    expect(s.done, isTrue);
+  });
+
+  test('letters the recogniser confuses', () {
+    expect(TasmeeMatcher.similar(TasmeeMatcher.key('الذين'), TasmeeMatcher.key('ٱلَّزِينَ')), isTrue);
+    expect(TasmeeMatcher.similar(TasmeeMatcher.key('يعلمون'), TasmeeMatcher.key('يَشْعُرُونَ')), isFalse);
+    expect(TasmeeMatcher.similar(TasmeeMatcher.key('يعملون'), TasmeeMatcher.key('يَعْلَمُونَ')), isFalse);
+  });
 }

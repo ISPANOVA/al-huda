@@ -168,7 +168,11 @@ class PrayerCubit extends Cubit<PrayerState> {
             madhab: s.madhab,
             adjustments: s.prayerAdjustments,
           );
-          return (date: day.date, prayers: [for (final p in prayers) (p.nameOn(day.date), day[p])]);
+          return (
+            date: day.date,
+            prayers: [for (final p in prayers) (p.nameOn(day.date), day[p])],
+            sunrise: day[PrayerName.sunrise],
+          );
         }(),
     ];
     HomeWidgets.updatePrayers(city: loc.city ?? 'الهدى', days: days);
