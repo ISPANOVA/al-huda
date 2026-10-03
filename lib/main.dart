@@ -14,12 +14,18 @@ Future<void> main() async {
     systemNavigationBarColor: Colors.transparent,
   ));
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-  runApp(const _Bootstrap());
+  // Services start here, not from the first frame: when Android Auto (or a
+  // headset button) starts the app without a screen there is no frame, and
+  // the audio service must still come up to answer the car.
+  final deps = initializeDateFormatting('ar').then((_) => AppDependencies.init());
+  runApp(_Bootstrap(deps));
 }
 
 /// Shows the animated splash while services start, then fades into the app.
 class _Bootstrap extends StatefulWidget {
-  const _Bootstrap();
+  final Future<AppDependencies> deps;
+
+  const _Bootstrap(this.deps);
 
   @override
   State<_Bootstrap> createState() => _BootstrapState();
@@ -36,8 +42,7 @@ class _BootstrapState extends State<_Bootstrap> {
 
   Future<void> _start() async {
     final minSplash = Future<void>.delayed(const Duration(milliseconds: 1700));
-    await initializeDateFormatting('ar');
-    final deps = await AppDependencies.init();
+    final deps = await widget.deps;
     await minSplash;
     if (mounted) setState(() => _deps = deps);
   }
