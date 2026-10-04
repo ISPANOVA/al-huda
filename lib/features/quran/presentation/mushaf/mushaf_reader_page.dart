@@ -201,7 +201,9 @@ class _MushafReaderPageState extends State<MushafReaderPage> {
     final current = _controller!;
     if (spread == _controllerSpread) return current;
     _controllerSpread = spread;
-    final next = PageController(initialPage: _indexOf(_page));
+    // keepPage off: the page view under the other key must not restore the
+    // index it had before the switch.
+    final next = PageController(initialPage: _indexOf(_page), keepPage: false);
     _controller = next;
     WidgetsBinding.instance.addPostFrameCallback((_) => current.dispose());
     return next;
