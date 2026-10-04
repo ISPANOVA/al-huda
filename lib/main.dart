@@ -52,6 +52,10 @@ class _BootstrapState extends State<_Bootstrap> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    // At startup the window size may not be known yet (treated as a phone):
+    // check again once the first frame is laid out, so a tablet held
+    // sideways is not kept in portrait.
+    WidgetsBinding.instance.addPostFrameCallback((_) => _ui(() => AppOrientation.apply(onlyIfChanged: true)));
     _start();
   }
 

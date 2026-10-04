@@ -53,6 +53,8 @@ adb shell wm size 1600x2560; adb shell wm density 320
 launch; sleep 12; tap 'المصحف'; shot C2_tablet_landscape 5
 adb shell settings put system user_rotation 0; shot C3_tablet_portrait 6
 adb shell settings put system user_rotation 1; shot C4_tablet_landscape_again 6
+# Open the app with the tablet already sideways (it must not start in portrait).
+launch; sleep 12; shot C5_tablet_landscape_launch 2
 adb shell wm size reset; adb shell wm density reset; adb shell settings put system user_rotation 0
 adb logcat -d > "$OUT/B_logcat.txt"
 for p in A B; do

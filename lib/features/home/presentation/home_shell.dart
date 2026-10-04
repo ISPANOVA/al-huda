@@ -366,10 +366,18 @@ class _StableTopInset extends StatefulWidget {
 
 class _StableTopInsetState extends State<_StableTopInset> {
   double _top = 0;
+  Orientation? _orientation;
 
   @override
   Widget build(BuildContext context) {
     final top = MediaQuery.viewPaddingOf(context).top;
+    // A tablet turned around (or the wide-screen frame opening) starts over:
+    // the inset of the old layout must not stay as a gap at the top.
+    final orientation = MediaQuery.orientationOf(context);
+    if (orientation != _orientation) {
+      _orientation = orientation;
+      _top = top;
+    }
     if (top > _top) _top = top;
     final glass = GlassTheme.of(context);
     final dark = Theme.of(context).brightness == Brightness.dark;
