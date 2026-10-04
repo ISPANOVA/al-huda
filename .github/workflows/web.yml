@@ -37,7 +37,7 @@ jobs:
           {
             flutter --version
             flutter pub get
-            flutter build web --release --base-href / --no-web-resources-cdn --wasm
+            flutter build web --release --base-href / --no-web-resources-cdn --wasm --no-strip-wasm
           } 2>&1 | tee "$RUNNER_TEMP/web_log.txt" || echo failed > "$RUNNER_TEMP/failed"
 
       - name: Deploy to Cloudflare Pages (main only)
