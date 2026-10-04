@@ -5,4 +5,4 @@
 /// the same API that also runs under WebAssembly (Hive 2 does not).
 library;
 
-export 'package:hive_flutter/hive_flutter.dart' if (dart.library.js_interop) 'package:hive_ce_flutter/hive_flutter.dart';
+export 'package:hive_flutter/hive_flutter.dart' if (dart.library.js_interop) 'kv_store_web.dart';
