@@ -75,8 +75,21 @@ jobs:
           echo "== native libs and bundled assets (size path)" >> shots/compare.txt
           diff shots/old_sizes.txt shots/new_sizes.txt >> shots/compare.txt || true
           cat shots/compare.txt
+          # The Gradle / Kotlin daemons hold several GB: stop them before the emulator.
+          (cd android && ./gradlew --stop) || true
+          pkill -f GradleDaemon || true
+          pkill -f KotlinCompileDaemon || true
           rm -rf build android/.gradle ~/.gradle/caches
           df -h /
+          free -m
+      - name: Save comparison now (in case the emulator step dies)
+        run: |
+          mkdir -p "$RUNNER_TEMP/early" && cp -r shots "$RUNNER_TEMP/early/"
+          cd "$RUNNER_TEMP/early"
+          git init -q -b verify-compare
+          git config user.name ci-bot && git config user.email ci-bot@users.noreply.github.com
+          git add -A && git commit -qm "compare ${{ github.run_number }} (${GITHUB_SHA::7})"
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${GITHUB_REPOSITORY}.git" HEAD:verify-compare
       - name: Enable KVM
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
