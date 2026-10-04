@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../core/theme/web_lite.dart';
 import '../../core/data/surah_metadata.dart';
 import '../../core/theme/app_themes.dart';
 import '../../core/utils/arabic_utils.dart';
@@ -378,9 +379,9 @@ class _ReciterHero extends StatelessWidget {
                                 gradient: const LinearGradient(
                                   colors: [Color(0xFFF7E2A3), Color(0xFFE2C275), Color(0xFFA8812F)],
                                 ),
-                                boxShadow: [
+                                boxShadow: liteShadows([
                                   BoxShadow(color: const Color(0xFFE2C275).withValues(alpha: 0.35), blurRadius: 16),
-                                ],
+                                ]),
                               ),
                               child: const Row(
                                 mainAxisAlignment: MainAxisAlignment.center,

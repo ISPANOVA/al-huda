@@ -53,7 +53,13 @@ class _TasbeehPageState extends State<TasbeehPage> with SingleTickerProviderStat
     }
     if (roundDone) {
       _celebrate();
-      showGlassSnack(context, 'أتممت دورة كاملة، بارك الله فيك');
+      final st = context.read<TasbeehCubit>().state;
+      showGlassSnack(
+        context,
+        st.autoNext && st.phrases.length > 1
+            ? 'أتممت الدورة • الذكر التالي: ${st.phrase}'
+            : 'أتممت دورة كاملة، بارك الله فيك',
+      );
     }
   }
 
@@ -213,6 +219,17 @@ class _TasbeehPageState extends State<TasbeehPage> with SingleTickerProviderStat
                       onSelected: (_) => cubit.setTarget(t),
                     ),
                 ],
+              ),
+              const SizedBox(height: 8),
+              GlassContainer(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
+                child: SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: const Text('الانتقال للذكر التالي تلقائيًا'),
+                  subtitle: const Text('بعد إتمام عدد الدورة ينتقل للذكر الذي يليه'),
+                  value: state.autoNext,
+                  onChanged: state.target == 0 ? null : cubit.setAutoNext,
+                ),
               ),
             ],
           );

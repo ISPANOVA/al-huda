@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../core/theme/web_lite.dart';
 import '../../../core/theme/app_themes.dart';
 import '../../../core/utils/arabic_utils.dart';
 import '../../../core/widgets/glass_container.dart';
@@ -167,7 +168,7 @@ class StreakCard extends StatelessWidget {
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               gradient: LinearGradient(colors: [Colors.orange.shade400, Colors.deepOrange.shade600]),
-              boxShadow: [BoxShadow(color: Colors.orange.withValues(alpha: 0.5), blurRadius: 18)],
+              boxShadow: liteShadows([BoxShadow(color: Colors.orange.withValues(alpha: 0.5), blurRadius: 18)]),
             ),
             child: const Center(child: Text('🔥', style: TextStyle(fontSize: 30))),
           ),

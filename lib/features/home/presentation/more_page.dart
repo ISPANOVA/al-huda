@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+import '../../../core/theme/web_lite.dart';
 import '../../../core/theme/app_themes.dart';
 import '../../../core/widgets/background_patterns.dart';
 import '../../../core/widgets/noor_ui.dart';
@@ -174,7 +175,7 @@ class CreditsCard extends StatelessWidget {
           colors: [Color(0xFF1A1407), Color(0xFF0A0804)],
         ),
         border: Border.all(color: glass.accent.withValues(alpha: 0.55)),
-        boxShadow: [BoxShadow(color: glass.accent.withValues(alpha: 0.18), blurRadius: 24, offset: const Offset(0, 8))],
+        boxShadow: liteShadows([BoxShadow(color: glass.accent.withValues(alpha: 0.18), blurRadius: 24, offset: const Offset(0, 8))]),
       ),
       child: Stack(
         children: [

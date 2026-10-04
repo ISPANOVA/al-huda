@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../theme/app_themes.dart';
@@ -157,7 +158,7 @@ class NoorCard extends StatelessWidget {
           ],
         ),
         // Blurred shadows are costly in long lists: only highlighted cards glow.
-        boxShadow: highlighted
+        boxShadow: !kIsWeb && highlighted
             ? [BoxShadow(color: glass.accent.withValues(alpha: dark ? 0.28 : 0.15), blurRadius: 18, offset: const Offset(0, 4))]
             : null,
       ),

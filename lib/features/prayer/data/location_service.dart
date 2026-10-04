@@ -5,6 +5,7 @@ import 'package:geolocator/geolocator.dart';
 
 import '../../../core/services/storage_service.dart';
 import '../domain/prayer_entities.dart';
+import 'web_geo.dart';
 
 class LocationException implements Exception {
   final String message;
@@ -29,6 +30,7 @@ class LocationService {
   }
 
   Future<UserLocation> current() async {
+    if (kIsWeb) return _webCurrent();
     if (!await Geolocator.isLocationServiceEnabled()) {
       throw const LocationException('خدمة الموقع متوقفة. فعّل GPS لحساب المواقيت بدقة.');
     }
@@ -98,6 +100,52 @@ class LocationService {
       return parts.isEmpty ? null : parts.join('، ');
     } catch (e) {
       debugPrint('Web reverse geocoding failed: $e');
+      return null;
+    }
+  }
+
+  /// Browser: the device location, or (if the browser can't or won't give it)
+  /// the approximate city of the internet connection, so prayer times always
+  /// show. The approximate one is replaced whenever a real fix comes later.
+  Future<UserLocation> _webCurrent() async {
+    late double lat, lng;
+    String? city;
+    var approximate = false;
+    try {
+      final p = await browserPosition();
+      lat = p.lat;
+      lng = p.lng;
+    } catch (e) {
+      debugPrint('Browser location failed: $e');
+      final ip = await _ipLocation();
+      if (ip == null) {
+        if (e == 1) {
+          throw const LocationException('تم رفض إذن الموقع. اسمح للمتصفح بالموقع من إعداداته ثم أعد المحاولة.');
+        }
+        throw const LocationException('تعذر تحديد موقعك الحالي.');
+      }
+      (lat, lng, city) = ip;
+      approximate = true;
+    }
+    city ??= await _webCity(lat, lng);
+    if (approximate && city != null) city = '$city (تقريبي)';
+    final location = UserLocation(latitude: lat, longitude: lng, city: city);
+    await _storage.settings.put(_cacheKey, location.toMap());
+    return location;
+  }
+
+  /// City-level location from the connection's IP (no permission needed).
+  Future<(double, double, String?)?> _ipLocation() async {
+    try {
+      final res = await Dio(BaseOptions(connectTimeout: const Duration(seconds: 8)))
+          .get<Map<String, dynamic>>('https://get.geojs.io/v1/ip/geo.json');
+      final d = res.data ?? const {};
+      final lat = double.tryParse('${d['latitude']}');
+      final lng = double.tryParse('${d['longitude']}');
+      if (lat == null || lng == null) return null;
+      return (lat, lng, null);
+    } catch (e) {
+      debugPrint('IP location failed: $e');
       return null;
     }
   }

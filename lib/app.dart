@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -8,6 +10,7 @@ import 'core/services/notification_service.dart';
 import 'core/services/storage_service.dart';
 import 'core/theme/app_themes.dart';
 import 'core/theme/theme_transition.dart';
+import 'core/widgets/web_frame.dart';
 import 'features/athkar/presentation/cubit/athkar_cubit.dart';
 import 'features/audio/data/audio_download_service.dart';
 import 'features/audio/presentation/cubit/audio_cubit.dart';
@@ -99,9 +102,12 @@ class _AlHudaAppState extends State<AlHudaApp> {
                 GlobalWidgetsLocalizations.delegate,
                 GlobalCupertinoLocalizations.delegate,
               ],
+              // Browser: drag pages with the mouse too, and keep the phone
+              // layout in a centred column on wide screens.
+              scrollBehavior: kIsWeb ? _webScroll : null,
               builder: (context, child) => Directionality(
                 textDirection: TextDirection.rtl,
-                child: ThemeTransition(child: child!),
+                child: ThemeTransition(child: kIsWeb ? WebFrame(child: child!) : child!),
               ),
               home: AnimatedSwitcher(
                 duration: const Duration(milliseconds: 600),
@@ -120,3 +126,5 @@ class _AlHudaAppState extends State<AlHudaApp> {
     );
   }
 }
+
+final ScrollBehavior _webScroll = const MaterialScrollBehavior().copyWith(dragDevices: PointerDeviceKind.values.toSet());
