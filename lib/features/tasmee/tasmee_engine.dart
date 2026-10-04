@@ -62,7 +62,8 @@ class TasmeeMatcher {
   /// Letters only: no diacritics / Quranic marks, unified hamza & alef forms,
   /// and long-alef dropped (Uthmani often omits it: ٱلْكِتَٰبُ ≈ الكتاب).
   static String key(String s) {
-    var k = s.replaceAll(_marks, '');
+    // Uthmani wāw written for a long ā (ٱلصَّلَوٰة، ٱلزَّكَوٰة، ٱلْحَيَوٰة) is read as alef.
+    var k = s.replaceAll('وٰ', 'ا').replaceAll(_marks, '');
     k = k
         .replaceAll(RegExp('[ٱأإآٲٳ]'), 'ا')
         .replaceAll('ى', 'ي')
@@ -120,6 +121,33 @@ class TasmeeMatcher {
     return prev[b.length];
   }
 
+  /// Weak letters a spelling may add or drop (رؤوف / رءوف).
+  static bool _weak(int c) => c == 0x0648 || c == 0x064A; // و ي
+
+  /// For short words: only a confusable letter or a weak letter may differ.
+  static double _shortDistance(String a, String b) {
+    var prev = List<double>.generate(b.length + 1, (j) => j.toDouble());
+    for (var i = 1; i <= a.length; i++) {
+      final ca = a.codeUnitAt(i - 1);
+      final cur = List<double>.filled(b.length + 1, 0)..[0] = prev[0] + (_weak(ca) ? 0.5 : 1);
+      for (var j = 1; j <= b.length; j++) {
+        final cb = b.codeUnitAt(j - 1);
+        final sub = ca == cb ? 0.0 : (_close(ca, cb) ? 0.5 : 1.0);
+        cur[j] = math.min(
+          math.min(cur[j - 1] + (_weak(cb) ? 0.5 : 1), prev[j] + (_weak(ca) ? 0.5 : 1)),
+          prev[j - 1] + sub,
+        );
+      }
+      prev = cur;
+    }
+    return prev[b.length];
+  }
+
+  /// Different first letters make different short words (إليك / عليك،
+  /// لهم / عليهم), unless the recogniser confuses the two sounds.
+  static bool _sameStart(String h, String e) =>
+      math.min(h.length, e.length) > 5 || h[0] == e[0] || _close(h.codeUnitAt(0), e.codeUnitAt(0));
+
   /// Heard [h] counts as expected [e].
   static bool similar(String h, String e) {
     if (h.isEmpty || e.isEmpty) return false;
@@ -127,11 +155,23 @@ class TasmeeMatcher {
     // A leading و / ف the recogniser dropped or added.
     if (e.length >= 3 && (e[0] == 'و' || e[0] == 'ف') && h == e.substring(1)) return true;
     if (h.length >= 3 && (h[0] == 'و' || h[0] == 'ف') && e == h.substring(1)) return true;
+    if (!_sameStart(h, e)) return false;
+    // Short words: one letter changes the meaning (لهم / لكم، عليه / عليهم).
+    if (e.length <= 4) return e.length > 2 && _shortDistance(h, e) <= 0.5;
     // Strict enough that a different Quranic word (يعلمون/يشعرون، يعلمون/يعملون)
     // is never accepted, loose enough for Uthmani vs plain spelling and for
     // letters the recogniser mishears.
-    final tol = e.length <= 2 ? 0 : (e.length <= 6 ? 1 : 2);
+    final tol = e.length <= 6 ? 1 : 2;
     return soundDistance(h, e) <= tol;
+  }
+
+  /// What was heard could be the recogniser mishearing [e] (so another of its
+  /// transcripts may be trusted): close in sound, same first letter. A clearly
+  /// different word (في for على، عليك for إليك) is what the reciter said.
+  static bool couldBe(String h, String e) {
+    if (h.isEmpty || e.isEmpty) return false;
+    if (!_sameStart(h, e)) return false;
+    return soundDistance(h, e) <= math.max(1.0, e.length * 0.4);
   }
 
   /// Opening disjoint letters, as written (alef kept) and the surahs that
@@ -428,7 +468,7 @@ class TasmeeSession {
         i++;
         continue;
       }
-      if (_inAlternates(alternates, i, e)) {
+      if (TasmeeMatcher.couldBe(h, e.key) && _inAlternates(alternates, i, e)) {
         reveal(pos++);
         i++;
         continue;
