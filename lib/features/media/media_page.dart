@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -75,7 +76,7 @@ class _MediaPageState extends State<MediaPage> {
         SliverToBoxAdapter(
           child: MediaSectionHeader(
             'القرّاء',
-            subtitle: 'المصحف كاملًا • استمع أو حمّل للاستماع بلا إنترنت',
+            subtitle: kIsWeb ? 'المصحف كاملًا بأصوات كبار القراء' : 'المصحف كاملًا • استمع أو حمّل للاستماع بلا إنترنت',
             action: 'الكل (${ArabicUtils.toArabicDigits(MediaCatalog.reciters.length)})',
             onAction: () => Navigator.of(context).push(AllRecitersPage.route()),
           ),
@@ -125,10 +126,11 @@ class MediaHeader extends StatelessWidget {
                   ).createShader(r),
                   child: const Text('الوسائط', style: TextStyle(fontSize: 32, fontWeight: FontWeight.w900, height: 1.2)),
                 ),
-                Text('استمع • شاهد • حمّل', style: TextStyle(color: glass.onGlassMuted, letterSpacing: 0.3)),
+                Text(kIsWeb ? 'استمع • شاهد' : 'استمع • شاهد • حمّل', style: TextStyle(color: glass.onGlassMuted, letterSpacing: 0.3)),
               ],
             ),
           ),
+          if (MediaDownloads.supported)
           ListenableBuilder(
             listenable: MediaDownloads.instance,
             builder: (context, _) {

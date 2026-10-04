@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -9,6 +10,7 @@ import 'package:speech_to_text/speech_recognition_result.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 
 import '../../core/data/surah_metadata.dart';
+import '../../core/platform/web_env.dart';
 import '../../core/theme/app_themes.dart';
 import '../../core/utils/arabic_utils.dart';
 import '../../core/widgets/gradient_background.dart';
@@ -19,6 +21,7 @@ import '../quran/domain/repositories/quran_repository.dart';
 import '../quran/domain/entities/mushaf_line.dart';
 import '../quran/presentation/mushaf/mushaf_page.dart' show MushafPageView, MushafStyle, MushafWordPaint;
 import 'tasmee_engine.dart';
+import 'web_speech.dart';
 
 /// التسميع: the page's words are hidden; recite from memory and each word
 /// appears as you say it. A wrong word stays hidden with a red line and a
@@ -288,7 +291,8 @@ class _TasmeePageState extends State<TasmeePage> {
     if (e.errorMsg.contains('permission')) {
       _active = false;
       _watchdog?.cancel();
-      setState(() => _status = 'يحتاج التسميع إذن الميكروفون من إعدادات التطبيق');
+      setState(() => _status =
+          kIsWeb ? 'يحتاج التسميع إذن الميكروفون من المتصفح' : 'يحتاج التسميع إذن الميكروفون من إعدادات التطبيق');
       _showSpeechHelp();
       return;
     }
@@ -344,6 +348,7 @@ class _TasmeePageState extends State<TasmeePage> {
           Text('الميكروفون لا يعمل للتسميع',
               style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 18)),
           const SizedBox(height: 8),
+          if (kIsWeb) ..._webHelp(step, glass) else ...[
           Text(
             'التسميع يعتمد على خدمة «التعرف على الكلام» من Google الموجودة في الهاتف. '
             'غالبًا تكون غير موجودة أو متوقفة، خصوصًا في المحاكيات مثل LDPlayer.',
@@ -356,6 +361,7 @@ class _TasmeePageState extends State<TasmeePage> {
           step(Icons.mic_rounded, 'اسمح للتطبيق باستخدام الميكروفون من إعدادات الهاتف ← التطبيقات ← الهدى ← الأذونات.'),
           step(Icons.computer_rounded,
               'على المحاكي (LDPlayer وغيره): فعّل الميكروفون من إعدادات المحاكي، وتأكد أن ويندوز يسمح له باستخدام الميكروفون.'),
+          ],
           if (error != null)
             Text('رمز الخطأ: $error', style: TextStyle(fontSize: 11, color: glass.onGlassMuted)),
           const SizedBox(height: 8),
@@ -366,6 +372,29 @@ class _TasmeePageState extends State<TasmeePage> {
         ],
       );
     });
+  }
+
+  /// The same help for the web build: the browser does the recognition.
+  List<Widget> _webHelp(Widget Function(IconData, String) step, GlassTheme glass) {
+    final ios = isIosBrowser;
+    return [
+      Text(
+        !webSpeechSupported
+            ? 'هذا المتصفح لا يدعم التعرف على الكلام. افتح الصفحة من ${ios ? 'Safari' : 'Google Chrome'}.'
+            : 'التسميع في المتصفح يعتمد على خدمة التعرف على الكلام في ${ios ? 'Safari (خدمة الإملاء من Apple)' : 'Chrome (خدمة Google)'}، ويحتاج اتصالًا بالإنترنت.',
+        style: TextStyle(color: glass.onGlassMuted, height: 1.6),
+      ),
+      const SizedBox(height: 16),
+      if (ios) ...[
+        step(Icons.public_rounded, 'افتح الصفحة من Safari نفسه، فهو الأضمن للتسميع على آيفون.'),
+        step(Icons.keyboard_voice_rounded, 'فعّل الإملاء: الإعدادات، ثم عام، ثم لوحة المفاتيح، ثم «تفعيل الإملاء».'),
+        step(Icons.mic_rounded, 'اسمح بالميكروفون: الإعدادات، ثم Safari، ثم الميكروفون، ثم «سماح»، وبعدها أعد تحميل الصفحة.'),
+      ] else ...[
+        step(Icons.public_rounded, 'استخدم Google Chrome أو Microsoft Edge (فايرفوكس لا يدعم التسميع).'),
+        step(Icons.mic_rounded, 'اسمح بالميكروفون: اضغط رمز القفل بجوار عنوان الصفحة، ثم الميكروفون، ثم «سماح»، وبعدها أعد تحميل الصفحة.'),
+      ],
+      step(Icons.wifi_rounded, 'تأكد من الاتصال بالإنترنت.'),
+    ];
   }
 
   void _onResult(SpeechRecognitionResult r) {

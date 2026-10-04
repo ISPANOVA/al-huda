@@ -1,6 +1,8 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/platform/web_env.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_themes.dart';
 import '../../../../core/widgets/glass_container.dart';
@@ -81,6 +83,7 @@ class SettingsPage extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                 child: Column(
                   children: [
+                    if (!kIsWeb) // reminders are phone notifications
                     SwitchListTile(
                       contentPadding: EdgeInsets.zero,
                       title: const Text('تذكير أذكار الصباح والمساء'),
@@ -184,8 +187,13 @@ class _BackupCardState extends State<_BackupCard> {
           barrierDismissible: false,
           builder: (ctx) => AlertDialog(
             title: const Text('تمت الاستعادة ✅'),
-            content: const Text('سيُغلق التطبيق الآن، افتحه مرة أخرى لتظهر بياناتك.'),
-            actions: [FilledButton(onPressed: () => SystemNavigator.pop(), child: const Text('حسنًا'))],
+            content: const Text(kIsWeb
+                ? 'ستُعاد تحميل الصفحة الآن لتظهر بياناتك.'
+                : 'سيُغلق التطبيق الآن، افتحه مرة أخرى لتظهر بياناتك.'),
+            actions: [
+              FilledButton(
+                  onPressed: () => kIsWeb ? reloadPage() : SystemNavigator.pop(), child: const Text('حسنًا')),
+            ],
           ),
         );
       }

@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:just_audio/just_audio.dart';
@@ -72,6 +73,7 @@ class _AdhanSettingsCardState extends State<AdhanSettingsCard> {
 
   @override
   Widget build(BuildContext context) {
+    if (kIsWeb) return const _WebAdhanNotice();
     return BlocBuilder<SettingsCubit, SettingsState>(
       buildWhen: (p, c) =>
           p.prayerNotifications != c.prayerNotifications ||
@@ -410,6 +412,33 @@ class _PreviewButton extends StatelessWidget {
           onPressed: () => AdhanPreview.toggle(context, voice, full),
         );
       },
+    );
+  }
+}
+
+/// The browser can't ring at a set time while the page is closed.
+class _WebAdhanNotice extends StatelessWidget {
+  const _WebAdhanNotice();
+
+  @override
+  Widget build(BuildContext context) {
+    final glass = GlassTheme.of(context);
+    return GlassContainer(
+      padding: const EdgeInsets.all(16),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.notifications_off_rounded, color: glass.accent),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              'الأذان والتنبيهات تعمل في تطبيق أندرويد فقط؛ المتصفح لا يستطيع التنبيه والصفحة مغلقة. '
+              'هنا تظهر المواقيت والعدّاد للصلاة القادمة.',
+              style: TextStyle(height: 1.7, color: glass.onGlass),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

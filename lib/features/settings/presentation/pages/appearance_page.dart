@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -125,6 +126,7 @@ class AppearancePage extends StatelessWidget {
                       ),
               ),
               const SizedBox(height: 22),
+              if (!kIsWeb) // home-screen widgets are Android only
               _WidgetStyleCard(opacity: s.widgetOpacity, textColor: Color(s.widgetTextColor)),
             ],
           );

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -13,6 +14,7 @@ import '../../../../core/widgets/glass_container.dart';
 import '../../../../core/widgets/gradient_background.dart';
 import '../../../../core/widgets/state_views.dart';
 import '../../../prayer/data/prayer_repository.dart';
+import '../../web_compass.dart';
 import '../../../prayer/presentation/cubit/prayer_cubit.dart';
 import '../../../settings/presentation/cubit/settings_cubit.dart';
 
@@ -36,9 +38,47 @@ class _QiblaPageState extends State<QiblaPage> {
   double _tiltX = 0, _tiltY = 0; // radians, smoothed
   bool _wasAligned = false;
 
+  // Browser build: deviceorientation events (Safari asks first, on a tap).
+  StreamSubscription<double>? _webSub;
+  bool _webNeedsTap = false;
+  Timer? _webProbe;
+
+  void _startWebCompass() {
+    _webSub?.cancel();
+    _webSub = webCompassHeadings().listen((raw) {
+      _webProbe?.cancel();
+      if (!mounted) return;
+      setState(() {
+        _noSensor = false;
+        _heading = _heading == null ? raw : _smoothAngle(_heading!, raw, 0.18);
+      });
+    });
+    // No reading at all (a computer): say so instead of a frozen dial.
+    _webProbe?.cancel();
+    _webProbe = Timer(const Duration(seconds: 3), () {
+      if (mounted && _heading == null) setState(() => _noSensor = true);
+    });
+  }
+
+  Future<void> _enableWebCompass() async {
+    final ok = await requestWebCompassPermission();
+    if (!mounted) return;
+    setState(() => _webNeedsTap = !ok);
+    if (ok) _startWebCompass();
+  }
+
   @override
   void initState() {
     super.initState();
+    if (kIsWeb) {
+      _webNeedsTap = webCompassNeedsPermission;
+      if (!_webNeedsTap) _startWebCompass();
+      return;
+    }
+    _initNativeCompass();
+  }
+
+  void _initNativeCompass() {
     final events = FlutterCompass.events;
     if (events == null) {
       _noSensor = true;
@@ -76,6 +116,8 @@ class _QiblaPageState extends State<QiblaPage> {
 
   @override
   void dispose() {
+    _webSub?.cancel();
+    _webProbe?.cancel();
     _compassSub?.cancel();
     _accelSub?.cancel();
     super.dispose();
@@ -182,7 +224,9 @@ class _QiblaPageState extends State<QiblaPage> {
             child: Column(
               children: [
                 Text(
-                  _noSensor
+                  _webNeedsTap
+                      ? 'اضغط «تفعيل البوصلة» ليتحرك المؤشر مع اتجاه هاتفك'
+                      : _noSensor
                       ? 'جهازك لا يحتوي على مستشعر بوصلة. استخدم الزاوية أعلاه مع بوصلة خارجية.'
                       : aligned
                           ? '🕋 أنت متجه نحو القبلة'
@@ -196,6 +240,14 @@ class _QiblaPageState extends State<QiblaPage> {
                   const SizedBox(height: 8),
                   Text('دقة البوصلة منخفضة: حرّك الهاتف على شكل رقم 8 للمعايرة، وابتعد عن المعادن.',
                       textAlign: TextAlign.center, style: TextStyle(color: glass.onGlassMuted)),
+                ],
+                if (_webNeedsTap) ...[
+                  const SizedBox(height: 10),
+                  FilledButton.icon(
+                    onPressed: _enableWebCompass,
+                    icon: const Icon(Icons.explore_rounded),
+                    label: const Text('تفعيل البوصلة'),
+                  ),
                 ],
                 const SizedBox(height: 6),
                 Text('ضع الهاتف أفقيًا للحصول على أدق نتيجة', style: TextStyle(color: glass.onGlassMuted, fontSize: 12)),

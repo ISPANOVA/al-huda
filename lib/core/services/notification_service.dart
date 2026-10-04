@@ -76,6 +76,7 @@ class NotificationService {
     required String voiceName,
     required bool full,
   }) async {
+    if (kIsWeb) return; // no local notifications on the web
     if (when.isBefore(DateTime.now())) return;
     final details = NotificationDetails(android: _adhanChannel(voice, voiceName, full), iOS: _darwin);
     await _schedule(id, title, body, when, details);
@@ -87,7 +88,7 @@ class NotificationService {
   /// Whether exact alarms are allowed (Android 12+). Without it an exact
   /// schedule is silently dropped by the plugin, so we fall back to inexact.
   Future<bool> canScheduleExact() async {
-    if (!Platform.isAndroid) return true;
+    if (kIsWeb || !Platform.isAndroid) return true;
     try {
       return await _android?.canScheduleExactNotifications() ?? true;
     } catch (_) {
@@ -106,6 +107,7 @@ class NotificationService {
 
   Future<void> _schedule(int id, String title, String body, DateTime when, NotificationDetails details,
       {String? payload}) async {
+    if (kIsWeb) return; // no local notifications on the web
     final exact = await canScheduleExact();
     final date = tz.TZDateTime.from(when, tz.local);
     try {
@@ -139,6 +141,7 @@ class NotificationService {
     required String body,
     required DateTime when,
   }) async {
+    if (kIsWeb) return; // no local notifications on the web
     if (when.isBefore(DateTime.now())) return;
     await _schedule(id, title, body, when, NotificationDetails(android: _reminderChannel, iOS: _darwin),
         payload: 'athkar:prayer');
@@ -151,6 +154,7 @@ class NotificationService {
     required bool full,
     int seconds = 10,
   }) async {
+    if (kIsWeb) return; // no local notifications on the web
     await _schedule(
       98,
       'تجربة الأذان 🕌',
@@ -167,6 +171,7 @@ class NotificationService {
     required String body,
     required DateTime when,
   }) async {
+    if (kIsWeb) return; // no local notifications on the web
     if (when.isBefore(DateTime.now())) return;
     await _schedule(id, title, body, when, NotificationDetails(android: _preAdhanChannel, iOS: _darwin));
   }
@@ -178,6 +183,7 @@ class NotificationService {
     required String body,
     required DateTime when,
   }) async {
+    if (kIsWeb) return; // no local notifications on the web
     if (when.isBefore(DateTime.now())) return;
     await _schedule(
       id,
@@ -216,6 +222,7 @@ class NotificationService {
   static const _darwin = DarwinNotificationDetails(presentAlert: true, presentSound: true, presentBadge: false);
 
   Future<void> init() async {
+    if (kIsWeb) return; // no local notifications on the web
     if (_initialized) return;
     tzdata.initializeTimeZones();
     try {
@@ -245,6 +252,7 @@ class NotificationService {
   }
 
   Future<bool> requestPermissions() async {
+    if (kIsWeb) return false;
     if (Platform.isAndroid) {
       final android = _plugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
       return await android?.requestNotificationsPermission() ?? false;
@@ -263,6 +271,7 @@ class NotificationService {
     required String body,
     required DateTime when,
   }) async {
+    if (kIsWeb) return; // no local notifications on the web
     if (when.isBefore(DateTime.now())) return;
     await _plugin.zonedSchedule(
       id: id,
@@ -281,6 +290,7 @@ class NotificationService {
     required String body,
     required DateTime when,
   }) async {
+    if (kIsWeb) return; // no local notifications on the web
     if (when.isBefore(DateTime.now())) return;
     await _plugin.zonedSchedule(
       id: id,
@@ -300,6 +310,7 @@ class NotificationService {
     required int hour,
     required int minute,
   }) async {
+    if (kIsWeb) return; // no local notifications on the web
     final now = tz.TZDateTime.now(tz.local);
     var next = tz.TZDateTime(tz.local, now.year, now.month, now.day, hour, minute);
     if (!next.isAfter(now)) next = next.add(const Duration(days: 1));
@@ -316,6 +327,7 @@ class NotificationService {
 
   /// Immediately shows a prayer alert with the chosen adhan (settings test).
   Future<void> showAdhanNow({required String voice, required String voiceName, required bool full}) async {
+    if (kIsWeb) return; // no local notifications on the web
     await _plugin.show(
       id: 99,
       title: 'تجربة تنبيه الأذان 🕌',
@@ -328,6 +340,7 @@ class NotificationService {
   /// waiting to fire. Already-delivered ones (an adhan that is ringing right
   /// now) are left alone.
   Future<void> cancelPendingRange(int fromId, int count) async {
+    if (kIsWeb) return; // no local notifications on the web
     try {
       final pending = await _plugin.pendingNotificationRequests();
       for (final p in pending) {
@@ -338,9 +351,13 @@ class NotificationService {
     }
   }
 
-  Future<void> cancel(int id) => _plugin.cancel(id: id);
+  Future<void> cancel(int id) async {
+    if (kIsWeb) return;
+    await _plugin.cancel(id: id);
+  }
 
   Future<void> cancelRange(int fromId, int count) async {
+    if (kIsWeb) return; // no local notifications on the web
     for (var i = 0; i < count; i++) {
       await _plugin.cancel(id: fromId + i);
     }

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_themes.dart';
@@ -52,6 +53,7 @@ class MorePage extends StatelessWidget {
         'الاستماع',
         [
           (icon: Icons.headphones_rounded, title: 'المشغل', subtitle: 'التلاوة الحالية', route: PlayerPage.route),
+          if (!kIsWeb)
           (icon: Icons.download_for_offline_rounded, title: 'تنزيلات المصحف', subtitle: 'استماع دون إنترنت', route: DownloadsPage.route),
         ]
       ),

@@ -435,7 +435,9 @@ class _SurahTile extends StatelessWidget {
     final primary = Theme.of(context).colorScheme.primary;
 
     Widget download;
-    if (progress != null) {
+    if (!MediaDownloads.supported) {
+      download = const SizedBox(width: 8);
+    } else if (progress != null) {
       download = IconButton(
         tooltip: 'إلغاء التنزيل',
         onPressed: () => dl.cancel(reciter, surah),

@@ -43,6 +43,11 @@ class QuranAudioHandler extends BaseAudioHandler with SeekHandler {
   Uri? _art;
 
   Future<void> _prepareArtwork() async {
+    if (kIsWeb) {
+      // The browser's media session loads artwork by URL.
+      _art = Uri.base.resolve('assets/assets/icon/app_icon.png');
+      return;
+    }
     try {
       final dir = await getTemporaryDirectory();
       final file = File('${dir.path}/alhuda_now_playing.png');

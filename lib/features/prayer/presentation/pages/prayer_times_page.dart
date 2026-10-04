@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hijri/hijri_calendar.dart';
@@ -365,6 +366,8 @@ class _Timeline extends StatelessWidget {
                       ),
                     ),
                   ),
+                  // The browser can't ring at prayer time: no bells there.
+                  if (!kIsWeb) ...[
                   const SizedBox(width: 6),
                   SizedBox.square(
                     dimension: 38,
@@ -379,6 +382,7 @@ class _Timeline extends StatelessWidget {
                       ),
                     ),
                   ),
+                  ],
                 ],
               ),
             ),

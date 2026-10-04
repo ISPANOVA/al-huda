@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 
 import '../../../core/data/surah_metadata.dart';
@@ -22,7 +23,11 @@ class AudioDownloadService {
 
   AudioDownloadService(this._dio, this._storage);
 
+  /// No file system on the web: recitations always stream there.
+  static bool get supported => !kIsWeb;
+
   Future<void> init() async {
+    if (!supported) return;
     final docs = await getApplicationDocumentsDirectory();
     _rootPath = '${docs.path}/audio';
     await Directory(_rootPath!).create(recursive: true);
@@ -54,6 +59,7 @@ class AudioDownloadService {
     void Function(int done, int total)? onProgress,
     CancelToken? cancelToken,
   }) async {
+    if (!supported) throw UnsupportedError('downloads');
     if (_rootPath == null) await init();
     await Directory('$_rootPath/${reciter.id}').create(recursive: true);
 
@@ -83,6 +89,7 @@ class AudioDownloadService {
   }
 
   Future<void> deleteSurah(Reciter reciter, int surah) async {
+    if (!supported) return;
     final count = SurahMetadata.surah(surah).ayahCount;
     for (var a = 1; a <= count; a++) {
       final f = File(_path(reciter.id, SurahMetadata.globalAyah(surah, a)));
