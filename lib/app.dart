@@ -107,7 +107,7 @@ class _AlHudaAppState extends State<AlHudaApp> {
               scrollBehavior: kIsWeb ? _webScroll : null,
               builder: (context, child) => Directionality(
                 textDirection: TextDirection.rtl,
-                child: ThemeTransition(child: kIsWeb ? WebFrame(child: child!) : child!),
+                child: ThemeTransition(child: WebFrame(child: child!)),
               ),
               home: AnimatedSwitcher(
                 duration: const Duration(milliseconds: 600),

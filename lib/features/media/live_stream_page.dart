@@ -3,6 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:video_player/video_player.dart';
 
+import '../../core/utils/app_orientation.dart';
+
 import '../../core/widgets/state_views.dart';
 import '../audio/presentation/cubit/audio_cubit.dart';
 import 'media_widgets.dart';
@@ -60,7 +62,7 @@ class _LiveStreamPageState extends State<LiveStreamPage> {
       await SystemChrome.setPreferredOrientations([DeviceOrientation.landscapeLeft, DeviceOrientation.landscapeRight]);
       await SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
     } else {
-      await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+      await AppOrientation.apply();
       await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     }
     if (mounted) setState(() {});
@@ -70,7 +72,7 @@ class _LiveStreamPageState extends State<LiveStreamPage> {
   void dispose() {
     _controller?.dispose();
     if (_fullscreen) {
-      SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+      AppOrientation.apply();
       SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     }
     super.dispose();

@@ -1,11 +1,15 @@
+import 'dart:math' as math;
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../theme/app_themes.dart';
 import 'gradient_background.dart';
 
-/// Browser on a computer or tablet: the app keeps its phone layout in a
-/// centred column (a stretched 1440px-wide phone UI looks broken), framed on
-/// the app's own background with its name beside it on wide screens.
+/// Wide screens (a computer, or a tablet in landscape): the app keeps its
+/// phone layout in a centred column (a stretched phone UI looks broken),
+/// framed on the app's own background with its name beside it. While the
+/// Mushaf is on screen the column opens to the full width so two pages fit.
 class WebFrame extends StatelessWidget {
   final Widget child;
 
@@ -13,17 +17,34 @@ class WebFrame extends StatelessWidget {
 
   static const double columnWidth = 460;
 
+  /// Set by the Mushaf reader while it is visible.
+  static final ValueNotifier<bool> wide = ValueNotifier(false);
+
+  /// Browser from 640px; the phone app only on big landscape screens.
+  static bool framed(Size size) => kIsWeb ? size.width >= 640 : size.width >= 900 && size.width > size.height;
+
   @override
   Widget build(BuildContext context) {
     final mq = MediaQuery.of(context);
     final size = mq.size;
-    if (size.width < 640) return child;
+    if (!framed(size)) return child;
+    return ValueListenableBuilder<bool>(valueListenable: wide, builder: (context, isWide, _) => _framed(context, mq, isWide));
+  }
+
+  Widget _framed(BuildContext context, MediaQueryData mq, bool isWide) {
+    final size = mq.size;
     final glass = GlassTheme.of(context);
-    final margin = size.height > 720 ? 18.0 : 0.0;
-    final height = size.height - margin * 2;
-    final radius = BorderRadius.circular(margin > 0 ? 30 : 0);
-    final column = Container(
-      width: columnWidth,
+    final big = size.height > 720;
+    final top = big ? math.max(18.0, mq.viewPadding.top + 8) : mq.viewPadding.top;
+    final bottom = big ? math.max(18.0, mq.viewPadding.bottom + 8) : mq.viewPadding.bottom;
+    final height = size.height - top - bottom;
+    final width = isWide ? math.min(size.width - 36, 1400.0) : columnWidth;
+    final radius = BorderRadius.circular(big ? 30 : 0);
+    final column = AnimatedContainer(
+      duration: const Duration(milliseconds: 280),
+      curve: Curves.easeOutCubic,
+      margin: EdgeInsets.only(top: top, bottom: bottom),
+      width: width,
       height: height,
       decoration: BoxDecoration(
         borderRadius: radius,
@@ -34,7 +55,7 @@ class WebFrame extends StatelessWidget {
         borderRadius: radius,
         child: MediaQuery(
           data: mq.copyWith(
-            size: Size(columnWidth, height),
+            size: Size(width, height),
             padding: EdgeInsets.zero,
             viewPadding: EdgeInsets.zero,
           ),
@@ -42,7 +63,7 @@ class WebFrame extends StatelessWidget {
         ),
       ),
     );
-    final brand = size.width >= 1100
+    final brand = size.width >= 1100 && !isWide
         ? Positioned(
             right: 0,
             top: 0,
@@ -61,7 +82,7 @@ class WebFrame extends StatelessWidget {
       children: [
         const GradientBackground(child: SizedBox.expand()),
         ?brand,
-        Center(child: column),
+        Align(alignment: Alignment.topCenter, child: column),
       ],
     );
   }
