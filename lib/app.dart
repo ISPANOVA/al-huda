@@ -105,9 +105,10 @@ class _AlHudaAppState extends State<AlHudaApp> {
               // Browser: drag pages with the mouse too, and keep the phone
               // layout in a centred column on wide screens.
               scrollBehavior: kIsWeb ? _webScroll : null,
+              navigatorObservers: [WebFrame.observer],
               builder: (context, child) => Directionality(
                 textDirection: TextDirection.rtl,
-                child: ThemeTransition(child: kIsWeb ? WebFrame(child: child!) : child!),
+                child: ThemeTransition(child: WebFrame(child: child!)),
               ),
               home: AnimatedSwitcher(
                 duration: const Duration(milliseconds: 600),

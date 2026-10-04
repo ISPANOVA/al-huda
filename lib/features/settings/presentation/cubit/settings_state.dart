@@ -67,6 +67,9 @@ class SettingsState extends Equatable {
   /// Home-screen widgets text colour (ARGB).
   final int widgetTextColor;
 
+  /// Mushaf pages on wide screens: 'auto' (two in landscape), 'single', 'double'.
+  final String mushafPages;
+
   const SettingsState({
     this.themeType = AppThemeType.noirGold,
     this.themeMode = ThemeMode.dark,
@@ -102,6 +105,7 @@ class SettingsState extends Equatable {
     this.patternStrength = 1.0,
     this.widgetOpacity = 1.0,
     this.widgetTextColor = 0xFFFFFFFF,
+    this.mushafPages = 'auto',
   });
 
   SettingsState copyWith({
@@ -139,6 +143,7 @@ class SettingsState extends Equatable {
     double? patternStrength,
     double? widgetOpacity,
     int? widgetTextColor,
+    String? mushafPages,
   }) {
     return SettingsState(
       themeType: themeType ?? this.themeType,
@@ -175,6 +180,7 @@ class SettingsState extends Equatable {
       patternStrength: patternStrength ?? this.patternStrength,
       widgetOpacity: widgetOpacity ?? this.widgetOpacity,
       widgetTextColor: widgetTextColor ?? this.widgetTextColor,
+      mushafPages: mushafPages ?? this.mushafPages,
     );
   }
 
@@ -213,6 +219,7 @@ class SettingsState extends Equatable {
         'patternStrength': patternStrength,
         'widgetOpacity': widgetOpacity,
         'widgetTextColor': widgetTextColor,
+        'mushafPages': mushafPages,
       };
 
   factory SettingsState.fromMap(Map<String, dynamic> m) {
@@ -258,6 +265,7 @@ class SettingsState extends Equatable {
       patternStrength: (m['patternStrength'] as num?)?.toDouble() ?? d.patternStrength,
       widgetOpacity: (m['widgetOpacity'] as num?)?.toDouble() ?? d.widgetOpacity,
       widgetTextColor: (m['widgetTextColor'] as num?)?.toInt() ?? d.widgetTextColor,
+      mushafPages: m['mushafPages'] as String? ?? d.mushafPages,
     );
   }
 
@@ -297,5 +305,6 @@ class SettingsState extends Equatable {
         patternStrength,
         widgetOpacity,
         widgetTextColor,
+        mushafPages,
       ];
 }

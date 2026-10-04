@@ -240,7 +240,26 @@ Future<void> showReaderSettingsSheet(BuildContext context) {
                 value: s.autoFollowAudio,
                 onChanged: cubit.setAutoFollowAudio,
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: 10),
+              Text('عرض الصفحات (للتابلت والكمبيوتر والهواتف القابلة للطي)',
+                  style: TextStyle(fontWeight: FontWeight.w700, color: glass.onGlass)),
+              const SizedBox(height: 8),
+              SegmentedButton<String>(
+                showSelectedIcon: false,
+                segments: const [
+                  ButtonSegment(value: 'auto', label: Text('تلقائي')),
+                  ButtonSegment(value: 'single', label: Text('صفحة')),
+                  ButtonSegment(value: 'double', label: Text('صفحتان')),
+                ],
+                selected: {s.mushafPages},
+                onSelectionChanged: (v) => cubit.setMushafPages(v.first),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                'تلقائي: صفحة بالطول وصفحتان بالعرض على الشاشات الكبيرة.',
+                style: TextStyle(fontSize: 12.5, color: glass.onGlassMuted),
+              ),
+              const SizedBox(height: 12),
               Text(
                 'اضغط مطولًا على أي آية لعرض تفسيرها وخيارات الاستماع والمشاركة، واضغط ضغطة عادية في أي مكان لإخفاء الأدوات أو إظهارها.',
                 style: TextStyle(fontSize: 12.5, color: glass.onGlassMuted),

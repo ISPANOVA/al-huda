@@ -5,6 +5,7 @@ import 'package:intl/date_symbol_data_local.dart';
 
 import 'app.dart';
 import 'core/di/app_dependencies.dart';
+import 'core/utils/app_orientation.dart';
 import 'features/onboarding/splash_screen.dart';
 import 'features/tasmee/web_speech.dart';
 
@@ -17,7 +18,8 @@ Future<void> main() async {
   // below have nobody to answer them, and the audio service must still
   // come up to answer the car.
   final deps = initializeDateFormatting('ar').then((_) => AppDependencies.init());
-  _ui(() => SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]));
+  // Portrait on phones; tablets and unfolded foldables may turn.
+  _ui(AppOrientation.apply);
   _ui(() async => SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
         systemNavigationBarColor: Colors.transparent,
@@ -43,14 +45,29 @@ class _Bootstrap extends StatefulWidget {
   State<_Bootstrap> createState() => _BootstrapState();
 }
 
-class _BootstrapState extends State<_Bootstrap> {
+class _BootstrapState extends State<_Bootstrap> with WidgetsBindingObserver {
   AppDependencies? _deps;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    // At startup the window size may not be known yet (treated as a phone):
+    // check again once the first frame is laid out, so a tablet held
+    // sideways is not kept in portrait.
+    WidgetsBinding.instance.addPostFrameCallback((_) => _ui(() => AppOrientation.apply(onlyIfChanged: true)));
     _start();
   }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  /// Folding or unfolding a phone changes which orientations are allowed.
+  @override
+  void didChangeMetrics() => _ui(() => AppOrientation.apply(onlyIfChanged: true));
 
   Future<void> _start() async {
     final minSplash = Future<void>.delayed(const Duration(milliseconds: 1700));

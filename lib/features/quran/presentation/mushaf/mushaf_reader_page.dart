@@ -9,6 +9,7 @@ import '../../../../core/theme/app_themes.dart';
 import '../../../../core/utils/arabic_utils.dart';
 import '../../../../core/widgets/gradient_background.dart';
 import '../../../../core/widgets/state_views.dart';
+import '../../../../core/widgets/web_frame.dart';
 import '../../../audio/presentation/cubit/audio_cubit.dart';
 import '../../../audio/presentation/cubit/audio_state.dart';
 import '../../../settings/presentation/cubit/settings_cubit.dart';
@@ -73,6 +74,9 @@ class MushafReaderPage extends StatefulWidget {
 class _MushafReaderPageState extends State<MushafReaderPage> {
   late final QuranRepository _repo = context.read<QuranRepository>();
   PageController? _controller;
+
+  /// The controller counts spreads (two pages) instead of pages.
+  bool _controllerSpread = false;
   int _page = 1;
   int? _selected;
   QuranNavRequest? _pending;
@@ -115,6 +119,8 @@ class _MushafReaderPageState extends State<MushafReaderPage> {
   void dispose() {
     _wirdTimer?.cancel();
     _controller?.dispose();
+    // Not during unmounting: the frame rebuilds at the end of this frame.
+    WidgetsBinding.instance.addPostFrameCallback((_) => WebFrame.wide.value = false);
     if (!widget.embedded) MushafReaderPage.setImmersive(false);
     super.dispose();
   }
@@ -154,7 +160,16 @@ class _MushafReaderPageState extends State<MushafReaderPage> {
     });
   }
 
-  void _onPageShown(int page) {
+  void _onPageShown(int page, {bool withNext = false}) {
+    if (withNext && page + 1 <= QuranRepository.pageCount) {
+      final next = _repo.ayahsOnPage(page + 1);
+      if (next.isNotEmpty && _loggedPages.add(page + 1)) {
+        context.read<StatsRepository>().log(StatType.quranAyahs, next.length);
+      }
+      for (final p in [page + 2, page + 3]) {
+        if (p <= QuranRepository.pageCount) MushafPageView.prewarm(p, _repo.linesOnPage(p));
+      }
+    }
     _trackWird(page);
     // Pre-build the neighbouring pages while the user reads this one.
     for (final p in [page + 1, page - 1, page + 2, page - 2]) {
@@ -168,10 +183,36 @@ class _MushafReaderPageState extends State<MushafReaderPage> {
     if (_loggedPages.add(page)) context.read<StatsRepository>().log(StatType.quranAyahs, ayahs.length);
   }
 
+  /// Controller index of [page] (its spread in two-page mode).
+  int _indexOf(int page) {
+    final p = page.clamp(1, QuranRepository.pageCount) - 1;
+    return _controllerSpread ? p ~/ 2 : p;
+  }
+
+  /// Two pages side by side: 'double' on any screen wide enough, 'auto' only
+  /// in landscape on a large screen (tablet, unfolded phone, computer).
+  static bool _useSpread(String mode, double width, double height) => switch (mode) {
+        'single' => false,
+        'double' => width >= 600,
+        _ => width >= 700 && width > height * 1.1,
+      };
+
+  PageController _controllerFor(bool spread) {
+    final current = _controller!;
+    if (spread == _controllerSpread) return current;
+    _controllerSpread = spread;
+    // keepPage off: the page view under the other key must not restore the
+    // index it had before the switch.
+    final next = PageController(initialPage: _indexOf(_page), keepPage: false);
+    _controller = next;
+    WidgetsBinding.instance.addPostFrameCallback((_) => current.dispose());
+    return next;
+  }
+
   void _goTo(int page, {bool animate = true}) {
     final c = _controller;
     if (c == null || !c.hasClients) return;
-    final target = page.clamp(1, QuranRepository.pageCount) - 1;
+    final target = _indexOf(page);
     if (!animate || (target - (c.page ?? 0).round()).abs() > 2) {
       c.jumpToPage(target);
     } else {
@@ -192,7 +233,7 @@ class _MushafReaderPageState extends State<MushafReaderPage> {
     if (!_repo.isReady || audio.surah == null || audio.ayah == null || audio.ayah! < 1) return;
     if (!context.read<SettingsCubit>().state.autoFollowAudio) return;
     final target = _repo.pageOf(audio.surah!, audio.ayah!);
-    if (target != _page) _goTo(target);
+    if (_indexOf(target) != _indexOf(_page)) _goTo(target);
   }
 
   void _playPage(int page) {
@@ -209,8 +250,22 @@ class _MushafReaderPageState extends State<MushafReaderPage> {
     if (page != null) _goTo(page, animate: false);
   }
 
+  /// Opens the wide-screen frame to the full width while the Mushaf is the
+  /// visible screen (its tab, with nothing pushed over it but a sheet or a
+  /// dialog).
+  void _syncWideFrame() {
+    final route = ModalRoute.of(context);
+    final visible = TickerMode.of(context) &&
+        (route == null || route.isCurrent || (route.isActive && WebFrame.popupOnTop));
+    if (WebFrame.wide.value == visible) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) WebFrame.wide.value = visible;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
+    _syncWideFrame();
     final style = MushafStyle.of(context);
     const headerH = 50.0;
     const footerH = 48.0;
@@ -224,31 +279,46 @@ class _MushafReaderPageState extends State<MushafReaderPage> {
       return SurahMetadata.globalAyah(s.surah!, s.ayah!);
     });
 
+    final pagesMode = context.select<SettingsCubit, String>((c) => c.state.mushafPages);
+    Widget pageView(int page) => MushafPageView(
+          page: page,
+          lines: _repo.linesOnPage(page),
+          referenceWidth: _repo.referenceLineWidth,
+          style: style,
+          highlightedAyah: highlighted,
+          selectedAyah: _selected,
+          onAyahTap: _onAyahTap,
+        );
+
     Widget pages = _controller == null
         ? const LoadingView()
-        : PageView.builder(
-            controller: _controller,
-            itemCount: QuranRepository.pageCount,
-            allowImplicitScrolling: true,
-            onPageChanged: (i) {
-              setState(() => _page = i + 1);
-              _onPageShown(i + 1);
-            },
-            itemBuilder: (context, i) => RepaintBoundary(
-              child: Padding(
-                padding: EdgeInsets.fromLTRB(10, headerH, 10, footerH + bottomInset),
-                child: MushafPageView(
-                  page: i + 1,
-                  lines: _repo.linesOnPage(i + 1),
-                  referenceWidth: _repo.referenceLineWidth,
-                  style: style,
-                  highlightedAyah: highlighted,
-                  selectedAyah: _selected,
-                  onAyahTap: _onAyahTap,
+        : LayoutBuilder(builder: (context, box) {
+            final spread = _useSpread(pagesMode, box.maxWidth, box.maxHeight);
+            final controller = _controllerFor(spread);
+            return PageView.builder(
+              key: ValueKey(spread),
+              controller: controller,
+              itemCount: spread ? (QuranRepository.pageCount + 1) ~/ 2 : QuranRepository.pageCount,
+              allowImplicitScrolling: true,
+              onPageChanged: (i) {
+                final page = spread ? i * 2 + 1 : i + 1;
+                setState(() => _page = page);
+                _onPageShown(page, withNext: spread);
+              },
+              itemBuilder: (context, i) => RepaintBoundary(
+                child: Padding(
+                  padding: EdgeInsets.fromLTRB(10, headerH, 10, footerH + bottomInset),
+                  child: spread
+                      ? _MushafSpread(
+                          right: pageView(i * 2 + 1),
+                          left: i * 2 + 2 <= QuranRepository.pageCount ? pageView(i * 2 + 2) : null,
+                          divider: style.accent,
+                        )
+                      : _PageProportion(child: pageView(i + 1)),
                 ),
               ),
-            ),
-          );
+            );
+          });
 
     final ayahs = _controller == null ? const <Ayah>[] : _repo.ayahsOnPage(_page);
     Widget content = Stack(
@@ -714,5 +784,66 @@ class _IndexSheetState extends State<_IndexSheet> {
         ],
       ),
     );
+  }
+}
+
+/// Mushaf page proportions (≈ 2:3). On a wide area (landscape, tablets) the
+/// page keeps its shape in the centre instead of stretching its lines.
+const double _pageAspect = 0.66;
+
+class _PageProportion extends StatelessWidget {
+  final Widget child;
+
+  const _PageProportion({required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(builder: (context, c) {
+      if (!c.hasBoundedHeight || c.maxWidth <= c.maxHeight * 0.72) return child;
+      return Center(child: SizedBox(width: c.maxHeight * _pageAspect, height: c.maxHeight, child: child));
+    });
+  }
+}
+
+/// Two pages side by side like an open Mushaf: the odd page on the right.
+class _MushafSpread extends StatelessWidget {
+  final Widget right;
+  final Widget? left;
+  final Color divider;
+
+  const _MushafSpread({required this.right, required this.left, required this.divider});
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(builder: (context, c) {
+      const gutter = 22.0;
+      final pageW = ((c.maxWidth - gutter) / 2).clamp(0.0, c.maxHeight * _pageAspect);
+      return Directionality(
+        textDirection: TextDirection.rtl,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            SizedBox(width: pageW, height: c.maxHeight, child: right),
+            SizedBox(
+              width: gutter,
+              height: c.maxHeight * 0.9,
+              child: Center(
+                child: Container(
+                  width: 1,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [divider.withValues(alpha: 0), divider.withValues(alpha: 0.35), divider.withValues(alpha: 0)],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            SizedBox(width: pageW, height: c.maxHeight, child: left ?? const SizedBox.shrink()),
+          ],
+        ),
+      );
+    });
   }
 }
