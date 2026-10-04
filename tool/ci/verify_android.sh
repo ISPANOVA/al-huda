@@ -44,6 +44,16 @@ adb shell dumpsys media_session | grep -E "state=PlaybackState|description=" | h
 tapxy 0.12 0.90; shot B9_tab_more 4
 tap 'الإعدادات'; shot B10_settings 4
 launch; shot B11_relaunch 12
+# ---- Phone turned sideways: stays portrait with one page.
+adb shell settings put system accelerometer_rotation 0
+adb shell settings put system user_rotation 1
+launch; sleep 12; tap 'المصحف'; shot C1_phone_landscape 5
+# ---- Same emulator as a tablet (800dp wide): landscape two pages, portrait one.
+adb shell wm size 1600x2560; adb shell wm density 320
+launch; sleep 12; tap 'المصحف'; shot C2_tablet_landscape 5
+adb shell settings put system user_rotation 0; shot C3_tablet_portrait 6
+adb shell settings put system user_rotation 1; shot C4_tablet_landscape_again 6
+adb shell wm size reset; adb shell wm density reset; adb shell settings put system user_rotation 0
 adb logcat -d > "$OUT/B_logcat.txt"
 for p in A B; do
   grep -E "FATAL|E/flutter| E flutter|Unhandled Exception|I flutter : [A-Z]" "$OUT/${p}_logcat.txt" | grep -v "I flutter : #" > "$OUT/${p}_errors.txt" || true
