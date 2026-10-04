@@ -49,6 +49,18 @@
       setTimeout(function () { s.remove(); }, 500);
     });
   </script>
+  <script>
+    // Phones report 3x pixels; drawing the whole app at 3x in the browser is
+    // what makes it stutter. 2x looks the same and is less than half the work.
+    (function () {
+      var real = window.devicePixelRatio || 1;
+      if (real > 2) {
+        try {
+          Object.defineProperty(window, 'devicePixelRatio', { get: function () { return 2; }, configurable: true });
+        } catch (e) {}
+      }
+    })();
+  </script>
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>
