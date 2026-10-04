@@ -20,6 +20,12 @@ class WebFrame extends StatelessWidget {
   /// Set by the Mushaf reader while it is visible.
   static final ValueNotifier<bool> wide = ValueNotifier(false);
 
+  /// Whether the top route is a popup (a sheet or a dialog), so the Mushaf
+  /// stays wide behind its settings sheet or guide.
+  static bool popupOnTop = false;
+
+  static final NavigatorObserver observer = _TopRouteObserver();
+
   /// Browser from 640px; the phone app only on big landscape screens.
   static bool framed(Size size) => kIsWeb ? size.width >= 640 : size.width >= 900 && size.width > size.height;
 
@@ -85,6 +91,43 @@ class WebFrame extends StatelessWidget {
         Align(alignment: Alignment.topCenter, child: column),
       ],
     );
+  }
+}
+
+class _TopRouteObserver extends NavigatorObserver {
+  final List<Route<dynamic>> _stack = [];
+
+  void _sync() => WebFrame.popupOnTop = _stack.isNotEmpty && _stack.last is PopupRoute;
+
+  @override
+  void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    _stack.add(route);
+    _sync();
+  }
+
+  @override
+  void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    _stack.remove(route);
+    _sync();
+  }
+
+  @override
+  void didRemove(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    _stack.remove(route);
+    _sync();
+  }
+
+  @override
+  void didReplace({Route<dynamic>? newRoute, Route<dynamic>? oldRoute}) {
+    final i = oldRoute == null ? -1 : _stack.indexOf(oldRoute);
+    if (i >= 0 && newRoute != null) {
+      _stack[i] = newRoute;
+    } else if (i >= 0) {
+      _stack.removeAt(i);
+    } else if (newRoute != null) {
+      _stack.add(newRoute);
+    }
+    _sync();
   }
 }
 

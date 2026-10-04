@@ -249,9 +249,12 @@ class _MushafReaderPageState extends State<MushafReaderPage> {
   }
 
   /// Opens the wide-screen frame to the full width while the Mushaf is the
-  /// visible screen (its tab, with nothing pushed over it).
+  /// visible screen (its tab, with nothing pushed over it but a sheet or a
+  /// dialog).
   void _syncWideFrame() {
-    final visible = TickerMode.of(context) && (ModalRoute.of(context)?.isCurrent ?? true);
+    final route = ModalRoute.of(context);
+    final visible = TickerMode.of(context) &&
+        (route == null || route.isCurrent || (route.isActive && WebFrame.popupOnTop));
     if (WebFrame.wide.value == visible) return;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) WebFrame.wide.value = visible;
