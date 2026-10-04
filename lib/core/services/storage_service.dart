@@ -1,4 +1,4 @@
-import 'package:hive_flutter/hive_flutter.dart';
+import 'kv_store.dart';
 
 /// Thin wrapper around Hive. All boxes store plain JSON-like values
 /// (maps, lists, primitives) so no code generation / adapters are needed.

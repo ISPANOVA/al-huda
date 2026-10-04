@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 /// Every screen slides in from the reading side (RTL: from the left) while
@@ -80,7 +81,14 @@ class _FadeThroughIndexedStackState extends State<FadeThroughIndexedStack> with 
     if (widget.index != _current) {
       _previous = _current;
       _current = widget.index;
-      _controller.forward(from: 0);
+      if (kIsWeb) {
+        // The browser has no raster cache: fading whole tabs costs a full
+        // offscreen layer per frame. Switch instantly there.
+        _previous = null;
+        _controller.value = 1;
+      } else {
+        _controller.forward(from: 0);
+      }
     }
   }
 

@@ -37,7 +37,7 @@ jobs:
           {
             flutter --version
             flutter pub get
-            flutter build web --release --base-href / --no-web-resources-cdn --pwa-strategy=none
+            flutter build web --release --base-href / --no-web-resources-cdn --wasm
           } 2>&1 | tee "$RUNNER_TEMP/web_log.txt" || echo failed > "$RUNNER_TEMP/failed"
 
       - name: Deploy to Cloudflare Pages (main only)
@@ -50,7 +50,7 @@ jobs:
             echo "::notice::Add CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID secrets to publish the site."
             exit 0
           fi
-          printf '/index.html\n  Cache-Control: no-cache\n/flutter_bootstrap.js\n  Cache-Control: no-cache\n/main.dart.js\n  Cache-Control: no-cache\n' > build/web/_headers
+          cp tool/web/_headers build/web/_headers
           npx --yes wrangler@4 pages project create al-huda --production-branch main 2>&1 | tail -3 || true
           npx --yes wrangler@4 pages deploy build/web --project-name al-huda --branch main --commit-dirty=true 2>&1 | tee "$RUNNER_TEMP/deploy.txt"
           grep -o 'https://[a-z0-9.-]*pages.dev' "$RUNNER_TEMP/deploy.txt" | tail -1 > "$RUNNER_TEMP/url.txt" || true

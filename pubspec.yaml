@@ -55,6 +55,8 @@ dependencies:
   # Web build only (browser speech recognition, compass, page helpers)
   web: ^1.1.0
   speech_to_text_platform_interface: any
+  # Storage for the web build (Hive 2 cannot run under WebAssembly)
+  hive_ce: ^2.16.0
 
 dev_dependencies:
   flutter_test:
