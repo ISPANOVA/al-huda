@@ -349,4 +349,54 @@ void main() {
     s.feed(['الحمد', 'لله', 'رب', 'العا'], isFinal: false);
     expect(s.mistakes, isEmpty);
   });
+
+  test('short words differing by one letter are different words', () {
+    final k = TasmeeMatcher.key;
+    expect(TasmeeMatcher.similar(k('عليك'), k('إِلَيْكَ')), isFalse);
+    expect(TasmeeMatcher.similar(k('عليهم'), k('إِلَيْهِمْ')), isFalse);
+    expect(TasmeeMatcher.similar(k('لكم'), k('لَهُمْ')), isFalse);
+    expect(TasmeeMatcher.similar(k('في'), k('عَلَىٰ')), isFalse);
+    // …but spelling variants still match.
+    expect(TasmeeMatcher.similar(k('إليك'), k('إِلَيْكَ')), isTrue);
+    expect(TasmeeMatcher.similar(k('رؤوف'), k('رَءُوفٌ')), isTrue);
+    expect(TasmeeMatcher.similar(k('الحياة'), k('ٱلْحَيَوٰةِ')), isTrue);
+    expect(TasmeeMatcher.similar(k('الزكاة'), k('ٱلزَّكَوٰةَ')), isTrue);
+    expect(TasmeeMatcher.similar(k('الربا'), k('ٱلرِّبَوٰا۟')), isTrue);
+    expect(TasmeeMatcher.similar(k('السماوات'), k('ٱلسَّمَٰوَٰتِ')), isTrue);
+    expect(TasmeeMatcher.similar(k('أولئك'), k('أُو۟لَٰٓئِكَ')), isTrue);
+  });
+
+  test('في instead of على is a mistake even if another transcript has على', () {
+    final s = TasmeeSession(_words('أُو۟لَٰٓئِكَ عَلَىٰ هُدًى مِّن رَّبِّهِمْ', surah: 2, ayah: 5), []);
+    s.feed(
+      'اولئك في هدى من ربهم'.split(' '),
+      isFinal: true,
+      alternates: ['اولئك على هدى من ربهم'.split(' ')],
+    );
+    expect(s.mistakes.length, 1);
+    expect(s.words[1].missed, isTrue);
+    expect(s.done, isTrue);
+  });
+
+  test('عليك instead of إليك is a mistake', () {
+    final s = TasmeeSession(_words('بِمَآ أُنزِلَ إِلَيْكَ وَمَآ أُنزِلَ مِن قَبْلِكَ', surah: 2, ayah: 4), []);
+    s.feed(
+      'بما انزل عليك وما انزل من قبلك'.split(' '),
+      isFinal: true,
+      alternates: ['بما انزل إليك وما انزل من قبلك'.split(' ')],
+    );
+    expect(s.mistakes.length, 1);
+    expect(s.words[2].missed, isTrue);
+    expect(s.done, isTrue);
+  });
+
+  test('the correct ayah still has no mistakes', () {
+    final s = TasmeeSession(
+      _words('وَٱلَّذِينَ يُؤْمِنُونَ بِمَآ أُنزِلَ إِلَيْكَ وَمَآ أُنزِلَ مِن قَبْلِكَ وَبِٱلْءَاخِرَةِ هُمْ يُوقِنُونَ', surah: 2, ayah: 4),
+      [],
+    );
+    s.feed('والذين يؤمنون بما أنزل إليك وما أنزل من قبلك وبالآخرة هم يوقنون'.split(' '), isFinal: true);
+    expect(s.mistakes, isEmpty);
+    expect(s.done, isTrue);
+  });
 }
