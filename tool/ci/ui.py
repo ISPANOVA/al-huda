@@ -30,6 +30,13 @@ if __name__ == '__main__':
         with open(sys.argv[2], 'w', encoding='utf-8') as f:
             for n in dump():
                 f.write(f'{n}\n')
+    elif cmd == 'tapxy':
+        # Fractions of the screen (fallback when a widget has no label).
+        size = subprocess.run(['adb', 'shell', 'wm', 'size'], capture_output=True).stdout.decode()
+        w, h = map(int, re.search(r'(\d+)x(\d+)', size).groups())
+        x, y = int(float(sys.argv[2]) * w), int(float(sys.argv[3]) * h)
+        print(f'tapxy {x},{y}')
+        subprocess.run(['adb', 'shell', 'input', 'tap', str(x), str(y)])
     elif cmd == 'tap':
         want = sys.argv[2]
         nodes = [n for n in dump() if want in n[0]]

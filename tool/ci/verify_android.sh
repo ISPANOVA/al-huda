@@ -5,37 +5,47 @@
 set -x
 OUT=shots
 PKG=com.alhuda.islamic.app
-shot() { sleep "${2:-3}"; adb exec-out screencap -p > "$OUT/$1.png"; }
+shot() { sleep "${2:-3}"; adb exec-out screencap -p > "$OUT/$1.png"; python3 tool/ci/ui.py dump "$OUT/$1_labels.txt"; }
 tap() { python3 tool/ci/ui.py tap "$1" | tee -a "$OUT/steps.txt"; }
-launch() { adb shell am force-stop $PKG; adb shell am start -W -n $PKG/.MainActivity | tee -a "$OUT/steps.txt"; }
+tapxy() { python3 tool/ci/ui.py tapxy "$1" "$2" | tee -a "$OUT/steps.txt"; }
+launch() { adb shell am force-stop $PKG; adb shell am start -W -n $PKG/.MainActivity >> "$OUT/steps.txt"; }
+adb emu geo fix 31.2357 30.0444 || true
 
+# ---- Build 31, as testers have it now.
 adb install -r -t old.apk | tee "$OUT/install_old.txt"
 adb shell pm grant $PKG android.permission.POST_NOTIFICATIONS || true
 adb logcat -c
 launch; shot A1_launch 14
 tap 'تخطي'; shot A2_permissions 3
 tap 'ابدأ'; shot A3_home 6
-python3 tool/ci/ui.py dump "$OUT/A3_labels.txt"
+# Second start of build 31 (does it ask for the location too?).
+launch; shot A4_relaunch 14
 adb logcat -d > "$OUT/A_logcat.txt"
+# Allow the location from here on so no system prompt covers the screens.
+adb shell pm grant $PKG android.permission.ACCESS_FINE_LOCATION || true
+adb shell pm grant $PKG android.permission.ACCESS_COARSE_LOCATION || true
 
-# Upgrade in place, exactly like a tester installing the new APK.
+# ---- Upgrade in place, exactly like a tester installing the new APK.
 adb install -r -t new.apk | tee "$OUT/install_new.txt"
-adb shell dumpsys package $PKG | grep -E "versionCode|versionName|lastUpdateTime" > "$OUT/package_after_upgrade.txt"
+adb shell dumpsys package $PKG | grep -E "versionCode|versionName|lastUpdateTime|granted=true" > "$OUT/package_after_upgrade.txt"
 adb logcat -c
 launch; shot B1_after_upgrade 14
-python3 tool/ci/ui.py dump "$OUT/B1_labels.txt"
 tap 'المصحف'; shot B2_mushaf 5
 tap 'تخطي'; shot B3_mushaf_page 3
 tap 'التسميع'; shot B4_tasmee 5
-python3 tool/ci/ui.py dump "$OUT/B4_labels.txt"
-adb shell input keyevent KEYCODE_BACK; sleep 2
-tap 'الصلاة'; shot B5_prayer 4
-tap 'الوسائط'; shot B6_media 4
-tap 'القاهرة'; sleep 1; tap 'إذاعة القرآن الكريم من'; shot B7_radio 8
-adb shell dumpsys media_session | grep -E "state=|description=" | head -20 > "$OUT/B7_media_session.txt"
-tap 'الرئيسية'; shot B8_home 3
-launch; shot B9_relaunch 12
+tap 'الكلمة التالية'; shot B5_tasmee_hint 3
+adb shell input keyevent KEYCODE_BACK; sleep 3
+adb shell input keyevent KEYCODE_BACK; sleep 3
+launch; sleep 12
+tapxy 0.36 0.90; shot B6_tab_clock 4
+tapxy 0.48 0.90; shot B7_tab_media 4
+tap 'القاهرة'; sleep 1; tap 'إذاعة القرآن الكريم'; shot B8_radio 10
+adb shell dumpsys media_session | grep -E "state=PlaybackState|description=" | head -12 > "$OUT/B8_media_session.txt"
+tapxy 0.12 0.90; shot B9_tab_more 4
+tap 'الإعدادات'; shot B10_settings 4
+launch; shot B11_relaunch 12
 adb logcat -d > "$OUT/B_logcat.txt"
-grep -E "FATAL|AndroidRuntime: |E/flutter|Unhandled Exception|ALHUDA" "$OUT/A_logcat.txt" > "$OUT/A_errors.txt" || true
-grep -E "FATAL|AndroidRuntime: |E/flutter|Unhandled Exception|ALHUDA" "$OUT/B_logcat.txt" > "$OUT/B_errors.txt" || true
+for p in A B; do
+  grep -E "FATAL|E/flutter| E flutter|Unhandled Exception|I flutter : [A-Z]" "$OUT/${p}_logcat.txt" | grep -v "I flutter : #" > "$OUT/${p}_errors.txt" || true
+done
 exit 0
