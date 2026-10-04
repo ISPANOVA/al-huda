@@ -1,3 +1,6 @@
+import 'dart:ui' as ui;
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../theme/app_themes.dart';
@@ -77,16 +80,74 @@ class _IslamicPatternOverlay extends StatelessWidget {
       child: RepaintBoundary(
         child: ValueListenableBuilder(
           valueListenable: BackgroundStyle.current,
-          builder: (context, style, _) => CustomPaint(
-            painter: PatternPainter(
+          builder: (context, style, _) {
+            final painter = PatternPainter(
               pattern: style.pattern,
               color: glass.accent.withValues(alpha: dark ? 0.14 : 0.18),
               strength: style.strength,
-            ),
-          ),
+            );
+            // The browser keeps no raster cache: a full-screen pattern would be
+            // re-stroked on every frame. Draw it once into an image there.
+            return kIsWeb ? _CachedPattern(painter: painter) : CustomPaint(painter: painter);
+          },
         ),
       ),
     );
+  }
+}
+
+/// Web only: the pattern rendered once per size / style into an image.
+class _CachedPattern extends StatefulWidget {
+  final PatternPainter painter;
+
+  const _CachedPattern({required this.painter});
+
+  @override
+  State<_CachedPattern> createState() => _CachedPatternState();
+}
+
+class _CachedPatternState extends State<_CachedPattern> {
+  ui.Image? _image;
+  String? _key;
+
+  ui.Image? _imageFor(Size size, double dpr) {
+    final p = widget.painter;
+    final key = '${size.width.round()}x${size.height.round()}@$dpr ${p.pattern} ${p.color.toARGB32()} ${p.strength}';
+    if (key == _key) return _image;
+    _image?.dispose();
+    _image = null;
+    _key = key;
+    final w = (size.width * dpr).ceil(), h = (size.height * dpr).ceil();
+    if (w <= 0 || h <= 0) return null;
+    final recorder = ui.PictureRecorder();
+    final canvas = Canvas(recorder)..scale(dpr);
+    p.paint(canvas, size);
+    final picture = recorder.endRecording();
+    try {
+      _image = picture.toImageSync(w, h);
+    } catch (_) {
+      _image = null;
+    }
+    picture.dispose();
+    return _image;
+  }
+
+  @override
+  void dispose() {
+    _image?.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final dpr = MediaQuery.devicePixelRatioOf(context);
+    return LayoutBuilder(builder: (context, c) {
+      final size = c.biggest;
+      if (!size.isFinite) return CustomPaint(painter: widget.painter);
+      final image = _imageFor(size, dpr);
+      if (image == null) return CustomPaint(painter: widget.painter);
+      return RawImage(image: image, width: size.width, height: size.height, fit: BoxFit.fill);
+    });
   }
 }
 
