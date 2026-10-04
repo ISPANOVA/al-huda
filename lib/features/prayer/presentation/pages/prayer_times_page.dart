@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hijri/hijri_calendar.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../core/theme/web_lite.dart';
 import '../../../../core/theme/app_themes.dart';
 import '../../../../core/utils/arabic_utils.dart';
 import '../../../../core/widgets/gradient_background.dart';
@@ -134,9 +135,9 @@ class _SunPathHero extends StatelessWidget {
           clipBehavior: Clip.antiAlias,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(34),
-            boxShadow: [
+            boxShadow: liteShadows([
               BoxShadow(color: skyColors(sky.phase)[1].withValues(alpha: 0.45), blurRadius: 30, offset: const Offset(0, 12)),
-            ],
+            ]),
           ),
           child: Stack(
             children: [

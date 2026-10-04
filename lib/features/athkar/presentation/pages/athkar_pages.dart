@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/theme/web_lite.dart';
 import '../../../../core/theme/app_themes.dart';
 import '../../../../core/utils/arabic_utils.dart';
 import '../../../../core/widgets/noor_ui.dart';
@@ -136,7 +137,7 @@ class _FeaturedAthkar extends StatelessWidget {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(30),
           gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: look.colors),
-          boxShadow: [BoxShadow(color: look.colors[1].withValues(alpha: 0.45), blurRadius: 26, offset: const Offset(0, 10))],
+          boxShadow: liteShadows([BoxShadow(color: look.colors[1].withValues(alpha: 0.45), blurRadius: 26, offset: const Offset(0, 10))]),
         ),
         child: Stack(
           children: [

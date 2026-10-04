@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import '../../core/theme/web_lite.dart';
 import '../../core/theme/app_themes.dart';
 import '../../core/utils/arabic_utils.dart';
 
@@ -86,13 +87,13 @@ class _EqualizerState extends State<Equalizer> with SingleTickerProviderStateMix
   @override
   void initState() {
     super.initState();
-    if (widget.playing) _c.repeat();
+    if (widget.playing && animateDecorations) _c.repeat();
   }
 
   @override
   void didUpdateWidget(covariant Equalizer old) {
     super.didUpdateWidget(old);
-    if (widget.playing && !_c.isAnimating) {
+    if (widget.playing && animateDecorations && !_c.isAnimating) {
       _c.repeat();
     } else if (!widget.playing && _c.isAnimating) {
       _c.stop();
@@ -156,7 +157,13 @@ class LiveBadge extends StatefulWidget {
 
 class _LiveBadgeState extends State<LiveBadge> with SingleTickerProviderStateMixin {
   late final AnimationController _c =
-      AnimationController(vsync: this, duration: const Duration(milliseconds: 1300))..repeat(reverse: true);
+      AnimationController(vsync: this, duration: const Duration(milliseconds: 1300), value: 1);
+
+  @override
+  void initState() {
+    super.initState();
+    if (animateDecorations) _c.repeat(reverse: true);
+  }
 
   @override
   void dispose() {
@@ -171,7 +178,7 @@ class _LiveBadgeState extends State<LiveBadge> with SingleTickerProviderStateMix
       decoration: BoxDecoration(
         color: const Color(0xFFE5484D),
         borderRadius: BorderRadius.circular(30),
-        boxShadow: [BoxShadow(color: const Color(0xFFE5484D).withValues(alpha: 0.45), blurRadius: 12)],
+        boxShadow: liteShadows([BoxShadow(color: const Color(0xFFE5484D).withValues(alpha: 0.45), blurRadius: 12)]),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../core/theme/web_lite.dart';
 import '../../core/theme/app_themes.dart';
 import '../../core/utils/arabic_utils.dart';
 import '../../core/widgets/state_views.dart';
@@ -253,7 +254,7 @@ class _LiveCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(30),
           gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: live.colors),
           border: Border.all(color: gold.withValues(alpha: 0.35)),
-          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.35), blurRadius: 24, offset: const Offset(0, 10))],
+          boxShadow: liteShadows([BoxShadow(color: Colors.black.withValues(alpha: 0.35), blurRadius: 24, offset: const Offset(0, 10))]),
         ),
         child: Stack(
           children: [
@@ -340,7 +341,7 @@ class _LiveCard extends StatelessWidget {
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       gradient: const LinearGradient(colors: [Color(0xFFF7E2A3), gold, Color(0xFFA8812F)]),
-                      boxShadow: [BoxShadow(color: gold.withValues(alpha: 0.5), blurRadius: 18)],
+                      boxShadow: liteShadows([BoxShadow(color: gold.withValues(alpha: 0.5), blurRadius: 18)]),
                     ),
                     child: const Icon(Icons.play_arrow_rounded, color: Colors.black, size: 36),
                   ),
@@ -384,7 +385,7 @@ class _OfficialStationsState extends State<_OfficialStations> with SingleTickerP
       builder: (context, audio) {
         final isThis = audio.hasQueue && audio.isLive && audio.title == station.name;
         final playing = isThis && audio.playing;
-        if (playing && !_waves.isAnimating) {
+        if (playing && animateDecorations && !_waves.isAnimating) {
           _waves.repeat();
         } else if (!playing && _waves.isAnimating) {
           _waves.stop();
@@ -470,7 +471,7 @@ class _OfficialStationsState extends State<_OfficialStations> with SingleTickerP
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
                                 color: glass.accent,
-                                boxShadow: [BoxShadow(color: glass.accent.withValues(alpha: 0.45), blurRadius: 18)],
+                                boxShadow: liteShadows([BoxShadow(color: glass.accent.withValues(alpha: 0.45), blurRadius: 18)]),
                               ),
                               child: isThis && audio.buffering
                                   ? const Padding(

@@ -3,6 +3,7 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../core/theme/web_lite.dart';
 import '../../../core/services/home_widgets.dart';
 import '../../../core/services/notification_service.dart';
 import '../../../core/utils/arabic_utils.dart';
@@ -265,13 +266,13 @@ class _BottomNav extends StatelessWidget {
           color: surface.withValues(alpha: 0.96),
           borderRadius: BorderRadius.circular(32),
           border: Border.all(color: glass.accent.withValues(alpha: dark ? 0.18 : 0.3)),
-          boxShadow: [
+          boxShadow: liteShadows([
             BoxShadow(
               color: Colors.black.withValues(alpha: dark ? 0.45 : 0.15),
               blurRadius: 24,
               offset: const Offset(0, 8),
             ),
-          ],
+          ]),
         ),
         padding: const EdgeInsets.all(7),
         child: LayoutBuilder(builder: (context, c) {

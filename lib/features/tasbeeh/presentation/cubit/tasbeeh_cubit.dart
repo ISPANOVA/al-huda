@@ -13,6 +13,9 @@ class TasbeehState extends Equatable {
   final int rounds;
   final int lifetime;
 
+  /// After a full round, move to the next dhikr by itself.
+  final bool autoNext;
+
   const TasbeehState({
     required this.phrases,
     this.selected = 0,
@@ -20,11 +23,13 @@ class TasbeehState extends Equatable {
     this.target = 33,
     this.rounds = 0,
     this.lifetime = 0,
+    this.autoNext = true,
   });
 
   String get phrase => phrases[selected.clamp(0, phrases.length - 1)];
 
-  TasbeehState copyWith({List<String>? phrases, int? selected, int? count, int? target, int? rounds, int? lifetime}) =>
+  TasbeehState copyWith(
+          {List<String>? phrases, int? selected, int? count, int? target, int? rounds, int? lifetime, bool? autoNext}) =>
       TasbeehState(
         phrases: phrases ?? this.phrases,
         selected: selected ?? this.selected,
@@ -32,13 +37,14 @@ class TasbeehState extends Equatable {
         target: target ?? this.target,
         rounds: rounds ?? this.rounds,
         lifetime: lifetime ?? this.lifetime,
+        autoNext: autoNext ?? this.autoNext,
       );
 
   Map<String, dynamic> toMap() =>
-      {'phrases': phrases, 'selected': selected, 'count': count, 'target': target, 'rounds': rounds, 'lifetime': lifetime};
+      {'phrases': phrases, 'selected': selected, 'count': count, 'target': target, 'rounds': rounds, 'lifetime': lifetime, 'autoNext': autoNext};
 
   @override
-  List<Object?> get props => [phrases, selected, count, target, rounds, lifetime];
+  List<Object?> get props => [phrases, selected, count, target, rounds, lifetime, autoNext];
 }
 
 class TasbeehCubit extends Cubit<TasbeehState> {
@@ -69,23 +75,27 @@ class TasbeehCubit extends Cubit<TasbeehState> {
         target: (m['target'] as num?)?.toInt() ?? 33,
         rounds: (m['rounds'] as num?)?.toInt() ?? 0,
         lifetime: (m['lifetime'] as num?)?.toInt() ?? 0,
+        autoNext: m['autoNext'] as bool? ?? true,
       ));
     }
   }
 
   void _persist() => _storage.tasbeeh.put(_key, state.toMap());
 
-  /// Returns true when a round (target) was just completed.
+  /// Returns true when a round (target) was just completed. With [autoNext]
+  /// the next dhikr is selected then (سبحان الله ٣٣ ← الحمد لله ٣٣ ← …).
   bool tap() {
     var count = state.count + 1;
     var rounds = state.rounds;
+    var selected = state.selected;
     var completedRound = false;
     if (state.target > 0 && count >= state.target) {
       completedRound = true;
       rounds++;
       count = 0;
+      if (state.autoNext && state.phrases.length > 1) selected = (selected + 1) % state.phrases.length;
     }
-    emit(state.copyWith(count: count, rounds: rounds, lifetime: state.lifetime + 1));
+    emit(state.copyWith(count: count, rounds: rounds, selected: selected, lifetime: state.lifetime + 1));
     _persist();
     // Batch stats writes.
     if (++_unloggedTaps >= 10 || completedRound) {
@@ -102,6 +112,11 @@ class TasbeehCubit extends Cubit<TasbeehState> {
 
   void setTarget(int target) {
     emit(state.copyWith(target: target, count: 0));
+    _persist();
+  }
+
+  void setAutoNext(bool value) {
+    emit(state.copyWith(autoNext: value));
     _persist();
   }
 

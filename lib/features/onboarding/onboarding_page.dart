@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:geolocator/geolocator.dart';
 
+import '../../core/theme/web_lite.dart';
 import '../../core/services/notification_service.dart';
 import '../../core/services/storage_service.dart';
 import '../../core/theme/app_themes.dart';
@@ -86,6 +87,14 @@ class _OnboardingPageState extends State<OnboardingPage> {
     if (_busy) return;
     setState(() => _busy = true);
     try {
+      if (kIsWeb) {
+        // The browser asks by itself; the prayer cubit falls back to the
+        // approximate city when it can't get the device location.
+        final cubit = context.read<PrayerCubit>();
+        await cubit.refreshLocation(silent: true);
+        if (mounted) setState(() => _locationGranted = cubit.state.location != null);
+        return;
+      }
       if (!await Geolocator.isLocationServiceEnabled()) {
         await Geolocator.openLocationSettings();
       }
@@ -204,7 +213,7 @@ class _SlideView extends StatelessWidget {
               clipBehavior: Clip.antiAlias,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(36),
-                boxShadow: [BoxShadow(color: skyColors(slide.sky)[1].withValues(alpha: 0.5), blurRadius: 30, offset: const Offset(0, 12))],
+                boxShadow: liteShadows([BoxShadow(color: skyColors(slide.sky)[1].withValues(alpha: 0.5), blurRadius: 30, offset: const Offset(0, 12))]),
               ),
               child: Stack(
                 children: [
