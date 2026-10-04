@@ -51,10 +51,12 @@ launch; sleep 12; tap 'المصحف'; shot C1_phone_landscape 5
 # ---- Same emulator as a tablet (800dp wide): landscape two pages, portrait one.
 adb shell wm size 1600x2560; adb shell wm density 320
 launch; sleep 12; tap 'المصحف'; shot C2_tablet_landscape 5
+rot() { { echo "== $1"; adb shell dumpsys window displays | grep -iE "mRotation=|mUserRotation|mCurrentAppOrientation|mLastOrientation" | head -6; adb shell dumpsys activity activities | grep -iE "requestedOrientation|mLastReportedConfiguration" | grep -i alhuda -A0 | head -3; adb shell dumpsys activity activities | grep -i "screenOrientation\|requestedOrientation" | head -4; } >> "$OUT/rotation.txt"; }
+rot C2
 adb shell settings put system user_rotation 0; shot C3_tablet_portrait 6
 adb shell settings put system user_rotation 1; shot C4_tablet_landscape_again 6
 # Open the app with the tablet already sideways (it must not start in portrait).
-launch; sleep 12; shot C5_tablet_landscape_launch 2
+launch; sleep 12; shot C5_tablet_landscape_launch 2; rot C5
 adb shell wm size reset; adb shell wm density reset; adb shell settings put system user_rotation 0
 adb logcat -d > "$OUT/B_logcat.txt"
 for p in A B; do

@@ -10,14 +10,22 @@ class AppOrientation {
   static bool? _large;
 
   /// Shortest side of the window in logical pixels ≥ 600: a tablet or an
-  /// unfolded phone.
-  static bool get isLargeScreen {
-    final views = PlatformDispatcher.instance.views;
-    if (views.isEmpty) return false;
-    final v = views.first;
-    if (v.devicePixelRatio <= 0) return false;
-    return (v.physicalSize / v.devicePixelRatio).shortestSide >= 600;
+  /// unfolded phone. Before the window has a size (very early at startup)
+  /// the screen's own size decides; null when neither is known yet.
+  static bool? get _largeOrNull {
+    final d = PlatformDispatcher.instance;
+    for (final v in d.views) {
+      if (!v.physicalSize.isEmpty && v.devicePixelRatio > 0) {
+        return (v.physicalSize / v.devicePixelRatio).shortestSide >= 600;
+      }
+    }
+    for (final s in d.displays) {
+      if (!s.size.isEmpty && s.devicePixelRatio > 0) return (s.size / s.devicePixelRatio).shortestSide >= 600;
+    }
+    return null;
   }
+
+  static bool get isLargeScreen => _largeOrNull ?? false;
 
   static List<DeviceOrientation> get allowed =>
       isLargeScreen ? DeviceOrientation.values : const [DeviceOrientation.portraitUp];
@@ -28,6 +36,7 @@ class AppOrientation {
     final large = isLargeScreen;
     if (onlyIfChanged && large == _large) return;
     _large = large;
-    await SystemChrome.setPreferredOrientations(allowed);
+    await SystemChrome.setPreferredOrientations(
+        large ? DeviceOrientation.values : const [DeviceOrientation.portraitUp]);
   }
 }
