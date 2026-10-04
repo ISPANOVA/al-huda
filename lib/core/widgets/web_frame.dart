@@ -48,7 +48,12 @@ class WebFrame extends StatelessWidget {
             top: 0,
             bottom: 0,
             width: (size.width - columnWidth) / 2,
-            child: IgnorePointer(child: _Brand(color: glass.accent, text: glass.onGlass, muted: glass.onGlassMuted)),
+            child: IgnorePointer(
+              child: Material(
+                type: MaterialType.transparency,
+                child: _Brand(color: glass.accent, text: glass.onGlass, muted: glass.onGlassMuted),
+              ),
+            ),
           )
         : null;
     return Stack(
