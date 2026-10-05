@@ -1,12 +1,14 @@
 {
-  "enabled": false,
-  "id": "0",
+  "enabled": true,
+  "id": "2026-10-05T10:50:38.478Z",
   "mode": "optional",
   "show": "once",
-  "title": "",
-  "message": "",
-  "buttonText": "",
+  "title": "مرحبا بك",
+  "message": "هذه تجربه للرساله",
+  "buttonText": "ابدأ",
   "buttonUrl": "",
-  "platforms": ["android", "web"],
+  "platforms": [
+    "android"
+  ],
   "belowBuild": 0
 }
