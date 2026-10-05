@@ -295,11 +295,12 @@ class _QiblaPageState extends State<QiblaPage> {
                               ? 'استدر يمينًا ${ArabicUtils.toArabicDigits(offset.abs().round())}°'
                               : 'استدر يسارًا ${ArabicUtils.toArabicDigits(offset.abs().round())}°',
                   textAlign: TextAlign.center,
+                  // Long notes read better in the body face.
                   style: TextStyle(
-                    fontFamily: AppFonts.display,
-                    fontSize: _webNeedsTap || _noSensor ? 17 : 22,
-                    fontWeight: FontWeight.w700,
-                    height: 1.5,
+                    fontFamily: _webNeedsTap || _noSensor ? AppFonts.ui : AppFonts.display,
+                    fontSize: _webNeedsTap || _noSensor ? 15.5 : 22,
+                    fontWeight: _webNeedsTap || _noSensor ? FontWeight.w800 : FontWeight.w700,
+                    height: 1.6,
                     color: onStatus,
                   ),
                 ),
