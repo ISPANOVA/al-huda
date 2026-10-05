@@ -5,9 +5,11 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/theme/app_themes.dart';
+import '../../../../core/theme/tones.dart';
 import '../../../../core/utils/arabic_utils.dart';
 import '../../../../core/widgets/glass_container.dart';
 import '../../../../core/widgets/gradient_background.dart';
+import '../../../../core/widgets/noor_ui.dart';
 import '../../../../core/widgets/state_views.dart';
 import '../../../settings/presentation/cubit/settings_cubit.dart';
 import '../cubit/tasbeeh_cubit.dart';
@@ -93,8 +95,13 @@ class _TasbeehPageState extends State<TasbeehPage> with SingleTickerProviderStat
   @override
   Widget build(BuildContext context) {
     final glass = GlassTheme.of(context);
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    const tone = Tone.teal;
     return GlassScaffold(
       title: 'المسبحة الإلكترونية',
+      subtitle: 'عداد ذكي',
+      icon: Icons.blur_circular_rounded,
+      tone: tone,
       actions: [
         IconButton(tooltip: 'إضافة ذكر', icon: const Icon(Icons.add_rounded), onPressed: _addPhrase),
         IconButton(
@@ -108,7 +115,7 @@ class _TasbeehPageState extends State<TasbeehPage> with SingleTickerProviderStat
           final cubit = context.read<TasbeehCubit>();
           final progress = state.target == 0 ? 0.0 : state.count / state.target;
           return ListView(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
             children: [
               SizedBox(
                 height: 48,
@@ -141,56 +148,111 @@ class _TasbeehPageState extends State<TasbeehPage> with SingleTickerProviderStat
                   ),
                 ),
               ),
-              const SizedBox(height: 20),
-              GlassContainer(
-                padding: const EdgeInsets.all(18),
-                child: Text(
-                  state.phrase,
-                  textAlign: TextAlign.center,
-                  style: context
-                      .read<SettingsCubit>()
-                      .state
-                      .quranFont
-                      .style(fontSize: 28, height: 1.8, color: glass.onGlass, weight: FontWeight.w700),
+              const SizedBox(height: 14),
+              ToneCard(
+                tone: tone,
+                ornament: true,
+                padding: const EdgeInsets.fromLTRB(18, 14, 18, 18),
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        SizedBox.square(
+                          dimension: 12,
+                          child: CustomPaint(painter: KhatamPainter(tone.ink(dark), stroke: 1.4)),
+                        ),
+                        const SizedBox(width: 8),
+                        Text('الذكر الحالي',
+                            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: tone.ink(dark))),
+                        const SizedBox(width: 8),
+                        SizedBox.square(
+                          dimension: 12,
+                          child: CustomPaint(painter: KhatamPainter(tone.ink(dark), stroke: 1.4)),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      state.phrase,
+                      textAlign: TextAlign.center,
+                      style: context
+                          .read<SettingsCubit>()
+                          .state
+                          .quranFont
+                          .style(fontSize: 28, height: 1.8, color: glass.onGlass, weight: FontWeight.w700),
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 28),
+              const SizedBox(height: 24),
               Center(
                 child: ScaleTransition(
                   scale: _pulse,
                   child: GestureDetector(
                     onTap: _onTap,
-                    child: SizedBox(
-                      width: 260,
-                      height: 260,
-                      child: CustomPaint(
-                        painter: _BeadsRingPainter(
-                          progress: progress,
-                          accent: glass.accent,
-                          track: glass.onGlass.withValues(alpha: 0.15),
-                          beads: state.target == 0 || state.target > 100 ? 33 : state.target,
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(28),
-                          child: GlassContainer(
-                            borderRadius: 200,
-                            blur: 24,
-                            padding: EdgeInsets.zero,
-                            child: Center(
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Text(
-                                    ArabicUtils.toArabicDigits(state.count),
-                                    style: TextStyle(fontSize: 64, fontWeight: FontWeight.w900, color: glass.onGlass),
-                                  ),
-                                  Text(
-                                    state.target == 0 ? 'بلا حد' : 'من ${ArabicUtils.toArabicDigits(state.target)}',
-                                    style: TextStyle(color: glass.onGlassMuted),
-                                  ),
-                                ],
+                    child: RepaintBoundary(
+                      child: SizedBox(
+                        width: 272,
+                        height: 272,
+                        child: CustomPaint(
+                          painter: _CounterPainter(
+                            progress: progress,
+                            light: tone.light,
+                            deep: tone.deep,
+                            surface: noorSurface(context),
+                            track: glass.onGlass.withValues(alpha: dark ? 0.13 : 0.16),
+                            beads: state.target == 0 || state.target > 100 ? 33 : state.target,
+                          ),
+                          child: Stack(
+                            alignment: Alignment.center,
+                            children: [
+                              SizedBox.square(
+                                dimension: 150,
+                                child: CustomPaint(
+                                  painter: KhatamPainter(tone.mid.withValues(alpha: dark ? 0.16 : 0.20), stroke: 1.2),
+                                ),
                               ),
-                            ),
+                              Padding(
+                                padding: const EdgeInsets.all(64),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    FittedBox(
+                                      fit: BoxFit.scaleDown,
+                                      child: Text(
+                                        ArabicUtils.toArabicDigits(state.count),
+                                        style: TextStyle(
+                                          fontFamily: AppFonts.display,
+                                          fontSize: 66,
+                                          fontWeight: FontWeight.w700,
+                                          height: 1.15,
+                                          color: tone.ink(dark),
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(20),
+                                        color: tone.mid.withValues(alpha: dark ? 0.18 : 0.14),
+                                        border: Border.all(color: tone.mid.withValues(alpha: 0.4)),
+                                      ),
+                                      child: Text(
+                                        state.target == 0 ? 'بلا حد' : 'من ${ArabicUtils.toArabicDigits(state.target)}',
+                                        maxLines: 1,
+                                        style: TextStyle(
+                                          fontSize: 12.5,
+                                          fontWeight: FontWeight.w800,
+                                          color: tone.ink(dark),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ),
@@ -199,18 +261,35 @@ class _TasbeehPageState extends State<TasbeehPage> with SingleTickerProviderStat
                 ),
               ),
               const SizedBox(height: 12),
-              Center(child: Text('اضغط على الدائرة للتسبيح', style: TextStyle(color: glass.onGlassMuted))),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.touch_app_rounded, size: 16, color: glass.onGlassMuted),
+                  const SizedBox(width: 6),
+                  Text('اضغط على الدائرة للتسبيح', style: TextStyle(color: glass.onGlassMuted)),
+                ],
+              ),
               const SizedBox(height: 20),
               Row(
                 children: [
-                  Expanded(child: _StatTile(label: 'الدورات', value: state.rounds)),
-                  const SizedBox(width: 10),
-                  Expanded(child: _StatTile(label: 'إجمالي التسبيح', value: state.lifetime)),
+                  Expanded(
+                    child: _StatTile(label: 'الدورات', value: state.rounds, icon: Icons.loop_rounded, tone: tone),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _StatTile(
+                      label: 'إجمالي التسبيح',
+                      value: state.lifetime,
+                      icon: Icons.all_inclusive_rounded,
+                      tone: Tone.emerald,
+                    ),
+                  ),
                 ],
               ),
-              const GlassSectionTitle('عدد الدورة'),
+              const GlassSectionTitle('عدد الدورة', tone: tone),
               Wrap(
                 spacing: 8,
+                runSpacing: 8,
                 children: [
                   for (final t in _targets)
                     ChoiceChip(
@@ -220,13 +299,14 @@ class _TasbeehPageState extends State<TasbeehPage> with SingleTickerProviderStat
                     ),
                 ],
               ),
-              const SizedBox(height: 8),
-              GlassContainer(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
-                child: SwitchListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: const Text('الانتقال للذكر التالي تلقائيًا'),
-                  subtitle: const Text('بعد إتمام عدد الدورة ينتقل للذكر الذي يليه'),
+              const GlassSectionTitle('الإعدادات', tone: tone),
+              NoorCard(
+                padding: EdgeInsets.zero,
+                child: _SettingRow(
+                  icon: Icons.skip_next_rounded,
+                  tone: Tone.sapphire,
+                  title: 'الانتقال للذكر التالي تلقائيًا',
+                  subtitle: 'بعد إتمام عدد الدورة ينتقل للذكر الذي يليه',
                   value: state.autoNext,
                   onChanged: state.target == 0 ? null : cubit.setAutoNext,
                 ),
@@ -242,51 +322,234 @@ class _TasbeehPageState extends State<TasbeehPage> with SingleTickerProviderStat
 class _StatTile extends StatelessWidget {
   final String label;
   final int value;
+  final IconData icon;
+  final Tone tone;
 
-  const _StatTile({required this.label, required this.value});
+  const _StatTile({required this.label, required this.value, required this.icon, required this.tone});
 
   @override
   Widget build(BuildContext context) {
     final glass = GlassTheme.of(context);
-    return GlassContainer(
-      child: Column(
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    return ToneCard(
+      tone: tone,
+      radius: 22,
+      padding: const EdgeInsets.all(14),
+      child: Row(
         children: [
-          Text(ArabicUtils.toArabicDigits(value), style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: glass.accent)),
-          Text(label, style: TextStyle(color: glass.onGlassMuted)),
+          ToneIcon(icon, tone: tone, size: 40),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SizedBox(
+                  width: double.infinity,
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: AlignmentDirectional.centerStart,
+                    child: Text(
+                      ArabicUtils.toArabicDigits(value),
+                      style: TextStyle(
+                        fontFamily: AppFonts.display,
+                        fontSize: 26,
+                        fontWeight: FontWeight.w700,
+                        height: 1.25,
+                        color: tone.ink(dark),
+                      ),
+                    ),
+                  ),
+                ),
+                Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(color: glass.onGlassMuted, fontSize: 12.5, fontWeight: FontWeight.w700),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
   }
 }
 
-/// Ring of beads that light up with progress.
-class _BeadsRingPainter extends CustomPainter {
+/// A settings row: coloured icon, title, subtitle and a switch.
+class _SettingRow extends StatelessWidget {
+  final IconData icon;
+  final Tone tone;
+  final String title;
+  final String? subtitle;
+  final bool value;
+  final ValueChanged<bool>? onChanged;
+
+  const _SettingRow({
+    required this.icon,
+    required this.tone,
+    required this.title,
+    this.subtitle,
+    required this.value,
+    this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final glass = GlassTheme.of(context);
+    final enabled = onChanged != null;
+    return InkWell(
+      onTap: enabled ? () => onChanged!(!value) : null,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(14, 12, 12, 12),
+        child: Row(
+          children: [
+            Opacity(opacity: enabled ? 1 : 0.5, child: ToneIcon(icon, tone: tone, size: 42)),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w800,
+                      color: enabled ? glass.onGlass : glass.onGlassMuted,
+                    ),
+                  ),
+                  if (subtitle != null)
+                    Text(subtitle!, style: TextStyle(fontSize: 12, height: 1.4, color: glass.onGlassMuted)),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            Switch(value: value, onChanged: onChanged),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// The counter: a ring of beads that light up with the count, and a disc
+/// with a teal rim that fills with the round's progress. Painted only when
+/// the count changes (no running animation).
+class _CounterPainter extends CustomPainter {
   final double progress;
-  final Color accent;
+  final Color light;
+  final Color deep;
+  final Color surface;
   final Color track;
   final int beads;
 
-  _BeadsRingPainter({required this.progress, required this.accent, required this.track, required this.beads});
+  _CounterPainter({
+    required this.progress,
+    required this.light,
+    required this.deep,
+    required this.surface,
+    required this.track,
+    required this.beads,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
     final c = size.center(Offset.zero);
-    final r = size.width / 2 - 10;
-    final lit = (progress * beads).floor();
+    final outer = size.shortestSide / 2;
+    final mid = Color.lerp(light, deep, 0.45)!;
+    final p = progress.clamp(0.0, 1.0);
+
+    // Beads around the edge.
+    final beadR = outer - 9;
+    final lit = (p * beads).floor();
+    final small = beads > 60;
     for (var i = 0; i < beads; i++) {
       final a = -math.pi / 2 + 2 * math.pi * i / beads;
-      final p = Offset(c.dx + r * math.cos(a), c.dy + r * math.sin(a));
+      final o = Offset(c.dx + beadR * math.cos(a), c.dy + beadR * math.sin(a));
       final on = i < lit;
-      if (on) canvas.drawCircle(p, 8, Paint()..color = accent.withValues(alpha: 0.35)..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6));
-      canvas.drawCircle(p, beads > 60 ? 3.5 : 5.5, Paint()..color = on ? accent : track);
+      if (on) {
+        canvas.drawCircle(o, small ? 5.5 : 8, Paint()..color = light.withValues(alpha: 0.22));
+        canvas.drawCircle(
+          o,
+          small ? 3.5 : 5.5,
+          Paint()..color = Color.lerp(light, deep, beads <= 1 ? 0.0 : i / (beads - 1) * 0.7)!,
+        );
+      } else {
+        canvas.drawCircle(o, small ? 3 : 4.5, Paint()..color = track);
+      }
     }
+
+    // The disc with a soft teal glow from the top.
+    final discR = outer - 30;
+    final disc = Rect.fromCircle(center: c, radius: discR);
+    canvas.drawCircle(
+      c,
+      discR,
+      Paint()
+        ..shader = RadialGradient(
+          center: const Alignment(0, -0.45),
+          radius: 1.0,
+          colors: [Color.lerp(surface, mid, 0.30)!, surface],
+        ).createShader(disc),
+    );
+
+    // Soft halo outside the rim (a wide translucent stroke, no blur).
+    if (p > 0) {
+      canvas.drawCircle(
+        c,
+        discR,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 20
+          ..color = mid.withValues(alpha: 0.08 + 0.10 * p),
+      );
+    }
+
+    // Rim track and progress arc.
+    const rim = 9.0;
+    canvas.drawCircle(
+      c,
+      discR,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = rim
+        ..color = mid.withValues(alpha: 0.18),
+    );
+    if (p > 0) {
+      canvas.drawArc(
+        disc,
+        -math.pi / 2,
+        2 * math.pi * p,
+        false,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = rim
+          ..strokeCap = StrokeCap.round
+          ..shader = SweepGradient(
+            colors: [light, mid, deep, light],
+            transform: const GradientRotation(-math.pi / 2),
+          ).createShader(disc),
+      );
+    }
+
+    // Fine inner hairline.
+    canvas.drawCircle(
+      c,
+      discR - rim / 2 - 4,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1
+        ..color = light.withValues(alpha: 0.22),
+    );
   }
 
   @override
-  bool shouldRepaint(covariant _BeadsRingPainter old) =>
-      old.progress != progress || old.beads != beads || old.accent != accent;
+  bool shouldRepaint(covariant _CounterPainter old) =>
+      old.progress != progress ||
+      old.beads != beads ||
+      old.light != light ||
+      old.surface != surface ||
+      old.track != track;
 }
-
 
 class _StarBurst extends StatefulWidget {
   final Color color;

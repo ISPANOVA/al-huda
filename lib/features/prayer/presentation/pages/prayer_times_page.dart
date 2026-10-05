@@ -493,7 +493,8 @@ class _SettingsEntry extends StatelessWidget {
   }
 }
 
-/// Adhan voice / alerts and calculation method, on their own page.
+/// Adhan voice / alerts and calculation method, on their own page — split
+/// into titled sections (الأذان، الصلوات، سلوك الأذان، التذكيرات، طريقة الحساب).
 class PrayerSettingsPage extends StatelessWidget {
   const PrayerSettingsPage({super.key});
 
@@ -503,12 +504,15 @@ class PrayerSettingsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return GlassScaffold(
       title: 'الأذان والمواقيت',
+      subtitle: 'الأذان والتنبيهات وطريقة الحساب',
+      icon: Icons.campaign_rounded,
+      tone: Tone.sapphire,
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
+        physics: const BouncingScrollPhysics(),
         children: const [
-          NoorSection('الأذان والتنبيهات'),
           AdhanSettingsCard(),
-          NoorSection('طريقة الحساب'),
+          SizedBox(height: 4),
           PrayerCalculationSettings(),
         ],
       ),

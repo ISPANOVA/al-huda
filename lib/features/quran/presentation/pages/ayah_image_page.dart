@@ -10,8 +10,11 @@ import 'package:share_plus/share_plus.dart';
 
 import '../../../../core/data/surah_metadata.dart';
 import '../../../../core/theme/app_themes.dart';
+import '../../../../core/theme/tones.dart';
 import '../../../../core/utils/arabic_utils.dart';
+import '../../../../core/widgets/glass_container.dart';
 import '../../../../core/widgets/gradient_background.dart';
+import '../../../../core/widgets/noor_ui.dart';
 import '../../../../core/widgets/state_views.dart';
 import '../../domain/entities/ayah.dart';
 
@@ -90,8 +93,12 @@ class _AyahImagePageState extends State<AyahImagePage> {
   Widget build(BuildContext context) {
     final glass = GlassTheme.of(context);
     final style = _styles[_style];
+    final hasTafseer = widget.ayah.tafseer.isNotEmpty;
     return GlassScaffold(
       title: 'مشاركة كصورة',
+      subtitle: _reference(),
+      icon: Icons.ios_share_rounded,
+      tone: Tone.emerald,
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
         children: [
@@ -104,9 +111,9 @@ class _AyahImagePageState extends State<AyahImagePage> {
               tafseer: _withTafseer ? widget.ayah.tafseer : null,
             ),
           ),
-          const SizedBox(height: 18),
+          const GlassSectionTitle('نمط البطاقة', tone: Tone.emerald),
           SizedBox(
-            height: 64,
+            height: 76,
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
               itemCount: _styles.length,
@@ -114,32 +121,85 @@ class _AyahImagePageState extends State<AyahImagePage> {
               itemBuilder: (context, i) {
                 final s = _styles[i];
                 final selected = i == _style;
-                return GestureDetector(
-                  onTap: () => setState(() => _style = i),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    width: 64,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: LinearGradient(colors: s.colors),
-                      border: Border.all(color: selected ? glass.accent : glass.onGlass.withValues(alpha: 0.2), width: selected ? 3 : 1),
-                    ),
-                    child: Center(
-                      child: Text(s.name, style: TextStyle(color: s.ink, fontSize: 11, fontWeight: FontWeight.w800)),
+                return Semantics(
+                  button: true,
+                  selected: selected,
+                  label: s.name,
+                  child: GestureDetector(
+                    onTap: () => setState(() => _style = i),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      width: 76,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(22),
+                        gradient: LinearGradient(
+                            begin: Alignment.topRight, end: Alignment.bottomLeft, colors: s.colors),
+                        border: Border.all(
+                          color: selected ? glass.accent : glass.onGlass.withValues(alpha: 0.2),
+                          width: selected ? 3 : 1,
+                        ),
+                      ),
+                      child: Stack(
+                        children: [
+                          PositionedDirectional(
+                            top: 8,
+                            end: 8,
+                            child: AnimatedScale(
+                              duration: const Duration(milliseconds: 200),
+                              scale: selected ? 1.0 : 0.6,
+                              child: Container(
+                                width: selected ? 18 : 10,
+                                height: selected ? 18 : 10,
+                                decoration: BoxDecoration(shape: BoxShape.circle, color: s.accent),
+                                child: selected ? Icon(Icons.check_rounded, size: 13, color: s.colors.first) : null,
+                              ),
+                            ),
+                          ),
+                          Align(
+                            alignment: const Alignment(0, 0.45),
+                            child: Text(s.name,
+                                style: TextStyle(color: s.ink, fontSize: 12.5, fontWeight: FontWeight.w900)),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 );
               },
             ),
           ),
-          const SizedBox(height: 8),
-          SwitchListTile(
-            contentPadding: EdgeInsets.zero,
-            title: const Text('إضافة التفسير الميسر'),
-            value: _withTafseer,
-            onChanged: widget.ayah.tafseer.isEmpty ? null : (v) => setState(() => _withTafseer = v),
+          const GlassSectionTitle('المحتوى', tone: Tone.emerald),
+          NoorCard(
+            padding: EdgeInsets.zero,
+            child: InkWell(
+              onTap: hasTafseer ? () => setState(() => _withTafseer = !_withTafseer) : null,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(14, 12, 12, 12),
+                child: Row(
+                  children: [
+                    Opacity(
+                      opacity: hasTafseer ? 1.0 : 0.5,
+                      child: const ToneIcon(Icons.auto_stories_rounded, tone: Tone.gold, size: 42),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Text('إضافة التفسير الميسر',
+                          style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w800,
+                              color: hasTafseer ? glass.onGlass : glass.onGlassMuted)),
+                    ),
+                    const SizedBox(width: 8),
+                    Switch(
+                      value: _withTafseer,
+                      onChanged: hasTafseer ? (v) => setState(() => _withTafseer = v) : null,
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 20),
           FilledButton.icon(
             style: FilledButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 15),

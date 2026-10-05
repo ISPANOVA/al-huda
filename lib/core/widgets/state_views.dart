@@ -49,15 +49,35 @@ class MessageView extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.all(24),
         child: GlassContainer(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(icon, size: 48, color: glass.accent),
-              const SizedBox(height: 12),
+              Container(
+                width: 92,
+                height: 92,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: RadialGradient(
+                    colors: [glass.accent.withValues(alpha: 0.28), glass.accent.withValues(alpha: 0)],
+                  ),
+                ),
+                alignment: Alignment.center,
+                child: Container(
+                  width: 62,
+                  height: 62,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: glass.accent.withValues(alpha: 0.14),
+                    border: Border.all(color: glass.accent.withValues(alpha: 0.5)),
+                  ),
+                  child: Icon(icon, size: 30, color: glass.accent),
+                ),
+              ),
+              const SizedBox(height: 14),
               Text(title,
                   textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
+                  style: TextStyle(fontFamily: AppFonts.display, fontSize: 20, fontWeight: FontWeight.w700, color: glass.onGlass)),
               if (subtitle != null) ...[
                 const SizedBox(height: 8),
                 Text(subtitle!, textAlign: TextAlign.center, style: TextStyle(color: glass.onGlassMuted)),

@@ -346,7 +346,10 @@ class NoorSection extends StatelessWidget {
   final String? action;
   final VoidCallback? onAction;
 
-  const NoorSection(this.title, {super.key, this.action, this.onAction});
+  /// Colour of the star before the title (the page's tone; gold by default).
+  final Tone? tone;
+
+  const NoorSection(this.title, {super.key, this.action, this.onAction, this.tone});
 
   @override
   Widget build(BuildContext context) {
@@ -357,7 +360,8 @@ class NoorSection extends StatelessWidget {
         children: [
           SizedBox.square(
             dimension: 14,
-            child: CustomPaint(painter: _MiniStar(glass.accent)),
+            child: CustomPaint(
+                painter: _MiniStar(tone?.ink(Theme.of(context).brightness == Brightness.dark) ?? glass.accent)),
           ),
           const SizedBox(width: 8),
           Expanded(

@@ -269,8 +269,13 @@ class AthkarListPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final category = AthkarData.byId(categoryId);
     final progress = context.select<AthkarCubit, double>((c) => c.state.categoryProgress(category));
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    const tone = Tone.rose;
     return GlassScaffold(
       title: category.title,
+      subtitle: category.subtitle,
+      tone: tone,
+      icon: athkarLook(category.id).icon,
       actions: [
         IconButton(
           tooltip: 'إعادة البدء',
@@ -283,14 +288,15 @@ class AthkarListPage extends StatelessWidget {
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(6),
-              child: LinearProgressIndicator(
-                value: progress,
-                minHeight: 7,
-                color: GlassTheme.of(context).accent,
-                backgroundColor: GlassTheme.of(context).onGlass.withValues(alpha: 0.08),
-              ),
+            child: Row(
+              children: [
+                Expanded(child: _ToneProgressBar(value: progress, tone: tone)),
+                const SizedBox(width: 10),
+                Text(
+                  progress >= 1 ? 'تمت ✓' : '${ArabicUtils.toArabicDigits((progress * 100).round())}٪',
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w900, color: tone.ink(dark)),
+                ),
+              ],
             ),
           ),
           Expanded(
@@ -319,6 +325,9 @@ class _ThikrCard extends StatelessWidget {
     final completed = done >= thikr.count;
     final haptics = context.select((SettingsCubit c) => c.state.hapticFeedback);
     final font = context.select((SettingsCubit c) => c.state.quranFont);
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    const tone = Tone.rose;
+    final ink = tone.ink(dark);
 
     Future<void> tap() async {
       if (completed) return;
@@ -350,11 +359,25 @@ class _ThikrCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: glass.accent.withValues(alpha: 0.10),
+                  color: tone.mid.withValues(alpha: dark ? 0.14 : 0.10),
                   borderRadius: BorderRadius.circular(14),
-                  border: BorderDirectional(start: BorderSide(color: glass.accent, width: 3)),
+                  border: BorderDirectional(start: BorderSide(color: ink, width: 3)),
                 ),
-                child: Text(thikr.virtue!, style: TextStyle(fontSize: 13, color: glass.onGlassMuted, height: 1.6)),
+                child: Text.rich(
+                  TextSpan(
+                    children: [
+                      WidgetSpan(
+                        alignment: PlaceholderAlignment.middle,
+                        child: Padding(
+                          padding: const EdgeInsetsDirectional.only(end: 6),
+                          child: Icon(Icons.auto_awesome_rounded, size: 14, color: ink),
+                        ),
+                      ),
+                      TextSpan(text: thikr.virtue),
+                    ],
+                  ),
+                  style: TextStyle(fontSize: 13, color: glass.onGlassMuted, height: 1.6),
+                ),
               ),
             ],
             const SizedBox(height: 12),
@@ -366,7 +389,7 @@ class _ThikrCard extends StatelessWidget {
                 if (thikr.quran != null)
                   IconButton(
                     tooltip: 'استماع',
-                    icon: Icon(Icons.volume_up_rounded, color: glass.accent),
+                    icon: Icon(Icons.volume_up_rounded, color: ink),
                     onPressed: () {
                       final q = thikr.quran!;
                       context.read<AudioCubit>().playAyahs(q.surah, q.from, q.to);
@@ -375,32 +398,83 @@ class _ThikrCard extends StatelessWidget {
                 const SizedBox(width: 4),
                 GestureDetector(
                   onTap: tap,
-                  child: NoorRing(
-                    value: ratio,
-                    color: glass.accent,
-                    size: 62,
-                    stroke: 5,
-                    child: AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 200),
-                      child: completed
-                          ? Icon(Icons.check_rounded, key: const ValueKey('done'), color: glass.accent, size: 30)
-                          : Column(
-                              key: ValueKey(done),
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(ArabicUtils.toArabicDigits(done),
-                                    style: TextStyle(
-                                        fontSize: 18, fontWeight: FontWeight.w900, color: glass.onGlass, height: 1.1)),
-                                Text('من ${ArabicUtils.toArabicDigits(thikr.count)}',
-                                    style: TextStyle(fontSize: 10, color: glass.onGlassMuted)),
-                              ],
-                            ),
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: RadialGradient(
+                        colors: [tone.mid.withValues(alpha: dark ? 0.20 : 0.14), tone.mid.withValues(alpha: 0.04)],
+                      ),
+                    ),
+                    child: NoorRing(
+                      value: ratio,
+                      color: ink,
+                      track: tone.mid.withValues(alpha: 0.18),
+                      size: 62,
+                      stroke: 5,
+                      child: AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 200),
+                        child: completed
+                            ? Icon(Icons.check_rounded, key: const ValueKey('done'), color: ink, size: 30)
+                            : Column(
+                                key: ValueKey(done),
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(ArabicUtils.toArabicDigits(done),
+                                      style: TextStyle(
+                                          fontSize: 18, fontWeight: FontWeight.w900, color: glass.onGlass, height: 1.1)),
+                                  Text('من ${ArabicUtils.toArabicDigits(thikr.count)}',
+                                      style: TextStyle(fontSize: 10, color: glass.onGlassMuted)),
+                                ],
+                              ),
+                      ),
                     ),
                   ),
                 ),
               ],
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Thin progress bar filled with the tone's gradient.
+class _ToneProgressBar extends StatelessWidget {
+  final double value;
+  final Tone tone;
+
+  const _ToneProgressBar({required this.value, required this.tone});
+
+  @override
+  Widget build(BuildContext context) {
+    final glass = GlassTheme.of(context);
+    return Container(
+      height: 8,
+      alignment: AlignmentDirectional.centerStart,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(6),
+        color: glass.onGlass.withValues(alpha: 0.08),
+      ),
+      child: TweenAnimationBuilder<double>(
+        tween: Tween(begin: 0, end: value.clamp(0.0, 1.0)),
+        duration: const Duration(milliseconds: 500),
+        curve: Curves.easeOutCubic,
+        builder: (context, v, child) => FractionallySizedBox(
+          alignment: AlignmentDirectional.centerStart,
+          widthFactor: v,
+          heightFactor: 1,
+          child: child,
+        ),
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(6),
+            gradient: LinearGradient(
+              begin: AlignmentDirectional.centerStart,
+              end: AlignmentDirectional.centerEnd,
+              colors: [tone.light, tone.deep],
+            ),
+          ),
         ),
       ),
     );

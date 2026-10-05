@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../theme/app_themes.dart';
+import '../theme/tones.dart';
 import 'noor_ui.dart';
 
 /// Frosted glass surface: backdrop blur + translucent gradient fill +
@@ -131,20 +132,27 @@ class GlassSectionTitle extends StatelessWidget {
   final String title;
   final Widget? trailing;
 
-  const GlassSectionTitle(this.title, {super.key, this.trailing});
+  /// Colour of the little star before the title (the page's tone).
+  final Tone? tone;
+
+  const GlassSectionTitle(this.title, {super.key, this.trailing, this.tone});
 
   @override
   Widget build(BuildContext context) {
     final glass = GlassTheme.of(context);
+    final dark = Theme.of(context).brightness == Brightness.dark;
     return Padding(
       padding: const EdgeInsets.fromLTRB(6, 22, 4, 10),
       child: Row(
         children: [
-          Icon(Icons.auto_awesome_rounded, size: 14, color: glass.accent),
+          SizedBox.square(
+            dimension: 14,
+            child: CustomPaint(painter: KhatamPainter(tone?.ink(dark) ?? glass.accent, stroke: 1.6)),
+          ),
           const SizedBox(width: 8),
           Expanded(
             child: Text(title,
-                style: TextStyle(fontSize: 16.5, fontWeight: FontWeight.w900, color: glass.onGlass)),
+                style: TextStyle(fontFamily: AppFonts.display, fontSize: 19, fontWeight: FontWeight.w700, color: glass.onGlass)),
           ),
           ?trailing,
         ],

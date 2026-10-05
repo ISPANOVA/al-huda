@@ -268,10 +268,15 @@ class AppThemes {
         inactiveTrackColor: onGlass.withValues(alpha: 0.2),
         overlayColor: accent.withValues(alpha: 0.2),
       ),
+      // Switches: solid gold when on, a quiet outline when off.
       switchTheme: SwitchThemeData(
-        thumbColor: WidgetStateProperty.resolveWith((s) => s.contains(WidgetState.selected) ? accent : null),
+        thumbColor: WidgetStateProperty.resolveWith((s) => s.contains(WidgetState.selected)
+            ? (isDark ? const Color(0xFF15120A) : Colors.white)
+            : onGlass.withValues(alpha: 0.55)),
         trackColor: WidgetStateProperty.resolveWith(
-            (s) => s.contains(WidgetState.selected) ? accent.withValues(alpha: 0.45) : null),
+            (s) => s.contains(WidgetState.selected) ? accent : onGlass.withValues(alpha: 0.06)),
+        trackOutlineColor: WidgetStateProperty.resolveWith(
+            (s) => s.contains(WidgetState.selected) ? Colors.transparent : onGlass.withValues(alpha: 0.22)),
       ),
       bottomSheetTheme: const BottomSheetThemeData(backgroundColor: Colors.transparent, elevation: 0),
       dialogTheme: DialogThemeData(
@@ -301,8 +306,14 @@ class AppThemes {
       ),
       chipTheme: ChipThemeData(
         backgroundColor: Colors.white.withValues(alpha: isDark ? 0.06 : 0.3),
-        selectedColor: accent.withValues(alpha: 0.5),
-        labelStyle: TextStyle(color: onGlass),
+        selectedColor: accent,
+        checkmarkColor: isDark ? Colors.black : Colors.white,
+        labelStyle: TextStyle(
+          color: WidgetStateColor.resolveWith(
+              (s) => s.contains(WidgetState.selected) ? (isDark ? Colors.black : Colors.white) : onGlass),
+          fontWeight: FontWeight.w700,
+        ),
+        secondaryLabelStyle: TextStyle(color: isDark ? Colors.black : Colors.white, fontWeight: FontWeight.w800),
         side: BorderSide(color: glass.glassBorder),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       ),
