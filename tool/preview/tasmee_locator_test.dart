@@ -143,6 +143,7 @@ void main() {
   });
 
   plainSpellingCheck(quran, reset);
+  noisyRecogniserCheck(quran, reset);
 
   group('tracker', () {
     setUp(reset);
@@ -272,5 +273,94 @@ void plainSpellingCheck(List<TasmeeWord> quran, void Function() reset) {
     // ignore: avoid_print
     print('plain spelling: ${mistakes.length} words judged wrong\n${bad.join('\n')}');
     expect(mistakes.length, lessThan(40));
+  }, skip: file.existsSync() ? false : 'no plain Quran text');
+}
+
+/// A noisy recogniser (dropped particles, misheard letters, words arriving
+/// one by one with the last still half-said) over random ayahs, some with a
+/// real wrong word: how many correct words are flagged, how many real
+/// mistakes are caught.
+void noisyRecogniserCheck(List<TasmeeWord> quran, void Function() reset) {
+  final file = File('/tmp/quran-simple-clean.txt');
+  test('noisy recogniser: few false mistakes, real ones caught', () {
+    final lines = file.readAsLinesSync().where((l) => RegExp(r'^\d+\|\d+\|').hasMatch(l)).toList();
+    final rnd = math.Random(11);
+    const confusable = ['ثس', 'سص', 'ذز', 'ضد', 'ظض', 'طت', 'قك', 'حه'];
+    String mishear(String w) {
+      for (final g in confusable) {
+        final i = w.indexOf(g[0]);
+        if (i >= 0) return w.replaceRange(i, i + 1, g[1]);
+      }
+      return w;
+    }
+
+    final vocab = [for (final l in lines.take(2000)) ...l.split('|')[2].split(' ')]
+        .where((w) => TasmeeMatcher.key(w).length >= 4)
+        .toList();
+    var words = 0, falseFlags = 0, injected = 0, caught = 0;
+    final examples = <String>[];
+    for (var t = 0; t < 600; t++) {
+      reset();
+      final l = lines[rnd.nextInt(lines.length)].split('|');
+      final su = int.parse(l[0]), ay = int.parse(l[1]);
+      final plain = l[2].split(' ');
+      final start = quran.indexWhere((w) => w.surah == su && w.ayah == ay);
+      final mistakes = <TasmeeMistake>[];
+      final s = TasmeeSession(quran, mistakes)..startFrom(start);
+      // One real mistake in a third of the ayahs.
+      var wrongAt = -1;
+      String? wrongWord;
+      if (plain.length >= 4 && rnd.nextInt(3) == 0) {
+        final candidates = [
+          for (var i = 1; i < plain.length - 1; i++)
+            if (TasmeeMatcher.key(plain[i]).length >= 4) i,
+        ];
+        if (candidates.isNotEmpty) {
+          wrongAt = candidates[rnd.nextInt(candidates.length)];
+          final orig = TasmeeMatcher.key(plain[wrongAt]);
+          do {
+            wrongWord = vocab[rnd.nextInt(vocab.length)];
+          } while (TasmeeMatcher.key(wrongWord!)[0] == orig[0] || TasmeeMatcher.couldBe(TasmeeMatcher.key(wrongWord), orig));
+        }
+      }
+      final said = <String>[];
+      for (var i = 0; i < plain.length; i++) {
+        if (i == wrongAt) {
+          said.add(wrongWord!);
+          continue;
+        }
+        final k = TasmeeMatcher.key(plain[i]);
+        final r = rnd.nextDouble();
+        if (k.length <= 2 && r < 0.06) continue; // a particle lost
+        said.add(r > 0.95 ? mishear(plain[i]) : plain[i]);
+      }
+      // Partial results, the last word often half-said.
+      for (var n = 1; n < said.length; n++) {
+        final part = said.sublist(0, n);
+        final last = part.last;
+        if (last.length > 3 && rnd.nextBool()) part[n - 1] = last.substring(0, last.length ~/ 2 + 1);
+        s.feed(part, isFinal: false);
+      }
+      s.feed(said, isFinal: true);
+      words += plain.length;
+      final real = wrongAt >= 0 ? 1 : 0;
+      injected += real;
+      var hit = false;
+      for (final m in mistakes) {
+        if (wrongAt >= 0 && m.heard == wrongWord) {
+          hit = true;
+        } else {
+          falseFlags++;
+          if (examples.length < 25) examples.add('$su:$ay ${m.word}←${m.heard} | ${said.join(' ')}');
+        }
+      }
+      if (hit) caught++;
+    }
+    // ignore: avoid_print
+    print('noisy: $words words, $falseFlags false mistakes '
+        '(${(falseFlags * 100 / words).toStringAsFixed(2)}%), caught $caught / $injected real mistakes\n'
+        '${examples.join('\n')}');
+    expect(falseFlags * 100 / words, lessThan(1.0));
+    expect(caught, greaterThan(injected * 0.9));
   }, skip: file.existsSync() ? false : 'no plain Quran text');
 }

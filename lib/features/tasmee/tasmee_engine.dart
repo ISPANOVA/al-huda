@@ -132,13 +132,15 @@ class TasmeeMatcher {
       // Hamza below a yā' seat after a long ā: ءَانَآيِٕ ← آناء, وَرَآيِٕ ← وراء
       // (but ٱمۡرِيٕ ← امرئ keeps its yā').
       .replaceAllMapped(RegExp('([اآ]ٓ?)ي[ِ]?ٕ[ِ]?'), (m) => '${m[1]}ء')
+      // Hamza carried by a written yā': وَمَلَإِيْهِۦ ← وملئه.
+      .replaceAll('إِيْ', 'ئ')
       // Small yā' / wāw / nūn: أُحۡيِۦ ← أحيي, دَاوُۥدَ ← داوود, نُـۨجِي ← ننجي.
       .replaceAll('ۦ', 'ي')
       .replaceAll('ۧ', 'ي')
       .replaceAll('ۥ', 'و')
       .replaceAll('ۨ', 'ن')
       // Alef written for alef maqsura: رَءَا ← رأى, تَرَٰٓءَا ← تراءى, لَدَا ← لدى, ٱلۡأَقۡصَا ← الأقصى.
-      .replaceAllMapped(RegExp('(رّ?َ?ٰ?ٓ?ءَ?[آا]ٓ?|^لَدَا|^طَغَا|قۡصَا)\$'), (m) => '${m[0]!.substring(0, m[0]!.length - 1)}ى');
+      .replaceAllMapped(RegExp('(رّ?َ?ٰ?ٓ?ءَ?[آا]ٓ?|^لَدَا|^طَغَا|قۡصَا|نَـَٔا)\$'), (m) => '${m[0]!.substring(0, m[0]!.length - 1)}ى');
 
   static int distance(String a, String b) {
     if (a == b) return 0;
@@ -218,7 +220,7 @@ class TasmeeMatcher {
     if (h.isEmpty || e.isEmpty) return false;
     if (h == e) return true;
     // The Uthmani script writes الليل، اللاتي، اللائي، اللذان with one lām.
-    if (h.length >= 4 && e.length >= 3) {
+    if (h.length >= 3 && e.length >= 2) {
       final i = h.indexOf('لل');
       if (i >= 0 && i <= 2 && h.replaceFirst('لل', 'ل', i) == e && _oneLam.any((st) => e.startsWith(st, i))) {
         return true;
@@ -241,7 +243,7 @@ class TasmeeMatcher {
     return soundDistance(h, e) <= tol;
   }
 
-  static const _oneLam = ['ليل', 'لتي', 'ليي', 'لذن', 'لذين'];
+  static const _oneLam = ['ليل', 'لتي', 'لي', 'لذن', 'لذين'];
 
   static final _numberish = {
     for (final w in ['ثلاث', 'اربع', 'خمس', 'ست', 'سبع', 'ثماني', 'تسع', 'عشر', 'ثمن']) key(w),
