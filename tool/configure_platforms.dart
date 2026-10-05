@@ -330,6 +330,8 @@ void _configureMainActivity() {
   }
   target.writeAsStringSync('''package $appId
 
+import android.content.Intent
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.view.Display
@@ -349,6 +351,22 @@ class MainActivity : AudioServiceActivity() {
                     WidgetStore.save(this, call.argument<String>("prayers"), call.argument<String>("ayahs"), call.argument<String>("style"))
                     WidgetStore.updateAll(this)
                     result.success(true)
+                }
+                else -> result.notImplemented()
+            }
+        }
+        // Links from the owner's message (an update download, a page).
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "alhuda/app").setMethodCallHandler { call, result ->
+            when (call.method) {
+                "openUrl" -> {
+                    try {
+                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(call.argument<String>("url") ?: ""))
+                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        startActivity(intent)
+                        result.success(true)
+                    } catch (e: Exception) {
+                        result.success(false)
+                    }
                 }
                 else -> result.notImplemented()
             }
