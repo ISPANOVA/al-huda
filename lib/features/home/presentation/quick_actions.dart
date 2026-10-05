@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/services/storage_service.dart';
 import '../../../core/theme/app_themes.dart';
+import '../../../core/theme/tones.dart';
 import '../../../core/widgets/noor_ui.dart';
 import '../../../core/widgets/state_views.dart';
 import '../../audio/presentation/pages/downloads_page.dart';
@@ -125,11 +126,11 @@ class _QuickActionsSectionState extends State<QuickActionsSection> {
   }
 }
 
+/// The outlined square of the «add» tile.
 class _SoftIcon extends StatelessWidget {
   final IconData icon;
-  final bool dashed;
 
-  const _SoftIcon({required this.icon, this.dashed = false});
+  const _SoftIcon({required this.icon});
 
   @override
   Widget build(BuildContext context) {
@@ -139,15 +140,7 @@ class _SoftIcon extends StatelessWidget {
       height: 56,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(19),
-        color: dashed ? Colors.transparent : null,
-        gradient: dashed
-            ? null
-            : LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [glass.accent.withValues(alpha: 0.22), glass.accent.withValues(alpha: 0.08)],
-              ),
-        border: Border.all(color: glass.accent.withValues(alpha: dashed ? 0.35 : 0.22)),
+        border: Border.all(color: glass.accent.withValues(alpha: 0.35)),
       ),
       child: Icon(icon, color: glass.accent, size: 25),
     );
@@ -171,7 +164,7 @@ class _QuickTile extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          _SoftIcon(icon: def.icon),
+          ToneIcon(def.icon, tone: Tone.of(def.id), size: 56),
           const SizedBox(height: 7),
           Text(def.label,
               maxLines: 1,
@@ -198,7 +191,7 @@ class _AddTile extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const _SoftIcon(icon: Icons.add_rounded, dashed: true),
+          const _SoftIcon(icon: Icons.add_rounded),
           const SizedBox(height: 7),
           Text('إضافة', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12, color: glass.onGlassMuted)),
         ],
@@ -228,6 +221,7 @@ class _EditSheetState extends State<_EditSheet> {
   @override
   Widget build(BuildContext context) {
     final glass = GlassTheme.of(context);
+    final dark = Theme.of(context).brightness == Brightness.dark;
     return SizedBox(
       height: MediaQuery.sizeOf(context).height * 0.75,
       child: Column(
@@ -258,7 +252,7 @@ class _EditSheetState extends State<_EditSheet> {
                   ),
                   title: Row(
                     children: [
-                      Icon(a.icon, color: on ? glass.accent : glass.onGlassMuted, size: 22),
+                      Icon(a.icon, color: on ? Tone.of(a.id).ink(dark) : glass.onGlassMuted, size: 22),
                       const SizedBox(width: 10),
                       Text(a.label, style: TextStyle(fontWeight: FontWeight.w700, color: on ? null : glass.onGlassMuted)),
                     ],

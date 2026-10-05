@@ -7,6 +7,7 @@ import '../../../core/theme/web_lite.dart';
 import '../../../core/data/surah_metadata.dart';
 import '../../../core/services/home_widgets.dart';
 import '../../../core/theme/app_themes.dart';
+import '../../../core/theme/tones.dart';
 import '../../../core/utils/arabic_utils.dart';
 import '../../../core/widgets/adaptive.dart';
 import '../../../core/widgets/noor_ui.dart';
@@ -15,6 +16,7 @@ import '../../khatmah/presentation/cubit/khatmah_cubit.dart';
 import '../../khatmah/presentation/pages/khatmah_page.dart';
 import '../../prayer/domain/prayer_entities.dart';
 import '../../prayer/presentation/cubit/prayer_cubit.dart';
+import '../../prayer/presentation/prayer_tones.dart';
 import '../../qibla/presentation/pages/qibla_page.dart';
 import '../../quran/domain/entities/ayah.dart';
 import '../../quran/domain/entities/ayah_ref.dart';
@@ -87,37 +89,73 @@ class DashboardPage extends StatelessWidget {
         ],
       );
     }
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(0, 6, 0, 130),
-      physics: physics,
-      children: [
-        _Rise(
-          0,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 14),
-            child: HomeSkyHero(onTap: () => onNavigate(3)),
+    return NotificationListener<ScrollUpdateNotification>(
+      onNotification: (n) {
+        if (n.depth == 0) scroll.value = n.metrics.pixels;
+        return false;
+      },
+      child: ListView(
+        padding: const EdgeInsets.fromLTRB(0, 0, 0, 130),
+        physics: physics,
+        children: [
+          // The sky runs from edge to edge, under the status bar.
+          HomeSkyHero(onTap: () => onNavigate(3), fullBleed: true, height: 350),
+          const SizedBox(height: 14),
+          _Rise(
+            1,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 14),
+              child: TodayPrayersStrip(onTap: () => onNavigate(3)),
+            ),
           ),
-        ),
-        const SizedBox(height: 12),
-        _Rise(
-          1,
-          child: Padding(
+          const SizedBox(height: 16),
+          const _SeasonalCards(),
+          const _Rise(2, child: Padding(padding: EdgeInsets.symmetric(horizontal: 14), child: _ContinueReading())),
+          const SizedBox(height: 12),
+          const _Rise(3, child: Padding(padding: EdgeInsets.symmetric(horizontal: 14), child: _GoalsRow())),
+          Padding(
             padding: const EdgeInsets.symmetric(horizontal: 14),
-            child: TodayPrayersStrip(onTap: () => onNavigate(3)),
+            child: QuickActionsSection(onNavigate: onNavigate),
           ),
-        ),
-        const SizedBox(height: 16),
-        const _SeasonalCards(),
-        const _Rise(2, child: Padding(padding: EdgeInsets.symmetric(horizontal: 14), child: _ContinueReading())),
-        const SizedBox(height: 12),
-        const _Rise(3, child: Padding(padding: EdgeInsets.symmetric(horizontal: 14), child: _GoalsRow())),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 14),
-          child: QuickActionsSection(onNavigate: onNavigate),
-        ),
-        const NoorSection('آية اليوم'),
-        const Padding(padding: EdgeInsets.symmetric(horizontal: 14), child: _AyahOfTheDay()),
-      ],
+          const NoorSection('آية اليوم'),
+          const Padding(padding: EdgeInsets.symmetric(horizontal: 14), child: _AyahOfTheDay()),
+        ],
+      ),
+    );
+  }
+
+  /// How far the phone home is scrolled (the status-bar strip above it
+  /// takes the sky's colour while the sky is in view).
+  static final scroll = ValueNotifier<double>(0);
+}
+
+/// Phone: the strip behind the status bar, in the colour of the top of the
+/// sky so the home's sky reaches the top edge; it fades as the page scrolls.
+class HomeSkyStrip extends StatelessWidget {
+  const HomeSkyStrip({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<PrayerCubit, PrayerState>(
+      buildWhen: (p, c) => p.today != c.today || p.next != c.next,
+      builder: (context, s) {
+        final today = s.today;
+        final sky = skyState(
+          now: DateTime.now(),
+          fajr: today?[PrayerName.fajr],
+          sunrise: today?[PrayerName.sunrise],
+          dhuhr: today?[PrayerName.dhuhr],
+          maghrib: today?[PrayerName.maghrib],
+          isha: today?[PrayerName.isha],
+        );
+        final color = skyColors(sky.phase).first;
+        return ValueListenableBuilder<double>(
+          valueListenable: DashboardPage.scroll,
+          builder: (context, y, _) => ColoredBox(
+            color: color.withValues(alpha: 1 - (y / 90).clamp(0.0, 1.0)),
+          ),
+        );
+      },
     );
   }
 }
@@ -182,16 +220,12 @@ class TodayPrayersStrip extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(vertical: 10),
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(18),
-                        gradient: isNext
-                            ? LinearGradient(
-                                begin: Alignment.topCenter,
-                                end: Alignment.bottomCenter,
-                                colors: [Color.lerp(glass.accent, Colors.white, 0.25)!, glass.accent],
-                              )
-                            : null,
+                        gradient: isNext ? p.tone.solid : null,
                         color: isNext ? null : noorSurface(context),
                         border: Border.all(
-                          color: isNext ? Colors.transparent : glass.accent.withValues(alpha: dark ? 0.14 : 0.22),
+                          color: isNext
+                              ? Colors.white.withValues(alpha: 0.2)
+                              : p.tone.mid.withValues(alpha: dark ? 0.32 : 0.4),
                         ),
                       ),
                       child: Opacity(
@@ -203,7 +237,7 @@ class TodayPrayersStrip extends StatelessWidget {
                                 style: TextStyle(
                                   fontSize: 12.5,
                                   fontWeight: FontWeight.w700,
-                                  color: isNext ? Colors.black.withValues(alpha: 0.7) : glass.onGlassMuted,
+                                  color: isNext ? Colors.white.withValues(alpha: 0.85) : glass.onGlassMuted,
                                 )),
                             const SizedBox(height: 2),
                             FittedBox(
@@ -213,7 +247,7 @@ class TodayPrayersStrip extends StatelessWidget {
                                   style: TextStyle(
                                     fontSize: 14.5,
                                     fontWeight: FontWeight.w900,
-                                    color: isNext ? Colors.black : glass.onGlass,
+                                    color: isNext ? Colors.white : glass.onGlass,
                                   )),
                             ),
                           ],
@@ -237,7 +271,10 @@ class HomeSkyHero extends StatelessWidget {
   final VoidCallback? onTap;
   final double height;
 
-  const HomeSkyHero({super.key, this.onTap, this.height = 330});
+  /// Edge to edge with only the bottom corners rounded (phone home).
+  final bool fullBleed;
+
+  const HomeSkyHero({super.key, this.onTap, this.height = 330, this.fullBleed = false});
 
   @override
   Widget build(BuildContext context) {
@@ -261,7 +298,9 @@ class HomeSkyHero extends StatelessWidget {
             height: height,
             clipBehavior: Clip.antiAlias,
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(34),
+              borderRadius: fullBleed
+                  ? const BorderRadius.vertical(bottom: Radius.circular(36))
+                  : BorderRadius.circular(34),
               boxShadow: liteShadows([
                 BoxShadow(
                   color: skyColors(sky.phase)[1].withValues(alpha: 0.45),
@@ -278,7 +317,7 @@ class HomeSkyHero extends StatelessWidget {
                   ),
                 ),
                 Positioned(
-                  top: 18,
+                  top: fullBleed ? 10 : 18,
                   left: 18,
                   right: 12,
                   child: Row(
@@ -290,13 +329,14 @@ class HomeSkyHero extends StatelessWidget {
                           children: [
                             Text(skyGreeting(sky.phase),
                                 style: TextStyle(color: Colors.white.withValues(alpha: 0.8), fontSize: 14)),
-                            const Text('الهدى',
+                            Text('الهدى',
                                 style: TextStyle(
                                     fontFamily: AppFonts.display,
                                     color: Colors.white,
-                                    fontSize: 36,
+                                    fontSize: fullBleed ? 42 : 36,
                                     fontWeight: FontWeight.w700,
-                                    height: 1.25)),
+                                    height: 1.25,
+                                    shadows: const [Shadow(color: Color(0x66F3D58A), blurRadius: 18)])),
                             Text('${hijri.toFormat('dd MMMM yyyy')} هـ',
                                 style: const TextStyle(
                                     color: Color(0xFFFFE3A3), fontWeight: FontWeight.w800, fontSize: 13.5)),
@@ -316,7 +356,7 @@ class HomeSkyHero extends StatelessWidget {
                 Positioned(
                   left: 14,
                   right: 14,
-                  bottom: 14,
+                  bottom: fullBleed ? 16 : 14,
                   child: _NextPrayerGlass(state: s),
                 ),
               ],
@@ -544,13 +584,17 @@ class _ContinueReading extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final glass = GlassTheme.of(context);
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    const tone = Tone.emerald;
     final font = context.select((SettingsCubit c) => c.state.quranFont);
     final last = context.select<BookmarksCubit, AyahRef?>((c) => c.state.lastRead);
     final surah = last?.surah ?? 1;
     final ayah = last?.ayah ?? 1;
     final info = SurahMetadata.surah(surah);
     final percent = SurahMetadata.globalAyah(surah, ayah) / SurahMetadata.totalAyahs;
-    return NoorCard(
+    return ToneCard(
+      tone: tone,
+      ornament: true,
       padding: const EdgeInsets.all(12),
       onTap: () => MushafReaderPage.open(context, surah: surah, ayah: ayah),
       child: Row(
@@ -564,7 +608,7 @@ class _ContinueReading extends StatelessWidget {
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
-                colors: [glass.accent.withValues(alpha: 0.35), glass.accent.withValues(alpha: 0.08)],
+                colors: [tone.mid.withValues(alpha: 0.45), tone.mid.withValues(alpha: 0.10)],
               ),
               child: FittedBox(
                 child: Text(info.name, style: font.style(fontSize: 26, height: 1.4, color: glass.onGlass)),
@@ -581,15 +625,21 @@ class _ContinueReading extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text('سورة ${info.name}', style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w900)),
                 Text('الآية ${ArabicUtils.toArabicDigits(ayah)} • ${info.revelationAr}',
-                    style: TextStyle(color: glass.accent, fontWeight: FontWeight.w700, fontSize: 13)),
+                    style: TextStyle(color: tone.ink(dark), fontWeight: FontWeight.w700, fontSize: 13)),
                 const SizedBox(height: 10),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(6),
-                  child: LinearProgressIndicator(
-                    value: percent,
-                    minHeight: 6,
-                    color: glass.accent,
-                    backgroundColor: glass.onGlass.withValues(alpha: 0.08),
+                Container(
+                  height: 6,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(6),
+                    color: glass.onGlass.withValues(alpha: 0.08),
+                  ),
+                  alignment: AlignmentDirectional.centerStart,
+                  child: FractionallySizedBox(
+                    widthFactor: percent.clamp(0.02, 1.0),
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(borderRadius: BorderRadius.circular(6), gradient: tone.gradient()),
+                      child: const SizedBox.expand(),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -600,14 +650,17 @@ class _ContinueReading extends StatelessWidget {
           ),
           const SizedBox(width: 6),
           Material(
-            color: glass.accent,
             shape: const CircleBorder(),
-            child: InkWell(
-              customBorder: const CircleBorder(),
-              onTap: () => context.read<AudioCubit>().playSurah(surah, fromAyah: ayah),
-              child: const SizedBox.square(
-                dimension: 46,
-                child: Icon(Icons.play_arrow_rounded, color: Colors.black, size: 28),
+            clipBehavior: Clip.antiAlias,
+            child: Ink(
+              decoration: BoxDecoration(shape: BoxShape.circle, gradient: tone.gradient()),
+              child: InkWell(
+                customBorder: const CircleBorder(),
+                onTap: () => context.read<AudioCubit>().playSurah(surah, fromAyah: ayah),
+                child: const SizedBox.square(
+                  dimension: 48,
+                  child: Icon(Icons.play_arrow_rounded, color: Colors.white, size: 30),
+                ),
               ),
             ),
           ),
@@ -640,6 +693,7 @@ class _GoalsRow extends StatelessWidget {
 }
 
 class _GoalTile extends StatelessWidget {
+  final Tone tone;
   final double value;
   final Widget center;
   final String title;
@@ -647,6 +701,7 @@ class _GoalTile extends StatelessWidget {
   final VoidCallback onTap;
 
   const _GoalTile({
+    required this.tone,
     required this.value,
     required this.center,
     required this.title,
@@ -657,13 +712,22 @@ class _GoalTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final glass = GlassTheme.of(context);
-    return NoorCard(
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    return ToneCard(
+      tone: tone,
       radius: 22,
       padding: const EdgeInsets.fromLTRB(8, 14, 8, 12),
       onTap: onTap,
       child: Column(
         children: [
-          NoorRing(value: value, color: glass.accent, size: 58, stroke: 5, child: center),
+          NoorRing(
+            value: value,
+            color: tone.ink(dark),
+            track: tone.mid.withValues(alpha: 0.18),
+            size: 58,
+            stroke: 5,
+            child: IconTheme.merge(data: IconThemeData(color: tone.ink(dark)), child: center),
+          ),
           const SizedBox(height: 8),
           Text(title, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 14)),
           Text(subtitle,
@@ -681,7 +745,6 @@ class _WirdTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final glass = GlassTheme.of(context);
     final goal = context.select((SettingsCubit c) => c.state.wirdPages);
     final tracker = context.read<WirdTracker>();
     return ListenableBuilder(
@@ -690,8 +753,9 @@ class _WirdTile extends StatelessWidget {
         final done = tracker.todayCount;
         if (goal <= 0) {
           return _GoalTile(
+            tone: Tone.emerald,
             value: 0,
-            center: Icon(Icons.add_rounded, color: glass.accent),
+            center: const Icon(Icons.add_rounded),
             title: 'الورد اليومي',
             subtitle: 'حدّد هدفك',
             onTap: () => showWirdSetup(context),
@@ -699,9 +763,10 @@ class _WirdTile extends StatelessWidget {
         }
         final complete = done >= goal;
         return _GoalTile(
+          tone: Tone.emerald,
           value: done / goal,
           center: complete
-              ? Icon(Icons.check_rounded, color: glass.accent)
+              ? const Icon(Icons.check_rounded)
               : Text('${ArabicUtils.toArabicDigits(done)}/${ArabicUtils.toArabicDigits(goal)}',
                   style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 13)),
           title: 'وردي',
@@ -721,13 +786,13 @@ class _KhatmahTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final glass = GlassTheme.of(context);
     final plan = context.select((KhatmahCubit c) => c.state.plan);
     final now = DateTime.now();
     return _GoalTile(
+      tone: Tone.gold,
       value: plan?.progress ?? 0,
       center: plan == null
-          ? Icon(Icons.flag_rounded, color: glass.accent)
+          ? const Icon(Icons.flag_rounded)
           : Text('${ArabicUtils.toArabicDigits((plan.progress * 100).round())}٪',
               style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 13)),
       title: 'الختمة',
@@ -750,6 +815,7 @@ class _StreakTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<StatsCubit, StatsSummary>(
       builder: (context, s) => _GoalTile(
+        tone: Tone.amber,
         value: (s.currentStreak / 7).clamp(0.0, 1.0),
         center: Text('🔥${ArabicUtils.toArabicDigits(s.currentStreak)}',
             style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 13)),

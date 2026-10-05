@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../theme/app_themes.dart';
+import '../theme/tones.dart';
 
 /// "Noor" design kit: mihrab arches, living sky, solid cards with a gold
 /// hairline. Shared by the Home, Prayer, Athkar and More tabs.
@@ -186,15 +187,25 @@ class NoorPageHeader extends StatelessWidget {
   final String? subtitle;
   final List<Widget> actions;
 
-  const NoorPageHeader(this.title, {super.key, this.subtitle, this.actions = const []});
+  /// The colour of this part of the app, shown as its icon and a fine
+  /// underline beneath the title.
+  final Tone? tone;
+  final IconData? icon;
+
+  const NoorPageHeader(this.title, {super.key, this.subtitle, this.actions = const [], this.tone, this.icon});
 
   @override
   Widget build(BuildContext context) {
     final glass = GlassTheme.of(context);
+    final tone = this.tone;
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 10, 16, 14),
       child: Row(
         children: [
+          if (tone != null && icon != null) ...[
+            ToneIcon(icon!, tone: tone, size: 50),
+            const SizedBox(width: 14),
+          ],
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -207,6 +218,13 @@ class NoorPageHeader extends StatelessWidget {
                   child: Text(title,
                       style: const TextStyle(fontFamily: AppFonts.display, fontSize: 34, fontWeight: FontWeight.w700, height: 1.3)),
                 ),
+                if (tone != null)
+                  Container(
+                    width: 46,
+                    height: 3.5,
+                    margin: const EdgeInsets.only(top: 2, bottom: 6),
+                    decoration: BoxDecoration(borderRadius: BorderRadius.circular(2), gradient: tone.gradient()),
+                  ),
                 if (subtitle != null)
                   Text(subtitle!, style: TextStyle(color: glass.onGlassMuted, height: 1.4)),
               ],

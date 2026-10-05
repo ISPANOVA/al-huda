@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 
 import '../../../../core/theme/web_lite.dart';
 import '../../../../core/theme/app_themes.dart';
+import '../../../../core/theme/tones.dart';
 import '../../../../core/utils/arabic_utils.dart';
 import '../../../../core/widgets/gradient_background.dart';
 import '../../../../core/widgets/noor_ui.dart';
@@ -15,6 +16,7 @@ import '../../../settings/presentation/cubit/settings_cubit.dart';
 import '../../domain/adhan_voices.dart';
 import '../../domain/prayer_entities.dart';
 import '../cubit/prayer_cubit.dart';
+import '../prayer_tones.dart';
 import '../widgets/adhan_settings.dart';
 import '../widgets/prayer_calc_settings.dart';
 
@@ -41,6 +43,7 @@ class PrayerTimesPage extends StatelessWidget {
             children: [
               NoorPageHeader(
                 'الصلاة',
+                tone: Tone.sapphire,
                 subtitle: '${hijri.toFormat('dd MMMM yyyy')} هـ • $gregorian',
                 actions: [
                   NoorIconButton(
@@ -284,6 +287,8 @@ class _Timeline extends StatelessWidget {
   }) {
     final muted = passed && !isNext;
     final friday = name == PrayerName.dhuhr && time.weekday == DateTime.friday;
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    final tone = name.tone;
     return IntrinsicHeight(
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -293,24 +298,25 @@ class _Timeline extends StatelessWidget {
             child: Column(
               children: [
                 Expanded(
-                  child: Container(width: 2, color: first ? Colors.transparent : glass.accent.withValues(alpha: 0.25)),
+                  child: Container(width: 2, color: first ? Colors.transparent : tone.mid.withValues(alpha: 0.35)),
                 ),
                 Container(
                   width: isNext ? 40 : 32,
                   height: isNext ? 40 : 32,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: isNext ? glass.accent : (muted ? glass.onGlass.withValues(alpha: 0.06) : glass.accent.withValues(alpha: 0.14)),
-                    boxShadow: isNext ? [BoxShadow(color: glass.accent.withValues(alpha: 0.5), blurRadius: 14)] : null,
+                    color: muted ? glass.onGlass.withValues(alpha: 0.06) : null,
+                    gradient: muted ? null : tone.gradient(),
+                    boxShadow: isNext && !kIsWeb ? [BoxShadow(color: tone.mid.withValues(alpha: 0.55), blurRadius: 14)] : null,
                   ),
                   child: Icon(
                     muted ? Icons.check_rounded : _icons[name],
                     size: isNext ? 22 : 17,
-                    color: isNext ? Colors.black : (muted ? glass.onGlassMuted : glass.accent),
+                    color: muted ? glass.onGlassMuted : Colors.white,
                   ),
                 ),
                 Expanded(
-                  child: Container(width: 2, color: last ? Colors.transparent : glass.accent.withValues(alpha: 0.25)),
+                  child: Container(width: 2, color: last ? Colors.transparent : tone.mid.withValues(alpha: 0.35)),
                 ),
               ],
             ),
@@ -324,9 +330,9 @@ class _Timeline extends StatelessWidget {
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(18),
                 gradient: isNext
-                    ? LinearGradient(colors: [glass.accent.withValues(alpha: 0.28), glass.accent.withValues(alpha: 0.06)])
+                    ? LinearGradient(colors: [tone.mid.withValues(alpha: 0.30), tone.mid.withValues(alpha: 0.06)])
                     : null,
-                border: isNext ? Border.all(color: glass.accent.withValues(alpha: 0.6)) : null,
+                border: isNext ? Border.all(color: tone.mid.withValues(alpha: 0.7)) : null,
               ),
               child: Row(
                 children: [
@@ -348,7 +354,7 @@ class _Timeline extends StatelessWidget {
                               if (isNext) 'بعد ${ArabicUtils.formatDuration(state.countdown, withSeconds: false)}',
                               if (friday) 'اقرأ سورة الكهف',
                             ].join(' • '),
-                            style: TextStyle(fontSize: 12, color: glass.accent, fontWeight: FontWeight.w700),
+                            style: TextStyle(fontSize: 12, color: tone.ink(dark), fontWeight: FontWeight.w700),
                           ),
                       ],
                     ),
@@ -363,7 +369,7 @@ class _Timeline extends StatelessWidget {
                         fontSize: isNext ? 18 : 16.5,
                         fontWeight: FontWeight.w900,
                         fontFeatures: const [FontFeature.tabularFigures()],
-                        color: muted ? glass.onGlassMuted : (isNext ? glass.accent : glass.onGlass),
+                        color: muted ? glass.onGlassMuted : (isNext ? tone.ink(dark) : glass.onGlass),
                       ),
                     ),
                   ),
@@ -379,7 +385,7 @@ class _Timeline extends StatelessWidget {
                       icon: Icon(
                         alert ? Icons.notifications_active_rounded : Icons.notifications_off_outlined,
                         size: 20,
-                        color: alert ? glass.accent : glass.onGlassMuted.withValues(alpha: 0.6),
+                        color: alert ? tone.ink(dark) : glass.onGlassMuted.withValues(alpha: 0.6),
                       ),
                     ),
                   ),
@@ -409,8 +415,8 @@ class _LocationCard extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(14, 10, 8, 10),
       child: Row(
         children: [
-          Icon(Icons.place_rounded, color: glass.accent),
-          const SizedBox(width: 10),
+          const ToneIcon(Icons.place_rounded, tone: Tone.sapphire, size: 40),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -450,15 +456,7 @@ class _SettingsEntry extends StatelessWidget {
       onTap: () => Navigator.of(context).push(PrayerSettingsPage.route()),
       child: Row(
         children: [
-          Container(
-            width: 52,
-            height: 52,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(16),
-              gradient: LinearGradient(colors: [glass.accent, glass.accent.withValues(alpha: 0.55)]),
-            ),
-            child: const Icon(Icons.campaign_rounded, color: Colors.black, size: 28),
-          ),
+          const ToneIcon(Icons.campaign_rounded, tone: Tone.sapphire, size: 52),
           const SizedBox(width: 14),
           Expanded(
             child: Column(
@@ -475,9 +473,13 @@ class _SettingsEntry extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(10),
-                          color: glass.accent.withValues(alpha: 0.12),
+                          color: Tone.sapphire.mid.withValues(alpha: 0.16),
                         ),
-                        child: Text(c, style: TextStyle(fontSize: 11, color: glass.accent, fontWeight: FontWeight.w800)),
+                        child: Text(c,
+                            style: TextStyle(
+                                fontSize: 11,
+                                color: Tone.sapphire.ink(Theme.of(context).brightness == Brightness.dark),
+                                fontWeight: FontWeight.w800)),
                       ),
                   ],
                 ),
