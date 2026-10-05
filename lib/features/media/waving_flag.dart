@@ -254,7 +254,9 @@ void _saudi(Canvas canvas, Size size) {
   final w = size.width, h = size.height;
   canvas.drawRect(Offset.zero & size, Paint()..color = const Color(0xFF006C35));
 
-  // The shahada, sized to about two thirds of the flag's width.
+  // The shahada and the sword, a little softened so the station's name
+  // written over the flag stays easy to read.
+  canvas.saveLayer(Offset.zero & size, Paint()..color = Colors.white.withValues(alpha: 0.6));
   final tp = TextPainter(
     text: const TextSpan(
       text: 'لا إله إلا الله محمد رسول الله',
@@ -263,7 +265,7 @@ void _saudi(Canvas canvas, Size size) {
     textDirection: TextDirection.rtl,
     textAlign: TextAlign.center,
   )..layout();
-  final target = math.min(w * 0.6, h * 1.7);
+  final target = math.min(w * 0.5, h * 1.6);
   final scale = target / tp.width;
   canvas.save();
   canvas.translate(w / 2 - target / 2, h * 0.42 - tp.height * scale / 2);
@@ -296,4 +298,5 @@ void _saudi(Canvas canvas, Size size) {
   );
   canvas.drawRect(Rect.fromLTWH(right + t * 1.2, y - t * 0.55, target * 0.09, t * 1.1), white);
   canvas.drawCircle(Offset(right + t * 1.2 + target * 0.09 + t * 0.5, y), t * 0.85, white);
+  canvas.restore();
 }
