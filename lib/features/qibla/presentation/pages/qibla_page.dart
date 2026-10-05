@@ -290,7 +290,7 @@ class _QiblaPageState extends State<QiblaPage> {
                       : _noSensor
                       ? 'جهازك لا يحتوي على مستشعر بوصلة. استخدم الزاوية أعلاه مع بوصلة خارجية.'
                       : aligned
-                          ? '🕋 أنت متجه نحو القبلة'
+                          ? 'أنت متجه نحو القبلة'
                           : offset > 0
                               ? 'استدر يمينًا ${ArabicUtils.toArabicDigits(offset.abs().round())}°'
                               : 'استدر يسارًا ${ArabicUtils.toArabicDigits(offset.abs().round())}°',
@@ -419,7 +419,23 @@ class _Needle extends StatelessWidget {
       height: 250,
       child: Column(
         children: [
-          const Text('🕋', style: TextStyle(fontSize: 28)),
+          // The Kaaba at the needle's head: black with its gold band.
+          Container(
+            width: 26,
+            height: 28,
+            margin: const EdgeInsets.only(bottom: 2),
+            decoration: BoxDecoration(
+              color: const Color(0xFF111111),
+              borderRadius: BorderRadius.circular(3),
+              border: Border.all(color: const Color(0xFFD4AF37), width: 1),
+            ),
+            child: Column(
+              children: [
+                const SizedBox(height: 6),
+                Container(height: 3.5, color: const Color(0xFFD4AF37)),
+              ],
+            ),
+          ),
           Expanded(
             child: CustomPaint(size: const Size(24, 100), painter: _NeedlePainter(color)),
           ),

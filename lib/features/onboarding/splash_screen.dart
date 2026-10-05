@@ -166,6 +166,8 @@ class _LatticePainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    // The very first frame can be laid out at zero size: nothing to draw.
+    if (size.width <= 0 || size.height <= 0) return;
     final c = size.center(Offset.zero);
     canvas.save();
     canvas.translate(c.dx, c.dy);

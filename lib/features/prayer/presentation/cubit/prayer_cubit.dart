@@ -133,6 +133,9 @@ class PrayerCubit extends Cubit<PrayerState> {
     }
   }
 
+  /// Schedules the adhan again (e.g. after exact alarms were allowed).
+  void reschedule() => _recalculate();
+
   void _recalculate() {
     final loc = state.location;
     if (loc == null) return;

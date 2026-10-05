@@ -877,7 +877,7 @@ class _ThemeTile extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      type == AppThemeType.custom ? '🎨 ${p.nameAr}' : p.nameAr,
+                      p.nameAr,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(fontWeight: FontWeight.w900, fontSize: 14, color: fg),

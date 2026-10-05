@@ -365,7 +365,7 @@ class StreakCard extends StatelessWidget {
                   color: Colors.white.withValues(alpha: 0.16),
                   border: Border.all(color: Colors.white.withValues(alpha: 0.32), width: 1.4),
                 ),
-                child: const Center(child: Text('🔥', style: TextStyle(fontSize: 30))),
+                child: const Icon(Icons.local_fire_department_rounded, color: Colors.white, size: 32),
               ),
               const SizedBox(width: 16),
               Expanded(

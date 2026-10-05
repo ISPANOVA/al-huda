@@ -156,7 +156,7 @@ class _MushafReaderPageState extends State<MushafReaderPage> {
       if (widget.embedded && !TickerMode.of(context)) return;
       final goal = context.read<SettingsCubit>().state.wirdPages;
       final done = context.read<WirdTracker>().record(page, goal);
-      if (done) showGlassSnack(context, 'أتممت وردك اليوم، تقبّل الله منك 🌿');
+      if (done) showGlassSnack(context, 'أتممت وردك اليوم، تقبّل الله منك');
     });
   }
 

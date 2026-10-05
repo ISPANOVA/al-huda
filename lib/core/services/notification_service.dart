@@ -89,12 +89,19 @@ class NotificationService {
   /// schedule is silently dropped by the plugin, so we fall back to inexact.
   Future<bool> canScheduleExact() async {
     if (kIsWeb || !Platform.isAndroid) return true;
+    bool ok;
     try {
-      return await _android?.canScheduleExactNotifications() ?? true;
+      ok = await _android?.canScheduleExactNotifications() ?? true;
     } catch (_) {
-      return true;
+      ok = true;
     }
+    exactAllowed.value = ok;
+    return ok;
   }
+
+  /// Last known answer of [canScheduleExact] (the prayer page shows a hint
+  /// to allow exact alarms while it is false).
+  static final exactAllowed = ValueNotifier<bool>(true);
 
   /// Opens the system screen to allow exact alarms when it is not granted.
   Future<bool> ensureExactAlarms() async {

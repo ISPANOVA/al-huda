@@ -650,7 +650,7 @@ class _TasmeePageState extends State<TasmeePage> {
             const SizedBox(height: 12),
             Expanded(
               child: _mistakes.isEmpty
-                  ? Center(child: Text('لا أخطاء، ما شاء الله 🌿', style: TextStyle(color: glass.onGlassMuted)))
+                  ? Center(child: Text('لا أخطاء، ما شاء الله', style: TextStyle(color: glass.onGlassMuted)))
                   : ListView.separated(
                       itemCount: _mistakes.length,
                       separatorBuilder: (_, _) => Divider(height: 1, color: glass.onGlass.withValues(alpha: 0.08)),

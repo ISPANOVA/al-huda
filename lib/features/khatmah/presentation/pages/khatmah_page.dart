@@ -38,7 +38,7 @@ class KhatmahPage extends StatelessWidget {
         listener: (context, state) => showDialog<void>(
           context: context,
           builder: (_) => AlertDialog(
-            title: const Text('🎉 مبارك إتمام الختمة'),
+            title: const Text('مبارك إتمام الختمة'),
             content: const Text(
               'اللهم ارحمني بالقرآن، واجعله لي إمامًا ونورًا وهدًى ورحمة. '
               'تقبل الله منك، ويمكنك بدء ختمة جديدة الآن.',
@@ -515,8 +515,8 @@ class _PlanView extends StatelessWidget {
                 child: _HeroPill(
                   darker: delta < 0,
                   text: delta >= 0
-                      ? '✅ أنت متقدم على الجدول بـ ${ArabicUtils.toArabicDigits(delta)} آية'
-                      : '⏳ متأخر عن الجدول بـ ${ArabicUtils.toArabicDigits(-delta)} آية، وسيُوزع الفرق على الأيام المتبقية',
+                      ? 'أنت متقدم على الجدول بـ ${ArabicUtils.toArabicDigits(delta)} آية'
+                      : 'متأخر عن الجدول بـ ${ArabicUtils.toArabicDigits(-delta)} آية، وسيُوزع الفرق على الأيام المتبقية',
                 ),
               ),
             ],
@@ -556,7 +556,7 @@ class _PlanView extends StatelessWidget {
                     Expanded(
                       child: Text(
                         todayDone
-                            ? 'أحسنت! أتممت ورد اليوم 🌟'
+                            ? 'أحسنت! أتممت ورد اليوم'
                             : 'المتبقي اليوم: ${ArabicUtils.toArabicDigits(plan.todayRemaining(now))} آية',
                         style: TextStyle(
                           color: todayDone ? today.ink(dark) : glass.onGlassMuted,

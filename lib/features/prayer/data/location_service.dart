@@ -72,8 +72,11 @@ class LocationService {
               .join('، ');
         }
       } catch (e) {
-        debugPrint('Reverse geocoding failed: $e');
+        if (kDebugMode) debugPrint('Reverse geocoding failed: $e');
       }
+      // Phones without a geocoder (or places it doesn't know): the same
+      // online service the website uses.
+      if (city == null || city.isEmpty) city = await _webCity(position.latitude, position.longitude);
     }
 
     final location = UserLocation(latitude: position.latitude, longitude: position.longitude, city: city);
@@ -99,7 +102,7 @@ class LocationService {
           .toList();
       return parts.isEmpty ? null : parts.join('، ');
     } catch (e) {
-      debugPrint('Web reverse geocoding failed: $e');
+      if (kDebugMode) debugPrint('Web reverse geocoding failed: $e');
       return null;
     }
   }
