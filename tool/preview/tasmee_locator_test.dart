@@ -207,8 +207,8 @@ void main() {
       final mistakes = <TasmeeMistake>[];
       final t = TasmeeTracker(quran, mistakes, from: at(55, 1), to: at(56, 1));
       t.feed(said('فبأي آلاء ربكما تكذبان'), isFinal: false);
-      t.feed(said('فبأي آلاء ربكما تكذبان فبأي آلاء ربكما تكذبان'), isFinal: false);
-      if (t.located) expect(quran[t.expected].surah, 55);
+      expect(t.located, isFalse); // 31 places in al-Rahman: wait for more
+      t.feed(said('فبأي آلاء ربكما تكذبان خلق'), isFinal: false);
       t.feed(said('فبأي آلاء ربكما تكذبان خلق الإنسان من صلصال كالفخار'), isFinal: true);
       expect(t.located, isTrue);
       expect(quran[t.expected].surah, 55);
