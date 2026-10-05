@@ -1,6 +1,6 @@
 {
   "enabled": true,
-  "id": "2026-10-05T12:44:29.584Z",
+  "id": "2026-10-05T12:44:57.176Z",
   "mode": "force",
   "show": "once",
   "title": "مرحبا بك",
@@ -10,5 +10,6 @@
   "platforms": [
     "android"
   ],
-  "belowBuild": 0
+  "belowBuild": 0,
+  "belowVersion": ""
 }
