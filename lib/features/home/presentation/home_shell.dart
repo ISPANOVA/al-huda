@@ -19,6 +19,8 @@ import '../../media/media_page.dart';
 import '../../calendar/islamic_calendar.dart';
 import '../../settings/presentation/cubit/settings_cubit.dart';
 import '../../audio/presentation/widgets/mini_player.dart';
+import '../../prayer/domain/prayer_entities.dart';
+import '../../prayer/presentation/cubit/prayer_cubit.dart';
 import '../../prayer/presentation/pages/prayer_times_page.dart';
 import '../../quran/presentation/cubit/quran_nav_cubit.dart';
 import '../../quran/presentation/mushaf/mushaf_reader_page.dart';
@@ -340,9 +342,55 @@ class _SideNav extends StatelessWidget {
                 ),
               ),
             const Spacer(),
+            if (expanded) const _RailNextPrayer(),
           ],
         ),
       ),
+    );
+  }
+}
+
+/// The next prayer at the foot of the side navigation.
+class _RailNextPrayer extends StatelessWidget {
+  const _RailNextPrayer();
+
+  @override
+  Widget build(BuildContext context) {
+    final glass = GlassTheme.of(context);
+    return BlocBuilder<PrayerCubit, PrayerState>(
+      buildWhen: (p, c) => p.next != c.next || p.countdown.inMinutes != c.countdown.inMinutes,
+      builder: (context, s) {
+        final next = s.next;
+        if (next == null) return const SizedBox(height: 16);
+        return Container(
+          margin: const EdgeInsets.fromLTRB(14, 0, 14, 18),
+          padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(18),
+            color: glass.accent.withValues(alpha: 0.10),
+            border: Border.all(color: glass.accent.withValues(alpha: 0.3)),
+          ),
+          child: Row(
+            children: [
+              Icon(Icons.access_time_filled_rounded, color: glass.accent, size: 22),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('${next.name.nameOn(next.time)} • ${ArabicUtils.formatTime(next.time)}',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(fontWeight: FontWeight.w800, color: glass.onGlass)),
+                    Text('باقي ${ArabicUtils.formatDuration(s.countdown, withSeconds: false)}',
+                        style: TextStyle(fontSize: 12, color: glass.onGlassMuted)),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }
