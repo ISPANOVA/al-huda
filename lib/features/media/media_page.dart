@@ -16,6 +16,7 @@ import 'media_catalog.dart';
 import 'media_downloads.dart';
 import 'media_downloads_page.dart';
 import 'media_widgets.dart';
+import 'waving_flag.dart';
 import 'reciter_pages.dart';
 
 class _Live {
@@ -389,7 +390,6 @@ class _OfficialStationsState extends State<_OfficialStations> with SingleTickerP
   @override
   Widget build(BuildContext context) {
     final glass = GlassTheme.of(context);
-    const tone = Tone.amethyst;
     final station = kOfficialRadios[_index];
     return BlocBuilder<AudioCubit, AudioState>(
       buildWhen: (p, c) =>
@@ -402,22 +402,49 @@ class _OfficialStationsState extends State<_OfficialStations> with SingleTickerP
         } else if (!playing && _waves.isAnimating) {
           _waves.stop();
         }
-        final dark = Color.lerp(tone.deep, Colors.black, 0.78)!;
+        final egypt = station.name.contains('القاهرة');
+        // Text colour on the white station tab: the flag's own colour.
+        final dark = egypt ? const Color(0xFFA50E22) : const Color(0xFF00552A);
         return Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Container(
             clipBehavior: Clip.antiAlias,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(30),
-              gradient: LinearGradient(
-                begin: Alignment.topRight,
-                end: Alignment.bottomLeft,
-                colors: [Color.lerp(tone.deep, Colors.black, 0.3)!, Color.lerp(Tone.sapphire.deep, Colors.black, 0.6)!, dark],
-              ),
-              border: Border.all(color: tone.light.withValues(alpha: 0.35)),
+              color: Colors.black,
+              border: Border.all(color: Colors.white.withValues(alpha: 0.22)),
             ),
             child: Stack(
               children: [
+                // The station's flag: still, and waving while it is on air.
+                Positioned.fill(
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 350),
+                    child: WavingFlag(
+                      key: ValueKey(egypt),
+                      kind: egypt ? FlagKind.egypt : FlagKind.saudi,
+                      waving: playing,
+                    ),
+                  ),
+                ),
+                // A dark veil so the writing stays readable over the flag.
+                Positioned.fill(
+                  child: IgnorePointer(
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            Colors.black.withValues(alpha: 0.62),
+                            Colors.black.withValues(alpha: 0.50),
+                            Colors.black.withValues(alpha: 0.58),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
                 PositionedDirectional(
                   end: -50,
                   top: -50,
@@ -425,7 +452,7 @@ class _OfficialStationsState extends State<_OfficialStations> with SingleTickerP
                     child: SizedBox(
                       width: 230,
                       height: 230,
-                      child: CustomPaint(painter: _WavesPainter(_waves, tone.light)),
+                      child: CustomPaint(painter: _WavesPainter(_waves, Colors.white)),
                     ),
                   ),
                 ),
@@ -441,7 +468,8 @@ class _OfficialStationsState extends State<_OfficialStations> with SingleTickerP
                             height: 46,
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(15),
-                              gradient: tone.gradient(),
+                              color: Colors.white.withValues(alpha: 0.16),
+                              border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
                             ),
                             child: const Icon(Icons.radio_rounded, color: Colors.white),
                           ),
