@@ -1,7 +1,8 @@
 import 'dart:math' as math;
 
 /// State of one word of the Mushaf during a recitation test (تسميع).
-enum TasmeeState { hidden, correct, hinted, mistake }
+/// [given]: shown without being recited (before the ayah the test started at).
+enum TasmeeState { hidden, correct, hinted, mistake, given }
 
 class TasmeeWord {
   final int surah;
@@ -20,9 +21,17 @@ class TasmeeWord {
   /// letter by letter («ألف لام ميم»). Null for every other word.
   final String? spoken;
 
+  /// Another way the word is commonly heard: the vocative «يا» the
+  /// recogniser leaves out (يَٰمُوسَىٰٓ ← موسى). Null for most words.
+  final String? alt;
+
   TasmeeWord({required this.surah, required this.ayah, required this.text, required this.endsAyah})
       : key = TasmeeMatcher.key(text),
-        spoken = TasmeeMatcher.spokenLetters(surah, ayah, text);
+        spoken = TasmeeMatcher.spokenLetters(surah, ayah, text),
+        alt = text.startsWith('يَٰ') && TasmeeMatcher.key(text).length >= 4 ? TasmeeMatcher.key(text).substring(1) : null;
+
+  /// Heard key [h] is this word.
+  bool heardAs(String h) => TasmeeMatcher.similar(h, key) || (alt != null && TasmeeMatcher.similar(h, alt!));
 
   bool get revealed => state != TasmeeState.hidden && state != TasmeeState.mistake;
 }
@@ -59,21 +68,87 @@ class TasmeeMatcher {
   static final _marks = RegExp('[ؐ-ًؚ-ٰٟۖ-ۭـ]');
   static final _nonLetters = RegExp('[^ء-ي]');
 
+  static const _units = ['', 'واحد', 'اثنين', 'ثلاث', 'اربع', 'خمس', 'ست', 'سبع', 'ثماني', 'تسع'];
+  static const _tens = ['', 'عشر', 'عشرين', 'ثلاثين', 'اربعين', 'خمسين', 'ستين', 'سبعين', 'ثمانين', 'تسعين'];
+
+  /// A number the recogniser wrote in digits («19», «١٠٠٠»), as words.
+  static List<String> numberWords(String token) {
+    final digits = token.replaceAllMapped(RegExp('[٠-٩]'), (m) => '${m[0]!.codeUnitAt(0) - 0x0660}');
+    final n = int.tryParse(digits);
+    if (n == null || n < 0) return [token];
+    if (n == 0) return ['صفر'];
+    final out = <String>[];
+    var rest = n;
+    if (rest >= 1000) {
+      final t = rest ~/ 1000;
+      rest %= 1000;
+      out.addAll(t == 1 ? ['الف'] : t == 2 ? ['الفين'] : [...numberWords('$t'), t <= 10 ? 'الاف' : 'الف']);
+    }
+    if (rest >= 100) {
+      final h = rest ~/ 100;
+      rest %= 100;
+      out.add(h == 1 ? 'مائة' : h == 2 ? 'مائتين' : '${_units[h]}مائة');
+    }
+    if (rest > 0) {
+      if (rest < 10) {
+        out.add(_units[rest]);
+      } else if (rest == 10) {
+        out.add('عشر');
+      } else if (rest < 20) {
+        out.addAll([rest == 11 ? 'احد' : rest == 12 ? 'اثني' : _units[rest - 10], 'عشر']);
+      } else {
+        if (rest % 10 > 0) out.addAll([_units[rest % 10], 'و${_tens[rest ~/ 10]}']);
+        else out.add(_tens[rest ~/ 10]);
+      }
+    }
+    return out;
+  }
+
+  /// Splits a transcript into words, digits written out.
+  static List<String> words(String transcript) => [
+        for (final w in transcript.split(RegExp(r'\s+')))
+          if (w.isNotEmpty) ...(RegExp(r'^[0-9٠-٩]+$').hasMatch(w) ? numberWords(w) : [w]),
+      ];
+
   /// Letters only: no diacritics / Quranic marks, unified hamza & alef forms,
   /// and long-alef dropped (Uthmani often omits it: ٱلْكِتَٰبُ ≈ الكتاب).
   static String key(String s) {
     // Uthmani wāw written for a long ā (ٱلصَّلَوٰة، ٱلزَّكَوٰة، ٱلْحَيَوٰة) is read as alef.
-    var k = s.replaceAll('وٰ', 'ا').replaceAll(_marks, '');
+    var k = s.replaceAll('وٰ', 'ا');
+    if (k.length != _plainLength(k)) k = _uthmaniLetters(k);
+    k = k.replaceAll(_marks, '');
     k = k
         .replaceAll(RegExp('[ٱأإآٲٳ]'), 'ا')
         .replaceAll('ى', 'ي')
-        .replaceAll('ئ', 'ي')
+        // Hamza on a yā' seat is often written on a bare tooth (شَيۡـٔٗا،
+        // ءَابَآءِي): like the hamza itself, it is not compared.
+        .replaceAll('ئ', '')
         .replaceAll('ؤ', 'و')
         .replaceAll('ة', 'ه')
         .replaceAll('ء', '');
     k = k.replaceAll(_nonLetters, '');
     return k.replaceAll('ا', '');
   }
+
+  static final _small = RegExp('[ؐ-ًؚ-ٰٟۖ-ۭـ]');
+  static int _plainLength(String s) => s.length - _small.allMatches(s).length;
+
+  /// Letters the Uthmani script writes small or on a bare seat, as ordinary
+  /// spelling writes them (otherwise common words never match: شيئا، أحيي،
+  /// رأى، آناء، ننجي).
+  static String _uthmaniLetters(String s) => s
+      // Hamza below a yā' seat after a long ā: ءَانَآيِٕ ← آناء, وَرَآيِٕ ← وراء
+      // (but ٱمۡرِيٕ ← امرئ keeps its yā').
+      .replaceAllMapped(RegExp('([اآ]ٓ?)ي[ِ]?ٕ[ِ]?'), (m) => '${m[1]}ء')
+      // Hamza carried by a written yā': وَمَلَإِيْهِۦ ← وملئه.
+      .replaceAll('إِيْ', 'ئ')
+      // Small yā' / wāw / nūn: أُحۡيِۦ ← أحيي, دَاوُۥدَ ← داوود, نُـۨجِي ← ننجي.
+      .replaceAll('ۦ', 'ي')
+      .replaceAll('ۧ', 'ي')
+      .replaceAll('ۥ', 'و')
+      .replaceAll('ۨ', 'ن')
+      // Alef written for alef maqsura: رَءَا ← رأى, تَرَٰٓءَا ← تراءى, لَدَا ← لدى, ٱلۡأَقۡصَا ← الأقصى.
+      .replaceAllMapped(RegExp('(رّ?َ?ٰ?ٓ?ءَ?[آا]ٓ?|^لَدَا|^طَغَا|قۡصَا|نَـَٔا)\$'), (m) => '${m[0]!.substring(0, m[0]!.length - 1)}ى');
 
   static int distance(String a, String b) {
     if (a == b) return 0;
@@ -152,18 +227,47 @@ class TasmeeMatcher {
   static bool similar(String h, String e) {
     if (h.isEmpty || e.isEmpty) return false;
     if (h == e) return true;
+    // The Uthmani script writes الليل، اللاتي، اللائي، اللذان with one lām.
+    if (h.length >= 3 && e.length >= 2) {
+      final i = h.indexOf('لل');
+      if (i >= 0 && i <= 2 && h.replaceFirst('لل', 'ل', i) == e && _oneLam.any((st) => e.startsWith(st, i))) {
+        return true;
+      }
+    }
+    // Counted things: ثلاث / ثلاثة, سبع / سبعة (the recogniser picks either).
+    if (h.length >= 3 && (h + 'ه' == e || e + 'ه' == h) && _numberish.contains(h.length < e.length ? h : e)) {
+      return true;
+    }
     // A leading و / ف the recogniser dropped or added.
     if (e.length >= 3 && (e[0] == 'و' || e[0] == 'ف') && h == e.substring(1)) return true;
     if (h.length >= 3 && (h[0] == 'و' || h[0] == 'ف') && e == h.substring(1)) return true;
     if (!_sameStart(h, e)) return false;
     // Short words: one letter changes the meaning (لهم / لكم، عليه / عليهم).
-    if (e.length <= 4) return e.length > 2 && _shortDistance(h, e) <= 0.5;
+    if (e.length <= 4) {
+      if (e.length > 2) return _shortDistance(h, e) <= 0.5;
+      // Two letters: one misheard sound (قال ← كال، هذا ← هزا، ثم ← سم), unless
+      // what was heard is itself another word of the Quran (قل / كل).
+      return h.length == 2 &&
+          !knownWords.contains(h) &&
+          ((h[0] == e[0] && _close(h.codeUnitAt(1), e.codeUnitAt(1))) ||
+              (h[1] == e[1] && _close(h.codeUnitAt(0), e.codeUnitAt(0))));
+    }
     // Strict enough that a different Quranic word (يعلمون/يشعرون، يعلمون/يعملون)
     // is never accepted, loose enough for Uthmani vs plain spelling and for
     // letters the recogniser mishears.
     final tol = e.length <= 6 ? 1 : 2;
     return soundDistance(h, e) <= tol;
   }
+
+  /// Keys of every word of the Quran (filled when the whole Mushaf is
+  /// loaded): a heard word that is one of them was said, not misheard.
+  static Set<String> knownWords = const {};
+
+  static const _oneLam = ['ليل', 'لتي', 'لي', 'لذن', 'لذين'];
+
+  static final _numberish = {
+    for (final w in ['ثلاث', 'اربع', 'خمس', 'ست', 'سبع', 'ثماني', 'تسع', 'عشر', 'ثمن']) key(w),
+  };
 
   /// What was heard could be the recogniser mishearing [e] (so another of its
   /// transcripts may be trusted): close in sound, same first letter. A clearly
@@ -254,7 +358,17 @@ class TasmeeSession {
   int _used;
 
   List<String> _lastHeard;
+
+  /// States of the words from [_base] while a segment is judged (a window:
+  /// the session may span the whole Quran).
   List<(TasmeeState, bool)> _snap = const [];
+  static const _window = 3000;
+
+  /// The microphone restarted and no result has come yet.
+  bool _restarted = false;
+
+  /// Heard index (absolute) just after the last word that matched.
+  int _lastMatch = 0;
   final List<TasmeeMistake> _segMistakes = [];
   final Set<int> _alerted = {};
 
@@ -273,6 +387,13 @@ class TasmeeSession {
   /// Carried into the next page's session within the same utterance.
   int get consumed => _used;
 
+  /// Heard index where the current utterance's own words begin.
+  int get utteranceStart => _offset;
+
+  /// Heard words of the current utterance up to the last one that matched
+  /// the text: what follows (when it keeps growing) may be a jump elsewhere.
+  int get lastMatchHeard => _lastMatch;
+
   bool get done => expected >= words.length;
 
   /// Words recited correctly on this page from [from].
@@ -290,14 +411,33 @@ class TasmeeSession {
     _commit();
   }
 
+  /// The reciter moved elsewhere (found by the locator): the first [keep]
+  /// heard words are judged where they were, the words from [from] on from
+  /// [index] on (anything between is dropped).
+  TasmeeFeed relocate(int index, List<String> heard, {required int keep, required int from, bool isFinal = false}) {
+    _restore();
+    if (keep > _offset) _align(heard.sublist(0, keep), isFinal: true, alternates: const [], quiet: true);
+    _commit();
+    expected = index;
+    _base = index;
+    _offset = from;
+    _used = from;
+    _lastMatch = from;
+    _lastHeard = heard;
+    _snapshot();
+    return _align(heard, isFinal: isFinal, alternates: const []);
+  }
+
   /// Call when the recogniser starts a new utterance (its text restarts).
   /// The transcript is kept: if the next result simply continues it (the
   /// listening was restarted while the recogniser kept its text), only the
   /// new words are judged; if it starts over, it is detected in [feed].
   void newUtterance() {
+    _restarted = true;
     _commit();
     _offset = _lastHeard.length;
     _used = _offset;
+    _lastMatch = _offset;
   }
 
   /// Fixes what was judged so far; later results only judge what follows.
@@ -309,7 +449,8 @@ class TasmeeSession {
   }
 
   void _snapshot() {
-    _snap = [for (var i = _base; i < words.length; i++) (words[i].state, words[i].missed)];
+    final end = math.min(words.length, _base + _window);
+    _snap = [for (var i = _base; i < end; i++) (words[i].state, words[i].missed)];
   }
 
   void _restore() {
@@ -317,7 +458,7 @@ class TasmeeSession {
       mistakes.remove(m);
     }
     _segMistakes.clear();
-    for (var i = _base; i < words.length; i++) {
+    for (var i = _base; i < _base + _snap.length; i++) {
       final s = _snap[i - _base];
       words[i].state = s.$1;
       words[i].missed = s.$2;
@@ -325,7 +466,7 @@ class TasmeeSession {
     expected = _base;
   }
 
-  bool _m(String h, int j) => j < words.length && TasmeeMatcher.similar(h, words[j].key);
+  bool _m(String h, int j) => j < words.length && words[j].heardAs(h);
 
   /// [heard]: all words recognised in the current utterance so far.
   /// [alternates]: other transcripts the recogniser considered.
@@ -354,6 +495,7 @@ class TasmeeSession {
       _commit();
       _offset = 0;
       _used = 0;
+      _lastMatch = 0;
     }
 
     var fresh = false;
@@ -363,16 +505,20 @@ class TasmeeSession {
       for (var p = 0; p < prev.length && p < heard.length; p++) {
         if (TasmeeMatcher.key(prev[p]) == TasmeeMatcher.key(heard[p])) same++;
       }
-      fresh = same * 2 < prev.length;
+      // Right after the microphone restarted, the old text is carried only if
+      // it comes back nearly whole (consecutive ayahs often share words at the
+      // same places: that is a new ayah, not the old transcript).
+      fresh = _restarted ? same * 10 < prev.length * 8 : same * 2 < prev.length;
     }
     if (!fresh && heard.length < _offset) fresh = true;
+    _restarted = false;
     if (fresh) settlePrevious();
 
     final before = expected;
     var r = _align(heard, isFinal: isFinal, alternates: alternates);
     // Never lose what was already recited: a transcript that would move the
     // reciter back is a fresh one, not a correction.
-    if (!fresh && prev.isNotEmpty && expected + 2 < before) {
+    if (!fresh && prev.isNotEmpty && expected + 2 < before && heard.length + 1 < prev.length) {
       settlePrevious();
       r = _align(heard, isFinal: isFinal, alternates: alternates);
     }
@@ -384,19 +530,27 @@ class TasmeeSession {
     List<String> heard, {
     required bool isFinal,
     required List<List<String>> alternates,
+    bool quiet = false,
   }) {
-    _lastHeard = heard;
+    if (!quiet) _lastHeard = heard;
     final before = expected;
     _restore();
     final k = [for (final w in heard) TasmeeMatcher.key(w)];
-    final n = words.length;
+    // Never past the window kept for undoing (a whole-Quran session).
+    final n = math.min(words.length, _base + _snap.length);
+    var lastMatch = math.min(_offset, k.length);
     var i = math.min(_offset, k.length);
     var pos = _base;
     int? shadow; // reading position while repeating earlier words
     var newMistakes = 0;
     var flash = -1;
 
-    void reveal(int j) => words[j].state = TasmeeState.correct;
+    var matched = false;
+    void reveal(int j) {
+      words[j].state = TasmeeState.correct;
+      matched = true;
+    }
+
     void miss(int j, String said) {
       final w = words[j];
       w.missed = true;
@@ -411,6 +565,10 @@ class TasmeeSession {
     }
 
     while (i < k.length && pos < n) {
+      if (matched) {
+        lastMatch = i;
+        matched = false;
+      }
       final h = k[i];
       if (h.isEmpty) {
         i++;
@@ -430,6 +588,7 @@ class TasmeeSession {
           shadow = null;
         } else if (sh < pos && _m(h, sh)) {
           shadow = sh + 1 >= pos ? null : sh + 1;
+          matched = true;
           i++;
           continue;
         } else if (last) {
@@ -462,6 +621,13 @@ class TasmeeSession {
         i = ni + 1;
         continue;
       }
+      // Three words written as one (يَبۡنَؤُمَّ ← يا ابن أم).
+      if (hNext != null && ni + 1 < k.length && e.key.length >= 4 &&
+          TasmeeMatcher.similar(h + hNext + k[ni + 1], e.key)) {
+        reveal(pos++);
+        i = ni + 2;
+        continue;
+      }
       if (pos + 1 < n && TasmeeMatcher.similar(h, e.key + words[pos + 1].key)) {
         reveal(pos++);
         reveal(pos++);
@@ -473,15 +639,10 @@ class TasmeeSession {
         i++;
         continue;
       }
-      // Still being spoken: wait, unless it is clearly another word (not the
-      // beginning of the expected one, nor a nearby word) — then say so now.
-      if (last) {
-        if (_clearlyWrong(h, pos)) {
-          if (e.state != TasmeeState.mistake) miss(pos, heard[i]);
-          i++;
-        }
-        break;
-      }
+      // Still being spoken: the recogniser often rewrites its last guess,
+      // so a word is judged wrong only once the next one is heard (or the
+      // reciter pauses) — a correct word is never flashed red by a guess.
+      if (last) break;
 
       // Noise or a self-correction just before the expected word.
       if (hNext != null && _m(hNext, pos)) {
@@ -492,14 +653,18 @@ class TasmeeSession {
       final j = _findBack(h, hNext, pos);
       if (j != null) {
         shadow = j + 1 >= pos ? null : j + 1;
+        matched = true;
         i++;
         continue;
       }
-      // Words skipped (by the reciter, or dropped by the recogniser).
-      final to = _skipTo(h, hNext, pos, isFinal);
+      // Words skipped (by the reciter, or dropped by the recogniser). Right
+      // after the microphone restarted, the first words may simply not have
+      // been captured: those are not counted.
+      final atStart = i == _offset || (lastMatch == _offset && pos == _base);
+      final to = _skipTo(h, hNext, pos, isFinal, far: atStart);
       if (to != null) {
         for (var s = pos; s < to; s++) {
-          if (words[s].key.length > 3) {
+          if (!atStart && _countsWhenSkipped(s, to - pos, alternates)) {
             miss(s, '');
           }
           words[s].state = TasmeeState.correct;
@@ -528,8 +693,10 @@ class TasmeeSession {
       }
       i++;
     }
+    if (matched) lastMatch = i;
     expected = pos;
     _used = i;
+    if (!quiet) _lastMatch = lastMatch;
     return TasmeeFeed(math.max(0, expected - before), newMistakes, flash);
   }
 
@@ -550,22 +717,6 @@ class TasmeeSession {
     return 0;
   }
 
-  /// [h] (still being spoken) can't become the expected word or a word the
-  /// reciter may be skipping to or repeating.
-  bool _clearlyWrong(String h, int pos) {
-    if (h.length < 3) return false;
-    final e = words[pos].key;
-    final head = e.length > h.length ? e.substring(0, h.length) : e;
-    if (TasmeeMatcher.similar(h, head) || TasmeeMatcher.similar(h, e)) return false;
-    if (TasmeeMatcher.ignorable.contains(h)) return false;
-    for (var j = math.max(0, pos - 40); j < math.min(words.length, pos + 4); j++) {
-      final k = words[j].key;
-      final kh = k.length > h.length ? k.substring(0, h.length) : k;
-      if (TasmeeMatcher.similar(h, kh)) return false;
-    }
-    return true;
-  }
-
   /// Earlier word the reciter went back to: the word just recited, or one
   /// whose following word is heard next. A wrong word that merely exists
   /// earlier on the page (يشعرون instead of يعلمون) stays a mistake.
@@ -581,13 +732,32 @@ class TasmeeSession {
 
   /// Word 1–3 ahead that [h] is, confirmed by the next heard word (or by the
   /// end of speech right after a single dropped word).
-  int? _skipTo(String h, String? hNext, int pos, bool isFinal) {
-    for (var t = pos + 1; t <= pos + 3 && t < words.length; t++) {
+  int? _skipTo(String h, String? hNext, int pos, bool isFinal, {bool far = false}) {
+    for (var t = pos + 1; t <= pos + (far ? 8 : 3) && t < words.length; t++) {
       if (words[t].key.length < 2 || !_m(h, t)) continue;
       if (hNext != null && (t + 1 >= words.length || _m(hNext, t + 1))) return t;
       if (hNext == null && isFinal && t == pos + 1) return t;
+      // A particle (و، في، من، إن…) dropped before a word heard exactly.
+      if (t == pos + 1 && words[pos].key.length <= 2 && words[pos].spoken == null && h.length >= 3 && h == words[t].key) {
+        return t;
+      }
     }
     return null;
+  }
+
+  /// A skipped word is a mistake when it is a real word the recogniser
+  /// rarely drops: not a short particle, and not heard in another transcript.
+  bool _countsWhenSkipped(int s, int run, List<List<String>> alternates) {
+    final key = words[s].key;
+    if (key.length <= 3) return false;
+    // One short word alone (فيه، لهم، عنهم) is often lost by the recogniser.
+    if (run == 1 && key.length <= 4) return false;
+    for (final alt in alternates) {
+      for (final w in alt) {
+        if (TasmeeMatcher.similar(TasmeeMatcher.key(w), key)) return false;
+      }
+    }
+    return true;
   }
 
   bool _inAlternates(List<List<String>> alternates, int at, TasmeeWord e) {

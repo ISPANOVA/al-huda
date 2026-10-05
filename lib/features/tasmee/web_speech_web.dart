@@ -15,6 +15,11 @@ extension type _Webkit._(web.SpeechRecognition _) implements web.SpeechRecogniti
   external factory _Webkit();
 }
 
+final bool _mobile = RegExp('Android|iPhone|iPad|iPod|Mobile', caseSensitive: false)
+        .hasMatch(web.window.navigator.userAgent) ||
+    // iPadOS reports a Mac.
+    (web.window.navigator.userAgent.contains('Macintosh') && web.window.navigator.maxTouchPoints > 1);
+
 bool get _hasStandard => web.window.hasProperty('SpeechRecognition'.toJS).toDart;
 bool get _hasWebkit => web.window.hasProperty('webkitSpeechRecognition'.toJS).toDart;
 
@@ -76,7 +81,9 @@ class _BrowserSpeech extends SpeechToTextPlatform {
     _rec = rec;
     rec.lang = (localeId ?? 'ar-SA').replaceAll('_', '-');
     rec.interimResults = options?.partialResults ?? partialResults as bool;
-    rec.continuous = false;
+    // A computer's browser keeps listening across pauses (no words lost
+    // while restarting); phones' browsers repeat results when continuous.
+    rec.continuous = !_mobile;
     rec.maxAlternatives = 3;
     _lastWords = '';
     _lastFinal = true;
