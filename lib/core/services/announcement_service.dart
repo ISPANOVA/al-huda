@@ -72,7 +72,9 @@ class AnnouncementService {
 
   AnnouncementService(this._dio, this._storage);
 
-  static const url = 'https://al-huda-config.pages.dev/announce.json';
+  /// The config site; the CI smoke test points it elsewhere so a live
+  /// message can't cover the screens it checks.
+  static const url = String.fromEnvironment('ANNOUNCE_URL', defaultValue: 'https://al-huda-config.pages.dev/announce.json');
 
   /// Build number of this APK (set by the release build; 0 when unknown).
   static const appBuild = int.fromEnvironment('APP_BUILD');

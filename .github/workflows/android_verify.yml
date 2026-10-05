@@ -48,8 +48,8 @@ jobs:
               echo "keyAlias=alhuda"
               echo "storeFile=$GITHUB_WORKSPACE/keystore/alhuda-upload.p12"
             } > android/key.properties
-            flutter build apk --release --build-name=$BUILD_NAME --build-number=$BUILD_NUMBER --dart-define=APP_BUILD=$BUILD_NUMBER --dart-define=APP_VERSION=$BUILD_NAME
-            flutter build appbundle --release --build-name=$BUILD_NAME --build-number=$BUILD_NUMBER --dart-define=APP_BUILD=$BUILD_NUMBER --dart-define=APP_VERSION=$BUILD_NAME
+            flutter build apk --release --build-name=$BUILD_NAME --build-number=$BUILD_NUMBER --dart-define=APP_BUILD=$BUILD_NUMBER --dart-define=APP_VERSION=$BUILD_NAME --dart-define=ANNOUNCE_URL=https://ci.invalid/announce.json
+            flutter build appbundle --release --build-name=$BUILD_NAME --build-number=$BUILD_NUMBER --dart-define=APP_BUILD=$BUILD_NUMBER --dart-define=APP_VERSION=$BUILD_NAME --dart-define=ANNOUNCE_URL=https://ci.invalid/announce.json
           } 2>&1 | tee shots/build_log.txt
           rm -f android/key.properties
           cp build/app/outputs/flutter-apk/app-release.apk new.apk
