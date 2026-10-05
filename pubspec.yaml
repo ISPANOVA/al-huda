@@ -77,6 +77,25 @@ flutter:
     - family: UthmanicHafs
       fonts:
         - asset: assets/fonts/UthmanicHafs18.ttf
+    # Interface text, bundled so the first screen never waits for a download.
+    - family: Tajawal
+      fonts:
+        - asset: assets/fonts/Tajawal-Regular.ttf
+        - asset: assets/fonts/Tajawal-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Tajawal-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/Tajawal-ExtraBold.ttf
+          weight: 800
+        - asset: assets/fonts/Tajawal-Black.ttf
+          weight: 900
+    # Titles: a Kufi display face.
+    - family: ReemKufi
+      fonts:
+        - asset: assets/fonts/ReemKufi-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/ReemKufi-Bold.ttf
+          weight: 700
 
 flutter_launcher_icons:
   android: true

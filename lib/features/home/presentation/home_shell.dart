@@ -11,6 +11,7 @@ import '../../quran/domain/repositories/quran_repository.dart';
 import '../../../core/services/storage_service.dart';
 import '../../../core/theme/app_themes.dart';
 import '../../../core/theme/page_transitions.dart';
+import '../../../core/widgets/adaptive.dart';
 import '../../../core/widgets/gradient_background.dart';
 import '../../athkar/presentation/cubit/athkar_cubit.dart';
 import '../../athkar/presentation/pages/athkar_pages.dart';
@@ -152,9 +153,63 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
     if (i == quranTab) _guide();
   }
 
+  List<Widget> get _pages => [
+        DashboardPage(onNavigate: _go),
+        const MushafReaderPage(embedded: true),
+        const MediaPage(),
+        const PrayerTimesPage(),
+        const AthkarHomePage(),
+        const MorePage(),
+      ];
+
+  /// Tablet / computer: navigation on the side, pages use the width.
+  Widget _wideBody() {
+    final expanded = MediaQuery.sizeOf(context).width >= Adaptive.expanded;
+    return Row(
+      children: [
+        _SideNav(index: _index, onTap: _go, expanded: expanded),
+        Expanded(
+          child: Stack(
+            children: [
+              Positioned.fill(
+                child: FadeThroughIndexedStack(
+                  index: _index,
+                  children: [
+                    DashboardPage(onNavigate: _go),
+                    const MushafReaderPage(embedded: true),
+                    const MaxWidth(maxWidth: 1100, child: MediaPage()),
+                    const MaxWidth(maxWidth: 960, child: PrayerTimesPage()),
+                    const MaxWidth(maxWidth: 1100, child: AthkarHomePage()),
+                    const MaxWidth(maxWidth: 1000, child: MorePage()),
+                  ],
+                ),
+              ),
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: MaxWidth(
+                  maxWidth: 720,
+                  child: _SizeReporter(
+                    onHeight: (h) => MushafReaderPage.bottomOverlayHeight.value = h,
+                    child: const Padding(
+                      padding: EdgeInsets.only(bottom: 10),
+                      child: RepaintBoundary(child: MiniPlayer()),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final dark = Theme.of(context).brightness == Brightness.dark;
+    final wide = Adaptive.isWide(context);
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: dark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark,
       child: BlocListener<QuranNavCubit, QuranNavRequest?>(
@@ -180,22 +235,12 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
             body: GradientBackground(
               child: _StableTopInset(
                 quranTab: _index == quranTab,
-                child: Stack(
+                child: wide ? _wideBody() : Stack(
                   children: [
                     Column(
                       children: [
                         Expanded(
-                          child: FadeThroughIndexedStack(
-                            index: _index,
-                            children: [
-                              DashboardPage(onNavigate: _go),
-                              const MushafReaderPage(embedded: true),
-                              const MediaPage(),
-                              const PrayerTimesPage(),
-                              const AthkarHomePage(),
-                              const MorePage(),
-                            ],
-                          ),
+                          child: FadeThroughIndexedStack(index: _index, children: _pages),
                         ),
                       ],
                     ),
@@ -235,6 +280,134 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
               ),
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Side navigation for tablets and computers: the app's name, then the tabs
+/// (labels beside the icons when there is room, under them otherwise).
+class _SideNav extends StatelessWidget {
+  final int index;
+  final ValueChanged<int> onTap;
+  final bool expanded;
+
+  const _SideNav({required this.index, required this.onTap, required this.expanded});
+
+  @override
+  Widget build(BuildContext context) {
+    final glass = GlassTheme.of(context);
+    final primary = Theme.of(context).colorScheme.primary;
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    final base = glass.backgroundGradient.last;
+    final surface = dark ? Color.lerp(base, Colors.black, 0.35)! : Color.lerp(base, Colors.white, 0.7)!;
+    const tabs = _HomeShellState._tabs;
+    final width = expanded ? 236.0 : 96.0;
+    return Container(
+      width: width,
+      decoration: BoxDecoration(
+        color: surface.withValues(alpha: 0.92),
+        border: BorderDirectional(end: BorderSide(color: glass.accent.withValues(alpha: dark ? 0.16 : 0.28))),
+      ),
+      child: SafeArea(
+        right: false,
+        left: false,
+        child: Column(
+          children: [
+            const SizedBox(height: 22),
+            Image.asset('assets/icon/logo_mark.png', width: expanded ? 64 : 48, height: expanded ? 64 : 48),
+            if (expanded) ...[
+              const SizedBox(height: 8),
+              Text('الهدى',
+                  style: TextStyle(fontFamily: AppFonts.display, fontSize: 30, fontWeight: FontWeight.w700, color: glass.accent)),
+              Text('رفيقك اليومي مع القرآن', style: TextStyle(fontSize: 12.5, color: glass.onGlassMuted)),
+            ],
+            const SizedBox(height: 22),
+            for (var i = 0; i < tabs.length; i++)
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: expanded ? 14 : 10, vertical: 4),
+                child: _SideNavItem(
+                  icon: i == index ? tabs[i].active : tabs[i].icon,
+                  label: tabs[i].label,
+                  selected: i == index,
+                  expanded: expanded,
+                  primary: primary,
+                  onTap: () {
+                    HapticFeedback.selectionClick();
+                    onTap(i);
+                  },
+                ),
+              ),
+            const Spacer(),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SideNavItem extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final bool selected;
+  final bool expanded;
+  final Color primary;
+  final VoidCallback onTap;
+
+  const _SideNavItem({
+    required this.icon,
+    required this.label,
+    required this.selected,
+    required this.expanded,
+    required this.primary,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final glass = GlassTheme.of(context);
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    final fg = selected ? Colors.white : glass.onGlassMuted;
+    final content = expanded
+        ? Row(
+            children: [
+              Icon(icon, color: fg, size: 24),
+              const SizedBox(width: 14),
+              Text(label, style: TextStyle(color: fg, fontSize: 15.5, fontWeight: selected ? FontWeight.w800 : FontWeight.w600)),
+            ],
+          )
+        : Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, color: fg, size: 24),
+              const SizedBox(height: 4),
+              Text(label,
+                  maxLines: 1,
+                  style: TextStyle(color: fg, fontSize: 11, fontWeight: selected ? FontWeight.w800 : FontWeight.w600)),
+            ],
+          );
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(18),
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 260),
+          curve: Curves.easeOutCubic,
+          height: expanded ? 52 : 66,
+          padding: EdgeInsets.symmetric(horizontal: expanded ? 16 : 4),
+          alignment: expanded ? AlignmentDirectional.centerStart : Alignment.center,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(18),
+            gradient: selected
+                ? LinearGradient(colors: [
+                    primary.withValues(alpha: dark ? 0.55 : 0.85),
+                    Color.lerp(primary, glass.accent, 0.45)!.withValues(alpha: dark ? 0.45 : 0.75),
+                  ])
+                : null,
+          ),
+          child: content,
         ),
       ),
     );

@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../theme/app_themes.dart';
+import 'adaptive.dart';
 import 'background_patterns.dart';
 
 /// Vibrant multi-stop gradient with soft light orbs behind the glass layers.
@@ -191,12 +192,16 @@ class GlassScaffold extends StatelessWidget {
                   actions: actions,
                 )
               : null,
+          // On a tablet or computer the page keeps a comfortable reading
+          // width, centred on the full-screen background.
           body: SafeArea(
-            child: Column(
-              children: [
-                Expanded(child: body),
-                ?bottom,
-              ],
+            child: MaxWidth(
+              child: Column(
+                children: [
+                  Expanded(child: body),
+                  ?bottom,
+                ],
+              ),
             ),
           ),
         ),

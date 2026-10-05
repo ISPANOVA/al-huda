@@ -204,7 +204,8 @@ class NoorPageHeader extends StatelessWidget {
                   shaderCallback: (r) => LinearGradient(
                     colors: [glass.accent, Color.lerp(glass.accent, glass.onGlass, 0.45)!],
                   ).createShader(r),
-                  child: Text(title, style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w900, height: 1.2)),
+                  child: Text(title,
+                      style: const TextStyle(fontFamily: AppFonts.display, fontSize: 34, fontWeight: FontWeight.w700, height: 1.3)),
                 ),
                 if (subtitle != null)
                   Text(subtitle!, style: TextStyle(color: glass.onGlassMuted, height: 1.4)),
@@ -342,7 +343,8 @@ class NoorSection extends StatelessWidget {
           ),
           const SizedBox(width: 8),
           Expanded(
-            child: Text(title, style: TextStyle(fontSize: 19, fontWeight: FontWeight.w900, color: glass.onGlass)),
+            child: Text(title,
+                style: TextStyle(fontFamily: AppFonts.display, fontSize: 20, fontWeight: FontWeight.w700, color: glass.onGlass)),
           ),
           if (action != null)
             TextButton(

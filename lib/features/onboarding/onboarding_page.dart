@@ -248,7 +248,7 @@ class _SlideView extends StatelessWidget {
           const SizedBox(height: 34),
           Text(slide.title,
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 27, fontWeight: FontWeight.w900, color: glass.onGlass)),
+              style: TextStyle(fontFamily: AppFonts.display, fontSize: 28, fontWeight: FontWeight.w700, color: glass.onGlass)),
           const SizedBox(height: 12),
           Text(slide.body,
               textAlign: TextAlign.center,
@@ -284,7 +284,7 @@ class _PermissionsView extends StatelessWidget {
           Icon(Icons.verified_user_rounded, size: 64, color: glass.accent),
           const SizedBox(height: 20),
           Text('خطوة أخيرة',
-              style: TextStyle(fontSize: 26, fontWeight: FontWeight.w900, color: glass.onGlass)),
+              style: TextStyle(fontFamily: AppFonts.display, fontSize: 27, fontWeight: FontWeight.w700, color: glass.onGlass)),
           const SizedBox(height: 10),
           Text(
               kIsWeb

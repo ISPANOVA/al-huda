@@ -8,6 +8,7 @@ import '../../../core/data/surah_metadata.dart';
 import '../../../core/services/home_widgets.dart';
 import '../../../core/theme/app_themes.dart';
 import '../../../core/utils/arabic_utils.dart';
+import '../../../core/widgets/adaptive.dart';
 import '../../../core/widgets/noor_ui.dart';
 import '../../audio/presentation/cubit/audio_cubit.dart';
 import '../../khatmah/presentation/cubit/khatmah_cubit.dart';
@@ -39,19 +40,77 @@ class DashboardPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    const physics = BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics());
+    if (Adaptive.isWide(context)) {
+      // Tablet / computer: the sky, today's prayers and the ayah of the day
+      // beside the reading, goals and shortcuts.
+      return ListView(
+        padding: const EdgeInsets.fromLTRB(28, 24, 28, 120),
+        physics: physics,
+        children: [
+          MaxWidth(
+            maxWidth: 1280,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  flex: 7,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      _Rise(0, child: HomeSkyHero(height: 360, onTap: () => onNavigate(3))),
+                      const SizedBox(height: 14),
+                      _Rise(1, child: TodayPrayersStrip(onTap: () => onNavigate(3))),
+                      const NoorSection('آية اليوم'),
+                      const _Rise(3, child: _AyahOfTheDay()),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 24),
+                Expanded(
+                  flex: 5,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const _Rise(1, child: _ContinueReading()),
+                      const SizedBox(height: 14),
+                      const _Rise(2, child: _GoalsRow()),
+                      const SizedBox(height: 14),
+                      const _SeasonalCards(padding: EdgeInsets.only(bottom: 12)),
+                      _Rise(3, child: QuickActionsSection(onNavigate: onNavigate)),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      );
+    }
     return ListView(
       padding: const EdgeInsets.fromLTRB(0, 6, 0, 130),
-      physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+      physics: physics,
       children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 14),
-          child: HomeSkyHero(onTap: () => onNavigate(3)),
+        _Rise(
+          0,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14),
+            child: HomeSkyHero(onTap: () => onNavigate(3)),
+          ),
+        ),
+        const SizedBox(height: 12),
+        _Rise(
+          1,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14),
+            child: TodayPrayersStrip(onTap: () => onNavigate(3)),
+          ),
         ),
         const SizedBox(height: 16),
         const _SeasonalCards(),
-        const Padding(padding: EdgeInsets.symmetric(horizontal: 14), child: _ContinueReading()),
+        const _Rise(2, child: Padding(padding: EdgeInsets.symmetric(horizontal: 14), child: _ContinueReading())),
         const SizedBox(height: 12),
-        const Padding(padding: EdgeInsets.symmetric(horizontal: 14), child: _GoalsRow()),
+        const _Rise(3, child: Padding(padding: EdgeInsets.symmetric(horizontal: 14), child: _GoalsRow())),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 14),
           child: QuickActionsSection(onNavigate: onNavigate),
@@ -63,12 +122,122 @@ class DashboardPage extends StatelessWidget {
   }
 }
 
+/// Sections rise into place one after another when the home first appears
+/// (opacity and position only: cheap on every device).
+class _Rise extends StatelessWidget {
+  final int order;
+  final Widget child;
+
+  const _Rise(this.order, {required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0, end: 1),
+      duration: Duration(milliseconds: 420 + order * 90),
+      curve: Curves.easeOutCubic,
+      builder: (context, v, child) => Opacity(
+        opacity: v,
+        child: Transform.translate(offset: Offset(0, (1 - v) * 18), child: child),
+      ),
+      child: child,
+    );
+  }
+}
+
+// ------------------------------------------------------ today's prayers ---
+
+/// The five prayers of today in a row: those passed fade, the next shines.
+class TodayPrayersStrip extends StatelessWidget {
+  final VoidCallback? onTap;
+
+  const TodayPrayersStrip({super.key, this.onTap});
+
+  static const _order = [PrayerName.fajr, PrayerName.dhuhr, PrayerName.asr, PrayerName.maghrib, PrayerName.isha];
+
+  @override
+  Widget build(BuildContext context) {
+    final glass = GlassTheme.of(context);
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    return BlocBuilder<PrayerCubit, PrayerState>(
+      buildWhen: (p, c) => p.today != c.today || p.next != c.next,
+      builder: (context, s) {
+        final today = s.today;
+        if (today == null) return const SizedBox.shrink();
+        final now = DateTime.now();
+        return GestureDetector(
+          onTap: onTap,
+          child: Row(
+            children: [
+              for (var i = 0; i < _order.length; i++) ...[
+                if (i > 0) const SizedBox(width: 7),
+                Expanded(
+                  child: Builder(builder: (context) {
+                    final p = _order[i];
+                    final t = today[p];
+                    final isNext = s.next?.name == p && s.next!.time.day == t.day;
+                    final passed = !isNext && t.isBefore(now);
+                    return AnimatedContainer(
+                      duration: const Duration(milliseconds: 400),
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(18),
+                        gradient: isNext
+                            ? LinearGradient(
+                                begin: Alignment.topCenter,
+                                end: Alignment.bottomCenter,
+                                colors: [Color.lerp(glass.accent, Colors.white, 0.25)!, glass.accent],
+                              )
+                            : null,
+                        color: isNext ? null : noorSurface(context),
+                        border: Border.all(
+                          color: isNext ? Colors.transparent : glass.accent.withValues(alpha: dark ? 0.14 : 0.22),
+                        ),
+                      ),
+                      child: Opacity(
+                        opacity: passed ? 0.5 : 1,
+                        child: Column(
+                          children: [
+                            Text(p.nameOn(t),
+                                maxLines: 1,
+                                style: TextStyle(
+                                  fontSize: 12.5,
+                                  fontWeight: FontWeight.w700,
+                                  color: isNext ? Colors.black.withValues(alpha: 0.7) : glass.onGlassMuted,
+                                )),
+                            const SizedBox(height: 2),
+                            FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Text(ArabicUtils.formatTime(t),
+                                  maxLines: 1,
+                                  style: TextStyle(
+                                    fontSize: 14.5,
+                                    fontWeight: FontWeight.w900,
+                                    color: isNext ? Colors.black : glass.onGlass,
+                                  )),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  }),
+                ),
+              ],
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
 // --------------------------------------------------------------- hero ---
 
 class HomeSkyHero extends StatelessWidget {
   final VoidCallback? onTap;
+  final double height;
 
-  const HomeSkyHero({super.key, this.onTap});
+  const HomeSkyHero({super.key, this.onTap, this.height = 320});
 
   @override
   Widget build(BuildContext context) {
@@ -89,7 +258,7 @@ class HomeSkyHero extends StatelessWidget {
         return GestureDetector(
           onTap: onTap,
           child: Container(
-            height: 300,
+            height: height,
             clipBehavior: Clip.antiAlias,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(34),
@@ -123,7 +292,11 @@ class HomeSkyHero extends StatelessWidget {
                                 style: TextStyle(color: Colors.white.withValues(alpha: 0.8), fontSize: 14)),
                             const Text('الهدى',
                                 style: TextStyle(
-                                    color: Colors.white, fontSize: 30, fontWeight: FontWeight.w900, height: 1.2)),
+                                    fontFamily: AppFonts.display,
+                                    color: Colors.white,
+                                    fontSize: 36,
+                                    fontWeight: FontWeight.w700,
+                                    height: 1.25)),
                             Text('${hijri.toFormat('dd MMMM yyyy')} هـ',
                                 style: const TextStyle(
                                     color: Color(0xFFFFE3A3), fontWeight: FontWeight.w800, fontSize: 13.5)),
@@ -160,14 +333,31 @@ class _NextPrayerGlass extends StatelessWidget {
 
   const _NextPrayerGlass({required this.state});
 
+  /// Share of the time between the previous prayer and the next one gone.
+  static double _elapsed(PrayerState s) {
+    final next = s.next;
+    final today = s.today;
+    if (next == null || today == null) return 0;
+    final now = DateTime.now();
+    DateTime? prev;
+    for (final t in today.times.values) {
+      if (!t.isAfter(now) && (prev == null || t.isAfter(prev))) prev = t;
+    }
+    // Before Fajr: from last night's Isha (about the same time yesterday).
+    prev ??= today[PrayerName.isha].subtract(const Duration(days: 1));
+    final span = next.time.difference(prev).inSeconds;
+    if (span <= 0) return 0;
+    return (1 - s.countdown.inSeconds / span).clamp(0.0, 1.0);
+  }
+
   @override
   Widget build(BuildContext context) {
     final glass = GlassTheme.of(context);
     final next = state.next;
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 10, 10, 10),
+      padding: const EdgeInsets.fromLTRB(16, 8, 8, 8),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: BorderRadius.circular(24),
         color: Colors.black.withValues(alpha: 0.38),
         border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
       ),
@@ -197,7 +387,11 @@ class _NextPrayerGlass extends StatelessWidget {
                         children: [
                           Text(next.name.nameOn(next.time),
                               style: const TextStyle(
-                                  color: Colors.white, fontSize: 22, fontWeight: FontWeight.w900, height: 1.2)),
+                                  fontFamily: AppFonts.display,
+                                  color: Colors.white,
+                                  fontSize: 26,
+                                  fontWeight: FontWeight.w700,
+                                  height: 1.25)),
                           const SizedBox(width: 8),
                           Padding(
                             padding: const EdgeInsets.only(bottom: 3),
@@ -214,18 +408,26 @@ class _NextPrayerGlass extends StatelessWidget {
                     ],
                   ),
                 ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(16),
-                    color: glass.accent,
-                  ),
+                // Time left, inside a ring that fills from the last prayer to
+                // the next one.
+                NoorRing(
+                  value: _elapsed(state),
+                  color: glass.accent,
+                  track: Colors.white.withValues(alpha: 0.16),
+                  size: 86,
+                  stroke: 5,
                   child: Column(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(ArabicUtils.formatDuration(state.countdown),
-                          style: const TextStyle(
-                              color: Colors.black, fontWeight: FontWeight.w900, fontSize: 17, height: 1.1)),
-                      const Text('متبقٍ', style: TextStyle(color: Colors.black87, fontSize: 10.5)),
+                      FittedBox(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 10),
+                          child: Text(ArabicUtils.formatDuration(state.countdown),
+                              style: const TextStyle(
+                                  color: Colors.white, fontWeight: FontWeight.w900, fontSize: 15, height: 1.1)),
+                        ),
+                      ),
+                      Text('متبقٍ', style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 10.5)),
                     ],
                   ),
                 ),
@@ -239,7 +441,9 @@ class _NextPrayerGlass extends StatelessWidget {
 
 /// Friday reminder (Al-Kahf & salawat) and, in Ramadan, the iftar countdown.
 class _SeasonalCards extends StatelessWidget {
-  const _SeasonalCards();
+  final EdgeInsetsGeometry padding;
+
+  const _SeasonalCards({this.padding = const EdgeInsets.fromLTRB(14, 0, 14, 12)});
 
   @override
   Widget build(BuildContext context) {
@@ -251,7 +455,7 @@ class _SeasonalCards extends StatelessWidget {
       children: [
         if (ramadan)
           Padding(
-            padding: const EdgeInsets.fromLTRB(14, 0, 14, 12),
+            padding: padding,
             child: BlocBuilder<PrayerCubit, PrayerState>(
               buildWhen: (p, c) => p.countdown.inMinutes != c.countdown.inMinutes || p.today != c.today,
               builder: (context, s) {
@@ -272,7 +476,7 @@ class _SeasonalCards extends StatelessWidget {
           ),
         if (friday)
           Padding(
-            padding: const EdgeInsets.fromLTRB(14, 0, 14, 12),
+            padding: padding,
             child: _BannerCard(
               colors: const [Color(0xFF0B2A24), Color(0xFF1E5E4E), Color(0xFFC9A44C)],
               icon: Icons.mosque_rounded,
