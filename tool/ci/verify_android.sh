@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Inside the emulator job: install the published build 31, use it, then
+# Inside the emulator job: install the published build 46, use it, then
 # install the new APK over it (same signature, data kept) and walk through
 # the main screens, recording screenshots and any crash / Flutter error.
 set -x
@@ -11,14 +11,14 @@ tapxy() { python3 tool/ci/ui.py tapxy "$1" "$2" | tee -a "$OUT/steps.txt"; }
 launch() { adb shell am force-stop $PKG; adb shell am start -W -n $PKG/.MainActivity >> "$OUT/steps.txt"; }
 adb emu geo fix 31.2357 30.0444 || true
 
-# ---- Build 31, as testers have it now.
+# ---- Build 46, as testers have it now.
 adb install -r -t old.apk | tee "$OUT/install_old.txt"
 adb shell pm grant $PKG android.permission.POST_NOTIFICATIONS || true
 adb logcat -c
 launch; shot A1_launch 14
 tap 'تخطي'; shot A2_permissions 3
 tap 'ابدأ'; shot A3_home 6
-# Second start of build 31 (does it ask for the location too?).
+# Second start of build 46 (does it ask for the location too?).
 launch; shot A4_relaunch 14
 adb logcat -d > "$OUT/A_logcat.txt"
 # Allow the location from here on so no system prompt covers the screens.
