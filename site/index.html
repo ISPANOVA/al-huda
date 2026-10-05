@@ -78,6 +78,7 @@
 <main>
   <h1>رسالة تطبيق «الهدى»</h1>
   <p class="sub">اللي تكتبه هنا يظهر لكل اللي يفتح التطبيق أو الموقع خلال دقيقة من الحفظ.</p>
+  <div class="card" id="liveBox" style="margin-bottom:14px"><b>المنشور دلوقتي:</b> <span id="live">جاري التحميل…</span></div>
 
   <div class="grid">
     <div>
@@ -128,9 +129,14 @@
           <label><input type="checkbox" id="pAndroid" checked>تطبيق الأندرويد</label>
           <label><input type="checkbox" id="pWeb" checked>الموقع</label>
         </div>
-        <label class="f" for="belowBuild">للنسخ الأقدم من رقم (اختياري)</label>
-        <input type="number" id="belowBuild" min="0" placeholder="مثلًا 42" dir="ltr">
-        <div class="hint">لرسالة تحديث: اكتب رقم النسخة الجديدة (لو اسمها build-42 اكتب 42). اللي نزّلها مش هتظهرله، واللي لسه على نسخة أقدم هتظهرله. سيبه فاضي عشان تظهر للكل. (التطبيق بس، الموقع دايمًا محدّث.)</div>
+        <label class="f" for="belowVersion">للي عندهم إصدار أقدم من (اختياري)</label>
+        <input type="text" id="belowVersion" placeholder="مثلًا 1.0.1" dir="ltr">
+        <div class="hint">لرسالة تحديث: اكتب رقم الإصدار الجديد (مثلًا 1.0.1). اللي حدّث مش هتظهرله، واللي لسه على 1.0.0 هتظهرله. سيبه فاضي عشان تظهر للكل. (التطبيق بس، الموقع دايمًا محدّث.)</div>
+        <details style="margin-top:8px"><summary>بالرقم الداخلي للنسخة (للنسخ التجريبية)</summary>
+          <label class="f" for="belowBuild">للنسخ الأقدم من رقم</label>
+          <input type="number" id="belowBuild" min="0" placeholder="مثلًا 45" dir="ltr">
+          <div class="hint">رقم النسخة الداخلي (versionCode)، زي build-45 في GitHub.</div>
+        </details>
       </div>
 
       <div class="card">
@@ -195,6 +201,7 @@ function read() {
     buttonUrl: $('buttonUrl').value.trim(),
     platforms,
     belowBuild: parseInt($('belowBuild').value, 10) || 0,
+    belowVersion: $('belowVersion').value.trim(),
   };
 }
 
@@ -204,6 +211,7 @@ function fill(j) {
   document.querySelector(`input[name=show][value=${j.show === 'always' ? 'always' : 'once'}]`).checked = true;
   for (const f of ['title', 'message', 'buttonText', 'buttonUrl']) $(f).value = j[f] || '';
   $('belowBuild').value = j.belowBuild ? j.belowBuild : '';
+  $('belowVersion').value = j.belowVersion || '';
   const p = j.platforms || ['android', 'web'];
   $('pAndroid').checked = p.includes('android');
   $('pWeb').checked = p.includes('web');
@@ -239,6 +247,7 @@ async function save() {
   const j = read();
   if (j.enabled && !j.title && !j.message) { say('اكتب عنوان أو رسالة.', 'err'); return; }
   if (j.buttonUrl && !/^https?:\/\//i.test(j.buttonUrl)) { say('الرابط لازم يبدأ بـ https://', 'err'); return; }
+  if (j.belowVersion && !/^\d+(\.\d+){0,3}$/.test(j.belowVersion)) { say('رقم الإصدار يتكتب كده: 1.0.1', 'err'); return; }
   if (j.mode === 'force' && j.enabled && !j.buttonUrl && !confirm('رسالة إجبارية من غير زرار هتقفل التطبيق تمامًا. متأكد؟')) return;
   store('alhuda_token', $('remember').checked ? token : null);
   const body = { enabled: j.enabled, id: new Date().toISOString(), ...j };
@@ -257,7 +266,8 @@ async function save() {
     });
     if (res.status === 403) throw new Error('المفتاح محتاج صلاحية Contents: Read and write.');
     if (!res.ok) throw new Error('GitHub رفض الحفظ (' + res.status + ').');
-    say('تم الحفظ ✓ — الرسالة هتتنشر خلال دقيقة تقريبًا.', 'ok');
+    say('تم الحفظ ✓ — جاري النشر (حوالي دقيقة)…', 'ok');
+    waitLive(body.id);
   } catch (e) {
     say(e.message || 'تعذر الحفظ، اتأكد من النت.', 'err');
   } finally {
@@ -270,7 +280,27 @@ document.querySelectorAll('input[type=radio], input[type=checkbox]').forEach((el
 $('save').addEventListener('click', save);
 const saved = load('alhuda_token');
 if (saved) $('token').value = saved;
-fetch('announce.json?t=' + Date.now(), { cache: 'no-store' }).then((r) => r.json()).then(fill).catch(() => preview());
+function describe(j) {
+  if (!j.enabled) return 'مقفولة — مش ظاهر حاجة لحد';
+  const kind = j.mode === 'force' ? 'إجبارية' : (j.show === 'always' ? 'عادية (كل مرة)' : 'عادية (مرة واحدة)');
+  return `شغالة • ${kind} • «${j.title || j.message || ''}»`;
+}
+async function live() {
+  const r = await fetch('announce.json?t=' + Date.now(), { cache: 'no-store' });
+  return r.json();
+}
+async function waitLive(id) {
+  for (let i = 0; i < 36; i++) {
+    await new Promise((r) => setTimeout(r, 5000));
+    try {
+      const j = await live();
+      $('live').textContent = describe(j);
+      if (j.id === id) { say('اتنشرت ✓ — اقفل التطبيق وافتحه تاني وهتلاقيها اتغيرت.', 'ok'); return; }
+    } catch (_) {}
+  }
+  say('الحفظ تم بس النشر اتأخر. اضغط «حفظ ونشر» تاني.', 'err');
+}
+live().then((j) => { $('live').textContent = describe(j); fill(j); }).catch(() => { $('live').textContent = 'تعذر التحميل'; preview(); });
 </script>
 </body>
 </html>

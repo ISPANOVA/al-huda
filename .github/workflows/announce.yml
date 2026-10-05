@@ -14,7 +14,11 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
+      # Always the latest message (a late push event must not publish an
+      # older one over a newer save).
       - uses: actions/checkout@v4
+        with:
+          ref: announce
       - name: Check the message file
         run: python3 -c "import json; json.load(open('site/announce.json', encoding='utf-8')); print('announce.json OK')"
       - name: Deploy to Cloudflare Pages (al-huda-config)
