@@ -3,9 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/theme/app_themes.dart';
+import '../../../../core/theme/tones.dart';
+import '../../../../core/theme/web_lite.dart';
 import '../../../../core/widgets/background_patterns.dart';
 import '../../../../core/widgets/glass_container.dart';
 import '../../../../core/widgets/gradient_background.dart';
+import '../../../../core/widgets/noor_ui.dart';
 import '../cubit/settings_cubit.dart';
 import '../cubit/settings_state.dart';
 import 'settings_page.dart' show showCustomColorsSheet;
@@ -20,6 +23,9 @@ class AppearancePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return GlassScaffold(
       title: 'المظهر',
+      subtitle: 'ألوان التطبيق وزخرفة الخلفية',
+      icon: Icons.palette_rounded,
+      tone: Tone.amethyst,
       body: BlocBuilder<SettingsCubit, SettingsState>(
         builder: (context, s) {
           final cubit = context.read<SettingsCubit>();
@@ -31,60 +37,114 @@ class AppearancePage extends StatelessWidget {
             physics: const BouncingScrollPhysics(),
             children: [
               const _LivePreview(),
-              const GlassSectionTitle('ألوان التطبيق'),
-              GridView.count(
-                crossAxisCount: 2,
+
+              // ------------------------------------------------ theme ---
+              GlassSectionTitle('الثيم', tone: Tone.amethyst, trailing: _Pill(palette.nameAr, tone: Tone.amethyst)),
+              GridView(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
-                mainAxisSpacing: 10,
-                crossAxisSpacing: 10,
-                childAspectRatio: 1.7,
+                gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                  maxCrossAxisExtent: 240,
+                  mainAxisExtent: 124,
+                  mainAxisSpacing: 12,
+                  crossAxisSpacing: 12,
+                ),
                 children: [
                   for (final t in AppThemeType.values) _ThemeTile(type: t, selected: s.themeType == t),
                 ],
               ),
-              const SizedBox(height: 12),
-              GlassContainer(
-                padding: const EdgeInsets.all(8),
-                child: SegmentedButton<ThemeMode>(
-                  showSelectedIcon: false,
-                  segments: const [
-                    ButtonSegment(value: ThemeMode.system, label: Text('تلقائي'), icon: Icon(Icons.brightness_auto_rounded)),
-                    ButtonSegment(value: ThemeMode.light, label: Text('فاتح'), icon: Icon(Icons.light_mode_rounded)),
-                    ButtonSegment(value: ThemeMode.dark, label: Text('داكن'), icon: Icon(Icons.dark_mode_rounded)),
-                  ],
-                  selected: {s.themeMode},
-                  onSelectionChanged: (v) => cubit.setThemeMode(v.first),
-                ),
-              ),
               if (s.themeType == AppThemeType.custom)
                 Padding(
-                  padding: const EdgeInsets.only(top: 8),
-                  child: FilledButton.tonalIcon(
-                    icon: const Icon(Icons.palette_rounded),
-                    label: const Text('تعديل ألواني'),
-                    onPressed: () => showCustomColorsSheet(context),
+                  padding: const EdgeInsets.only(top: 12),
+                  child: ToneCard(
+                    tone: Tone.amethyst,
+                    radius: 20,
+                    padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+                    onTap: () => showCustomColorsSheet(context),
+                    child: Row(
+                      children: [
+                        const ToneIcon(Icons.palette_rounded, tone: Tone.amethyst, size: 40),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text('تعديل ألواني',
+                              style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15, color: glass.onGlass)),
+                        ),
+                        Icon(Icons.chevron_left_rounded, color: glass.onGlassMuted),
+                      ],
+                    ),
                   ),
                 ),
-              if (palette.alwaysDark || palette.alwaysLight)
-                Padding(
-                  padding: const EdgeInsets.only(top: 6),
-                  child: Text(
-                    s.themeType == AppThemeType.custom
-                        ? 'الوضع الفاتح أو الداكن يتحدد تلقائيًا من لون الخلفية الذي اخترته.'
-                        : 'هذا الثيم داكن دائمًا بطبيعته.',
-                    style: TextStyle(fontSize: 12, color: glass.onGlassMuted),
-                    textAlign: TextAlign.center,
-                  ),
+
+              // ------------------------------------------------- mode ---
+              const GlassSectionTitle('الوضع', tone: Tone.sapphire),
+              NoorCard(
+                padding: const EdgeInsets.all(10),
+                child: Column(
+                  children: [
+                    Row(
+                      children: [
+                        _ModeTile(
+                          label: 'تلقائي',
+                          hint: 'حسب الجهاز',
+                          icon: Icons.brightness_auto_rounded,
+                          tone: Tone.teal,
+                          selected: s.themeMode == ThemeMode.system,
+                          onTap: () => cubit.setThemeMode(ThemeMode.system),
+                        ),
+                        const SizedBox(width: 8),
+                        _ModeTile(
+                          label: 'فاتح',
+                          hint: 'نهاري',
+                          icon: Icons.light_mode_rounded,
+                          tone: Tone.amber,
+                          selected: s.themeMode == ThemeMode.light,
+                          onTap: () => cubit.setThemeMode(ThemeMode.light),
+                        ),
+                        const SizedBox(width: 8),
+                        _ModeTile(
+                          label: 'داكن',
+                          hint: 'ليلي',
+                          icon: Icons.dark_mode_rounded,
+                          tone: Tone.sapphire,
+                          selected: s.themeMode == ThemeMode.dark,
+                          onTap: () => cubit.setThemeMode(ThemeMode.dark),
+                        ),
+                      ],
+                    ),
+                    if (palette.alwaysDark || palette.alwaysLight)
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(6, 12, 6, 4),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Icon(Icons.info_outline_rounded, size: 18, color: Tone.sapphire.ink(Theme.of(context).brightness == Brightness.dark)),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                s.themeType == AppThemeType.custom
+                                    ? 'الوضع الفاتح أو الداكن يتحدد تلقائيًا من لون الخلفية الذي اخترته.'
+                                    : 'هذا الثيم داكن دائمًا بطبيعته.',
+                                style: TextStyle(fontSize: 12, height: 1.5, color: glass.onGlassMuted),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                  ],
                 ),
-              const GlassSectionTitle('زخرفة الخلفية'),
-              GridView.count(
-                crossAxisCount: 3,
+              ),
+
+              // ------------------------------------------- ornament ---
+              GlassSectionTitle('زخرفة الخلفية', tone: Tone.teal, trailing: _Pill(pattern.labelAr, tone: Tone.teal)),
+              GridView(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
-                mainAxisSpacing: 10,
-                crossAxisSpacing: 10,
-                childAspectRatio: 0.74,
+                gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                  maxCrossAxisExtent: 150,
+                  mainAxisExtent: 142,
+                  mainAxisSpacing: 10,
+                  crossAxisSpacing: 10,
+                ),
                 children: [
                   for (final p in BgPattern.values)
                     _PatternTile(
@@ -99,38 +159,148 @@ class AppearancePage extends StatelessWidget {
                 child: pattern == BgPattern.none
                     ? const SizedBox(width: double.infinity)
                     : Padding(
-                        padding: const EdgeInsets.only(top: 14),
-                        child: GlassContainer(
-                          padding: const EdgeInsets.fromLTRB(16, 12, 16, 6),
+                        padding: const EdgeInsets.only(top: 12),
+                        child: NoorCard(
+                          padding: const EdgeInsets.fromLTRB(14, 14, 14, 8),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Row(
                                 children: [
-                                  Icon(Icons.tune_rounded, color: glass.accent),
-                                  const SizedBox(width: 8),
-                                  const Text('وضوح الزخرفة', style: TextStyle(fontWeight: FontWeight.w800)),
+                                  const ToneIcon(Icons.tune_rounded, tone: Tone.teal, size: 40),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Text('وضوح الزخرفة',
+                                        style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15, color: glass.onGlass)),
+                                  ),
                                 ],
                               ),
+                              const SizedBox(height: 4),
                               _StrengthSlider(value: s.patternStrength),
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text('هادئة', style: TextStyle(fontSize: 12, color: glass.onGlassMuted)),
-                                  Text('واضحة', style: TextStyle(fontSize: 12, color: glass.onGlassMuted)),
-                                ],
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 8),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text('هادئة', style: TextStyle(fontSize: 12, color: glass.onGlassMuted)),
+                                    Text('واضحة', style: TextStyle(fontSize: 12, color: glass.onGlassMuted)),
+                                  ],
+                                ),
                               ),
                             ],
                           ),
                         ),
                       ),
               ),
-              const SizedBox(height: 22),
-              if (!kIsWeb) // home-screen widgets are Android only
-              _WidgetStyleCard(opacity: s.widgetOpacity, textColor: Color(s.widgetTextColor)),
+
+              // --------------------------------------------- widgets ---
+              if (!kIsWeb) ...[
+                // home-screen widgets are Android only
+                const GlassSectionTitle('ويدجت الشاشة الرئيسية', tone: Tone.sky),
+                _WidgetStyleCard(opacity: s.widgetOpacity, textColor: Color(s.widgetTextColor)),
+              ],
             ],
           );
         },
+      ),
+    );
+  }
+}
+
+/// Small rounded label in a tone (the current choice beside a section title).
+class _Pill extends StatelessWidget {
+  final String text;
+  final Tone tone;
+
+  const _Pill(this.text, {required this.tone});
+
+  @override
+  Widget build(BuildContext context) {
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    return Container(
+      constraints: const BoxConstraints(maxWidth: 160),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+      decoration: BoxDecoration(
+        color: tone.mid.withValues(alpha: dark ? 0.18 : 0.14),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: tone.mid.withValues(alpha: 0.35)),
+      ),
+      child: Text(text,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: tone.ink(dark))),
+    );
+  }
+}
+
+/// One of the three light / dark / automatic choices.
+class _ModeTile extends StatelessWidget {
+  final String label;
+  final String hint;
+  final IconData icon;
+  final Tone tone;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _ModeTile({
+    required this.label,
+    required this.hint,
+    required this.icon,
+    required this.tone,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final glass = GlassTheme.of(context);
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    return Expanded(
+      child: Semantics(
+        button: true,
+        selected: selected,
+        child: GestureDetector(
+          onTap: onTap,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 220),
+            padding: const EdgeInsets.fromLTRB(6, 14, 6, 12),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(18),
+              gradient: selected ? tone.solid : tone.wash(dark),
+              border: Border.all(
+                color: selected ? Colors.white.withValues(alpha: 0.22) : tone.mid.withValues(alpha: dark ? 0.28 : 0.32),
+                width: selected ? 1.5 : 1,
+              ),
+            ),
+            child: Column(
+              children: [
+                selected
+                    ? Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.20),
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: Icon(icon, color: Colors.white, size: 22),
+                      )
+                    : ToneIcon(icon, tone: tone, size: 40),
+                const SizedBox(height: 8),
+                Text(label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                        fontWeight: FontWeight.w900, fontSize: 14, color: selected ? Colors.white : glass.onGlass)),
+                Text(hint,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                        fontSize: 11,
+                        color: selected ? Colors.white.withValues(alpha: 0.8) : glass.onGlassMuted)),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -159,7 +329,9 @@ class _WidgetStyleCardState extends State<_WidgetStyleCard> {
   @override
   Widget build(BuildContext context) {
     final glass = GlassTheme.of(context);
+    final dark = Theme.of(context).brightness == Brightness.dark;
     final cubit = context.read<SettingsCubit>();
+    const tone = Tone.sky;
     Widget chip(String label, double value) {
       final on = (_v - value).abs() < 0.01;
       return Expanded(
@@ -170,44 +342,65 @@ class _WidgetStyleCardState extends State<_WidgetStyleCard> {
           },
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 200),
-            padding: const EdgeInsets.symmetric(vertical: 9),
+            padding: const EdgeInsets.symmetric(vertical: 10),
             margin: const EdgeInsets.symmetric(horizontal: 4),
             alignment: Alignment.center,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(14),
-              color: on ? glass.accent.withValues(alpha: 0.18) : glass.onGlass.withValues(alpha: 0.05),
-              border: Border.all(color: on ? glass.accent : glass.onGlass.withValues(alpha: 0.12)),
+              gradient: on ? tone.solid : null,
+              color: on ? null : glass.onGlass.withValues(alpha: 0.05),
+              border: Border.all(
+                  color: on ? Colors.white.withValues(alpha: 0.2) : tone.mid.withValues(alpha: dark ? 0.25 : 0.3)),
             ),
             child: Text(label,
-                style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13, color: on ? glass.accent : glass.onGlass)),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13, color: on ? Colors.white : glass.onGlass)),
           ),
         ),
       );
     }
 
-    return GlassContainer(
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
+    return NoorCard(
+      padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(Icons.widgets_rounded, color: glass.accent),
-              const SizedBox(width: 8),
-              const Text('ويدجت الشاشة الرئيسية', style: TextStyle(fontWeight: FontWeight.w800)),
+              const ToneIcon(Icons.widgets_rounded, tone: tone, size: 42),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('ويدجت الشاشة الرئيسية',
+                        style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15, color: glass.onGlass)),
+                    Text('خلفية الويدجت ولون كتابته',
+                        style: TextStyle(fontSize: 12, height: 1.4, color: glass.onGlassMuted)),
+                  ],
+                ),
+              ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 14),
           _WidgetPreview(opacity: _v, textColor: widget.textColor),
-          const SizedBox(height: 12),
+          const SizedBox(height: 14),
           Row(children: [chip('شفافة', 0), chip('نصف شفافة', 0.5), chip('بخلفية', 1)]),
           Slider(
             value: _v,
             onChanged: (v) => setState(() => _v = v),
             onChangeEnd: cubit.setWidgetOpacity,
           ),
-          Text('لون الكتابة', style: TextStyle(fontWeight: FontWeight.w800, color: glass.onGlass)),
-          const SizedBox(height: 10),
+          Divider(height: 18, color: glass.onGlass.withValues(alpha: 0.08)),
+          Row(
+            children: [
+              Icon(Icons.format_color_text_rounded, size: 20, color: tone.ink(dark)),
+              const SizedBox(width: 8),
+              Text('لون الكتابة', style: TextStyle(fontWeight: FontWeight.w800, color: glass.onGlass)),
+            ],
+          ),
+          const SizedBox(height: 12),
           Wrap(
             spacing: 10,
             runSpacing: 10,
@@ -237,11 +430,28 @@ class _WidgetStyleCardState extends State<_WidgetStyleCard> {
                 ),
             ],
           ),
-          const SizedBox(height: 12),
-          Text(
-            'لإضافة ويدجت: اضغط مطولًا على الشاشة الرئيسية ← الأدوات (Widgets) ← الهدى. '
-            'فيه ٥ أشكال لمواقيت الصلاة بالإضافة لآية اليوم والأذكار.',
-            style: TextStyle(fontSize: 12, height: 1.6, color: glass.onGlassMuted),
+          const SizedBox(height: 14),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              gradient: tone.wash(dark),
+              border: Border.all(color: tone.mid.withValues(alpha: 0.25)),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(Icons.lightbulb_outline_rounded, size: 18, color: tone.ink(dark)),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'لإضافة ويدجت: اضغط مطولًا على الشاشة الرئيسية ← الأدوات (Widgets) ← الهدى. '
+                    'فيه ٥ أشكال لمواقيت الصلاة بالإضافة لآية اليوم والأذكار.',
+                    style: TextStyle(fontSize: 12, height: 1.6, color: glass.onGlassMuted),
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -370,49 +580,82 @@ class _LivePreview extends StatelessWidget {
   Widget build(BuildContext context) {
     final glass = GlassTheme.of(context);
     return Container(
-      height: 190,
+      height: 196,
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: glass.accent.withValues(alpha: 0.45)),
+        border: Border.all(color: glass.accent.withValues(alpha: 0.5), width: 1.4),
       ),
       child: GradientBackground(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
+        child: Stack(
+          children: [
+            PositionedDirectional(
+              top: -40,
+              end: -40,
+              child: IgnorePointer(
+                child: SizedBox.square(
+                  dimension: 150,
+                  child: CustomPaint(painter: KhatamPainter(glass.accent.withValues(alpha: 0.22))),
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('الهدى', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: glass.accent)),
+                  Row(
+                    children: [
+                      Text('الهدى',
+                          style: TextStyle(
+                              fontFamily: AppFonts.display,
+                              fontSize: 26,
+                              fontWeight: FontWeight.w700,
+                              color: glass.accent)),
+                      const Spacer(),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: glass.accent.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: glass.accent.withValues(alpha: 0.4)),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.visibility_rounded, size: 14, color: glass.accent),
+                            const SizedBox(width: 4),
+                            Text('معاينة',
+                                style: TextStyle(fontSize: 12, color: glass.accent, fontWeight: FontWeight.w800)),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                   const Spacer(),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: glass.accent.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(20),
+                  NoorCard(
+                    radius: 20,
+                    padding: const EdgeInsets.all(10),
+                    child: Row(
+                      children: [
+                        const ToneIcon(Icons.mosque_rounded, tone: Tone.sapphire, size: 36),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text('الصلاة القادمة: العصر',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(fontWeight: FontWeight.w800, color: glass.onGlass)),
+                        ),
+                        Text('٠٣:١٢',
+                            style: TextStyle(
+                                fontFamily: AppFonts.display, fontWeight: FontWeight.w700, color: glass.accent)),
+                      ],
                     ),
-                    child: Text('معاينة', style: TextStyle(fontSize: 12, color: glass.accent, fontWeight: FontWeight.w800)),
                   ),
                 ],
               ),
-              const Spacer(),
-              GlassContainer(
-                blur: 0,
-                padding: const EdgeInsets.all(12),
-                child: Row(
-                  children: [
-                    Icon(Icons.mosque_rounded, color: glass.accent),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text('الصلاة القادمة: العصر', style: TextStyle(fontWeight: FontWeight.w800, color: glass.onGlass)),
-                    ),
-                    Text('٠٣:١٢', style: TextStyle(color: glass.onGlassMuted)),
-                  ],
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -430,80 +673,99 @@ class _PatternTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final glass = GlassTheme.of(context);
     final dark = Theme.of(context).brightness == Brightness.dark;
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 220),
-        clipBehavior: Clip.antiAlias,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(20),
-          gradient: LinearGradient(
-            begin: Alignment.topRight,
-            end: Alignment.bottomLeft,
-            colors: glass.backgroundGradient,
-          ),
-          border: Border.all(
-            color: selected ? glass.accent : glass.onGlass.withValues(alpha: 0.12),
-            width: selected ? 2.5 : 1,
-          ),
-          boxShadow: selected ? [BoxShadow(color: glass.accent.withValues(alpha: 0.35), blurRadius: 14)] : null,
-        ),
-        child: Stack(
-          children: [
-            Positioned.fill(
-              child: CustomPaint(
-                painter: PatternPainter(
-                  pattern: pattern,
-                  color: glass.accent.withValues(alpha: dark ? 0.5 : 0.6),
-                  scale: 0.5,
-                ),
-              ),
+    return Semantics(
+      button: true,
+      selected: selected,
+      label: pattern.labelAr,
+      child: GestureDetector(
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 220),
+          clipBehavior: Clip.antiAlias,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            gradient: LinearGradient(
+              begin: Alignment.topRight,
+              end: Alignment.bottomLeft,
+              colors: glass.backgroundGradient,
             ),
-            if (pattern == BgPattern.none)
-              Center(child: Icon(Icons.crop_square_rounded, color: glass.onGlassMuted, size: 30)),
-            if (selected)
-              PositionedDirectional(
-                top: 6,
-                end: 6,
-                child: Icon(Icons.check_circle_rounded, color: glass.accent, size: 22),
-              ),
-            Positioned(
-              left: 0,
-              right: 0,
-              bottom: 0,
-              child: Container(
-                padding: const EdgeInsets.fromLTRB(6, 14, 6, 8),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [glass.backgroundGradient.last.withValues(alpha: 0), glass.backgroundGradient.last],
+            border: Border.all(
+              color: selected ? glass.accent : glass.onGlass.withValues(alpha: 0.12),
+              width: selected ? 2.5 : 1,
+            ),
+            boxShadow: liteShadows(
+                selected ? [BoxShadow(color: glass.accent.withValues(alpha: 0.35), blurRadius: 14)] : null),
+          ),
+          child: Stack(
+            children: [
+              Positioned.fill(
+                child: CustomPaint(
+                  painter: PatternPainter(
+                    pattern: pattern,
+                    color: glass.accent.withValues(alpha: dark ? 0.5 : 0.6),
+                    scale: 0.5,
                   ),
                 ),
-                child: Column(
-                  children: [
-                    Text(pattern.labelAr,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                            fontWeight: FontWeight.w900,
-                            fontSize: 13,
-                            color: selected ? glass.accent : glass.onGlass)),
-                    Text(pattern.hintAr,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(fontSize: 9.5, color: glass.onGlassMuted)),
-                  ],
+              ),
+              if (pattern == BgPattern.none)
+                Center(child: Icon(Icons.crop_square_rounded, color: glass.onGlassMuted, size: 30)),
+              PositionedDirectional(
+                top: 7,
+                end: 7,
+                child: AnimatedOpacity(
+                  duration: const Duration(milliseconds: 200),
+                  opacity: selected ? 1.0 : 0.0,
+                  child: Container(
+                    width: 24,
+                    height: 24,
+                    decoration: BoxDecoration(shape: BoxShape.circle, color: glass.accent),
+                    child: Icon(Icons.check_rounded,
+                        size: 16, color: glass.accent.computeLuminance() > 0.5 ? Colors.black : Colors.white),
+                  ),
                 ),
               ),
-            ),
-          ],
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: Container(
+                  padding: const EdgeInsets.fromLTRB(6, 16, 6, 8),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [glass.backgroundGradient.last.withValues(alpha: 0), glass.backgroundGradient.last],
+                    ),
+                  ),
+                  child: Column(
+                    children: [
+                      Text(pattern.labelAr,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                              fontWeight: FontWeight.w900,
+                              fontSize: 13,
+                              color: selected ? glass.accent : glass.onGlass)),
+                      Text(pattern.hintAr,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(fontSize: 9.5, color: glass.onGlassMuted)),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 }
 
+/// A theme as a little picture of the app in its colours: its background,
+/// a card in its accent, its colour swatches and its name.
 class _ThemeTile extends StatelessWidget {
   final AppThemeType type;
   final bool selected;
@@ -515,42 +777,116 @@ class _ThemeTile extends StatelessWidget {
     final p = AppThemes.palette(type);
     final dark = Theme.of(context).brightness == Brightness.dark || p.alwaysDark;
     final colors = dark ? p.darkGradient : p.lightGradient;
-    return GestureDetector(
-      onTap: () async {
-        await context.read<SettingsCubit>().setThemeType(type);
-        if (type == AppThemeType.custom && context.mounted) showCustomColorsSheet(context);
-      },
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 250),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(22),
-          gradient: LinearGradient(colors: colors, begin: Alignment.topRight, end: Alignment.bottomLeft),
-          border: Border.all(color: selected ? p.accent : Colors.white24, width: selected ? 3 : 1),
-          boxShadow: selected ? [BoxShadow(color: p.accent.withValues(alpha: 0.5), blurRadius: 16)] : null,
-        ),
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Row(
-              children: [
-                for (final c in [p.primary, p.secondary, p.accent])
-                  Container(
-                    width: 16,
-                    height: 16,
-                    margin: const EdgeInsetsDirectional.only(end: 4),
-                    decoration: BoxDecoration(shape: BoxShape.circle, color: c, border: Border.all(color: Colors.white54)),
+    final fg = dark ? Colors.white : const Color(0xFF0E1B17);
+    return Semantics(
+      button: true,
+      selected: selected,
+      label: p.nameAr,
+      child: GestureDetector(
+        onTap: () async {
+          await context.read<SettingsCubit>().setThemeType(type);
+          if (type == AppThemeType.custom && context.mounted) showCustomColorsSheet(context);
+        },
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 250),
+          clipBehavior: Clip.antiAlias,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(22),
+            gradient: LinearGradient(colors: colors, begin: Alignment.topRight, end: Alignment.bottomLeft),
+            border: Border.all(color: selected ? p.accent : fg.withValues(alpha: 0.16), width: selected ? 3 : 1),
+            boxShadow: liteShadows(
+                selected ? [BoxShadow(color: p.accent.withValues(alpha: 0.5), blurRadius: 16)] : null),
+          ),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              PositionedDirectional(
+                bottom: -26,
+                end: -26,
+                child: IgnorePointer(
+                  child: SizedBox.square(
+                    dimension: 84,
+                    child: CustomPaint(painter: KhatamPainter(p.accent.withValues(alpha: 0.28))),
                   ),
-                const Spacer(),
-                if (selected) Icon(Icons.check_circle_rounded, color: p.accent),
-              ],
-            ),
-            Text(
-              type == AppThemeType.custom ? '🎨 ${p.nameAr}' : p.nameAr,
-              style: TextStyle(fontWeight: FontWeight.w900, color: dark ? Colors.white : const Color(0xFF0E1B17)),
-            ),
-          ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        for (final c in [p.primary, p.secondary, p.accent])
+                          Container(
+                            width: 16,
+                            height: 16,
+                            margin: const EdgeInsetsDirectional.only(end: 4),
+                            decoration: BoxDecoration(
+                                shape: BoxShape.circle, color: c, border: Border.all(color: Colors.white54)),
+                          ),
+                        const Spacer(),
+                        AnimatedScale(
+                          duration: const Duration(milliseconds: 200),
+                          scale: selected ? 1.0 : 0.0,
+                          child: Container(
+                            width: 24,
+                            height: 24,
+                            decoration: BoxDecoration(shape: BoxShape.circle, color: p.accent),
+                            child: Icon(Icons.check_rounded,
+                                size: 16, color: p.accent.computeLuminance() > 0.5 ? Colors.black : Colors.white),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const Spacer(),
+                    // a tiny card in the theme's accent: how pages will look.
+                    Container(
+                      height: 24,
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      decoration: BoxDecoration(
+                        color: fg.withValues(alpha: 0.07),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: p.accent.withValues(alpha: 0.45)),
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 10,
+                            height: 10,
+                            decoration: BoxDecoration(shape: BoxShape.circle, color: p.accent),
+                          ),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: Container(
+                              height: 5,
+                              decoration: BoxDecoration(
+                                color: fg.withValues(alpha: 0.30),
+                                borderRadius: BorderRadius.circular(3),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Container(
+                            width: 18,
+                            height: 5,
+                            decoration: BoxDecoration(color: p.accent, borderRadius: BorderRadius.circular(3)),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      type == AppThemeType.custom ? '🎨 ${p.nameAr}' : p.nameAr,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(fontWeight: FontWeight.w900, fontSize: 14, color: fg),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

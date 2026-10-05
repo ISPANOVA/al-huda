@@ -7,8 +7,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../core/data/surah_metadata.dart';
 import '../../core/services/storage_service.dart';
 import '../../core/theme/app_themes.dart';
+import '../../core/theme/tones.dart';
 import '../../core/utils/arabic_utils.dart';
-import '../../core/widgets/glass_container.dart';
 import '../../core/widgets/gradient_background.dart';
 import '../../core/widgets/noor_ui.dart';
 import '../quran/domain/entities/ayah.dart';
@@ -35,36 +35,63 @@ class _HifzReviewPageState extends State<HifzReviewPage> {
 
   Map<String, dynamic> _scores() => StorageService.asMap(context.read<StorageService>().settings.get(_scoresKey));
 
+  /// Each level in its own colour, with how much of the ayah it hides.
+  static const _levelTones = [Tone.emerald, Tone.amber, Tone.rose];
+  static const _levelHints = ['ربع الكلمات', 'نصف الكلمات', 'كل الكلمات'];
+
   @override
   Widget build(BuildContext context) {
     final glass = GlassTheme.of(context);
+    final dark = Theme.of(context).brightness == Brightness.dark;
     final scores = _scores();
     final q = ArabicUtils.normalize(_query);
     final list = [
       for (final s in SurahMetadata.all)
         if (_query.isEmpty || ArabicUtils.normalize(s.name).contains(q) || '${s.number}' == _query) s,
     ];
+    final fieldRadius = BorderRadius.circular(18);
     return GlassScaffold(
       title: 'مراجعة الحفظ',
+      subtitle: 'اختبر حفظك سورةً سورة',
+      icon: Icons.psychology_rounded,
+      tone: Tone.coral,
       body: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
-            child: GlassContainer(
+            padding: const EdgeInsets.fromLTRB(16, 4, 16, 10),
+            child: ToneCard(
+              tone: Tone.coral,
+              ornament: true,
+              radius: 24,
               padding: const EdgeInsets.all(14),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Text('اختر السورة التي تحفظها، وسنخفي بعض كلماتها لتسترجعها من ذاكرتك.',
-                      style: TextStyle(color: glass.onGlassMuted, height: 1.6, fontSize: 13)),
-                  const SizedBox(height: 10),
-                  SegmentedButton<int>(
-                    showSelectedIcon: false,
-                    segments: [
-                      for (var i = 0; i < _levels.length; i++) ButtonSegment(value: i, label: Text(_levels[i])),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const ToneIcon(Icons.visibility_off_rounded, tone: Tone.coral, size: 40),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text('اختر السورة التي تحفظها، وسنخفي بعض كلماتها لتسترجعها من ذاكرتك.',
+                            style: TextStyle(color: glass.onGlass, height: 1.6, fontSize: 13, fontWeight: FontWeight.w600)),
+                      ),
                     ],
-                    selected: {_level},
-                    onSelectionChanged: (v) => setState(() => _level = v.first),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      for (var i = 0; i < _levels.length; i++) ...[
+                        if (i > 0) const SizedBox(width: 8),
+                        _LevelTile(
+                          label: _levels[i],
+                          hint: _levelHints[i],
+                          tone: _levelTones[i],
+                          selected: _level == i,
+                          onTap: () => setState(() => _level = i),
+                        ),
+                      ],
+                    ],
                   ),
                 ],
               ),
@@ -74,10 +101,24 @@ class _HifzReviewPageState extends State<HifzReviewPage> {
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
             child: TextField(
               onChanged: (v) => setState(() => _query = v.trim()),
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 isDense: true,
                 hintText: 'ابحث عن سورة',
-                prefixIcon: Icon(Icons.search_rounded),
+                filled: true,
+                fillColor: noorSurface(context),
+                prefixIcon: Icon(Icons.search_rounded, color: Tone.coral.ink(dark)),
+                border: OutlineInputBorder(
+                  borderRadius: fieldRadius,
+                  borderSide: BorderSide(color: Tone.coral.mid.withValues(alpha: 0.35)),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: fieldRadius,
+                  borderSide: BorderSide(color: Tone.coral.mid.withValues(alpha: 0.35)),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: fieldRadius,
+                  borderSide: BorderSide(color: Tone.coral.mid, width: 1.6),
+                ),
               ),
             ),
           ),
@@ -88,51 +129,141 @@ class _HifzReviewPageState extends State<HifzReviewPage> {
               itemBuilder: (context, i) {
                 final s = list[i];
                 final best = (scores['${s.number}'] as num?)?.toInt();
-                return GlassContainer(
-                  margin: const EdgeInsets.symmetric(vertical: 4),
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                  onTap: () async {
-                    await Navigator.of(context).push(MaterialPageRoute(
-                      builder: (_) => _ReviewSession(surah: s.number, level: _level),
-                    ));
-                    if (mounted) setState(() {});
-                  },
-                  child: Row(
-                    children: [
-                      SizedBox(
-                        width: 40,
-                        child: Text(ArabicUtils.toArabicDigits(s.number),
-                            textAlign: TextAlign.center,
-                            style: TextStyle(color: glass.accent, fontWeight: FontWeight.w900)),
-                      ),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                final scoreTone = best == null
+                    ? Tone.coral
+                    : best >= 90
+                        ? Tone.emerald
+                        : best >= 60
+                            ? Tone.amber
+                            : Tone.coral;
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 5),
+                  child: Material(
+                    color: noorSurface(context),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                      side: BorderSide(color: Tone.coral.mid.withValues(alpha: dark ? 0.22 : 0.28)),
+                    ),
+                    clipBehavior: Clip.antiAlias,
+                    child: InkWell(
+                      onTap: () async {
+                        await Navigator.of(context).push(MaterialPageRoute(
+                          builder: (_) => _ReviewSession(surah: s.number, level: _level),
+                        ));
+                        if (mounted) setState(() {});
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(12, 10, 14, 10),
+                        child: Row(
                           children: [
-                            Text('سورة ${s.name}', style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
-                            Text('${ArabicUtils.toArabicDigits(s.ayahCount)} آية',
-                                style: TextStyle(color: glass.onGlassMuted, fontSize: 12)),
+                            SizedBox.square(
+                              dimension: 40,
+                              child: CustomPaint(
+                                painter: KhatamPainter(Tone.coral.ink(dark).withValues(alpha: 0.75), stroke: 1.2),
+                                child: Center(
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(9),
+                                    child: FittedBox(
+                                      child: Text(ArabicUtils.toArabicDigits(s.number),
+                                          style: TextStyle(color: Tone.coral.ink(dark), fontWeight: FontWeight.w900)),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text('سورة ${s.name}',
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16, color: glass.onGlass)),
+                                  Text('${ArabicUtils.toArabicDigits(s.ayahCount)} آية',
+                                      style: TextStyle(color: glass.onGlassMuted, fontSize: 12)),
+                                ],
+                              ),
+                            ),
+                            if (best != null)
+                              NoorRing(
+                                value: best / 100,
+                                color: scoreTone.ink(dark),
+                                size: 42,
+                                stroke: 3.5,
+                                child: Text(ArabicUtils.toArabicDigits(best),
+                                    style: TextStyle(
+                                        fontSize: 11, fontWeight: FontWeight.w900, color: scoreTone.ink(dark))),
+                              )
+                            else
+                              Icon(Icons.chevron_left_rounded, color: glass.onGlassMuted),
                           ],
                         ),
                       ),
-                      if (best != null)
-                        NoorRing(
-                          value: best / 100,
-                          color: glass.accent,
-                          size: 40,
-                          stroke: 3.5,
-                          child: Text(ArabicUtils.toArabicDigits(best),
-                              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w900)),
-                        )
-                      else
-                        Icon(Icons.chevron_left_rounded, color: glass.onGlassMuted),
-                    ],
+                    ),
                   ),
                 );
               },
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// One difficulty level: filled with its colour when chosen.
+class _LevelTile extends StatelessWidget {
+  final String label;
+  final String hint;
+  final Tone tone;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _LevelTile({
+    required this.label,
+    required this.hint,
+    required this.tone,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final glass = GlassTheme.of(context);
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    return Expanded(
+      child: Semantics(
+        button: true,
+        selected: selected,
+        child: GestureDetector(
+          onTap: onTap,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 9),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              gradient: selected ? tone.solid : null,
+              color: selected ? null : glass.onGlass.withValues(alpha: dark ? 0.05 : 0.04),
+              border: Border.all(
+                color: selected ? Colors.white.withValues(alpha: 0.2) : tone.mid.withValues(alpha: dark ? 0.35 : 0.4),
+              ),
+            ),
+            child: Column(
+              children: [
+                Text(label,
+                    maxLines: 1,
+                    style: TextStyle(
+                        fontWeight: FontWeight.w900, fontSize: 14, color: selected ? Colors.white : tone.ink(dark))),
+                Text(hint,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                        fontSize: 10.5, color: selected ? Colors.white.withValues(alpha: 0.8) : glass.onGlassMuted)),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -196,10 +327,15 @@ class _ReviewSessionState extends State<_ReviewSession> {
   @override
   Widget build(BuildContext context) {
     final glass = GlassTheme.of(context);
+    final dark = Theme.of(context).brightness == Brightness.dark;
     final font = context.select((SettingsCubit c) => c.state.quranFont);
     final info = SurahMetadata.surah(widget.surah);
+    const tone = Tone.coral;
     return GlassScaffold(
       title: 'مراجعة سورة ${info.name}',
+      subtitle: const ['مستوى سهل', 'مستوى متوسط', 'مستوى صعب'][widget.level],
+      icon: Icons.psychology_rounded,
+      tone: tone,
       body: FutureBuilder<List<Ayah>>(
         future: _ayahs,
         builder: (context, snap) {
@@ -216,26 +352,32 @@ class _ReviewSessionState extends State<_ReviewSession> {
             children: [
               Row(
                 children: [
-                  Text('الآية ${ArabicUtils.toArabicDigits(a.numberInSurah)} من ${ArabicUtils.toArabicDigits(ayahs.length)}',
-                      style: TextStyle(color: glass.onGlassMuted, fontWeight: FontWeight.w700)),
+                  Flexible(
+                    child: _Badge(
+                      icon: Icons.format_list_numbered_rounded,
+                      text:
+                          'الآية ${ArabicUtils.toArabicDigits(a.numberInSurah)} من ${ArabicUtils.toArabicDigits(ayahs.length)}',
+                      tone: tone,
+                    ),
+                  ),
                   const Spacer(),
-                  Text('✓ ${ArabicUtils.toArabicDigits(_correct)}',
-                      style: TextStyle(color: glass.accent, fontWeight: FontWeight.w900)),
+                  _Badge(icon: Icons.check_rounded, text: ArabicUtils.toArabicDigits(_correct), tone: Tone.emerald),
                 ],
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 10),
               ClipRRect(
                 borderRadius: BorderRadius.circular(6),
                 child: LinearProgressIndicator(
                   value: (_index) / ayahs.length,
-                  minHeight: 6,
-                  color: glass.accent,
-                  backgroundColor: glass.onGlass.withValues(alpha: 0.08),
+                  minHeight: 7,
+                  color: tone.ink(dark),
+                  backgroundColor: tone.mid.withValues(alpha: 0.14),
                 ),
               ),
               const SizedBox(height: 16),
-              GlassContainer(
-                padding: const EdgeInsets.fromLTRB(16, 20, 16, 20),
+              NoorCard(
+                radius: 26,
+                padding: const EdgeInsets.fromLTRB(16, 22, 16, 22),
                 child: Wrap(
                   alignment: WrapAlignment.center,
                   spacing: 8,
@@ -250,11 +392,11 @@ class _ReviewSessionState extends State<_ReviewSession> {
                                 height: 40,
                                 margin: const EdgeInsets.only(top: 6),
                                 decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(10),
-                                  color: glass.accent.withValues(alpha: 0.16),
-                                  border: Border.all(color: glass.accent.withValues(alpha: 0.5)),
+                                  borderRadius: BorderRadius.circular(12),
+                                  gradient: tone.wash(dark),
+                                  border: Border.all(color: tone.mid.withValues(alpha: 0.6)),
                                 ),
-                                child: Icon(Icons.visibility_rounded, size: 16, color: glass.accent),
+                                child: Icon(Icons.visibility_rounded, size: 16, color: tone.ink(dark)),
                               ),
                             )
                           : Text(
@@ -262,7 +404,7 @@ class _ReviewSessionState extends State<_ReviewSession> {
                               style: font.style(
                                 fontSize: 24,
                                 height: 1.9,
-                                color: _hidden.contains(i) ? glass.accent : glass.onGlass,
+                                color: _hidden.contains(i) ? tone.ink(dark) : glass.onGlass,
                               ),
                             ),
                     Text(ArabicUtils.ornateAyahMarker(a.numberInSurah),
@@ -270,15 +412,33 @@ class _ReviewSessionState extends State<_ReviewSession> {
                   ],
                 ),
               ),
-              const SizedBox(height: 10),
-              Text(
-                allShown ? 'هل كان استرجاعك صحيحًا؟' : 'استرجع الكلمات المخفية في ذهنك، ثم اضغط عليها للتحقق.',
-                textAlign: TextAlign.center,
-                style: TextStyle(color: glass.onGlassMuted),
+              const SizedBox(height: 14),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(allShown ? Icons.help_outline_rounded : Icons.touch_app_rounded,
+                      size: 18, color: tone.ink(dark)),
+                  const SizedBox(width: 6),
+                  Flexible(
+                    child: Text(
+                      allShown ? 'هل كان استرجاعك صحيحًا؟' : 'استرجع الكلمات المخفية في ذهنك، ثم اضغط عليها للتحقق.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                          color: allShown ? glass.onGlass : glass.onGlassMuted,
+                          fontWeight: allShown ? FontWeight.w800 : FontWeight.w500),
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 14),
               if (!allShown)
                 OutlinedButton.icon(
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: tone.ink(dark),
+                    side: BorderSide(color: tone.mid.withValues(alpha: 0.6)),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  ),
                   onPressed: () => setState(() => _revealed.addAll(_hidden)),
                   icon: const Icon(Icons.visibility_rounded),
                   label: const Text('إظهار كل الكلمات'),
@@ -288,6 +448,10 @@ class _ReviewSessionState extends State<_ReviewSession> {
                   children: [
                     Expanded(
                       child: FilledButton.icon(
+                        style: FilledButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        ),
                         onPressed: () => _grade(true, ayahs.length),
                         icon: const Icon(Icons.check_rounded),
                         label: const Text('حفظتها'),
@@ -296,6 +460,12 @@ class _ReviewSessionState extends State<_ReviewSession> {
                     const SizedBox(width: 10),
                     Expanded(
                       child: OutlinedButton.icon(
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: tone.ink(dark),
+                          side: BorderSide(color: tone.mid.withValues(alpha: 0.6)),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        ),
                         onPressed: () => _grade(false, ayahs.length),
                         icon: const Icon(Icons.replay_rounded),
                         label: const Text('تحتاج مراجعة'),
@@ -317,39 +487,105 @@ class _ReviewSessionState extends State<_ReviewSession> {
         : score >= 60
             ? 'أحسنت، راجع الآيات التي تعثرت فيها.'
             : 'تحتاج السورة إلى مراجعة، والتكرار مفتاح الإتقان.';
+    final tone = score >= 90
+        ? Tone.emerald
+        : score >= 60
+            ? Tone.amber
+            : Tone.coral;
     return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            NoorRing(
-              value: score / 100,
-              color: glass.accent,
-              size: 150,
-              stroke: 10,
-              child: Text('${ArabicUtils.toArabicDigits(score)}٪',
-                  style: const TextStyle(fontSize: 34, fontWeight: FontWeight.w900)),
-            ),
-            const SizedBox(height: 18),
-            Text(msg, textAlign: TextAlign.center, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800)),
-            const SizedBox(height: 6),
-            Text('${ArabicUtils.toArabicDigits(_correct)} من ${ArabicUtils.toArabicDigits(total)} آية',
-                style: TextStyle(color: glass.onGlassMuted)),
-            const SizedBox(height: 20),
-            FilledButton.icon(
-              onPressed: () => setState(() {
-                _index = 0;
-                _correct = 0;
-                _graded = 0;
-                _hidden = {};
-                _finished = false;
-              }),
-              icon: const Icon(Icons.refresh_rounded),
-              label: const Text('مراجعة مرة أخرى'),
-            ),
-          ],
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+        child: ToneCard(
+          tone: tone,
+          solid: true,
+          ornament: true,
+          radius: 28,
+          padding: const EdgeInsets.fromLTRB(20, 28, 20, 22),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              NoorRing(
+                value: score / 100,
+                color: Colors.white,
+                track: Colors.white.withValues(alpha: 0.2),
+                size: 150,
+                stroke: 10,
+                child: Padding(
+                  padding: const EdgeInsets.all(22),
+                  child: FittedBox(
+                    child: Text('${ArabicUtils.toArabicDigits(score)}٪',
+                        style: const TextStyle(
+                            fontFamily: AppFonts.display,
+                            fontSize: 38,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white)),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 18),
+              Text(msg,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontSize: 17, height: 1.5, fontWeight: FontWeight.w800, color: Colors.white)),
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(20),
+                  color: Colors.white.withValues(alpha: 0.16),
+                ),
+                child: Text('${ArabicUtils.toArabicDigits(_correct)} من ${ArabicUtils.toArabicDigits(total)} آية',
+                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
+              ),
+              const SizedBox(height: 22),
+              FilledButton.icon(
+                onPressed: () => setState(() {
+                  _index = 0;
+                  _correct = 0;
+                  _graded = 0;
+                  _hidden = {};
+                  _finished = false;
+                }),
+                icon: const Icon(Icons.refresh_rounded),
+                label: const Text('مراجعة مرة أخرى'),
+              ),
+            ],
+          ),
         ),
+      ),
+    );
+  }
+}
+
+/// A small rounded label with an icon, in a tone.
+class _Badge extends StatelessWidget {
+  final IconData icon;
+  final String text;
+  final Tone tone;
+
+  const _Badge({required this.icon, required this.text, required this.tone});
+
+  @override
+  Widget build(BuildContext context) {
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        color: tone.mid.withValues(alpha: dark ? 0.16 : 0.12),
+        border: Border.all(color: tone.mid.withValues(alpha: 0.35)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 16, color: tone.ink(dark)),
+          const SizedBox(width: 6),
+          Flexible(
+            child: Text(text,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: tone.ink(dark))),
+          ),
+        ],
       ),
     );
   }

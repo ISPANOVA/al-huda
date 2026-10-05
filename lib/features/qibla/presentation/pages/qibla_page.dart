@@ -9,9 +9,10 @@ import 'package:flutter_compass/flutter_compass.dart';
 import 'package:sensors_plus/sensors_plus.dart';
 
 import '../../../../core/theme/app_themes.dart';
+import '../../../../core/theme/tones.dart';
 import '../../../../core/utils/arabic_utils.dart';
-import '../../../../core/widgets/glass_container.dart';
 import '../../../../core/widgets/gradient_background.dart';
+import '../../../../core/widgets/noor_ui.dart';
 import '../../../../core/widgets/state_views.dart';
 import '../../../prayer/data/prayer_repository.dart';
 import '../../web_compass.dart';
@@ -147,18 +148,38 @@ class _QiblaPageState extends State<QiblaPage> {
       if (aligned && !_wasAligned && haptics) HapticFeedback.heavyImpact();
       _wasAligned = aligned;
 
+      final dark = Theme.of(context).brightness == Brightness.dark;
+      final statusTone = aligned ? Tone.emerald : Tone.amber;
+      final surface = noorSurface(context);
+      final onStatus = aligned ? Colors.white : glass.onGlass;
+      final onStatusMuted = aligned ? Colors.white.withValues(alpha: 0.8) : glass.onGlassMuted;
+
       body = ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
         children: [
-          GlassContainer(
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _Info(label: 'اتجاه القبلة', value: '${ArabicUtils.toArabicDigits(qibla.toStringAsFixed(1))}°'),
-                _Info(label: 'اتجاه الجهاز', value: '${ArabicUtils.toArabicDigits(heading.toStringAsFixed(0))}°'),
-                _Info(label: 'المسافة إلى الكعبة', value: '${ArabicUtils.toArabicDigits(distance.round())} كم'),
-              ],
-            ),
+          Row(
+            children: [
+              _Info(
+                icon: Icons.explore_rounded,
+                tone: Tone.amber,
+                label: 'اتجاه القبلة',
+                value: '${ArabicUtils.toArabicDigits(qibla.toStringAsFixed(1))}°',
+              ),
+              const SizedBox(width: 10),
+              _Info(
+                icon: Icons.navigation_rounded,
+                tone: Tone.sapphire,
+                label: 'اتجاه الجهاز',
+                value: '${ArabicUtils.toArabicDigits(heading.toStringAsFixed(0))}°',
+              ),
+              const SizedBox(width: 10),
+              _Info(
+                icon: Icons.place_rounded,
+                tone: Tone.emerald,
+                label: 'المسافة إلى الكعبة',
+                value: '${ArabicUtils.toArabicDigits(distance.round())} كم',
+              ),
+            ],
           ),
           const SizedBox(height: 24),
           Center(
@@ -187,12 +208,31 @@ class _QiblaPageState extends State<QiblaPage> {
                         ],
                       ),
                     ),
-                    const GlassContainer(
+                    // The face of the compass: dark disc, a fine amber ring
+                    // (gold when facing the Qibla) and a quiet star inside.
+                    AnimatedContainer(
+                      duration: const Duration(milliseconds: 400),
                       width: 300,
                       height: 300,
-                      borderRadius: 150,
-                      padding: EdgeInsets.zero,
-                      child: SizedBox.expand(),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: RadialGradient(
+                          colors: [
+                            Color.alphaBlend(statusTone.mid.withValues(alpha: dark ? 0.16 : 0.12), surface),
+                            Color.alphaBlend(statusTone.mid.withValues(alpha: 0.03), surface),
+                          ],
+                        ),
+                        border: Border.all(
+                          color: aligned ? glass.accent : Tone.amber.mid.withValues(alpha: dark ? 0.45 : 0.5),
+                          width: aligned ? 2.5 : 1.5,
+                        ),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(70),
+                        child: CustomPaint(
+                          painter: KhatamPainter(Tone.amber.mid.withValues(alpha: dark ? 0.16 : 0.2)),
+                        ),
+                      ),
                     ),
                     // Dial rotates so that "N" always points to true north.
                     Transform.rotate(
@@ -218,11 +258,32 @@ class _QiblaPageState extends State<QiblaPage> {
             ),
           ),
           const SizedBox(height: 28),
-          GlassContainer(
-            tint: aligned ? glass.accent : null,
-            opacity: aligned ? 0.35 : null,
+          ToneCard(
+            tone: statusTone,
+            solid: aligned,
+            ornament: true,
+            radius: 24,
+            padding: const EdgeInsets.fromLTRB(16, 18, 16, 16),
             child: Column(
               children: [
+                if (aligned)
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.18),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: Colors.white.withValues(alpha: 0.22)),
+                    ),
+                    child: const Icon(Icons.check_rounded, color: Colors.white, size: 28),
+                  )
+                else
+                  ToneIcon(
+                    _webNeedsTap || _noSensor ? Icons.explore_off_rounded : Icons.explore_rounded,
+                    tone: Tone.amber,
+                    size: 48,
+                  ),
+                const SizedBox(height: 10),
                 Text(
                   _webNeedsTap
                       ? 'اضغط «تفعيل البوصلة» ليتحرك المؤشر مع اتجاه هاتفك'
@@ -234,23 +295,59 @@ class _QiblaPageState extends State<QiblaPage> {
                               ? 'استدر يمينًا ${ArabicUtils.toArabicDigits(offset.abs().round())}°'
                               : 'استدر يسارًا ${ArabicUtils.toArabicDigits(offset.abs().round())}°',
                   textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
+                  // Long notes read better in the body face.
+                  style: TextStyle(
+                    fontFamily: _webNeedsTap || _noSensor ? AppFonts.ui : AppFonts.display,
+                    fontSize: _webNeedsTap || _noSensor ? 15.5 : 22,
+                    fontWeight: _webNeedsTap || _noSensor ? FontWeight.w800 : FontWeight.w700,
+                    height: 1.6,
+                    color: onStatus,
+                  ),
                 ),
                 if (!_noSensor && _accuracy > 30) ...[
-                  const SizedBox(height: 8),
-                  Text('دقة البوصلة منخفضة: حرّك الهاتف على شكل رقم 8 للمعايرة، وابتعد عن المعادن.',
-                      textAlign: TextAlign.center, style: TextStyle(color: glass.onGlassMuted)),
+                  const SizedBox(height: 10),
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(14),
+                      color: aligned ? Colors.white.withValues(alpha: 0.14) : Tone.coral.mid.withValues(alpha: 0.12),
+                      border: Border.all(
+                          color: aligned ? Colors.white.withValues(alpha: 0.2) : Tone.coral.mid.withValues(alpha: 0.35)),
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(Icons.warning_amber_rounded,
+                            size: 18, color: aligned ? Colors.white : Tone.coral.ink(dark)),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text('دقة البوصلة منخفضة: حرّك الهاتف على شكل رقم 8 للمعايرة، وابتعد عن المعادن.',
+                              style: TextStyle(fontSize: 12.5, height: 1.5, color: onStatus)),
+                        ),
+                      ],
+                    ),
+                  ),
                 ],
                 if (_webNeedsTap) ...[
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 12),
                   FilledButton.icon(
                     onPressed: _enableWebCompass,
                     icon: const Icon(Icons.explore_rounded),
                     label: const Text('تفعيل البوصلة'),
                   ),
                 ],
-                const SizedBox(height: 6),
-                Text('ضع الهاتف أفقيًا للحصول على أدق نتيجة', style: TextStyle(color: glass.onGlassMuted, fontSize: 12)),
+                const SizedBox(height: 10),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.screen_rotation_alt_rounded, size: 16, color: onStatusMuted),
+                    const SizedBox(width: 6),
+                    Flexible(
+                      child: Text('ضع الهاتف أفقيًا للحصول على أدق نتيجة',
+                          textAlign: TextAlign.center, style: TextStyle(color: onStatusMuted, fontSize: 12)),
+                    ),
+                  ],
+                ),
               ],
             ),
           ),
@@ -258,25 +355,54 @@ class _QiblaPageState extends State<QiblaPage> {
       );
     }
 
-    return GlassScaffold(title: 'اتجاه القبلة', body: body);
+    return GlassScaffold(
+      title: 'اتجاه القبلة',
+      subtitle: location?.city ?? 'نحو الكعبة المشرفة',
+      icon: Icons.explore_rounded,
+      tone: Tone.amber,
+      body: body,
+    );
   }
 }
 
+/// A small stat card: coloured icon, big number and its label.
 class _Info extends StatelessWidget {
+  final IconData icon;
+  final Tone tone;
   final String label;
   final String value;
 
-  const _Info({required this.label, required this.value});
+  const _Info({required this.icon, required this.tone, required this.label, required this.value});
 
   @override
   Widget build(BuildContext context) {
     final glass = GlassTheme.of(context);
-    return Column(
-      children: [
-        Text(value, style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: glass.accent)),
-        const SizedBox(height: 2),
-        Text(label, style: TextStyle(fontSize: 11.5, color: glass.onGlassMuted)),
-      ],
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    return Expanded(
+      child: ToneCard(
+        tone: tone,
+        radius: 20,
+        padding: const EdgeInsets.fromLTRB(8, 12, 8, 12),
+        child: Column(
+          children: [
+            ToneIcon(icon, tone: tone, size: 34),
+            const SizedBox(height: 8),
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(value,
+                  maxLines: 1,
+                  style: TextStyle(
+                      fontFamily: AppFonts.display, fontSize: 20, fontWeight: FontWeight.w700, color: tone.ink(dark))),
+            ),
+            const SizedBox(height: 2),
+            Text(label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 11, color: glass.onGlassMuted)),
+          ],
+        ),
+      ),
     );
   }
 }

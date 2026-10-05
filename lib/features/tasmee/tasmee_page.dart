@@ -13,6 +13,7 @@ import 'package:speech_to_text/speech_to_text.dart';
 import '../../core/data/surah_metadata.dart';
 import '../../core/platform/web_env.dart';
 import '../../core/theme/app_themes.dart';
+import '../../core/theme/tones.dart';
 import '../../core/utils/arabic_utils.dart';
 import '../../core/widgets/gradient_background.dart';
 import '../../core/widgets/noor_ui.dart';
@@ -708,6 +709,8 @@ class _TasmeePageState extends State<TasmeePage> {
       },
       child: GlassScaffold(
         title: 'التسميع',
+        icon: Icons.record_voice_over_rounded,
+        tone: Tone.coral,
         actions: [
           IconButton(
             tooltip: 'انتقل إلى سورة أو آية',

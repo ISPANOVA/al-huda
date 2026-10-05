@@ -5,8 +5,11 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../core/theme/web_lite.dart';
 import '../../core/data/surah_metadata.dart';
 import '../../core/theme/app_themes.dart';
+import '../../core/theme/tones.dart';
 import '../../core/utils/arabic_utils.dart';
+import '../../core/widgets/glass_container.dart';
 import '../../core/widgets/gradient_background.dart';
+import '../../core/widgets/noor_ui.dart';
 import '../../core/widgets/state_views.dart';
 import '../audio/presentation/cubit/audio_cubit.dart';
 import '../audio/presentation/cubit/audio_state.dart';
@@ -111,6 +114,7 @@ class _AllRecitersPageState extends State<AllRecitersPage> {
   String _query = '';
   int _filter = 0;
   static const _filters = ['الكل', 'قرّاء مصر', 'الحرمين والخليج', 'المجوَّد'];
+  static const _filterTones = [Tone.amethyst, Tone.emerald, Tone.sapphire, Tone.gold];
 
   bool _match(MediaReciter r) {
     switch (_filter) {
@@ -127,9 +131,14 @@ class _AllRecitersPageState extends State<AllRecitersPage> {
   @override
   Widget build(BuildContext context) {
     final glass = GlassTheme.of(context);
+    final dark = Theme.of(context).brightness == Brightness.dark;
     final list = MediaCatalog.reciters.where(_match).toList();
+    final current = _filterTones[_filter];
     return GlassScaffold(
       title: 'القرّاء',
+      subtitle: 'مصاحف مرتلة ومجوَّدة برواية حفص',
+      icon: Icons.record_voice_over_rounded,
+      tone: Tone.amethyst,
       body: Column(
         children: [
           Padding(
@@ -144,7 +153,7 @@ class _AllRecitersPageState extends State<AllRecitersPage> {
             ),
           ),
           SizedBox(
-            height: 40,
+            height: 42,
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -152,6 +161,7 @@ class _AllRecitersPageState extends State<AllRecitersPage> {
               separatorBuilder: (_, _) => const SizedBox(width: 8),
               itemBuilder: (context, i) {
                 final on = i == _filter;
+                final tone = _filterTones[i];
                 return Pressable(
                   onTap: () => setState(() => _filter = i),
                   child: AnimatedContainer(
@@ -159,19 +169,52 @@ class _AllRecitersPageState extends State<AllRecitersPage> {
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     alignment: Alignment.center,
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(20),
-                      color: on ? glass.accent : glass.onGlass.withValues(alpha: 0.06),
+                      borderRadius: BorderRadius.circular(21),
+                      gradient: on ? tone.solid : null,
+                      color: on ? null : tone.mid.withValues(alpha: dark ? 0.12 : 0.08),
+                      border: Border.all(
+                        color: on ? Colors.white.withValues(alpha: 0.2) : tone.mid.withValues(alpha: 0.32),
+                      ),
                     ),
                     child: Text(
                       _filters[i],
-                      style: TextStyle(fontWeight: FontWeight.w800, color: on ? Colors.black : glass.onGlass),
+                      style: TextStyle(fontWeight: FontWeight.w800, color: on ? Colors.white : tone.ink(dark)),
                     ),
                   ),
                 );
               },
             ),
           ),
-          const SizedBox(height: 10),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 14, 20, 8),
+            child: Row(
+              children: [
+                SizedBox.square(
+                  dimension: 14,
+                  child: CustomPaint(painter: KhatamPainter(current.ink(dark), stroke: 1.6)),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    _filters[_filter],
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                        fontFamily: AppFonts.display, fontSize: 18, fontWeight: FontWeight.w700, color: glass.onGlass),
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(20),
+                    color: current.mid.withValues(alpha: dark ? 0.18 : 0.12),
+                  ),
+                  child: Text('${ArabicUtils.toArabicDigits(list.length)} قارئ',
+                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: current.ink(dark))),
+                ),
+              ],
+            ),
+          ),
           Expanded(
             child: list.isEmpty
                 ? const MessageView(icon: Icons.search_off_rounded, title: 'لا يوجد قارئ بهذا الاسم')
@@ -290,13 +333,24 @@ class _ReciterSurahsPageState extends State<ReciterSurahsPage> {
                   ),
                 ),
               ),
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  child: GlassSectionTitle(
+                    'السور',
+                    tone: Tone.amethyst,
+                    trailing: Text('${ArabicUtils.toArabicDigits(list.length)} سورة',
+                        style: TextStyle(fontSize: 12.5, color: glass.onGlassMuted)),
+                  ),
+                ),
+              ),
               ListenableBuilder(
                 listenable: MediaDownloads.instance,
                 builder: (context, _) => BlocBuilder<AudioCubit, AudioState>(
                   buildWhen: (p, c) =>
                       p.surah != c.surah || p.playing != c.playing || p.reciterId != c.reciterId || p.hasQueue != c.hasQueue,
                   builder: (context, audio) => SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(12, 4, 12, 140),
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 140),
                     sliver: SliverList.builder(
                       itemCount: list.length,
                       itemBuilder: (context, i) {
@@ -433,7 +487,9 @@ class _SurahTile extends StatelessWidget {
     final downloaded = dl.isDownloaded(reciter, surah);
     final progress = dl.progress(reciter, surah);
     final failed = dl.failed(reciter, surah);
-    final primary = Theme.of(context).colorScheme.primary;
+    const tone = Tone.amethyst;
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    final ink = tone.ink(dark);
 
     Widget download;
     if (!MediaDownloads.supported) {
@@ -451,11 +507,11 @@ class _SurahTile extends StatelessWidget {
               child: CircularProgressIndicator(
                 value: progress == 0 ? null : progress,
                 strokeWidth: 2.6,
-                color: glass.accent,
-                backgroundColor: glass.onGlass.withValues(alpha: 0.1),
+                color: ink,
+                backgroundColor: tone.mid.withValues(alpha: 0.16),
               ),
             ),
-            Icon(Icons.stop_rounded, size: 14, color: glass.accent),
+            Icon(Icons.stop_rounded, size: 14, color: ink),
           ],
         ),
       );
@@ -463,7 +519,7 @@ class _SurahTile extends StatelessWidget {
       download = IconButton(
         tooltip: 'محفوظة على الجهاز',
         onPressed: () => showGlassSnack(context, 'سورة $name محفوظة — تُسمع بدون إنترنت'),
-        icon: Icon(Icons.offline_pin_rounded, color: glass.accent),
+        icon: Icon(Icons.offline_pin_rounded, color: Tone.teal.ink(dark)),
       );
     } else {
       download = IconButton(
@@ -483,12 +539,15 @@ class _SurahTile extends StatelessWidget {
         onTap: () => playMediaSurah(context, reciter, surah),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 250),
-          padding: const EdgeInsets.fromLTRB(10, 8, 6, 8),
+          padding: const EdgeInsetsDirectional.fromSTEB(10, 8, 8, 8),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(20),
-            color: current ? glass.accent.withValues(alpha: 0.14) : glass.onGlass.withValues(alpha: 0.045),
+            color: current
+                ? Color.alphaBlend(tone.mid.withValues(alpha: dark ? 0.16 : 0.10), noorSurface(context))
+                : noorSurface(context),
             border: Border.all(
-              color: current ? glass.accent.withValues(alpha: 0.6) : glass.onGlass.withValues(alpha: 0.06),
+              color: current ? tone.mid.withValues(alpha: 0.7) : glass.onGlass.withValues(alpha: 0.07),
+              width: current ? 1.4 : 1,
             ),
           ),
           child: Row(
@@ -496,7 +555,7 @@ class _SurahTile extends StatelessWidget {
               SizedBox.square(
                 dimension: 46,
                 child: current
-                    ? Center(child: Equalizer(playing: playing, color: glass.accent, size: 22))
+                    ? Center(child: Equalizer(playing: playing, color: ink, size: 22))
                     : StarNumber(number: surah, color: glass.accent),
               ),
               const SizedBox(width: 10),
@@ -506,7 +565,7 @@ class _SurahTile extends StatelessWidget {
                   children: [
                     Text('سورة $name',
                         style: QuranFont.amiriQuran.style(
-                            fontSize: 19, height: 1.45, color: current ? glass.accent : glass.onGlass)),
+                            fontSize: 19, height: 1.45, color: current ? ink : glass.onGlass)),
                     Text(meta, style: TextStyle(fontSize: 12, color: glass.onGlassMuted)),
                   ],
                 ),
@@ -517,11 +576,15 @@ class _SurahTile extends StatelessWidget {
                 height: 42,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: current ? glass.accent : primary.withValues(alpha: 0.16),
+                  gradient: current ? tone.gradient() : null,
+                  color: current ? null : tone.mid.withValues(alpha: dark ? 0.16 : 0.10),
+                  border: Border.all(
+                    color: current ? Colors.white.withValues(alpha: 0.22) : tone.mid.withValues(alpha: 0.35),
+                  ),
                 ),
                 child: Icon(
                   playing ? Icons.pause_rounded : Icons.play_arrow_rounded,
-                  color: current ? Colors.black : glass.accent,
+                  color: current ? Colors.white : ink,
                   size: 26,
                 ),
               ),
