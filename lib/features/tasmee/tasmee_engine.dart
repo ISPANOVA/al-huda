@@ -106,7 +106,9 @@ class TasmeeMatcher {
   /// and long-alef dropped (Uthmani often omits it: ٱلْكِتَٰبُ ≈ الكتاب).
   static String key(String s) {
     // Uthmani wāw written for a long ā (ٱلصَّلَوٰة، ٱلزَّكَوٰة، ٱلْحَيَوٰة) is read as alef.
-    var k = s.replaceAll('وٰ', 'ا').replaceAll(_marks, '');
+    var k = s.replaceAll('وٰ', 'ا');
+    if (k.length != _plainLength(k)) k = _uthmaniLetters(k);
+    k = k.replaceAll(_marks, '');
     k = k
         .replaceAll(RegExp('[ٱأإآٲٳ]'), 'ا')
         .replaceAll('ى', 'ي')
@@ -117,6 +119,26 @@ class TasmeeMatcher {
     k = k.replaceAll(_nonLetters, '');
     return k.replaceAll('ا', '');
   }
+
+  static final _small = RegExp('[ؐ-ًؚ-ٰٟۖ-ۭـ]');
+  static int _plainLength(String s) => s.length - _small.allMatches(s).length;
+
+  /// Letters the Uthmani script writes small or on a bare seat, as ordinary
+  /// spelling writes them (otherwise common words never match: شيئا، أحيي،
+  /// رأى، آناء، ننجي).
+  static String _uthmaniLetters(String s) => s
+      // Hamza over a bare tooth: شَيۡـٔٗا ← شيئا, سَيِّـَٔات ← سيئات.
+      .replaceAll(RegExp('ـ[ً-ْٰ]*ٔ'), 'ئ')
+      // Hamza below a yā' seat after a long ā: ءَانَآيِٕ ← آناء, وَرَآيِٕ ← وراء
+      // (but ٱمۡرِيٕ ← امرئ keeps its yā').
+      .replaceAllMapped(RegExp('([اآ]ٓ?)ي[ِ]?ٕ[ِ]?'), (m) => '${m[1]}ء')
+      // Small yā' / wāw / nūn: أُحۡيِۦ ← أحيي, دَاوُۥدَ ← داوود, نُـۨجِي ← ننجي.
+      .replaceAll('ۦ', 'ي')
+      .replaceAll('ۧ', 'ي')
+      .replaceAll('ۥ', 'و')
+      .replaceAll('ۨ', 'ن')
+      // Alef written for alef maqsura: رَءَا ← رأى, تَرَٰٓءَا ← تراءى, لَدَا ← لدى, ٱلۡأَقۡصَا ← الأقصى.
+      .replaceAllMapped(RegExp('(رّ?َ?ٰ?ٓ?ءَ?[آا]ٓ?|^لَدَا|قۡصَا)\$'), (m) => '${m[0]!.substring(0, m[0]!.length - 1)}ى');
 
   static int distance(String a, String b) {
     if (a == b) return 0;
@@ -195,6 +217,13 @@ class TasmeeMatcher {
   static bool similar(String h, String e) {
     if (h.isEmpty || e.isEmpty) return false;
     if (h == e) return true;
+    // The Uthmani script writes الليل، اللاتي، اللائي، اللذان with one lām.
+    if (h.length >= 4 && e.length >= 3) {
+      final i = h.indexOf('لل');
+      if (i >= 0 && i <= 2 && h.replaceFirst('لل', 'ل', i) == e && _oneLam.any((st) => e.startsWith(st, i))) {
+        return true;
+      }
+    }
     // Counted things: ثلاث / ثلاثة, سبع / سبعة (the recogniser picks either).
     if (h.length >= 3 && (h + 'ه' == e || e + 'ه' == h) && _numberish.contains(h.length < e.length ? h : e)) {
       return true;
@@ -211,6 +240,8 @@ class TasmeeMatcher {
     final tol = e.length <= 6 ? 1 : 2;
     return soundDistance(h, e) <= tol;
   }
+
+  static const _oneLam = ['ليل', 'لتي', 'ليي', 'لذن', 'لذين'];
 
   static final _numberish = {
     for (final w in ['ثلاث', 'اربع', 'خمس', 'ست', 'سبع', 'ثماني', 'تسع', 'عشر', 'ثمن']) key(w),
@@ -558,6 +589,13 @@ class TasmeeSession {
       if (hNext != null && TasmeeMatcher.similar(h + hNext, e.key)) {
         reveal(pos++);
         i = ni + 1;
+        continue;
+      }
+      // Three words written as one (يَبۡنَؤُمَّ ← يا ابن أم).
+      if (hNext != null && ni + 1 < k.length && e.key.length >= 4 &&
+          TasmeeMatcher.similar(h + hNext + k[ni + 1], e.key)) {
+        reveal(pos++);
+        i = ni + 2;
         continue;
       }
       if (pos + 1 < n && TasmeeMatcher.similar(h, e.key + words[pos + 1].key)) {
