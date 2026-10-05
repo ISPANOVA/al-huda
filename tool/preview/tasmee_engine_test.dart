@@ -337,9 +337,11 @@ void main() {
     expect(s.words.take(6).every((w) => w.state == TasmeeState.correct), isTrue);
   });
 
-  test('a clearly different word is a mistake while still being spoken', () {
+  test('a word still being spoken is judged once the reciter goes on or pauses', () {
     final s = TasmeeSession(_words('ٱلْحَمْدُ لِلَّهِ رَبِّ ٱلْعَٰلَمِينَ'), []);
-    final r = s.feed(['الحمد', 'لله', 'رب', 'الكافرين'], isFinal: false);
+    var r = s.feed(['الحمد', 'لله', 'رب', 'الكافرين'], isFinal: false);
+    expect(r.mistakes, 0); // the recogniser may still rewrite its guess
+    r = s.feed(['الحمد', 'لله', 'رب', 'الكافرين'], isFinal: true);
     expect(r.mistakes, 1);
     expect(s.words[3].state, TasmeeState.mistake);
   });
