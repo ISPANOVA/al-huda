@@ -30,7 +30,8 @@ adb install -r -t new.apk | tee "$OUT/install_new.txt"
 adb shell dumpsys package $PKG | grep -E "versionCode|versionName|lastUpdateTime|granted=true" > "$OUT/package_after_upgrade.txt"
 adb logcat -c
 launch; shot B1_after_upgrade 14
-tap 'المصحف'; shot B2_mushaf 5
+# The Mushaf tab of the bottom bar (its label shows only when selected).
+tapxy 0.61 0.90; shot B2_mushaf 5
 tap 'تخطي'; shot B3_mushaf_page 3
 tap 'التسميع'; shot B4_tasmee 5
 tap 'الكلمة التالية'; shot B5_tasmee_hint 3

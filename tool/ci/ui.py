@@ -39,7 +39,8 @@ if __name__ == '__main__':
         subprocess.run(['adb', 'shell', 'input', 'tap', str(x), str(y)])
     elif cmd == 'tap':
         want = sys.argv[2]
-        nodes = [n for n in dump() if want in n[0]]
+        # Off-screen widgets report empty bounds: never tap those.
+        nodes = [n for n in dump() if want in n[0] and n[3] > n[1] and n[4] > n[2]]
         if not nodes:
             print(f'NOT FOUND: {want}')
             sys.exit(0)
