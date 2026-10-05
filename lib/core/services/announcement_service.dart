@@ -45,6 +45,12 @@ class Announcement {
     final below = (j['belowBuild'] as num?)?.toInt() ?? 0;
     final build = AnnouncementService.appBuild;
     if (!kIsWeb && below > 0 && build > 0 && build >= below) return null;
+    // «Versions older than 1.0.1»: gone once the user has 1.0.1.
+    final belowVersion = (j['belowVersion'] ?? '').toString().trim();
+    if (!kIsWeb && belowVersion.isNotEmpty && AnnouncementService.appVersion.isNotEmpty &&
+        AnnouncementService.compareVersions(AnnouncementService.appVersion, belowVersion) >= 0) {
+      return null;
+    }
     final title = (j['title'] ?? '').toString().trim();
     final message = (j['message'] ?? '').toString().trim();
     if (title.isEmpty && message.isEmpty) return null;
@@ -70,6 +76,20 @@ class AnnouncementService {
 
   /// Build number of this APK (set by the release build; 0 when unknown).
   static const appBuild = int.fromEnvironment('APP_BUILD');
+
+  /// Version shown to users (1.0.0, 1.0.1…; empty when unknown).
+  static const appVersion = String.fromEnvironment('APP_VERSION');
+
+  /// 1.0.1 vs 1.0.0 → positive.
+  static int compareVersions(String a, String b) {
+    List<int> parts(String v) => [for (final p in v.split('.')) int.tryParse(p.trim()) ?? 0];
+    final x = parts(a), y = parts(b);
+    for (var i = 0; i < 4; i++) {
+      final d = (i < x.length ? x[i] : 0) - (i < y.length ? y[i] : 0);
+      if (d != 0) return d;
+    }
+    return 0;
+  }
 
   static String get platform => kIsWeb ? 'web' : 'android';
 

@@ -73,12 +73,12 @@ jobs:
       - name: Build APK (universal, full size)
         run: |
           set -o pipefail
-          flutter build apk --release --build-name=$BUILD_NAME --build-number=$BUILD_NUMBER --dart-define=APP_BUILD=$BUILD_NUMBER 2>&1 | tee -a build_log.txt
+          flutter build apk --release --build-name=$BUILD_NAME --build-number=$BUILD_NUMBER --dart-define=APP_BUILD=$BUILD_NUMBER --dart-define=APP_VERSION=$BUILD_NAME 2>&1 | tee -a build_log.txt
 
       - name: Build App Bundle (Google Play)
         run: |
           set -o pipefail
-          flutter build appbundle --release --build-name=$BUILD_NAME --build-number=$BUILD_NUMBER --dart-define=APP_BUILD=$BUILD_NUMBER 2>&1 | tee -a build_log.txt
+          flutter build appbundle --release --build-name=$BUILD_NAME --build-number=$BUILD_NUMBER --dart-define=APP_BUILD=$BUILD_NUMBER --dart-define=APP_VERSION=$BUILD_NAME 2>&1 | tee -a build_log.txt
 
       - name: Rename outputs
         run: |
