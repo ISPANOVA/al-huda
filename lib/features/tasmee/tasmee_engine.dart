@@ -21,17 +21,24 @@ class TasmeeWord {
   /// letter by letter («ألف لام ميم»). Null for every other word.
   final String? spoken;
 
-  /// Another way the word is commonly heard: the vocative «يا» the
-  /// recogniser leaves out (يَٰمُوسَىٰٓ ← موسى). Null for most words.
-  final String? alt;
+  /// Other correct ways the word is written: with the small letters the
+  /// Uthmani script adds (أُحۡيِۦ ← أحيي, دَاوُۥدَ ← داوود), and without the
+  /// vocative «يا» merged into it (يَٰمُوسَىٰٓ ← موسى). Empty for most words.
+  final List<String> alts;
 
   TasmeeWord({required this.surah, required this.ayah, required this.text, required this.endsAyah})
       : key = TasmeeMatcher.key(text),
         spoken = TasmeeMatcher.spokenLetters(surah, ayah, text),
-        alt = text.startsWith('يَٰ') && TasmeeMatcher.key(text).length >= 4 ? TasmeeMatcher.key(text).substring(1) : null;
+        alts = TasmeeMatcher.altKeys(text);
 
   /// Heard key [h] is this word.
-  bool heardAs(String h) => TasmeeMatcher.similar(h, key) || (alt != null && TasmeeMatcher.similar(h, alt!));
+  bool heardAs(String h) {
+    if (TasmeeMatcher.similar(h, key)) return true;
+    for (final a in alts) {
+      if (TasmeeMatcher.similar(h, a)) return true;
+    }
+    return false;
+  }
 
   bool get revealed => state != TasmeeState.hidden && state != TasmeeState.mistake;
 }
@@ -112,10 +119,37 @@ class TasmeeMatcher {
 
   /// Letters only: no diacritics / Quranic marks, unified hamza & alef forms,
   /// and long-alef dropped (Uthmani often omits it: ٱلْكِتَٰبُ ≈ الكتاب).
-  static String key(String s) {
+  static String key(String s) => _key(s, small: false);
+
+  /// Other keys of an Uthmani word (see [TasmeeWord.alts]).
+  static List<String> altKeys(String text) {
+    final out = <String>[];
+    final k = key(text);
+    void add(String a) {
+      if (a.isNotEmpty && a != k && !out.contains(a)) out.add(a);
+    }
+
+    if (_smallLetters.hasMatch(text)) add(_key(text, small: true));
+    // A letter with a round sukun is written but not read: سَأُوْرِيكُمۡ ← سأريكم,
+    // بِأَيۡيْدٖ ← بأيد (أُوْلِي keeps it in ordinary spelling too).
+    if (text.contains('ْ')) add(key(text.replaceAll(RegExp('[وي]ْ'), '')));
+    // A ṣād with a small sīn is read as sīn: بَصۜۡطَةٗ ← بسطة.
+    if (text.contains('صۜ')) add(key(text.replaceAll('صۜ', 'س')));
+    // A final alef read as alef maqsura: وَنَـَٔا ← ونأى, تَتۡرَا ← تترى.
+    final bare = text.replaceAll(_marks, '');
+    if (bare == 'ونا' || bare == 'تترا') add('${k}ي');
+    // «أن لو» written as one word: وَأَلَّوِ ← وأن لو.
+    if (bare == 'وألو') add('ونلو');
+    if (text.startsWith('يَٰ') && k.length >= 4) out.add(k.substring(1));
+    return out;
+  }
+
+  static final _smallLetters = RegExp('[ۥۦۧۨ]');
+
+  static String _key(String s, {required bool small}) {
     // Uthmani wāw written for a long ā (ٱلصَّلَوٰة، ٱلزَّكَوٰة، ٱلْحَيَوٰة) is read as alef.
     var k = s.replaceAll('وٰ', 'ا');
-    if (k.length != _plainLength(k)) k = _uthmaniLetters(k);
+    if (k.length != _plainLength(k)) k = _uthmaniLetters(k, small: small);
     k = k.replaceAll(_marks, '');
     k = k
         .replaceAll(RegExp('[ٱأإآٲٳ]'), 'ا')
@@ -123,7 +157,7 @@ class TasmeeMatcher {
         // Hamza on a yā' seat is often written on a bare tooth (شَيۡـٔٗا،
         // ءَابَآءِي): like the hamza itself, it is not compared.
         .replaceAll('ئ', '')
-        .replaceAll('ؤ', 'و')
+        .replaceAll('ؤ', '')
         .replaceAll('ة', 'ه')
         .replaceAll('ء', '');
     k = k.replaceAll(_nonLetters, '');
@@ -136,17 +170,20 @@ class TasmeeMatcher {
   /// Letters the Uthmani script writes small or on a bare seat, as ordinary
   /// spelling writes them (otherwise common words never match: شيئا، أحيي،
   /// رأى، آناء، ننجي).
-  static String _uthmaniLetters(String s) => s
+  static String _uthmaniLetters(String s, {bool small = false}) => (small
+          ? s.replaceAll('ۦ', 'ي').replaceAll('ۧ', 'ي').replaceAll('ۥ', 'و').replaceAll('ۨ', 'ن')
+          : s)
+      // Alef maqsura with a small alef inside a word is a long ā written as
+      // alef: هَدَىٰكُمۡ ← هداكم, ٱلتَّوۡرَىٰةَ ← التوراة (but عَلَىٰ ← على).
+      .replaceAll(RegExp('ىٰ(?=[ؐ-ًؚ-ٰٟۖ-ۭ]*[ء-ي])'), 'ا')
       // Hamza below a yā' seat after a long ā: ءَانَآيِٕ ← آناء, وَرَآيِٕ ← وراء
       // (but ٱمۡرِيٕ ← امرئ keeps its yā').
       .replaceAllMapped(RegExp('([اآ]ٓ?)ي[ِ]?ٕ[ِ]?'), (m) => '${m[1]}ء')
+      // A yā' / wāw seat carrying a hamza below is the hamza alone:
+      // ٱمۡرِيٕٖ ← امرئ, ٱلسَّيِّيِٕ ← السيئ, ٱللُّؤۡلُوِٕ ← اللؤلؤ.
+      .replaceAllMapped(RegExp('[يو]([ًٌٍَُِّْ]*)ٕ'), (m) => m[1]!)
       // Hamza carried by a written yā': وَمَلَإِيْهِۦ ← وملئه.
       .replaceAll('إِيْ', 'ئ')
-      // Small yā' / wāw / nūn: أُحۡيِۦ ← أحيي, دَاوُۥدَ ← داوود, نُـۨجِي ← ننجي.
-      .replaceAll('ۦ', 'ي')
-      .replaceAll('ۧ', 'ي')
-      .replaceAll('ۥ', 'و')
-      .replaceAll('ۨ', 'ن')
       // Alef written for alef maqsura: رَءَا ← رأى, تَرَٰٓءَا ← تراءى, لَدَا ← لدى, ٱلۡأَقۡصَا ← الأقصى.
       .replaceAllMapped(RegExp('(رّ?َ?ٰ?ٓ?ءَ?[آا]ٓ?|^لَدَا|^طَغَا|قۡصَا|نَـَٔا)\$'), (m) => '${m[0]!.substring(0, m[0]!.length - 1)}ى');
 
@@ -196,28 +233,6 @@ class TasmeeMatcher {
     return prev[b.length];
   }
 
-  /// Weak letters a spelling may add or drop (رؤوف / رءوف).
-  static bool _weak(int c) => c == 0x0648 || c == 0x064A; // و ي
-
-  /// For short words: only a confusable letter or a weak letter may differ.
-  static double _shortDistance(String a, String b) {
-    var prev = List<double>.generate(b.length + 1, (j) => j.toDouble());
-    for (var i = 1; i <= a.length; i++) {
-      final ca = a.codeUnitAt(i - 1);
-      final cur = List<double>.filled(b.length + 1, 0)..[0] = prev[0] + (_weak(ca) ? 0.5 : 1);
-      for (var j = 1; j <= b.length; j++) {
-        final cb = b.codeUnitAt(j - 1);
-        final sub = ca == cb ? 0.0 : (_close(ca, cb) ? 0.5 : 1.0);
-        cur[j] = math.min(
-          math.min(cur[j - 1] + (_weak(cb) ? 0.5 : 1), prev[j] + (_weak(ca) ? 0.5 : 1)),
-          prev[j - 1] + sub,
-        );
-      }
-      prev = cur;
-    }
-    return prev[b.length];
-  }
-
   /// Different first letters make different short words (إليك / عليك،
   /// لهم / عليهم), unless the recogniser confuses the two sounds.
   static bool _sameStart(String h, String e) =>
@@ -238,25 +253,27 @@ class TasmeeMatcher {
     if (h.length >= 3 && (h + 'ه' == e || e + 'ه' == h) && _numberish.contains(h.length < e.length ? h : e)) {
       return true;
     }
-    // A leading و / ف the recogniser dropped or added.
-    if (e.length >= 3 && (e[0] == 'و' || e[0] == 'ف') && h == e.substring(1)) return true;
-    if (h.length >= 3 && (h[0] == 'و' || h[0] == 'ف') && e == h.substring(1)) return true;
-    if (!_sameStart(h, e)) return false;
-    // Short words: one letter changes the meaning (لهم / لكم، عليه / عليهم).
-    if (e.length <= 4) {
-      if (e.length > 2) return _shortDistance(h, e) <= 0.5;
-      // Two letters: one misheard sound (قال ← كال، هذا ← هزا، ثم ← سم), unless
-      // what was heard is itself another word of the Quran (قل / كل).
-      return h.length == 2 &&
-          !knownWords.contains(h) &&
-          ((h[0] == e[0] && _close(h.codeUnitAt(1), e.codeUnitAt(1))) ||
-              (h[1] == e[1] && _close(h.codeUnitAt(0), e.codeUnitAt(0))));
+    // A doubled yā' / wāw the Uthmani script writes once: يحيي / يُحۡيِ.
+    if (h.length == e.length + 1) {
+      for (final d in const ['يي', 'وو']) {
+        final i = h.indexOf(d);
+        if (i >= 0 && h.replaceRange(i, i + 1, '') == e) return true;
+      }
     }
-    // Strict enough that a different Quranic word (يعلمون/يشعرون، يعلمون/يعملون)
-    // is never accepted, loose enough for Uthmani vs plain spelling and for
-    // letters the recogniser mishears.
-    final tol = e.length <= 6 ? 1 : 2;
-    return soundDistance(h, e) <= tol;
+    // Otherwise the letters must be the same: one letter added, dropped or
+    // changed is a different word (وَبِٱلۡيَوۡمِ / واليوم، فقال / قال،
+    // يعملون / تعملون، ربي / رب). Only a sound the recogniser confuses
+    // (ذ/ز، ث/س، ض/ظ، ط/ت، ق/ك، ح/ه) may differ, letter for letter, and only
+    // when what was heard is not itself another word of the Quran.
+    if (h.length != e.length || knownWords.contains(h)) return false;
+    var diffs = 0;
+    for (var i = 0; i < e.length; i++) {
+      final a = h.codeUnitAt(i), b = e.codeUnitAt(i);
+      if (a == b) continue;
+      if (!_close(a, b)) return false;
+      diffs++;
+    }
+    return diffs <= (e.length <= 5 ? 1 : 2);
   }
 
   /// Keys of every word of the Quran (filled when the whole Mushaf is
@@ -303,8 +320,12 @@ class TasmeeMatcher {
   }
 
   /// Heard letters [acc] (keys joined) are the disjoint letters of [w].
-  static bool letters(String acc, TasmeeWord w) =>
-      acc == w.key || similar(acc, w.spoken!);
+  static bool letters(String acc, TasmeeWord w) {
+    if (acc == w.key || similar(acc, w.spoken!)) return true;
+    // Letter names are spelled many ways (ألف لام ميم، الف لاميم، ا ل م).
+    final sp = w.spoken!;
+    return acc.length >= 3 && soundDistance(acc, sp) <= (sp.length <= 4 ? 1 : 2);
+  }
 
   /// [acc] could still grow into the disjoint letters of [w].
   static bool lettersPrefix(String acc, TasmeeWord w) {
@@ -314,11 +335,10 @@ class TasmeeMatcher {
     return distance(acc, sp.substring(0, acc.length)) <= 1;
   }
 
-  /// A looser match used when the recogniser probably misheard a correct word.
-  static bool close(String h, String e) {
-    if (similar(h, e)) return true;
-    return e.length >= 8 && distance(h, e) <= 3;
-  }
+  /// Small words (their keys) a recogniser may lose: لا، ما، إن، من، في…
+  static final particles = {
+    for (final w in 'إن أن لا ما و ف من في عن لن لم قد ثم بل لو أو يا إذ إلى على هو هي هم'.split(' ')) key(w),
+  };
 
   /// Words people say around a recitation (isti'adha, basmala, closing) that
   /// are not part of the tested text.
@@ -616,14 +636,14 @@ class TasmeeSession {
         i++;
         continue;
       }
-      if (hNext != null && TasmeeMatcher.similar(h + hNext, e.key)) {
+      if (hNext != null && e.heardAs(h + hNext)) {
         reveal(pos++);
         i = ni + 1;
         continue;
       }
       // Three words written as one (يَبۡنَؤُمَّ ← يا ابن أم).
       if (hNext != null && ni + 1 < k.length && e.key.length >= 4 &&
-          TasmeeMatcher.similar(h + hNext + k[ni + 1], e.key)) {
+          e.heardAs(h + hNext + k[ni + 1])) {
         reveal(pos++);
         i = ni + 2;
         continue;
@@ -634,7 +654,7 @@ class TasmeeSession {
         i++;
         continue;
       }
-      if (TasmeeMatcher.couldBe(h, e.key) && _inAlternates(alternates, i, e)) {
+      if (!TasmeeMatcher.knownWords.contains(h) && TasmeeMatcher.couldBe(h, e.key) && _inAlternates(alternates, i, e)) {
         reveal(pos++);
         i++;
         continue;
@@ -644,6 +664,11 @@ class TasmeeSession {
       // reciter pauses) — a correct word is never flashed red by a guess.
       if (last) break;
 
+      // Isti'adha / basmala before an ayah.
+      if (TasmeeMatcher.ignorable.contains(h) && (pos == 0 || words[pos - 1].endsAyah)) {
+        i++;
+        continue;
+      }
       // Noise or a self-correction just before the expected word.
       if (hNext != null && _m(hNext, pos)) {
         i++;
@@ -671,11 +696,6 @@ class TasmeeSession {
         }
         pos = to;
         reveal(pos++);
-        i++;
-        continue;
-      }
-      // Isti'adha / basmala before an ayah.
-      if (TasmeeMatcher.ignorable.contains(h) && (pos == 0 || words[pos - 1].endsAyah)) {
         i++;
         continue;
       }
@@ -738,23 +758,19 @@ class TasmeeSession {
       if (hNext != null && (t + 1 >= words.length || _m(hNext, t + 1))) return t;
       if (hNext == null && isFinal && t == pos + 1) return t;
       // A particle (و، في، من، إن…) dropped before a word heard exactly.
-      if (t == pos + 1 && words[pos].key.length <= 2 && words[pos].spoken == null && h.length >= 3 && h == words[t].key) {
+      if (t == pos + 1 && TasmeeMatcher.particles.contains(words[pos].key) && h.length >= 3 && h == words[t].key) {
         return t;
       }
     }
     return null;
   }
 
-  /// A skipped word is a mistake when it is a real word the recogniser
-  /// rarely drops: not a short particle, and not heard in another transcript.
+  /// A skipped word is a mistake (even لا or في: leaving one out changes the
+  /// meaning), unless another transcript of the recogniser has it there.
   bool _countsWhenSkipped(int s, int run, List<List<String>> alternates) {
-    final key = words[s].key;
-    if (key.length <= 3) return false;
-    // One short word alone (فيه، لهم، عنهم) is often lost by the recogniser.
-    if (run == 1 && key.length <= 4) return false;
     for (final alt in alternates) {
       for (final w in alt) {
-        if (TasmeeMatcher.similar(TasmeeMatcher.key(w), key)) return false;
+        if (words[s].heardAs(TasmeeMatcher.key(w))) return false;
       }
     }
     return true;
@@ -762,7 +778,7 @@ class TasmeeSession {
 
   bool _inAlternates(List<List<String>> alternates, int at, TasmeeWord e) {
     for (final alt in alternates) {
-      if (at < alt.length && TasmeeMatcher.similar(TasmeeMatcher.key(alt[at]), e.key)) return true;
+      if (at < alt.length && e.heardAs(TasmeeMatcher.key(alt[at]))) return true;
     }
     return false;
   }
