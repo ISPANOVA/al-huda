@@ -162,6 +162,9 @@ class TasmeeMatcher {
   static String _uthmaniLetters(String s, {bool small = false}) => (small
           ? s.replaceAll('ۦ', 'ي').replaceAll('ۧ', 'ي').replaceAll('ۥ', 'و').replaceAll('ۨ', 'ن')
           : s)
+      // Alef maqsura with a small alef inside a word is a long ā written as
+      // alef: هَدَىٰكُمۡ ← هداكم, ٱلتَّوۡرَىٰةَ ← التوراة (but عَلَىٰ ← على).
+      .replaceAll(RegExp('ىٰ(?=[ؐ-ًؚ-ٰٟۖ-ۭ]*[ء-ي])'), 'ا')
       // Hamza below a yā' seat after a long ā: ءَانَآيِٕ ← آناء, وَرَآيِٕ ← وراء
       // (but ٱمۡرِيٕ ← امرئ keeps its yā').
       .replaceAllMapped(RegExp('([اآ]ٓ?)ي[ِ]?ٕ[ِ]?'), (m) => '${m[1]}ء')
@@ -235,6 +238,13 @@ class TasmeeMatcher {
     // Counted things: ثلاث / ثلاثة, سبع / سبعة (the recogniser picks either).
     if (h.length >= 3 && (h + 'ه' == e || e + 'ه' == h) && _numberish.contains(h.length < e.length ? h : e)) {
       return true;
+    }
+    // A doubled yā' / wāw the Uthmani script writes once: يحيي / يُحۡيِ.
+    if (h.length == e.length + 1) {
+      for (final d in const ['يي', 'وو']) {
+        final i = h.indexOf(d);
+        if (i >= 0 && h.replaceRange(i, i + 1, '') == e) return true;
+      }
     }
     // Otherwise the letters must be the same: one letter added, dropped or
     // changed is a different word (وَبِٱلۡيَوۡمِ / واليوم، فقال / قال،
