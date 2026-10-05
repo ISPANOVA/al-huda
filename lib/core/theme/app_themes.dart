@@ -4,6 +4,17 @@ import 'package:google_fonts/google_fonts.dart';
 
 import 'page_transitions.dart';
 
+/// Bundled typefaces.
+class AppFonts {
+  AppFonts._();
+
+  /// Interface text.
+  static const ui = 'Tajawal';
+
+  /// Titles and large numbers (Kufi).
+  static const display = 'ReemKufi';
+}
+
 enum AppThemeType { noirGold, emerald, andalusian, royalGold, obsidian, custom }
 
 /// Colour DNA of one glass theme.
@@ -218,6 +229,7 @@ class AppThemes {
 
     final base = ThemeData(
       useMaterial3: true,
+      fontFamily: AppFonts.ui,
       colorScheme: scheme,
       brightness: brightness,
       scaffoldBackgroundColor: glass.backgroundGradient.first,
@@ -228,7 +240,8 @@ class AppThemes {
       }),
     );
 
-    final textTheme = GoogleFonts.tajawalTextTheme(base.textTheme).apply(
+    final textTheme = base.textTheme.apply(
+      fontFamily: AppFonts.ui,
       bodyColor: onGlass,
       displayColor: onGlass,
     );

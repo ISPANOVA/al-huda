@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../core/widgets/adaptive.dart';
 import '../../core/theme/web_lite.dart';
 import '../../core/theme/app_themes.dart';
 import '../../core/utils/arabic_utils.dart';
@@ -637,10 +638,10 @@ class _ThemeRadiosGrid extends StatelessWidget {
     final glass = GlassTheme.of(context);
     return BlocBuilder<AudioCubit, AudioState>(
       buildWhen: (p, c) => p.title != c.title || p.playing != c.playing || p.isLive != c.isLive,
-      builder: (context, audio) => SliverGrid.builder(
+      builder: (context, audio) => SliverLayoutBuilder(builder: (context, box) => SliverGrid.builder(
         itemCount: kThemeRadios.length,
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: Adaptive.columns(box.crossAxisExtent, tile: 260, max: 4),
           mainAxisSpacing: 10,
           crossAxisSpacing: 10,
           mainAxisExtent: 70,
@@ -687,7 +688,7 @@ class _ThemeRadiosGrid extends StatelessWidget {
             ),
           );
         },
-      ),
+      )),
     );
   }
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/widgets/adaptive.dart';
 import '../../../../core/theme/web_lite.dart';
 import '../../../../core/theme/app_themes.dart';
 import '../../../../core/utils/arabic_utils.dart';
@@ -72,17 +73,19 @@ class AthkarHomePage extends StatelessWidget {
         const NoorSection('كل الأذكار'),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 14),
-          child: GridView.count(
-            crossAxisCount: 2,
-            shrinkWrap: true,
-            padding: EdgeInsets.zero,
-            physics: const NeverScrollableScrollPhysics(),
-            mainAxisSpacing: 12,
-            crossAxisSpacing: 12,
-            childAspectRatio: 1.08,
-            children: [
-              for (final c in cats) _CategoryArch(category: c, progress: state.categoryProgress(c)),
-            ],
+          child: LayoutBuilder(
+            builder: (context, box) => GridView.count(
+              crossAxisCount: Adaptive.columns(box.maxWidth, tile: 230, max: 4),
+              shrinkWrap: true,
+              padding: EdgeInsets.zero,
+              physics: const NeverScrollableScrollPhysics(),
+              mainAxisSpacing: 12,
+              crossAxisSpacing: 12,
+              childAspectRatio: 1.08,
+              children: [
+                for (final c in cats) _CategoryArch(category: c, progress: state.categoryProgress(c)),
+              ],
+            ),
           ),
         ),
         const NoorSection('رفيقك في الذكر'),
