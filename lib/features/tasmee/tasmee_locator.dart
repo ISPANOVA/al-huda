@@ -48,10 +48,13 @@ class TasmeeLocator {
       if (k.isEmpty) continue;
       (_index[k] ??= []).add(i);
     }
+    if (from == 0 && this.to == words.length && words.length > 70000) {
+      TasmeeMatcher.knownWords = _index.keys.toSet();
+    }
   }
 
   static bool _m(String h, TasmeeWord w) {
-    if (TasmeeMatcher.similar(h, w.key)) return true;
+    if (w.heardAs(h)) return true;
     final sp = w.spoken;
     return sp != null && (h == w.key || TasmeeMatcher.similar(h, sp));
   }

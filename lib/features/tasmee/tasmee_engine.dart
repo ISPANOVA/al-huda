@@ -21,9 +21,17 @@ class TasmeeWord {
   /// letter by letter («ألف لام ميم»). Null for every other word.
   final String? spoken;
 
+  /// Another way the word is commonly heard: the vocative «يا» the
+  /// recogniser leaves out (يَٰمُوسَىٰٓ ← موسى). Null for most words.
+  final String? alt;
+
   TasmeeWord({required this.surah, required this.ayah, required this.text, required this.endsAyah})
       : key = TasmeeMatcher.key(text),
-        spoken = TasmeeMatcher.spokenLetters(surah, ayah, text);
+        spoken = TasmeeMatcher.spokenLetters(surah, ayah, text),
+        alt = text.startsWith('يَٰ') && TasmeeMatcher.key(text).length >= 4 ? TasmeeMatcher.key(text).substring(1) : null;
+
+  /// Heard key [h] is this word.
+  bool heardAs(String h) => TasmeeMatcher.similar(h, key) || (alt != null && TasmeeMatcher.similar(h, alt!));
 
   bool get revealed => state != TasmeeState.hidden && state != TasmeeState.mistake;
 }
@@ -235,13 +243,25 @@ class TasmeeMatcher {
     if (h.length >= 3 && (h[0] == 'و' || h[0] == 'ف') && e == h.substring(1)) return true;
     if (!_sameStart(h, e)) return false;
     // Short words: one letter changes the meaning (لهم / لكم، عليه / عليهم).
-    if (e.length <= 4) return e.length > 2 && _shortDistance(h, e) <= 0.5;
+    if (e.length <= 4) {
+      if (e.length > 2) return _shortDistance(h, e) <= 0.5;
+      // Two letters: one misheard sound (قال ← كال، هذا ← هزا، ثم ← سم), unless
+      // what was heard is itself another word of the Quran (قل / كل).
+      return h.length == 2 &&
+          !knownWords.contains(h) &&
+          ((h[0] == e[0] && _close(h.codeUnitAt(1), e.codeUnitAt(1))) ||
+              (h[1] == e[1] && _close(h.codeUnitAt(0), e.codeUnitAt(0))));
+    }
     // Strict enough that a different Quranic word (يعلمون/يشعرون، يعلمون/يعملون)
     // is never accepted, loose enough for Uthmani vs plain spelling and for
     // letters the recogniser mishears.
     final tol = e.length <= 6 ? 1 : 2;
     return soundDistance(h, e) <= tol;
   }
+
+  /// Keys of every word of the Quran (filled when the whole Mushaf is
+  /// loaded): a heard word that is one of them was said, not misheard.
+  static Set<String> knownWords = const {};
 
   static const _oneLam = ['ليل', 'لتي', 'لي', 'لذن', 'لذين'];
 
@@ -446,7 +466,7 @@ class TasmeeSession {
     expected = _base;
   }
 
-  bool _m(String h, int j) => j < words.length && TasmeeMatcher.similar(h, words[j].key);
+  bool _m(String h, int j) => j < words.length && words[j].heardAs(h);
 
   /// [heard]: all words recognised in the current utterance so far.
   /// [alternates]: other transcripts the recogniser considered.
@@ -498,7 +518,7 @@ class TasmeeSession {
     var r = _align(heard, isFinal: isFinal, alternates: alternates);
     // Never lose what was already recited: a transcript that would move the
     // reciter back is a fresh one, not a correction.
-    if (!fresh && prev.isNotEmpty && expected + 2 < before) {
+    if (!fresh && prev.isNotEmpty && expected + 2 < before && heard.length + 1 < prev.length) {
       settlePrevious();
       r = _align(heard, isFinal: isFinal, alternates: alternates);
     }
@@ -717,6 +737,8 @@ class TasmeeSession {
       if (words[t].key.length < 2 || !_m(h, t)) continue;
       if (hNext != null && (t + 1 >= words.length || _m(hNext, t + 1))) return t;
       if (hNext == null && isFinal && t == pos + 1) return t;
+      // A particle (و، في، من، إن…) dropped before a word heard exactly.
+      if (t == pos + 1 && words[pos].key.length <= 2 && h.length >= 3 && h == words[t].key) return t;
     }
     return null;
   }
