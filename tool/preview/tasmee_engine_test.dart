@@ -45,11 +45,31 @@ void main() {
     expect(s.mistakes, isEmpty);
   });
 
-  test('dropped short word is not a mistake', () {
+  test('a dropped short word is a mistake too', () {
     final s = TasmeeSession(_words('قُلْ هُوَ ٱللَّهُ أَحَدٌ', surah: 112), []);
     s.feed(['قل', 'الله', 'أحد'], isFinal: true);
     expect(s.done, isTrue);
-    expect(s.mistakes, isEmpty);
+    expect(s.mistakes.length, 1);
+    expect(s.words[1].missed, isTrue);
+  });
+
+  test('one letter added, dropped or changed is a mistake', () {
+    final k = TasmeeMatcher.key;
+    expect(TasmeeMatcher.similar(k('واليوم'), k('وَبِٱلۡيَوۡمِ')), isFalse);
+    expect(TasmeeMatcher.similar(k('قال'), k('فَقَالَ')), isFalse);
+    expect(TasmeeMatcher.similar(k('وقال'), k('فَقَالَ')), isFalse);
+    expect(TasmeeMatcher.similar(k('تعملون'), k('يَعۡمَلُونَ')), isFalse);
+    expect(TasmeeMatcher.similar(k('ربي'), k('رَبِّ')), isFalse);
+    expect(TasmeeMatcher.similar(k('يتذكرون'), k('يَتَفَكَّرُونَ')), isFalse);
+    expect(TasmeeMatcher.similar(k('ربهم'), k('رَبِّكُمۡ')), isFalse);
+    // …while the same word in ordinary spelling, or a misheard sound, is fine.
+    expect(TasmeeMatcher.similar(k('وباليوم'), k('وَبِٱلۡيَوۡمِ')), isTrue);
+    expect(TasmeeMatcher.similar(k('الصلاة'), k('ٱلصَّلَوٰةَ')), isTrue);
+    expect(TasmeeMatcher.similar(k('المستكيم'), k('ٱلۡمُسۡتَقِيمَ')), isTrue);
+    final s = TasmeeSession(_words('وَبِٱلۡيَوۡمِ ٱلۡأٓخِرِ هُمۡ يُوقِنُونَ', surah: 2, ayah: 4), []);
+    s.feed('واليوم الآخر هم يوقنون'.split(' '), isFinal: true);
+    expect(s.mistakes.length, 1);
+    expect(s.mistakes.first.heard, 'واليوم');
   });
 
   test('skipped long word is a mistake', () {

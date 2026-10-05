@@ -295,6 +295,34 @@ class TasmeeTracker {
 
   bool _ayahStart(int i) => i <= 0 || words[i - 1].endsAyah;
 
+  /// Moves to [index]. Al-Fatiha's basmala is its first ayah: said before
+  /// «الحمد لله», it is recited from it; not said, it is shown (not missed).
+  TasmeeFeed _place(int index, List<String> heard, {required int keep, required int from, required bool isFinal}) {
+    final w = words[index];
+    if (w.surah == 1 && w.ayah == 2 && index > 0 && words[index - 1].ayah == 1) {
+      var start = index;
+      while (start > 0 && words[start - 1].surah == 1 && words[start - 1].ayah == 1) {
+        start--;
+      }
+      var said = -1;
+      for (var j = from - 1; j >= keep; j--) {
+        if (TasmeeMatcher.key(heard[j]) == 'بسم') {
+          said = j;
+          break;
+        }
+      }
+      if (said >= 0) {
+        index = start;
+        from = said;
+      } else {
+        for (var i = start; i < index; i++) {
+          if (words[i].state == TasmeeState.hidden) words[i].state = TasmeeState.given;
+        }
+      }
+    }
+    return session.relocate(index, heard, keep: keep, from: from, isFinal: isFinal);
+  }
+
   /// [h] is the expected word (or its beginning, while [partial]), one of
   /// the next few, or a word just recited (a repeat).
   bool _nearExpected(String h, {required bool partial}) {
@@ -305,7 +333,7 @@ class TasmeeTracker {
       if (words[e].spoken != null) return true;
     }
     for (var j = math.max(_from, e - 40); j < math.min(_to, e + 4); j++) {
-      if (TasmeeMatcher.similar(h, words[j].key)) return true;
+      if (words[j].heardAs(h)) return true;
     }
     return false;
   }
@@ -317,7 +345,7 @@ class TasmeeTracker {
       if (hit == null) return const TasmeeFeed(0, 0);
       located = true;
       _sure = hit.sure;
-      return session.relocate(hit.index, heard, keep: 0, from: hit.heardFrom, isFinal: isFinal);
+      return _place(hit.index, heard, keep: 0, from: hit.heardFrom, isFinal: isFinal);
     }
     if (!_sure) {
       // Found among places with the same words: the words that follow tell
@@ -325,7 +353,7 @@ class TasmeeTracker {
       final hit = _locator.locate(heard, near: session.expected);
       if (hit != null && hit.sure) {
         _sure = true;
-        return session.relocate(hit.index, heard, keep: 0, from: hit.heardFrom, isFinal: isFinal);
+        return _place(hit.index, heard, keep: 0, from: hit.heardFrom, isFinal: isFinal);
       }
     }
     // A new utterance that doesn't begin with the expected words (nor a
@@ -359,7 +387,7 @@ class TasmeeTracker {
     final hit = _locator.locate(tail, near: e, avoid: (e - 40, e + 3));
     if (hit == null || hit.matched < 3 || !hit.sure) return r;
     if (!_ayahStart(hit.index) && hit.matched < 8) return r;
-    final moved = session.relocate(hit.index, heard, keep: keep, from: keep + hit.heardFrom, isFinal: isFinal);
+    final moved = _place(hit.index, heard, keep: keep, from: keep + hit.heardFrom, isFinal: isFinal);
     return TasmeeFeed(moved.revealed, moved.mistakes, moved.flash);
   }
 }

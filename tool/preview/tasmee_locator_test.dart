@@ -218,6 +218,30 @@ void main() {
       expect(quran[t.expected].ayah, 15);
     });
 
+    test('al-Fatiha: its basmala is recited, or shown when it was not said', () {
+      var mistakes = <TasmeeMistake>[];
+      var t = TasmeeTracker(quran, mistakes);
+      final w = said('بسم الله الرحمن الرحيم الحمد لله رب العالمين الرحمن الرحيم');
+      for (var n = 1; n <= w.length; n++) {
+        t.feed(w.sublist(0, n), isFinal: n == w.length);
+      }
+      expect(mistakes, isEmpty);
+      expect(quran[at(1, 1)].state, TasmeeState.correct);
+      expect(quran[at(1, 1, 3)].state, TasmeeState.correct);
+      expect(quran[t.expected].ayah, 4);
+
+      reset();
+      mistakes = <TasmeeMistake>[];
+      t = TasmeeTracker(quran, mistakes);
+      final w2 = said('الحمد لله رب العالمين الرحمن الرحيم مالك يوم الدين');
+      for (var n = 1; n <= w2.length; n++) {
+        t.feed(w2.sublist(0, n), isFinal: n == w2.length);
+      }
+      expect(mistakes, isEmpty);
+      expect(quran[at(1, 1)].revealed, isTrue);
+      expect(quran[at(1, 2)].state, TasmeeState.correct);
+    });
+
     test('numbers written in digits', () {
       final mistakes = <TasmeeMistake>[];
       final t = TasmeeTracker(quran, mistakes);
@@ -331,8 +355,10 @@ void noisyRecogniserCheck(List<TasmeeWord> quran, void Function() reset) {
         }
         final k = TasmeeMatcher.key(plain[i]);
         final r = rnd.nextDouble();
-        if (k.length <= 2 && r < 0.06) continue; // a particle lost
-        said.add(r > 0.95 ? mishear(plain[i]) : plain[i]);
+        final m = r > 0.95 ? mishear(plain[i]) : plain[i];
+        // A mishearing that makes another real word can't be told from a
+        // real mistake: the simulated recogniser only garbles.
+        said.add(m != plain[i] && TasmeeMatcher.knownWords.contains(TasmeeMatcher.key(m)) ? plain[i] : m);
       }
       // Partial results, the last word often half-said.
       for (var n = 1; n < said.length; n++) {
