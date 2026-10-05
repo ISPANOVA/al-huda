@@ -123,6 +123,10 @@ class _TasmeePageState extends State<TasmeePage> {
   /// Index of each page's first word (1-based pages; [605] is the end).
   static List<int> _pageStart = const [];
 
+  /// Searches the whole Quran (to tell the reciter when they recite outside
+  /// the chosen surah).
+  static TasmeeLocator? _fullLocator;
+
   /// Index of each ayah's first word, by global ayah number.
   static List<int> _ayahStart = const [];
 
@@ -474,6 +478,15 @@ class _TasmeePageState extends State<TasmeePage> {
     final before = t.expected;
     final res = t.feed(heard, isFinal: isFinal, alternates: alternates);
     if (res.mistakes > 0) _onMistake(res.flash);
+    // A surah was chosen but the reciter is in another one: say where.
+    if (!t.located && _scopeSurah != null && heard.length >= 5) {
+      final hit = (_fullLocator ??= TasmeeLocator(t.words)).locate(heard);
+      if (hit != null && hit.sure) {
+        final w = t.words[hit.index];
+        _status = 'هذه من سورة ${SurahMetadata.surah(w.surah).name}، وأنت تسمّع سورة '
+            '${SurahMetadata.surah(_scopeSurah!).name}. غيّر الاختيار من الأعلى';
+      }
+    }
     if (t.located && (!wasLocated || (t.expected - before).abs() > 8)) {
       // Found (or moved to) the place being recited.
       HapticFeedback.mediumImpact();
