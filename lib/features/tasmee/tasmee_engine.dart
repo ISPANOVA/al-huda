@@ -125,10 +125,19 @@ class TasmeeMatcher {
   static List<String> altKeys(String text) {
     final out = <String>[];
     final k = key(text);
-    if (_smallLetters.hasMatch(text)) {
-      final full = _key(text, small: true);
-      if (full != k) out.add(full);
+    void add(String a) {
+      if (a.isNotEmpty && a != k && !out.contains(a)) out.add(a);
     }
+
+    if (_smallLetters.hasMatch(text)) add(_key(text, small: true));
+    // A letter with a round sukun is written but not read: سَأُوْرِيكُمۡ ← سأريكم,
+    // بِأَيۡيْدٖ ← بأيد (أُوْلِي keeps it in ordinary spelling too).
+    if (text.contains('ْ')) add(key(text.replaceAll(RegExp('[وي]ْ'), '')));
+    // A ṣād with a small sīn is read as sīn: بَصۜۡطَةٗ ← بسطة.
+    if (text.contains('صۜ')) add(key(text.replaceAll('صۜ', 'س')));
+    // A final alef read as alef maqsura: وَنَـَٔا ← ونأى, تَتۡرَا ← تترى.
+    final bare = text.replaceAll(_marks, '');
+    if (bare == 'ونا' || bare == 'تترا') add('${k}ي');
     if (text.startsWith('يَٰ') && k.length >= 4) out.add(k.substring(1));
     return out;
   }
@@ -168,6 +177,9 @@ class TasmeeMatcher {
       // Hamza below a yā' seat after a long ā: ءَانَآيِٕ ← آناء, وَرَآيِٕ ← وراء
       // (but ٱمۡرِيٕ ← امرئ keeps its yā').
       .replaceAllMapped(RegExp('([اآ]ٓ?)ي[ِ]?ٕ[ِ]?'), (m) => '${m[1]}ء')
+      // A yā' / wāw seat carrying a hamza below is the hamza alone:
+      // ٱمۡرِيٕٖ ← امرئ, ٱلسَّيِّيِٕ ← السيئ, ٱللُّؤۡلُوِٕ ← اللؤلؤ.
+      .replaceAllMapped(RegExp('[يو]([ًٌٍَُِّْ]*)ٕ'), (m) => m[1]!)
       // Hamza carried by a written yā': وَمَلَإِيْهِۦ ← وملئه.
       .replaceAll('إِيْ', 'ئ')
       // Alef written for alef maqsura: رَءَا ← رأى, تَرَٰٓءَا ← تراءى, لَدَا ← لدى, ٱلۡأَقۡصَا ← الأقصى.
@@ -320,6 +332,11 @@ class TasmeeMatcher {
     if (acc.length < 3 || acc.length >= sp.length) return false;
     return distance(acc, sp.substring(0, acc.length)) <= 1;
   }
+
+  /// Small words (their keys) a recogniser may lose: لا، ما، إن، من، في…
+  static final particles = {
+    for (final w in 'إن أن لا ما و ف من في عن لن لم قد ثم بل لو أو يا إذ إلى على هو هي هم'.split(' ')) key(w),
+  };
 
   /// Words people say around a recitation (isti'adha, basmala, closing) that
   /// are not part of the tested text.
@@ -645,6 +662,11 @@ class TasmeeSession {
       // reciter pauses) — a correct word is never flashed red by a guess.
       if (last) break;
 
+      // Isti'adha / basmala before an ayah.
+      if (TasmeeMatcher.ignorable.contains(h) && (pos == 0 || words[pos - 1].endsAyah)) {
+        i++;
+        continue;
+      }
       // Noise or a self-correction just before the expected word.
       if (hNext != null && _m(hNext, pos)) {
         i++;
@@ -672,11 +694,6 @@ class TasmeeSession {
         }
         pos = to;
         reveal(pos++);
-        i++;
-        continue;
-      }
-      // Isti'adha / basmala before an ayah.
-      if (TasmeeMatcher.ignorable.contains(h) && (pos == 0 || words[pos - 1].endsAyah)) {
         i++;
         continue;
       }
@@ -739,7 +756,7 @@ class TasmeeSession {
       if (hNext != null && (t + 1 >= words.length || _m(hNext, t + 1))) return t;
       if (hNext == null && isFinal && t == pos + 1) return t;
       // A particle (و، في، من، إن…) dropped before a word heard exactly.
-      if (t == pos + 1 && words[pos].key.length <= 2 && words[pos].spoken == null && h.length >= 3 && h == words[t].key) {
+      if (t == pos + 1 && TasmeeMatcher.particles.contains(words[pos].key) && h.length >= 3 && h == words[t].key) {
         return t;
       }
     }
