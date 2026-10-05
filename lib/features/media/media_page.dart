@@ -437,7 +437,7 @@ class _OfficialStationsState extends State<_OfficialStations> with SingleTickerP
                           end: Alignment.bottomCenter,
                           colors: [
                             Colors.black.withValues(alpha: 0.62),
-                            Colors.black.withValues(alpha: 0.30),
+                            Colors.black.withValues(alpha: 0.50),
                             Colors.black.withValues(alpha: 0.58),
                           ],
                         ),

@@ -263,7 +263,7 @@ void _saudi(Canvas canvas, Size size) {
     textDirection: TextDirection.rtl,
     textAlign: TextAlign.center,
   )..layout();
-  final target = math.min(w * 0.66, h * 2.4);
+  final target = math.min(w * 0.6, h * 1.7);
   final scale = target / tp.width;
   canvas.save();
   canvas.translate(w / 2 - target / 2, h * 0.42 - tp.height * scale / 2);
