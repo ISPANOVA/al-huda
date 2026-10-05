@@ -591,7 +591,9 @@ class _TasmeePageState extends State<TasmeePage> {
 
   void _hint(void Function(TasmeeSession s) reveal) {
     final t = _tracker;
-    if (t == null || !t.located || t.done) return;
+    if (t == null || t.done) return;
+    // Before the place is known, a hint starts from the page on screen.
+    if (!t.located) t.startAt(_pageStart[_page]);
     reveal(t.session);
     HapticFeedback.selectionClick();
     setState(() => _revision++);
@@ -905,7 +907,7 @@ class _TasmeePageState extends State<TasmeePage> {
   }
 
   Widget _controls(GlassTheme glass, TasmeeTracker t) {
-    final canHint = t.located && !t.done;
+    final canHint = !t.done;
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 10, 16, 12),
       decoration: BoxDecoration(
