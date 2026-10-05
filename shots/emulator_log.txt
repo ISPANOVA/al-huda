@@ -1,0 +1,1 @@
+tool/ci/emulator.sh: line 14: emulator: command not found

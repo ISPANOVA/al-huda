@@ -1,0 +1,36 @@
+== badging
+identical
+== permissions
+identical
+== manifest
+identical
+== files
+46a47,53
+> assets/flutter_assets/assets/fonts/ReemKufi-Bold.ttf
+> assets/flutter_assets/assets/fonts/ReemKufi-Medium.ttf
+> assets/flutter_assets/assets/fonts/Tajawal-Black.ttf
+> assets/flutter_assets/assets/fonts/Tajawal-Bold.ttf
+> assets/flutter_assets/assets/fonts/Tajawal-ExtraBold.ttf
+> assets/flutter_assets/assets/fonts/Tajawal-Medium.ttf
+> assets/flutter_assets/assets/fonts/Tajawal-Regular.ttf
+== native libs and bundled assets (size path)
+1a2,8
+> 89092 assets/flutter_assets/assets/fonts/ReemKufi-Bold.ttf
+> 89280 assets/flutter_assets/assets/fonts/ReemKufi-Medium.ttf
+> 59028 assets/flutter_assets/assets/fonts/Tajawal-Black.ttf
+> 59988 assets/flutter_assets/assets/fonts/Tajawal-Bold.ttf
+> 59648 assets/flutter_assets/assets/fonts/Tajawal-ExtraBold.ttf
+> 62280 assets/flutter_assets/assets/fonts/Tajawal-Medium.ttf
+> 60364 assets/flutter_assets/assets/fonts/Tajawal-Regular.ttf
+10c17
+< 10027912 lib/arm64-v8a/libapp.so
+---
+> 10355592 lib/arm64-v8a/libapp.so
+13c20
+< 11158088 lib/armeabi-v7a/libapp.so
+---
+> 11502152 lib/armeabi-v7a/libapp.so
+16c23
+< 10290056 lib/x86_64/libapp.so
+---
+> 10617736 lib/x86_64/libapp.so
