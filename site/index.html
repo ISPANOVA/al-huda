@@ -248,7 +248,8 @@ async function save() {
   if (j.enabled && !j.title && !j.message) { say('اكتب عنوان أو رسالة.', 'err'); return; }
   if (j.buttonUrl && !/^https?:\/\//i.test(j.buttonUrl)) { say('الرابط لازم يبدأ بـ https://', 'err'); return; }
   if (j.belowVersion && !/^\d+(\.\d+){0,3}$/.test(j.belowVersion)) { say('رقم الإصدار يتكتب كده: 1.0.1', 'err'); return; }
-  if (j.mode === 'force' && j.enabled && !j.buttonUrl && !confirm('رسالة إجبارية من غير زرار هتقفل التطبيق تمامًا. متأكد؟')) return;
+  if (j.belowVersion && !j.belowVersion.includes('.')) { say('الإصدار يتكتب بنقط زي 1.0.1 — لو قصدك رقم البيلد (زي 45) حطه في خانة «للي عندهم بيلد أقدم من»', 'err'); return; }
+  if (j.mode === 'force' && j.enabled && !j.buttonUrl && !confirm('رسالة إجبارية من غير رابط: هيظهر زرار «متابعة» يقفلها، وهترجع تظهر كل مرة يفتح فيها التطبيق (النسخ القديمة قبل آخر تحديث مفيهاش الزرار ده). متأكد؟')) return;
   store('alhuda_token', $('remember').checked ? token : null);
   const body = { enabled: j.enabled, id: new Date().toISOString(), ...j };
   const api = `https://api.github.com/repos/${OWNER}/${REPO}/contents/${PATH}`;
