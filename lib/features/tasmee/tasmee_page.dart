@@ -436,9 +436,12 @@ class _TasmeePageState extends State<TasmeePage> {
     ];
   }
 
+  /// The reciter is reciting outside the chosen surah (where they are).
+  String? _outside;
+
   String get _listeningStatus => _tracker?.located ?? false
       ? 'أستمع إليك… اقرأ من حفظك'
-      : (_scopeSurah == null
+      : _outside ?? (_scopeSurah == null
           ? 'أستمع… اقرأ من أي موضع وسأحدد السورة والآية'
           : 'أستمع… اقرأ من أي آية في سورة ${SurahMetadata.surah(_scopeSurah!).name}');
 
@@ -483,8 +486,9 @@ class _TasmeePageState extends State<TasmeePage> {
       final hit = (_fullLocator ??= TasmeeLocator(t.words)).locate(heard);
       if (hit != null && hit.sure) {
         final w = t.words[hit.index];
-        _status = 'هذه من سورة ${SurahMetadata.surah(w.surah).name}، وأنت تسمّع سورة '
+        _outside = 'هذه من سورة ${SurahMetadata.surah(w.surah).name}، وأنت تسمّع سورة '
             '${SurahMetadata.surah(_scopeSurah!).name}. غيّر الاختيار من الأعلى';
+        _status = _outside!;
       }
     }
     if (t.located && (!wasLocated || (t.expected - before).abs() > 8)) {
@@ -548,6 +552,7 @@ class _TasmeePageState extends State<TasmeePage> {
     final t = _tracker;
     if (t == null) return;
     _scopeSurah = surah;
+    _outside = null;
     if (surah == null) {
       t.setScope(0, t.words.length);
       t.near = _pageStart[_page];
