@@ -738,7 +738,9 @@ class TasmeeSession {
       if (hNext != null && (t + 1 >= words.length || _m(hNext, t + 1))) return t;
       if (hNext == null && isFinal && t == pos + 1) return t;
       // A particle (و، في، من، إن…) dropped before a word heard exactly.
-      if (t == pos + 1 && words[pos].key.length <= 2 && h.length >= 3 && h == words[t].key) return t;
+      if (t == pos + 1 && words[pos].key.length <= 2 && words[pos].spoken == null && h.length >= 3 && h == words[t].key) {
+        return t;
+      }
     }
     return null;
   }
