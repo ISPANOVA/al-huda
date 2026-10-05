@@ -1,15 +1,15 @@
 {
   "enabled": true,
-  "id": "2026-10-05T13:40:52.812Z",
+  "id": "2026-10-05T13:41:35.897Z",
   "mode": "force",
   "show": "once",
-  "title": "يرجى تحديث التطبيق",
-  "message": "يرجى تنزيل نسخة رقم 45 التجريبية",
+  "title": "مرحبا بك",
+  "message": "يرجى التحديث الى الحديث رقم 45 التجريبي",
   "buttonText": "ابدأ",
   "buttonUrl": "",
   "platforms": [
     "android"
   ],
   "belowBuild": 0,
-  "belowVersion": "44"
+  "belowVersion": "45"
 }
