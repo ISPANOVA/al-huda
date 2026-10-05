@@ -232,11 +232,11 @@ class _CalendarPageState extends State<CalendarPage> {
                         },
                       ),
                       const SizedBox(height: 8),
-                      Wrap(
+                      const Wrap(
                         alignment: WrapAlignment.center,
                         spacing: 14,
                         runSpacing: 6,
-                        children: const [
+                        children: [
                           _LegendDot(tone: Tone.sapphire, label: 'اليوم'),
                           _LegendDot(tone: Tone.emerald, label: 'صيام مستحب'),
                           _LegendDot(tone: Tone.sky, label: 'الأيام البيض'),

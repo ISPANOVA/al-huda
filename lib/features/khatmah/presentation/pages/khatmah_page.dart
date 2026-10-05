@@ -170,9 +170,9 @@ Widget _rows(BuildContext context, List<Widget> rows) {
 class _ToneBar extends StatelessWidget {
   final double value;
   final Tone tone;
-  final double height;
+  static const double height = 10;
 
-  const _ToneBar({required this.value, required this.tone, this.height = 10});
+  const _ToneBar({required this.value, required this.tone});
 
   @override
   Widget build(BuildContext context) {
