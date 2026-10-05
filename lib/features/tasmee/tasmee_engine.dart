@@ -138,6 +138,8 @@ class TasmeeMatcher {
     // A final alef read as alef maqsura: وَنَـَٔا ← ونأى, تَتۡرَا ← تترى.
     final bare = text.replaceAll(_marks, '');
     if (bare == 'ونا' || bare == 'تترا') add('${k}ي');
+    // «أن لو» written as one word: وَأَلَّوِ ← وأن لو.
+    if (bare == 'وألو') add('ونلو');
     if (text.startsWith('يَٰ') && k.length >= 4) out.add(k.substring(1));
     return out;
   }
