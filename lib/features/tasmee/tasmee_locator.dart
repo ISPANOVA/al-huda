@@ -13,7 +13,11 @@ class TasmeeHit {
   /// Heard words that matched the text there.
   final int matched;
 
-  const TasmeeHit(this.index, this.heardFrom, this.matched);
+  /// No other place fits as well (false: the same words occur elsewhere too
+  /// and the nearest place was taken).
+  final bool sure;
+
+  const TasmeeHit(this.index, this.heardFrom, this.matched, {this.sure = true});
 
   @override
   String toString() => 'TasmeeHit($index, from $heardFrom, $matched)';
@@ -59,12 +63,16 @@ class TasmeeLocator {
   TasmeeHit? locate(List<String> heard, {int? near, (int, int)? avoid}) {
     final k = [for (final w in heard) TasmeeMatcher.key(w)];
     // Isti'adha / basmala said before reciting are not part of the place
-    // (al-Fatiha's own basmala is found from what follows it).
+    // (al-Fatiha's own basmala is found from what follows it). Only the
+    // whole formula: «الرحمن» alone begins surat al-Rahman.
     var start = 0;
+    var formula = false;
     while (start < k.length && (k[start].isEmpty || TasmeeMatcher.ignorable.contains(k[start]))) {
+      if (k[start] == 'بسم' || k[start] == 'عوذ') formula = true;
       start++;
     }
-    if (start >= k.length) return null;
+    if (start >= k.length && formula) return null;
+    if (!formula) start = 0;
     final idx = [for (var j = start; j < k.length; j++) if (k[j].isNotEmpty) j];
     if (idx.length < 2) return null;
 
@@ -123,7 +131,9 @@ class TasmeeLocator {
       second = math.max(second, r.score);
     }
     var pick = top;
+    var sure = true;
     if (second >= top.score) {
+      sure = false;
       // The same words in several places: sure only once the passage is long
       // (then it doesn't matter which one until the words differ).
       if (top.score < 5) return null;
@@ -138,7 +148,7 @@ class TasmeeLocator {
       if (top.score == 3 && second >= 2 && distinct < 10) return null;
     }
     if (avoid != null && pick.start >= avoid.$1 && pick.start <= avoid.$2) return null;
-    return TasmeeHit(pick.start, pick.from, pick.score);
+    return TasmeeHit(pick.start, pick.from, pick.score, sure: sure);
   }
 
   /// Letters in the [n] heard words from [from]: two long distinctive words
@@ -262,6 +272,7 @@ class TasmeeTracker {
   /// Starts at [index] (chosen by the reciter): words before it on the same
   /// page ([pageStart]) are shown as already read.
   void startAt(int index, {int? pageStart}) {
+    _sure = true;
     if (pageStart != null) {
       for (var i = pageStart; i < index; i++) {
         if (words[i].state == TasmeeState.hidden) words[i].state = TasmeeState.given;
@@ -271,7 +282,13 @@ class TasmeeTracker {
     located = true;
   }
 
-  void newUtterance() => session.newUtterance();
+  /// The place found is the only one that fits (see [TasmeeHit.sure]).
+  bool _sure = true;
+
+  void newUtterance() {
+    _sure = true;
+    session.newUtterance();
+  }
 
   bool _ayahStart(int i) => i <= 0 || words[i - 1].endsAyah;
 
@@ -296,7 +313,17 @@ class TasmeeTracker {
       final hit = _locator.locate(heard, near: near);
       if (hit == null) return const TasmeeFeed(0, 0);
       located = true;
+      _sure = hit.sure;
       return session.relocate(hit.index, heard, keep: 0, from: hit.heardFrom, isFinal: isFinal);
+    }
+    if (!_sure) {
+      // Found among places with the same words: the words that follow tell
+      // which one, while this utterance goes on.
+      final hit = _locator.locate(heard, near: session.expected);
+      if (hit != null && hit.sure) {
+        _sure = true;
+        return session.relocate(hit.index, heard, keep: 0, from: hit.heardFrom, isFinal: isFinal);
+      }
     }
     // A new utterance that doesn't begin with the expected words (nor a
     // repeat of what came just before): wait for a third word before judging,
@@ -327,7 +354,7 @@ class TasmeeTracker {
     if (count < 3) return r;
     final e = session.expected;
     final hit = _locator.locate(tail, near: e, avoid: (e - 40, e + 3));
-    if (hit == null || hit.matched < 3) return r;
+    if (hit == null || hit.matched < 3 || !hit.sure) return r;
     if (!_ayahStart(hit.index) && hit.matched < 8) return r;
     final moved = session.relocate(hit.index, heard, keep: keep, from: keep + hit.heardFrom, isFinal: isFinal);
     return TasmeeFeed(moved.revealed, moved.mistakes, moved.flash);

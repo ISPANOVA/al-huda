@@ -179,6 +179,7 @@ void main() {
     test('drifting into another passage without a pause is a mistake, not a move', () {
       final mistakes = <TasmeeMistake>[];
       final t = TasmeeTracker(quran, mistakes);
+      t.startAt(at(1, 2));
       final w = said('الحمد لله رب العالمين قل هو الله أحد الله الصمد');
       for (var n = 1; n <= w.length; n++) {
         t.feed(w.sublist(0, n), isFinal: n == w.length);
