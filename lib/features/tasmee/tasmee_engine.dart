@@ -112,7 +112,9 @@ class TasmeeMatcher {
     k = k
         .replaceAll(RegExp('[ٱأإآٲٳ]'), 'ا')
         .replaceAll('ى', 'ي')
-        .replaceAll('ئ', 'ي')
+        // Hamza on a yā' seat is often written on a bare tooth (شَيۡـٔٗا،
+        // ءَابَآءِي): like the hamza itself, it is not compared.
+        .replaceAll('ئ', '')
         .replaceAll('ؤ', 'و')
         .replaceAll('ة', 'ه')
         .replaceAll('ء', '');
@@ -127,8 +129,6 @@ class TasmeeMatcher {
   /// spelling writes them (otherwise common words never match: شيئا، أحيي،
   /// رأى، آناء، ننجي).
   static String _uthmaniLetters(String s) => s
-      // Hamza over a bare tooth: شَيۡـٔٗا ← شيئا, سَيِّـَٔات ← سيئات.
-      .replaceAll(RegExp('ـ[ً-ْٰ]*ٔ'), 'ئ')
       // Hamza below a yā' seat after a long ā: ءَانَآيِٕ ← آناء, وَرَآيِٕ ← وراء
       // (but ٱمۡرِيٕ ← امرئ keeps its yā').
       .replaceAllMapped(RegExp('([اآ]ٓ?)ي[ِ]?ٕ[ِ]?'), (m) => '${m[1]}ء')
@@ -138,7 +138,7 @@ class TasmeeMatcher {
       .replaceAll('ۥ', 'و')
       .replaceAll('ۨ', 'ن')
       // Alef written for alef maqsura: رَءَا ← رأى, تَرَٰٓءَا ← تراءى, لَدَا ← لدى, ٱلۡأَقۡصَا ← الأقصى.
-      .replaceAllMapped(RegExp('(رّ?َ?ٰ?ٓ?ءَ?[آا]ٓ?|^لَدَا|قۡصَا)\$'), (m) => '${m[0]!.substring(0, m[0]!.length - 1)}ى');
+      .replaceAllMapped(RegExp('(رّ?َ?ٰ?ٓ?ءَ?[آا]ٓ?|^لَدَا|^طَغَا|قۡصَا)\$'), (m) => '${m[0]!.substring(0, m[0]!.length - 1)}ى');
 
   static int distance(String a, String b) {
     if (a == b) return 0;
@@ -342,6 +342,9 @@ class TasmeeSession {
   List<(TasmeeState, bool)> _snap = const [];
   static const _window = 3000;
 
+  /// The microphone restarted and no result has come yet.
+  bool _restarted = false;
+
   /// Heard index (absolute) just after the last word that matched.
   int _lastMatch = 0;
   final List<TasmeeMistake> _segMistakes = [];
@@ -408,6 +411,7 @@ class TasmeeSession {
   /// listening was restarted while the recogniser kept its text), only the
   /// new words are judged; if it starts over, it is detected in [feed].
   void newUtterance() {
+    _restarted = true;
     _commit();
     _offset = _lastHeard.length;
     _used = _offset;
@@ -479,9 +483,13 @@ class TasmeeSession {
       for (var p = 0; p < prev.length && p < heard.length; p++) {
         if (TasmeeMatcher.key(prev[p]) == TasmeeMatcher.key(heard[p])) same++;
       }
-      fresh = same * 2 < prev.length;
+      // Right after the microphone restarted, the old text is carried only if
+      // it comes back nearly whole (consecutive ayahs often share words at the
+      // same places: that is a new ayah, not the old transcript).
+      fresh = _restarted ? same * 10 < prev.length * 8 : same * 2 < prev.length;
     }
     if (!fresh && heard.length < _offset) fresh = true;
+    _restarted = false;
     if (fresh) settlePrevious();
 
     final before = expected;
