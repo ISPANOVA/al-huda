@@ -1,0 +1,12 @@
+{
+  "enabled": false,
+  "id": "0",
+  "mode": "optional",
+  "show": "once",
+  "title": "",
+  "message": "",
+  "buttonText": "",
+  "buttonUrl": "",
+  "platforms": ["android", "web"],
+  "belowBuild": 0
+}

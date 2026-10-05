@@ -1,0 +1,276 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>الهدى — رسالة التطبيق</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0B0A08; --panel: #15130F; --line: #2C2619; --ink: #F3EEE2; --muted: #A69E8C;
+    --gold: #D9B45F; --gold-ink: #1A1408; --red: #E5484D; --green: #3FB97F;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.7 Cairo, system-ui, sans-serif; }
+  main { max-width: 980px; margin: 0 auto; padding: 22px 16px 60px; }
+  h1 { font-size: 22px; margin: 0 0 2px; color: var(--gold); }
+  .sub { color: var(--muted); margin: 0 0 18px; font-size: 13.5px; }
+  .grid { display: grid; grid-template-columns: 1fr 360px; gap: 18px; align-items: start; }
+  @media (max-width: 860px) { .grid { grid-template-columns: 1fr; } }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 18px; padding: 16px; }
+  .card + .card { margin-top: 14px; }
+  .card h2 { font-size: 15px; margin: 0 0 10px; color: var(--gold); }
+  label.f { display: block; font-weight: 700; margin: 12px 0 5px; font-size: 13.5px; }
+  .hint { color: var(--muted); font-size: 12.5px; margin-top: 4px; }
+  input[type=text], input[type=url], input[type=number], input[type=password], textarea {
+    width: 100%; background: #0F0D0A; color: var(--ink); border: 1px solid var(--line); border-radius: 12px;
+    padding: 10px 12px; font: inherit; }
+  textarea { min-height: 120px; resize: vertical; }
+  input:focus, textarea:focus { outline: 2px solid var(--gold); outline-offset: 1px; }
+  .seg { display: flex; gap: 8px; flex-wrap: wrap; }
+  .seg label { flex: 1; min-width: 140px; border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; cursor: pointer; }
+  .seg input { accent-color: var(--gold); margin-left: 6px; }
+  .seg label:has(input:checked) { border-color: var(--gold); background: #1E1A12; }
+  .seg small { display: block; color: var(--muted); font-size: 12px; }
+  .switch { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .switch b { font-size: 16px; }
+  .toggle { appearance: none; width: 52px; height: 30px; background: #3a3426; border-radius: 30px; position: relative; cursor: pointer; flex: none; }
+  .toggle::after { content: ""; position: absolute; top: 3px; right: 3px; width: 24px; height: 24px; border-radius: 50%; background: #cfc6b0; transition: .2s; }
+  .toggle:checked { background: var(--green); }
+  .toggle:checked::after { right: 25px; background: #fff; }
+  .row { display: flex; gap: 10px; flex-wrap: wrap; }
+  .row > * { flex: 1; min-width: 160px; }
+  button { font: inherit; font-weight: 800; border: 0; border-radius: 14px; padding: 12px 18px; cursor: pointer; }
+  .primary { background: var(--gold); color: var(--gold-ink); width: 100%; font-size: 16px; }
+  .primary:disabled { opacity: .5; cursor: wait; }
+  .ghost { background: transparent; color: var(--muted); border: 1px solid var(--line); }
+  .status { margin-top: 10px; font-size: 13.5px; min-height: 22px; }
+  .ok { color: var(--green); } .err { color: var(--red); }
+  /* Preview: a phone */
+  .phone { position: sticky; top: 16px; }
+  .screen { position: relative; height: 640px; border-radius: 34px; border: 8px solid #26221a; overflow: hidden;
+    background: radial-gradient(circle at 70% 10%, #3a2e14, #0B0A08 60%); }
+  .fake { padding: 22px 16px; opacity: .35; }
+  .fake div { height: 70px; border-radius: 16px; background: #2a2418; margin-bottom: 12px; }
+  .ov { position: absolute; inset: 0; display: none; align-items: center; justify-content: center; padding: 18px; }
+  .ov.card-mode { display: flex; background: rgba(0,0,0,.55); }
+  .ov.force-mode { display: flex; background: linear-gradient(160deg, #1b160c, #0B0A08); }
+  .pv { width: 100%; text-align: center; }
+  .card-mode .pv { background: #17140E; border: 1px solid #5a4a24; border-radius: 22px; padding: 14px 16px 16px; }
+  .pv .x { text-align: left; color: var(--muted); font-size: 18px; height: 22px; }
+  .force-mode .pv .x { display: none; }
+  .pv .ic { font-size: 34px; }
+  .pv h3 { margin: 6px 0; color: var(--gold); font-size: 19px; }
+  .card-mode .pv h3 { color: var(--ink); }
+  .pv p { white-space: pre-wrap; color: var(--muted); margin: 0 0 14px; max-height: 260px; overflow: auto; }
+  .force-mode .pv p { color: var(--ink); }
+  .pv .b { background: var(--gold); color: var(--gold-ink); border-radius: 14px; padding: 11px; font-weight: 800; }
+  .pv .l { color: var(--muted); margin-top: 8px; font-size: 13px; }
+  .force-mode .pv .l { display: none; }
+  .off { position: absolute; inset: auto 0 18px 0; text-align: center; color: var(--muted); font-size: 13px; }
+  details summary { cursor: pointer; color: var(--gold); font-weight: 700; }
+  code { background: #0F0D0A; padding: 1px 6px; border-radius: 6px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>رسالة تطبيق «الهدى»</h1>
+  <p class="sub">اللي تكتبه هنا يظهر لكل اللي يفتح التطبيق أو الموقع خلال دقيقة من الحفظ.</p>
+
+  <div class="grid">
+    <div>
+      <div class="card">
+        <div class="switch">
+          <div><b>تشغيل الرسالة</b><div class="hint">لو مقفولة، مش هيظهر حاجة لحد.</div></div>
+          <input type="checkbox" class="toggle" id="enabled">
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>نوع الرسالة</h2>
+        <div class="seg">
+          <label><input type="radio" name="mode" value="optional" checked>عادية<small>يقدر يقفلها ويكمّل استخدام التطبيق</small></label>
+          <label><input type="radio" name="mode" value="force">إجبارية<small>شاشة كاملة، مينفعش يستخدم التطبيق غير لما يضغط الزرار (تحديث مثلًا)</small></label>
+        </div>
+        <div id="showBox">
+          <label class="f">تظهر كام مرة؟</label>
+          <div class="seg">
+            <label><input type="radio" name="show" value="once" checked>مرة واحدة<small>تظهر مرة لكل شخص (وترجع تظهر لو عدّلتها)</small></label>
+            <label><input type="radio" name="show" value="always">كل مرة يفتح<small>تظهر مع كل فتح للتطبيق</small></label>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>المحتوى</h2>
+        <label class="f" for="title">العنوان</label>
+        <input type="text" id="title" placeholder="مثلًا: تحديث جديد متاح">
+        <label class="f" for="message">الرسالة</label>
+        <textarea id="message" placeholder="اكتب الرسالة هنا… (ينفع سطور متعددة)"></textarea>
+        <div class="row">
+          <div>
+            <label class="f" for="buttonText">نص الزرار</label>
+            <input type="text" id="buttonText" placeholder="مثلًا: تحميل التحديث">
+          </div>
+          <div>
+            <label class="f" for="buttonUrl">رابط الزرار</label>
+            <input type="url" id="buttonUrl" placeholder="https://…" dir="ltr">
+          </div>
+        </div>
+        <div class="hint">سيب الرابط فاضي لو مش عايز زرار. أي رابط ينفع: رابط التحميل، قناة تليجرام، صفحة…</div>
+      </div>
+
+      <div class="card">
+        <h2>تظهر لمين؟</h2>
+        <div class="seg">
+          <label><input type="checkbox" id="pAndroid" checked>تطبيق الأندرويد</label>
+          <label><input type="checkbox" id="pWeb" checked>الموقع</label>
+        </div>
+        <label class="f" for="belowBuild">للنسخ الأقدم من رقم (اختياري)</label>
+        <input type="number" id="belowBuild" min="0" placeholder="مثلًا 42" dir="ltr">
+        <div class="hint">لرسالة تحديث: اكتب رقم النسخة الجديدة (لو اسمها build-42 اكتب 42). اللي نزّلها مش هتظهرله، واللي لسه على نسخة أقدم هتظهرله. سيبه فاضي عشان تظهر للكل. (التطبيق بس، الموقع دايمًا محدّث.)</div>
+      </div>
+
+      <div class="card">
+        <h2>الحفظ</h2>
+        <label class="f" for="token">مفتاح GitHub (Token)</label>
+        <input type="password" id="token" placeholder="github_pat_…" dir="ltr" autocomplete="off">
+        <label class="hint"><input type="checkbox" id="remember" checked> افتكره على الجهاز ده</label>
+        <details style="margin-top:8px"><summary>إزاي أعمل المفتاح؟ (مرة واحدة بس)</summary>
+          <ol class="hint">
+            <li>افتح <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" style="color:var(--gold)">github.com/settings/personal-access-tokens/new</a></li>
+            <li>اكتب أي اسم، واختار مدة (مثلًا سنة).</li>
+            <li>في <b>Repository access</b> اختار <b>Only select repositories</b> ثم <code>al-huda</code>.</li>
+            <li>في <b>Permissions</b> ← <b>Contents</b> اختار <b>Read and write</b>.</li>
+            <li>اضغط Generate وانسخ المفتاح وحطه هنا. المفتاح ده بتاعك انت بس، ومن غيره محدش يقدر يغيّر الرسالة.</li>
+          </ol>
+        </details>
+        <div style="margin-top:14px"><button class="primary" id="save">حفظ ونشر الرسالة</button></div>
+        <div class="status" id="status"></div>
+      </div>
+    </div>
+
+    <div class="phone">
+      <div class="card">
+        <h2>معاينة</h2>
+        <div class="screen">
+          <div class="fake"><div></div><div></div><div></div><div></div><div></div></div>
+          <div class="ov" id="ov">
+            <div class="pv">
+              <div class="x">✕</div>
+              <div class="ic" id="pvIcon">📢</div>
+              <h3 id="pvTitle"></h3>
+              <p id="pvMsg"></p>
+              <div class="b" id="pvBtn"></div>
+              <div class="l" id="pvLater">لاحقًا</div>
+            </div>
+          </div>
+          <div class="off" id="pvOff">الرسالة مقفولة — مش هيظهر حاجة</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+<script>
+const OWNER = 'ISPANOVA', REPO = 'al-huda', BRANCH = 'announce', PATH = 'site/announce.json';
+const $ = (id) => document.getElementById(id);
+const fields = ['title', 'message', 'buttonText', 'buttonUrl', 'belowBuild'];
+
+function store(k, v) { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch (_) {} }
+function load(k) { try { return localStorage.getItem(k); } catch (_) { return null; } }
+
+function read() {
+  const platforms = [];
+  if ($('pAndroid').checked) platforms.push('android');
+  if ($('pWeb').checked) platforms.push('web');
+  return {
+    enabled: $('enabled').checked,
+    mode: document.querySelector('input[name=mode]:checked').value,
+    show: document.querySelector('input[name=show]:checked').value,
+    title: $('title').value.trim(),
+    message: $('message').value.trim(),
+    buttonText: $('buttonText').value.trim(),
+    buttonUrl: $('buttonUrl').value.trim(),
+    platforms,
+    belowBuild: parseInt($('belowBuild').value, 10) || 0,
+  };
+}
+
+function fill(j) {
+  $('enabled').checked = !!j.enabled;
+  document.querySelector(`input[name=mode][value=${j.mode === 'force' ? 'force' : 'optional'}]`).checked = true;
+  document.querySelector(`input[name=show][value=${j.show === 'always' ? 'always' : 'once'}]`).checked = true;
+  for (const f of ['title', 'message', 'buttonText', 'buttonUrl']) $(f).value = j[f] || '';
+  $('belowBuild').value = j.belowBuild ? j.belowBuild : '';
+  const p = j.platforms || ['android', 'web'];
+  $('pAndroid').checked = p.includes('android');
+  $('pWeb').checked = p.includes('web');
+  preview();
+}
+
+function preview() {
+  const j = read();
+  const force = j.mode === 'force';
+  $('showBox').style.display = force ? 'none' : '';
+  $('ov').className = 'ov ' + (j.enabled ? (force ? 'force-mode' : 'card-mode') : '');
+  $('pvOff').style.display = j.enabled ? 'none' : '';
+  $('pvIcon').textContent = force ? '⬇️' : '📢';
+  $('pvTitle').textContent = j.title;
+  $('pvMsg').textContent = j.message;
+  $('pvBtn').style.display = j.buttonUrl ? '' : 'none';
+  $('pvBtn').textContent = j.buttonText || (force ? 'تحميل التحديث' : 'فتح');
+  $('pvLater').textContent = j.buttonUrl ? 'لاحقًا' : 'حسنًا';
+}
+
+function say(text, cls) { const s = $('status'); s.textContent = text; s.className = 'status ' + (cls || ''); }
+
+function b64(str) {
+  const bytes = new TextEncoder().encode(str);
+  let bin = '';
+  for (const b of bytes) bin += String.fromCharCode(b);
+  return btoa(bin);
+}
+
+async function save() {
+  const token = $('token').value.trim();
+  if (!token) { say('حط مفتاح GitHub الأول (الطريقة تحت الخانة).', 'err'); return; }
+  const j = read();
+  if (j.enabled && !j.title && !j.message) { say('اكتب عنوان أو رسالة.', 'err'); return; }
+  if (j.buttonUrl && !/^https?:\/\//i.test(j.buttonUrl)) { say('الرابط لازم يبدأ بـ https://', 'err'); return; }
+  if (j.mode === 'force' && j.enabled && !j.buttonUrl && !confirm('رسالة إجبارية من غير زرار هتقفل التطبيق تمامًا. متأكد؟')) return;
+  store('alhuda_token', $('remember').checked ? token : null);
+  const body = { enabled: j.enabled, id: new Date().toISOString(), ...j };
+  const api = `https://api.github.com/repos/${OWNER}/${REPO}/contents/${PATH}`;
+  const headers = { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json' };
+  $('save').disabled = true;
+  say('جاري الحفظ…');
+  try {
+    const cur = await fetch(`${api}?ref=${BRANCH}`, { headers, cache: 'no-store' });
+    if (cur.status === 401) throw new Error('المفتاح غلط أو انتهى.');
+    if (cur.status === 404) throw new Error('المفتاح مش معاه صلاحية على al-huda.');
+    const sha = (await cur.json()).sha;
+    const res = await fetch(api, {
+      method: 'PUT', headers,
+      body: JSON.stringify({ message: 'Update the app message', content: b64(JSON.stringify(body, null, 2) + '\n'), sha, branch: BRANCH }),
+    });
+    if (res.status === 403) throw new Error('المفتاح محتاج صلاحية Contents: Read and write.');
+    if (!res.ok) throw new Error('GitHub رفض الحفظ (' + res.status + ').');
+    say('تم الحفظ ✓ — الرسالة هتتنشر خلال دقيقة تقريبًا.', 'ok');
+  } catch (e) {
+    say(e.message || 'تعذر الحفظ، اتأكد من النت.', 'err');
+  } finally {
+    $('save').disabled = false;
+  }
+}
+
+document.querySelectorAll('input, textarea').forEach((el) => el.addEventListener('input', preview));
+document.querySelectorAll('input[type=radio], input[type=checkbox]').forEach((el) => el.addEventListener('change', preview));
+$('save').addEventListener('click', save);
+const saved = load('alhuda_token');
+if (saved) $('token').value = saved;
+fetch('announce.json?t=' + Date.now(), { cache: 'no-store' }).then((r) => r.json()).then(fill).catch(() => preview());
+</script>
+</body>
+</html>
