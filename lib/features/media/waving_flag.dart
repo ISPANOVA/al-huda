@@ -122,7 +122,7 @@ class _FlagPainter extends CustomPainter {
     // Waving: strips slide on a travelling sine wave that grows from the
     // pole (left) to the free end, each strip lit or shaded by its slope.
     final w = size.width, h = size.height;
-    final strips = kIsWeb ? 30 : 44;
+    final strips = kIsWeb ? 44 : 64;
     final sw = w / strips;
     final maxAmp = h * 0.05;
     final scaleX = img.width / w;
