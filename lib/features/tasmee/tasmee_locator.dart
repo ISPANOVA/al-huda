@@ -210,6 +210,23 @@ class TasmeeLocator {
     h = at - 1;
     while (h >= 0 && e >= from) {
       final hk = k[idx[h]];
+      // Disjoint letters said by their names over several words (ألف لام ميم).
+      if (words[e].spoken != null) {
+        var n = 0;
+        var acc = '';
+        for (var m = 1; m <= 6 && h - m + 1 >= 0; m++) {
+          acc = k[idx[h - m + 1]] + acc;
+          if (TasmeeMatcher.letters(acc, words[e])) n = m;
+        }
+        if (n > 0) {
+          score++;
+          s = e;
+          first = idx[h - n + 1];
+          e--;
+          h -= n;
+          continue;
+        }
+      }
       if (_m(hk, words[e])) {
         score++;
         s = e;
@@ -288,8 +305,13 @@ class TasmeeTracker {
   /// The place found is the only one that fits (see [TasmeeHit.sure]).
   bool _sure = true;
 
-  void newUtterance() {
+  /// The reciter turned the microphone on themselves: they may start
+  /// anywhere (another surah, the middle of an ayah).
+  bool _anywhere = false;
+
+  void newUtterance({bool manual = false}) {
     _sure = true;
+    if (manual) _anywhere = true;
     session.newUtterance();
   }
 
@@ -332,7 +354,9 @@ class TasmeeTracker {
       if (partial && h.length < k.length && TasmeeMatcher.similar(h, k.substring(0, h.length))) return true;
       if (words[e].spoken != null) return true;
     }
-    for (var j = math.max(_from, e - 40); j < math.min(_to, e + 4); j++) {
+    // A short word (لم، من، في) is everywhere: only right here counts.
+    final back = h.length <= 2 ? 2 : 40;
+    for (var j = math.max(_from, e - back); j < math.min(_to, e + (h.length <= 2 ? 2 : 4)); j++) {
       if (words[j].heardAs(h)) return true;
     }
     return false;
@@ -364,12 +388,14 @@ class TasmeeTracker {
         for (final w in heard.skip(session.utteranceStart))
           if (TasmeeMatcher.key(w) case final k when k.isNotEmpty && !TasmeeMatcher.ignorable.contains(k)) k,
       ];
-      if (start.isNotEmpty && start.length < 3 && !_nearExpected(start.first, partial: start.length == 1)) {
+      final waitHere = _anywhere ? !(session.expected < words.length && words[session.expected].heardAs(start.firstOrNull ?? '')) : !_nearExpected(start.firstOrNull ?? '', partial: start.length == 1);
+      if (start.isNotEmpty && start.length < 3 && waitHere) {
         return const TasmeeFeed(0, 0);
       }
     }
     final before = session.expected;
     final r = session.feed(heard, isFinal: isFinal, alternates: alternates);
+    if (session.expected != before) _anywhere = false;
     // Nothing of this utterance matched the text here, yet it goes on: the
     // reciter may have continued from another ayah after a pause. Only then
     // (not in the middle of reciting, where landing on a similar ayah is the
@@ -386,7 +412,11 @@ class TasmeeTracker {
     final e = session.expected;
     final hit = _locator.locate(tail, near: e, avoid: (e - 40, e + 3));
     if (hit == null || hit.matched < 3 || !hit.sure) return r;
-    if (!_ayahStart(hit.index) && hit.matched < 8) return r;
+    // In the middle of an ayah only when clearly elsewhere: after the reciter
+    // turned the microphone on, in another surah, or a long passage.
+    final elsewhere = _anywhere || words[hit.index].surah != words[math.min(e, words.length - 1)].surah;
+    if (!_ayahStart(hit.index) && hit.matched < (elsewhere ? 4 : 8)) return r;
+    _anywhere = false;
     final moved = _place(hit.index, heard, keep: keep, from: keep + hit.heardFrom, isFinal: isFinal);
     return TasmeeFeed(moved.revealed, moved.mistakes, moved.flash);
   }

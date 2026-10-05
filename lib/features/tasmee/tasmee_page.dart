@@ -275,14 +275,19 @@ class _TasmeePageState extends State<TasmeePage> {
     _watchdog = Timer.periodic(const Duration(milliseconds: 400), (_) {
       if (_active && !_starting && !_stt.isListening) _listen();
     });
-    await _listen();
+    await _listen(manual: true);
   }
 
-  Future<void> _listen() async {
+  /// When the current listening started: an end reported right after it
+  /// belongs to the previous one (stopped by the reciter) and is ignored.
+  DateTime _listenStarted = DateTime(2000);
+
+  Future<void> _listen({bool manual = false}) async {
     if (!_active || !mounted || _starting) return;
     _starting = true;
     _settle();
-    _tracker?.newUtterance();
+    _listenStarted = DateTime.now();
+    _tracker?.newUtterance(manual: manual);
     try {
       await _stt.listen(
         onResult: _onResult,
@@ -314,6 +319,9 @@ class _TasmeePageState extends State<TasmeePage> {
   void _onStatus(String status) {
     if (!mounted) return;
     if (status == 'done' || status == 'notListening') {
+      // The end of the listening the reciter just stopped, arriving after the
+      // new one began: restarting now would cut the new recitation.
+      if (_active && DateTime.now().difference(_listenStarted) < const Duration(milliseconds: 800)) return;
       _settle();
       setState(() {
         _listening = false;

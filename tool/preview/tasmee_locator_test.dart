@@ -242,6 +242,40 @@ void main() {
       expect(quran[at(1, 2)].state, TasmeeState.correct);
     });
 
+    test('microphone turned off and on: another surah, from its disjoint letters', () {
+      for (final start in ['الم', 'ألف لام ميم', 'الف لام ميم', 'ا ل م']) {
+        reset();
+        final mistakes = <TasmeeMistake>[];
+        final t = TasmeeTracker(quran, mistakes);
+        t.startAt(at(114, 1));
+        t.feed(said('قل أعوذ برب الناس ملك الناس'), isFinal: true);
+        t.newUtterance(manual: true);
+        final w = said('$start ذلك الكتاب لا ريب فيه هدى للمتقين');
+        for (var n = 1; n <= w.length; n++) {
+          t.feed(w.sublist(0, n), isFinal: n == w.length);
+        }
+        expect(mistakes, isEmpty, reason: start);
+        expect(quran[at(2, 1)].state, TasmeeState.correct, reason: start);
+        expect(quran[t.expected].ayah, 3, reason: start);
+        expect(quran[at(114, 3)].state, TasmeeState.hidden, reason: start);
+      }
+    });
+
+    test('microphone turned on again: the middle of an ayah in another surah', () {
+      final mistakes = <TasmeeMistake>[];
+      final t = TasmeeTracker(quran, mistakes);
+      t.startAt(at(114, 1));
+      t.feed(said('قل أعوذ برب الناس'), isFinal: true);
+      t.newUtterance(manual: true);
+      final w = said('قل الروح من أمر ربي وما أوتيتم من العلم إلا قليلا');
+      for (var n = 1; n <= w.length; n++) {
+        t.feed(w.sublist(0, n), isFinal: n == w.length);
+      }
+      expect(mistakes, isEmpty);
+      expect(quran[t.expected].surah, 17);
+      expect(quran[t.expected].ayah, 86);
+    });
+
     test('numbers written in digits', () {
       final mistakes = <TasmeeMistake>[];
       final t = TasmeeTracker(quran, mistakes);
