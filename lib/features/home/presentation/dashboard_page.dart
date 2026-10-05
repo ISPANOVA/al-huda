@@ -237,7 +237,7 @@ class HomeSkyHero extends StatelessWidget {
   final VoidCallback? onTap;
   final double height;
 
-  const HomeSkyHero({super.key, this.onTap, this.height = 320});
+  const HomeSkyHero({super.key, this.onTap, this.height = 330});
 
   @override
   Widget build(BuildContext context) {
@@ -414,8 +414,8 @@ class _NextPrayerGlass extends StatelessWidget {
                   value: _elapsed(state),
                   color: glass.accent,
                   track: Colors.white.withValues(alpha: 0.16),
-                  size: 86,
-                  stroke: 5,
+                  size: 72,
+                  stroke: 4.5,
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -424,7 +424,7 @@ class _NextPrayerGlass extends StatelessWidget {
                           padding: const EdgeInsets.symmetric(horizontal: 10),
                           child: Text(ArabicUtils.formatDuration(state.countdown),
                               style: const TextStyle(
-                                  color: Colors.white, fontWeight: FontWeight.w900, fontSize: 15, height: 1.1)),
+                                  color: Colors.white, fontWeight: FontWeight.w900, fontSize: 14, height: 1.1)),
                         ),
                       ),
                       Text('متبقٍ', style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 10.5)),

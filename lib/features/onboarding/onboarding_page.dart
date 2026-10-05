@@ -8,6 +8,7 @@ import '../../core/theme/web_lite.dart';
 import '../../core/services/notification_service.dart';
 import '../../core/services/storage_service.dart';
 import '../../core/theme/app_themes.dart';
+import '../../core/widgets/adaptive.dart';
 import '../../core/widgets/glass_container.dart';
 import '../../core/widgets/gradient_background.dart';
 import '../../core/widgets/noor_ui.dart';
@@ -119,7 +120,9 @@ class _OnboardingPageState extends State<OnboardingPage> {
         Scaffold(
           backgroundColor: Colors.transparent,
           body: SafeArea(
-            child: Column(
+            child: MaxWidth(
+              maxWidth: 560,
+              child: Column(
               children: [
                 Align(
                   alignment: AlignmentDirectional.centerEnd,
@@ -182,6 +185,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
                   ),
                 ),
               ],
+            ),
             ),
           ),
         ),
