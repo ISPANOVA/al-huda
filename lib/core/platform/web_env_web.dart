@@ -15,3 +15,9 @@ bool get isInstalledWebApp => web.window.matchMedia('(display-mode: standalone)'
 
 /// Starts the app again (after restoring a backup).
 void reloadPage() => web.window.location.reload();
+
+/// Opens a link in a new tab.
+bool openInBrowser(String url) {
+  web.window.open(url, '_blank');
+  return true;
+}

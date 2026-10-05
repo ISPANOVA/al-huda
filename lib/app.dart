@@ -10,6 +10,8 @@ import 'core/services/notification_service.dart';
 import 'core/services/storage_service.dart';
 import 'core/theme/app_themes.dart';
 import 'core/theme/theme_transition.dart';
+import 'core/services/announcement_service.dart';
+import 'core/widgets/announcement_gate.dart';
 import 'core/widgets/web_frame.dart';
 import 'features/athkar/presentation/cubit/athkar_cubit.dart';
 import 'features/audio/data/audio_download_service.dart';
@@ -39,6 +41,7 @@ class AlHudaApp extends StatefulWidget {
 
 class _AlHudaAppState extends State<AlHudaApp> {
   late bool _onboarded = widget.deps.storage.settings.get(OnboardingPage.doneKey) == true;
+  late final AnnouncementService _announcements = AnnouncementService(widget.deps.dio, widget.deps.storage);
 
   @override
   Widget build(BuildContext context) {
@@ -108,7 +111,9 @@ class _AlHudaAppState extends State<AlHudaApp> {
               navigatorObservers: [WebFrame.observer],
               builder: (context, child) => Directionality(
                 textDirection: TextDirection.rtl,
-                child: ThemeTransition(child: WebFrame(child: child!)),
+                child: ThemeTransition(
+                  child: WebFrame(child: AnnouncementGate(service: _announcements, child: child!)),
+                ),
               ),
               home: AnimatedSwitcher(
                 duration: const Duration(milliseconds: 600),
