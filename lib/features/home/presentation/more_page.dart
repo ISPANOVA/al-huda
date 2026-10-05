@@ -88,7 +88,7 @@ class MorePage extends StatelessWidget {
               physics: const NeverScrollableScrollPhysics(),
               mainAxisSpacing: 12,
               crossAxisSpacing: 12,
-              childAspectRatio: columns == 2 ? 1.45 : 1.2,
+              childAspectRatio: columns == 2 ? 1.45 : 1.75,
               children: [for (final f in featured) _FeaturedTile(item: f)],
             );
           }),
