@@ -91,7 +91,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: build-${{ env.BUILD_NUMBER }}
-          name: الهدى ${{ env.BUILD_NAME }} • نسخة تجريبية ${{ env.BUILD_NUMBER }}
+          name: الهدى ${{ env.BUILD_NAME }} • الإصدار الرسمي (build ${{ env.BUILD_NUMBER }})
           body: |
             ${{ github.event.head_commit.message }}
 

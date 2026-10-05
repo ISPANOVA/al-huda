@@ -91,7 +91,7 @@ class WirdCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(complete ? 'أتممت وردك اليوم 🌿' : 'وردك اليوم',
+                    Text(complete ? 'أتممت وردك اليوم' : 'وردك اليوم',
                         style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w900)),
                     Text(
                       complete
@@ -102,8 +102,15 @@ class WirdCard extends StatelessWidget {
                     if (streak > 0)
                       Padding(
                         padding: const EdgeInsets.only(top: 4),
-                        child: Text('🔥 ${ArabicUtils.toArabicDigits(streak)} يوم متتالٍ',
-                            style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w800, color: glass.accent)),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.local_fire_department_rounded, size: 16, color: glass.accent),
+                            const SizedBox(width: 3),
+                            Text('${ArabicUtils.toArabicDigits(streak)} يوم متتالٍ',
+                                style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w800, color: glass.accent)),
+                          ],
+                        ),
                       ),
                   ],
                 ),

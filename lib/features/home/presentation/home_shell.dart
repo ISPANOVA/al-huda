@@ -23,6 +23,7 @@ import '../../audio/presentation/widgets/mini_player.dart';
 import '../../prayer/domain/prayer_entities.dart';
 import '../../prayer/presentation/cubit/prayer_cubit.dart';
 import '../../prayer/presentation/pages/prayer_times_page.dart';
+import '../../prayer/presentation/widgets/exact_alarm_prompt.dart';
 import '../../quran/presentation/cubit/quran_nav_cubit.dart';
 import '../../quran/presentation/mushaf/mushaf_reader_page.dart';
 import '../../quran/presentation/mushaf/reader_guide.dart';
@@ -93,6 +94,7 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
     if (state == AppLifecycleState.resumed) {
       context.read<AthkarCubit>().refreshDay();
       context.read<StatsCubit>().refresh();
+      _recheckExactAlarms();
     }
   }
 
@@ -119,8 +121,16 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
     // Exact alarms make the adhan ring on time; ask once if the system denies them.
     if (settings.get('exact_alarm_asked') != true && !await n.canScheduleExact()) {
       await settings.put('exact_alarm_asked', true);
-      await n.ensureExactAlarms();
+      if (mounted) await askExactAlarms(context);
     }
+  }
+
+  /// Back from the system settings: once exact alarms are allowed, the
+  /// adhan is scheduled again to the minute.
+  Future<void> _recheckExactAlarms() async {
+    final before = NotificationService.exactAllowed.value;
+    final ok = await context.read<NotificationService>().canScheduleExact();
+    if (!before && ok && mounted) context.read<PrayerCubit>().reschedule();
   }
 
   void _onImmersive() {}

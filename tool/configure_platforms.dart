@@ -445,7 +445,6 @@ void _configureManifest() {
     'android.permission.POST_NOTIFICATIONS',
     'android.permission.RECEIVE_BOOT_COMPLETED',
     'android.permission.VIBRATE',
-    'android.permission.USE_EXACT_ALARM',
     'android.permission.SCHEDULE_EXACT_ALARM',
     'android.permission.RECORD_AUDIO',
   ];

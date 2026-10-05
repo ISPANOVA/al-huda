@@ -799,7 +799,7 @@ class _KhatmahTile extends StatelessWidget {
       subtitle: plan == null
           ? 'خطّط لختمتك'
           : plan.isFinished
-              ? 'مكتملة 🎉'
+              ? 'مكتملة'
               : plan.isTodayDone(now)
                   ? 'ورد اليوم تم'
                   : 'باقي ${ArabicUtils.toArabicDigits(plan.todayRemaining(now))} آية',
@@ -817,8 +817,14 @@ class _StreakTile extends StatelessWidget {
       builder: (context, s) => _GoalTile(
         tone: Tone.amber,
         value: (s.currentStreak / 7).clamp(0.0, 1.0),
-        center: Text('🔥${ArabicUtils.toArabicDigits(s.currentStreak)}',
-            style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 13)),
+        center: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.local_fire_department_rounded, size: 15),
+            Text(ArabicUtils.toArabicDigits(s.currentStreak),
+                style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 13)),
+          ],
+        ),
         title: 'المداومة',
         subtitle: 'أيام متتالية',
         onTap: () => Navigator.of(context).push(StatsPage.route()),

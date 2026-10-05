@@ -421,7 +421,7 @@ class _BackupCardState extends State<_BackupCard> {
           context: context,
           barrierDismissible: false,
           builder: (ctx) => AlertDialog(
-            title: const Text('تمت الاستعادة ✅'),
+            title: const Text('تمت الاستعادة'),
             content: const Text(kIsWeb
                 ? 'ستُعاد تحميل الصفحة الآن لتظهر بياناتك.'
                 : 'سيُغلق التطبيق الآن، افتحه مرة أخرى لتظهر بياناتك.'),

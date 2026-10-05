@@ -19,6 +19,7 @@ import '../cubit/prayer_cubit.dart';
 import '../prayer_tones.dart';
 import '../widgets/adhan_settings.dart';
 import '../widgets/prayer_calc_settings.dart';
+import '../widgets/exact_alarm_prompt.dart';
 
 /// الصلاة — the sun's path through today's prayers, a timeline of the
 /// times, and a single entry to the adhan & calculation settings.
@@ -74,6 +75,7 @@ class PrayerTimesPage extends StatelessWidget {
               if (state.ready) ...[
                 const Padding(padding: EdgeInsets.symmetric(horizontal: 14), child: _SunPathHero()),
                 const SizedBox(height: 14),
+                const Padding(padding: EdgeInsets.symmetric(horizontal: 14), child: ExactAlarmBanner()),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 14),
                   child: _Timeline(state: state),

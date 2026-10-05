@@ -18,6 +18,7 @@ import '../../../settings/presentation/cubit/settings_state.dart';
 import '../../domain/adhan_voices.dart';
 import '../../domain/prayer_entities.dart';
 import '../prayer_tones.dart';
+import 'exact_alarm_prompt.dart';
 
 /// Plays adhan samples from the bundled raw resources (one at a time).
 class AdhanPreview {
@@ -349,7 +350,7 @@ class _AdhanSettingsCardState extends State<AdhanSettingsCard> {
     final n = context.read<NotificationService>();
     await AdhanPreview.stop();
     final allowed = await n.requestPermissions();
-    await n.ensureExactAlarms();
+    if (context.mounted) await askExactAlarms(context);
     final voice = AdhanVoices.byId(s.adhanVoice);
     if (s.adhanAlwaysPlay && AdhanNative.supported) {
       await AdhanNative.test(sound: AdhanNative.sound(voice.id, s.adhanFull));

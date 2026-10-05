@@ -30,6 +30,8 @@ adb install -r -t new.apk | tee "$OUT/install_new.txt"
 adb shell dumpsys package $PKG | grep -E "versionCode|versionName|lastUpdateTime|granted=true" > "$OUT/package_after_upgrade.txt"
 adb logcat -c
 launch; shot B1_after_upgrade 14
+# The adhan's «exact alarms» explanation (only when the system denies them).
+tap 'لاحقًا'; sleep 2
 # The Mushaf tab of the bottom bar (its label shows only when selected).
 tapxy 0.61 0.90; shot B2_mushaf 5
 tap 'تخطي'; shot B3_mushaf_page 3
@@ -39,9 +41,12 @@ adb shell input keyevent KEYCODE_BACK; sleep 3
 adb shell input keyevent KEYCODE_BACK; sleep 3
 launch; sleep 12
 tapxy 0.36 0.90; shot B6_tab_clock 4
+# Each tab from the home tab (the bar's layout changes with the selection).
+launch; sleep 12
 tapxy 0.48 0.90; shot B7_tab_media 4
 tap 'القاهرة'; sleep 1; tap 'إذاعة القرآن الكريم'; shot B8_radio 10
 adb shell dumpsys media_session | grep -E "state=PlaybackState|description=" | head -12 > "$OUT/B8_media_session.txt"
+launch; sleep 12
 tapxy 0.12 0.90; shot B9_tab_more 4
 tap 'الإعدادات'; shot B10_settings 4
 launch; shot B11_relaunch 12

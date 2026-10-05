@@ -74,7 +74,7 @@ class _AnnouncementGateState extends State<AnnouncementGate> with WidgetsBinding
             child: AnimatedSwitcher(
               duration: const Duration(milliseconds: 250),
               child: a.force
-                  ? _ForceScreen(key: ValueKey(a.id), a: a)
+                  ? _ForceScreen(key: ValueKey(a.id), a: a, onClose: _close)
                   : _Card(key: ValueKey(a.id), a: a, onClose: _close),
             ),
           ),
@@ -91,11 +91,14 @@ Future<void> _follow(BuildContext context, Announcement a) async {
   }
 }
 
-/// A required update: covers the app; only the button leads on.
+/// A required update: covers the app; only the button leads on. Without a
+/// link to follow it would lock the app for good, so then its button closes
+/// the message instead.
 class _ForceScreen extends StatelessWidget {
   final Announcement a;
+  final VoidCallback onClose;
 
-  const _ForceScreen({super.key, required this.a});
+  const _ForceScreen({super.key, required this.a, required this.onClose});
 
   @override
   Widget build(BuildContext context) {
@@ -122,19 +125,23 @@ class _ForceScreen extends StatelessWidget {
                         textAlign: TextAlign.center,
                         style: TextStyle(fontSize: 16, height: 1.8, color: glass.onGlass)),
                   ],
-                  if (a.buttonUrl.isNotEmpty) ...[
-                    const SizedBox(height: 28),
-                    SizedBox(
-                      width: double.infinity,
-                      height: 54,
-                      child: FilledButton.icon(
-                        onPressed: () => _follow(context, a),
-                        icon: const Icon(Icons.system_update_rounded),
-                        label: Text(a.buttonText.isEmpty ? 'تحميل التحديث' : a.buttonText,
-                            style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800)),
-                      ),
-                    ),
-                  ],
+                  const SizedBox(height: 28),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 54,
+                    child: a.buttonUrl.isNotEmpty
+                        ? FilledButton.icon(
+                            onPressed: () => _follow(context, a),
+                            icon: const Icon(Icons.system_update_rounded),
+                            label: Text(a.buttonText.isEmpty ? 'تحميل التحديث' : a.buttonText,
+                                style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800)),
+                          )
+                        : FilledButton(
+                            onPressed: onClose,
+                            child: Text(a.buttonText.isEmpty ? 'متابعة' : a.buttonText,
+                                style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800)),
+                          ),
+                  ),
                 ],
               ),
             ),
