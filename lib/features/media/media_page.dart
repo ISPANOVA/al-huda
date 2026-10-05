@@ -6,6 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../core/widgets/adaptive.dart';
 import '../../core/theme/web_lite.dart';
 import '../../core/theme/app_themes.dart';
+import '../../core/theme/tones.dart';
 import '../../core/utils/arabic_utils.dart';
 import '../../core/widgets/state_views.dart';
 import '../audio/presentation/cubit/audio_cubit.dart';
@@ -28,10 +29,10 @@ class _Live {
 }
 
 const _lives = [
-  _Live('الحرم المكي', 'المسجد الحرام • قناة القرآن الكريم', true, [Color(0xFF2A2210), Color(0xFF0A0906)], [
+  _Live('الحرم المكي', 'المسجد الحرام • قناة القرآن الكريم', true, [Color(0xFF4A3510), Color(0xFF0A0906)], [
     'https://cdn-globecast.akamaized.net/live/eds/saudi_quran/hls_roku/index.m3u8',
   ]),
-  _Live('الحرم النبوي', 'المسجد النبوي • قناة السنة النبوية', false, [Color(0xFF0E2A22), Color(0xFF05100D)], [
+  _Live('الحرم النبوي', 'المسجد النبوي • قناة السنة النبوية', false, [Color(0xFF0E4A3A), Color(0xFF04120D)], [
     'https://cdn-globecast.akamaized.net/live/eds/saudi_sunnah/hls_roku/index.m3u8',
   ]),
 ];
@@ -72,7 +73,7 @@ class _MediaPageState extends State<MediaPage> {
         const SliverToBoxAdapter(child: MediaHeader()),
         const SliverToBoxAdapter(child: LiveCarousel()),
         const SliverToBoxAdapter(
-          child: MediaSectionHeader('الإذاعات', subtitle: 'بث متواصل على مدار الساعة'),
+          child: MediaSectionHeader('الإذاعات', subtitle: 'بث متواصل على مدار الساعة', tone: Tone.sapphire),
         ),
         const SliverToBoxAdapter(child: _OfficialStations()),
         SliverToBoxAdapter(
@@ -85,10 +86,10 @@ class _MediaPageState extends State<MediaPage> {
         ),
         const SliverToBoxAdapter(child: _FeaturedReciters()),
         const SliverToBoxAdapter(
-          child: MediaSectionHeader('إذاعات القرّاء', subtitle: 'تلاوات متواصلة لقارئك المفضل'),
+          child: MediaSectionHeader('إذاعات القرّاء', subtitle: 'تلاوات متواصلة لقارئك المفضل', tone: Tone.rose),
         ),
         const SliverToBoxAdapter(child: _ReciterRadios()),
-        const SliverToBoxAdapter(child: MediaSectionHeader('إذاعات منوعة')),
+        const SliverToBoxAdapter(child: MediaSectionHeader('إذاعات منوعة', tone: Tone.teal)),
         const SliverPadding(padding: EdgeInsets.symmetric(horizontal: 16), sliver: _ThemeRadiosGrid()),
         SliverToBoxAdapter(
           child: Padding(
@@ -113,10 +114,13 @@ class MediaHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final glass = GlassTheme.of(context);
+    const tone = Tone.amethyst;
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 10, 16, 14),
       child: Row(
         children: [
+          const ToneIcon(Icons.headphones_rounded, tone: tone, size: 50),
+          const SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -126,7 +130,14 @@ class MediaHeader extends StatelessWidget {
                   shaderCallback: (r) => LinearGradient(
                     colors: [glass.accent, Color.lerp(glass.accent, glass.onGlass, 0.45)!],
                   ).createShader(r),
-                  child: const Text('الوسائط', style: TextStyle(fontSize: 32, fontWeight: FontWeight.w900, height: 1.2)),
+                  child: const Text('الوسائط',
+                      style: TextStyle(fontFamily: AppFonts.display, fontSize: 34, fontWeight: FontWeight.w700, height: 1.3)),
+                ),
+                Container(
+                  width: 46,
+                  height: 3.5,
+                  margin: const EdgeInsets.only(top: 2, bottom: 6),
+                  decoration: BoxDecoration(borderRadius: BorderRadius.circular(2), gradient: tone.gradient()),
                 ),
                 Text(kIsWeb ? 'استمع • شاهد' : 'استمع • شاهد • حمّل', style: TextStyle(color: glass.onGlassMuted, letterSpacing: 0.3)),
               ],
@@ -144,21 +155,21 @@ class MediaHeader extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 14),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(18),
-                    color: glass.accent.withValues(alpha: 0.12),
-                    border: Border.all(color: glass.accent.withValues(alpha: 0.45)),
+                    gradient: tone.wash(Theme.of(context).brightness == Brightness.dark),
+                    border: Border.all(color: tone.mid.withValues(alpha: 0.5)),
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.download_for_offline_rounded, color: glass.accent),
+                      Icon(Icons.download_for_offline_rounded, color: tone.ink(Theme.of(context).brightness == Brightness.dark)),
                       const SizedBox(width: 6),
                       Text('تنزيلاتي', style: TextStyle(fontWeight: FontWeight.w800, color: glass.onGlass)),
                       if (n > 0) ...[
                         const SizedBox(width: 6),
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 1),
-                          decoration: BoxDecoration(color: glass.accent, borderRadius: BorderRadius.circular(10)),
+                          decoration: BoxDecoration(gradient: tone.gradient(), borderRadius: BorderRadius.circular(10)),
                           child: Text(ArabicUtils.toArabicDigits(n),
-                              style: const TextStyle(color: Colors.black, fontSize: 12, fontWeight: FontWeight.w900)),
+                              style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w900)),
                         ),
                       ],
                     ],
@@ -378,7 +389,7 @@ class _OfficialStationsState extends State<_OfficialStations> with SingleTickerP
   @override
   Widget build(BuildContext context) {
     final glass = GlassTheme.of(context);
-    final primary = Theme.of(context).colorScheme.primary;
+    const tone = Tone.amethyst;
     final station = kOfficialRadios[_index];
     return BlocBuilder<AudioCubit, AudioState>(
       buildWhen: (p, c) =>
@@ -391,7 +402,7 @@ class _OfficialStationsState extends State<_OfficialStations> with SingleTickerP
         } else if (!playing && _waves.isAnimating) {
           _waves.stop();
         }
-        final dark = Color.lerp(primary, Colors.black, 0.78)!;
+        final dark = Color.lerp(tone.deep, Colors.black, 0.78)!;
         return Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Container(
@@ -401,9 +412,9 @@ class _OfficialStationsState extends State<_OfficialStations> with SingleTickerP
               gradient: LinearGradient(
                 begin: Alignment.topRight,
                 end: Alignment.bottomLeft,
-                colors: [Color.lerp(primary, Colors.black, 0.45)!, dark],
+                colors: [Color.lerp(tone.deep, Colors.black, 0.3)!, Color.lerp(Tone.sapphire.deep, Colors.black, 0.6)!, dark],
               ),
-              border: Border.all(color: glass.accent.withValues(alpha: 0.35)),
+              border: Border.all(color: tone.light.withValues(alpha: 0.35)),
             ),
             child: Stack(
               children: [
@@ -414,7 +425,7 @@ class _OfficialStationsState extends State<_OfficialStations> with SingleTickerP
                     child: SizedBox(
                       width: 230,
                       height: 230,
-                      child: CustomPaint(painter: _WavesPainter(_waves, glass.accent)),
+                      child: CustomPaint(painter: _WavesPainter(_waves, tone.light)),
                     ),
                   ),
                 ),
@@ -430,9 +441,9 @@ class _OfficialStationsState extends State<_OfficialStations> with SingleTickerP
                             height: 46,
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(15),
-                              color: glass.accent.withValues(alpha: 0.18),
+                              gradient: tone.gradient(),
                             ),
-                            child: Icon(Icons.radio_rounded, color: glass.accent),
+                            child: const Icon(Icons.radio_rounded, color: Colors.white),
                           ),
                           const SizedBox(width: 12),
                           Expanded(

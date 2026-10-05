@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/widgets/adaptive.dart';
 import '../../../../core/theme/web_lite.dart';
 import '../../../../core/theme/app_themes.dart';
+import '../../../../core/theme/tones.dart';
 import '../../../../core/utils/arabic_utils.dart';
 import '../../../../core/widgets/noor_ui.dart';
 import '../../../tasbeeh/presentation/pages/tasbeeh_page.dart';
@@ -42,7 +43,6 @@ class AthkarHomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final glass = GlassTheme.of(context);
     final state = context.watch<AthkarCubit>().state;
     final cats = AthkarData.categories;
     final featured = AthkarData.byId(suggestedAthkar(DateTime.now()));
@@ -55,10 +55,12 @@ class AthkarHomePage extends StatelessWidget {
         NoorPageHeader(
           'الأذكار',
           subtitle: 'أَلَا بِذِكْرِ اللَّهِ تَطْمَئِنُّ الْقُلُوبُ',
+          tone: Tone.rose,
+          icon: Icons.favorite_rounded,
           actions: [
             NoorRing(
               value: overall,
-              color: glass.accent,
+              color: Tone.rose.ink(Theme.of(context).brightness == Brightness.dark),
               size: 54,
               stroke: 4.5,
               child: Text('${ArabicUtils.toArabicDigits(completed)}/${ArabicUtils.toArabicDigits(cats.length)}',
@@ -94,20 +96,21 @@ class AthkarHomePage extends StatelessWidget {
           child: Row(
             children: [
               for (final (i, item) in [
-                (Icons.blur_circular_rounded, 'المسبحة', TasbeehPage.route),
-                (Icons.healing_rounded, 'الرقية', RuqyahPage.route),
-                (Icons.back_hand_rounded, 'الأدعية', DuasPage.route),
+                (Icons.blur_circular_rounded, 'المسبحة', TasbeehPage.route, Tone.teal),
+                (Icons.healing_rounded, 'الرقية', RuqyahPage.route, Tone.sky),
+                (Icons.back_hand_rounded, 'الأدعية', DuasPage.route, Tone.amethyst),
               ].indexed) ...[
                 if (i > 0) const SizedBox(width: 10),
                 Expanded(
-                  child: NoorCard(
+                  child: ToneCard(
+                    tone: item.$4,
                     radius: 20,
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     onTap: () => Navigator.of(context).push(item.$3()),
                     child: Column(
                       children: [
-                        Icon(item.$1, color: glass.accent, size: 28),
-                        const SizedBox(height: 6),
+                        ToneIcon(item.$1, tone: item.$4, size: 46),
+                        const SizedBox(height: 8),
                         Text(item.$2, style: const TextStyle(fontWeight: FontWeight.w800)),
                       ],
                     ),

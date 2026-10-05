@@ -10,6 +10,7 @@ import '../../../core/utils/arabic_utils.dart';
 import '../../quran/domain/repositories/quran_repository.dart';
 import '../../../core/services/storage_service.dart';
 import '../../../core/theme/app_themes.dart';
+import '../../../core/theme/tones.dart';
 import '../../../core/theme/page_transitions.dart';
 import '../../../core/widgets/adaptive.dart';
 import '../../../core/widgets/gradient_background.dart';
@@ -44,13 +45,14 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
 
   late int _index;
 
+  /// Each tab has its colour (the same one its shortcuts and cards use).
   static const _tabs = [
-    (icon: Icons.home_outlined, active: Icons.home_rounded, label: 'الرئيسية'),
-    (icon: Icons.menu_book_outlined, active: Icons.menu_book_rounded, label: 'المصحف'),
-    (icon: Icons.headphones_outlined, active: Icons.headphones_rounded, label: 'الوسائط'),
-    (icon: Icons.access_time, active: Icons.access_time_filled_rounded, label: 'الصلاة'),
-    (icon: Icons.favorite_border_rounded, active: Icons.favorite_rounded, label: 'الأذكار'),
-    (icon: Icons.grid_view_outlined, active: Icons.grid_view_rounded, label: 'المزيد'),
+    (icon: Icons.home_outlined, active: Icons.home_rounded, label: 'الرئيسية', tone: Tone.gold),
+    (icon: Icons.menu_book_outlined, active: Icons.menu_book_rounded, label: 'المصحف', tone: Tone.emerald),
+    (icon: Icons.headphones_outlined, active: Icons.headphones_rounded, label: 'الوسائط', tone: Tone.amethyst),
+    (icon: Icons.access_time, active: Icons.access_time_filled_rounded, label: 'الصلاة', tone: Tone.sapphire),
+    (icon: Icons.favorite_border_rounded, active: Icons.favorite_rounded, label: 'الأذكار', tone: Tone.rose),
+    (icon: Icons.grid_view_outlined, active: Icons.grid_view_rounded, label: 'المزيد', tone: Tone.teal),
   ];
 
   @override
@@ -213,7 +215,8 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
     final dark = Theme.of(context).brightness == Brightness.dark;
     final wide = Adaptive.isWide(context);
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: dark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark,
+      // The phone home's sky is dark at the top: light status-bar icons.
+      value: dark || (_index == 0 && !wide) ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark,
       child: BlocListener<QuranNavCubit, QuranNavRequest?>(
         listener: (_, r) {
           if (r != null) _go(quranTab);
@@ -237,6 +240,7 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
             body: GradientBackground(
               child: _StableTopInset(
                 quranTab: _index == quranTab,
+                homeSky: _index == 0 && !wide,
                 child: wide ? _wideBody() : Stack(
                   children: [
                     Column(
@@ -300,7 +304,6 @@ class _SideNav extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final glass = GlassTheme.of(context);
-    final primary = Theme.of(context).colorScheme.primary;
     final dark = Theme.of(context).brightness == Brightness.dark;
     final base = glass.backgroundGradient.last;
     final surface = dark ? Color.lerp(base, Colors.black, 0.35)! : Color.lerp(base, Colors.white, 0.7)!;
@@ -334,7 +337,7 @@ class _SideNav extends StatelessWidget {
                   label: tabs[i].label,
                   selected: i == index,
                   expanded: expanded,
-                  primary: primary,
+                  tone: tabs[i].tone,
                   onTap: () {
                     HapticFeedback.selectionClick();
                     onTap(i);
@@ -400,7 +403,7 @@ class _SideNavItem extends StatelessWidget {
   final String label;
   final bool selected;
   final bool expanded;
-  final Color primary;
+  final Tone tone;
   final VoidCallback onTap;
 
   const _SideNavItem({
@@ -408,7 +411,7 @@ class _SideNavItem extends StatelessWidget {
     required this.label,
     required this.selected,
     required this.expanded,
-    required this.primary,
+    required this.tone,
     required this.onTap,
   });
 
@@ -417,10 +420,11 @@ class _SideNavItem extends StatelessWidget {
     final glass = GlassTheme.of(context);
     final dark = Theme.of(context).brightness == Brightness.dark;
     final fg = selected ? Colors.white : glass.onGlassMuted;
+    final iconColor = selected ? Colors.white : (dark ? tone.light : tone.deep).withValues(alpha: 0.85);
     final content = expanded
         ? Row(
             children: [
-              Icon(icon, color: fg, size: 24),
+              Icon(icon, color: iconColor, size: 24),
               const SizedBox(width: 14),
               Text(label, style: TextStyle(color: fg, fontSize: 15.5, fontWeight: selected ? FontWeight.w800 : FontWeight.w600)),
             ],
@@ -428,7 +432,7 @@ class _SideNavItem extends StatelessWidget {
         : Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(icon, color: fg, size: 24),
+              Icon(icon, color: iconColor, size: 24),
               const SizedBox(height: 4),
               Text(label,
                   maxLines: 1,
@@ -448,12 +452,7 @@ class _SideNavItem extends StatelessWidget {
           alignment: expanded ? AlignmentDirectional.centerStart : Alignment.center,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(18),
-            gradient: selected
-                ? LinearGradient(colors: [
-                    primary.withValues(alpha: dark ? 0.55 : 0.85),
-                    Color.lerp(primary, glass.accent, 0.45)!.withValues(alpha: dark ? 0.45 : 0.75),
-                  ])
-                : null,
+            gradient: selected ? tone.gradient() : null,
           ),
           child: content,
         ),
@@ -473,7 +472,6 @@ class _BottomNav extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final glass = GlassTheme.of(context);
-    final primary = Theme.of(context).colorScheme.primary;
     final dark = Theme.of(context).brightness == Brightness.dark;
     final base = glass.backgroundGradient.last;
     final surface = dark ? Color.lerp(base, Colors.black, 0.45)! : Color.lerp(base, Colors.white, 0.75)!;
@@ -515,12 +513,7 @@ class _BottomNav extends StatelessWidget {
                     height: double.infinity,
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(26),
-                      gradient: i == index
-                          ? LinearGradient(colors: [
-                              primary.withValues(alpha: dark ? 0.55 : 0.85),
-                              Color.lerp(primary, glass.accent, 0.45)!.withValues(alpha: dark ? 0.45 : 0.75),
-                            ])
-                          : null,
+                      gradient: i == index ? tabs[i].tone.gradient() : null,
                     ),
                     child: ClipRect(
                       child: Row(
@@ -532,7 +525,9 @@ class _BottomNav extends StatelessWidget {
                             child: Icon(
                               i == index ? tabs[i].active : tabs[i].icon,
                               size: 23,
-                              color: i == index ? Colors.white : glass.onGlassMuted,
+                              color: i == index
+                                  ? Colors.white
+                                  : (dark ? tabs[i].tone.light : tabs[i].tone.deep).withValues(alpha: 0.72),
                             ),
                           ),
                           if (i == index)
@@ -577,9 +572,12 @@ class _BottomNav extends StatelessWidget {
 /// On the Quran tab the strip is painted in the Mushaf paper colour.
 class _StableTopInset extends StatefulWidget {
   final bool quranTab;
+
+  /// Phone home: the strip takes the colour of the sky beneath it.
+  final bool homeSky;
   final Widget child;
 
-  const _StableTopInset({required this.quranTab, required this.child});
+  const _StableTopInset({required this.quranTab, this.homeSky = false, required this.child});
 
   @override
   State<_StableTopInset> createState() => _StableTopInsetState();
@@ -606,10 +604,24 @@ class _StableTopInsetState extends State<_StableTopInset> {
     final paper = dark ? Color.lerp(g[0], g[1], 0.45)! : Color.lerp(g[0], Colors.white, 0.35)!;
     return Column(
       children: [
-        AnimatedContainer(
-          duration: const Duration(milliseconds: 250),
+        SizedBox(
           height: _top,
-          color: widget.quranTab ? paper : Colors.transparent,
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 250),
+                color: widget.quranTab ? paper : Colors.transparent,
+              ),
+              IgnorePointer(
+                child: AnimatedOpacity(
+                  opacity: widget.homeSky ? 1 : 0,
+                  duration: const Duration(milliseconds: 250),
+                  child: const HomeSkyStrip(),
+                ),
+              ),
+            ],
+          ),
         ),
         Expanded(
           child: MediaQuery.removePadding(context: context, removeTop: true, child: widget.child),

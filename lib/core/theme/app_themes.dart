@@ -216,7 +216,10 @@ class AppThemes {
     final onGlass = isDark ? Colors.white : const Color(0xFF0E1B17);
     final glass = GlassTheme(
       backgroundGradient: isDark ? p.darkGradient : p.lightGradient,
-      orbs: p.orbs,
+      // Black & gold at night: a quiet aurora of gold, violet and emerald.
+      orbs: isDark && type == AppThemeType.noirGold
+          ? const [Color(0xFF4A3D1F), Color(0xFF2B1B52), Color(0xFF0E3F35)]
+          : p.orbs,
       glassTint: Colors.white,
       glassBorder: Colors.white.withValues(alpha: isDark ? 0.18 : 0.55),
       glassHighlight: Colors.white.withValues(alpha: isDark ? 0.10 : 0.35),

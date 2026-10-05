@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/theme/web_lite.dart';
 import '../../core/theme/app_themes.dart';
+import '../../core/theme/tones.dart';
 import '../../core/utils/arabic_utils.dart';
 
 /// Shared visual pieces of the media section (الوسائط).
@@ -442,7 +443,11 @@ class MediaSectionHeader extends StatelessWidget {
   final String? action;
   final VoidCallback? onAction;
 
-  const MediaSectionHeader(this.title, {super.key, this.subtitle, this.action, this.onAction});
+  /// Colour of the bar beside the title.
+  final Tone tone;
+
+  const MediaSectionHeader(this.title,
+      {super.key, this.subtitle, this.action, this.onAction, this.tone = Tone.amethyst});
 
   @override
   Widget build(BuildContext context) {
@@ -461,7 +466,7 @@ class MediaSectionHeader extends StatelessWidget {
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
-                colors: [glass.accent, glass.accent.withValues(alpha: 0.2)],
+                colors: [tone.light, tone.deep.withValues(alpha: 0.35)],
               ),
             ),
           ),
