@@ -24,3 +24,12 @@ jobs:
         run: |
           npx --yes wrangler@4 pages project create al-huda-config --production-branch announce || true
           npx --yes wrangler@4 pages deploy site --project-name al-huda-config --branch announce --commit-dirty=true
+      - name: Check the message is live
+        run: |
+          for i in 1 2 3 4 5 6; do
+            sleep 10
+            if curl -sf "https://al-huda-config.pages.dev/announce.json?t=$(date +%s)" | python3 -c "import json,sys; print(json.load(sys.stdin))"; then break; fi
+          done
+          curl -sf "https://al-huda-config.pages.dev/announce.json" > /dev/null
+          curl -sI "https://al-huda-config.pages.dev/announce.json" | tee headers.txt
+          grep -qi "access-control-allow-origin: \*" headers.txt
