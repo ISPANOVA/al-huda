@@ -1,7 +1,7 @@
 {
   "enabled": true,
-  "id": "2026-10-05T10:50:38.478Z",
-  "mode": "optional",
+  "id": "2026-10-05T10:57:28.469Z",
+  "mode": "force",
   "show": "once",
   "title": "مرحبا بك",
   "message": "هذه تجربه للرساله",
