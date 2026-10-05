@@ -3,9 +3,10 @@ name: Android verify (android-verify branch, nothing is published)
 # Builds the signed release APK/AAB exactly like build.yml, compares the APK
 # with the published build 46, and smoke-tests it on an emulator by
 # upgrading build 46 in place. Never creates a release.
+# Runs only when started by hand (Actions → this workflow → Run workflow):
+# an emulator run costs about 45 build minutes.
 on:
-  push:
-    branches: [android-verify]
+  workflow_dispatch:
 permissions:
   contents: write
 jobs:
