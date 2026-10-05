@@ -197,6 +197,7 @@ class _TasmeePageState extends State<TasmeePage> {
 
   /// Turns the Mushaf to [page] (as the app, not a swipe).
   void _showPage(int page, {bool animate = true}) {
+    if (_page != page && mounted) setState(() => _page = page);
     if (!_pages.hasClients) return;
     final target = page - 1;
     if ((_pages.page ?? target).round() == target) return;

@@ -142,6 +142,8 @@ void main() {
     expect(sw.elapsedMilliseconds / 50, lessThan(60));
   });
 
+  plainSpellingCheck(quran, reset);
+
   group('tracker', () {
     setUp(reset);
 
@@ -233,4 +235,42 @@ void main() {
       expect(mistakes.first.heard, 'في');
     });
   });
+}
+
+/// The whole Quran recited by a perfect reciter, transcribed in ordinary
+/// (imlaei) spelling, ayah by ayah: no word may be judged wrong.
+void plainSpellingCheck(List<TasmeeWord> quran, void Function() reset) {
+  final file = File('/tmp/quran-simple-clean.txt');
+  test('the whole Quran in plain spelling has no mistakes', () {
+    final lines = file.readAsLinesSync().where((l) => RegExp(r'^\d+\|\d+\|').hasMatch(l)).toList();
+    expect(lines.length, 6236);
+    reset();
+    final mistakes = <TasmeeMistake>[];
+    final s = TasmeeSession(quran, mistakes);
+    final bad = <String>[];
+    var surah = 0;
+    for (final l in lines) {
+      final parts = l.split('|');
+      final su = int.parse(parts[0]);
+      if (su != surah) {
+        // A new surah: start exactly there (al-Fatiha's basmala is an ayah).
+        surah = su;
+        final i = quran.indexWhere((w) => w.surah == su);
+        s.startFrom(i);
+      }
+      final before = mistakes.length;
+      s.newUtterance();
+      s.feed(TasmeeMatcher.words(parts[2]), isFinal: true);
+      if (mistakes.length > before && bad.length < 150) {
+        final ms = mistakes.sublist(before).map((m) => '${m.word}←${m.heard}').join(', ');
+        bad.add('${parts[0]}:${parts[1]}  $ms');
+      }
+      // Whatever happened, carry on from the next ayah.
+      final next = quran.indexWhere((w) => w.surah == su && w.ayah == int.parse(parts[1]) + 1);
+      if (next > 0 && s.expected != next) s.startFrom(next);
+    }
+    // ignore: avoid_print
+    print('plain spelling: ${mistakes.length} words judged wrong\n${bad.join('\n')}');
+    expect(mistakes.length, lessThan(40));
+  }, skip: file.existsSync() ? false : 'no plain Quran text');
 }

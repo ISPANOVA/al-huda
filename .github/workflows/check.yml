@@ -22,6 +22,9 @@ jobs:
       - name: Render previews
         run: |
           curl -sL -o /tmp/Cairo.ttf "https://github.com/google/fonts/raw/main/ofl/cairo/Cairo%5Bslnt,wght%5D.ttf" || true
+          # Plain (imlaei) Quran text, as a recogniser writes it, to test the Tasmee against.
+          curl -sL -o /tmp/quran-simple-clean.txt "https://tanzil.net/pub/download/index.php?quranType=simple-clean&outType=txt-2&agree=true" || true
+          head -c 300 /tmp/quran-simple-clean.txt || true
           flutter test tool/preview --update-goldens > preview.txt 2>&1 || true
           tail -40 preview.txt
       - name: Push results
