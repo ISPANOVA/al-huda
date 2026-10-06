@@ -368,6 +368,23 @@ class MainActivity : AudioServiceActivity() {
                         result.success(false)
                     }
                 }
+                // Whether battery saving may hold the adhan back, and the maker
+                // (each one hides the setting in a different place).
+                "batteryStatus" -> {
+                    val pm = getSystemService(android.content.Context.POWER_SERVICE) as android.os.PowerManager
+                    val exempt = Build.VERSION.SDK_INT < Build.VERSION_CODES.M || pm.isIgnoringBatteryOptimizations(packageName)
+                    result.success(mapOf("exempt" to exempt, "maker" to Build.MANUFACTURER.lowercase()))
+                }
+                "openAppSettings" -> {
+                    try {
+                        val intent = Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.fromParts("package", packageName, null))
+                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        startActivity(intent)
+                        result.success(true)
+                    } catch (e: Exception) {
+                        result.success(false)
+                    }
+                }
                 else -> result.notImplemented()
             }
         }
