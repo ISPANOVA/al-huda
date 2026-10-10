@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../media/reciter_photos.dart';
 
 import '../../../../core/theme/app_themes.dart';
 import '../../../../core/theme/tones.dart';
@@ -174,6 +175,7 @@ class SourcesPage extends StatelessWidget {
           _Block(Icons.live_tv_rounded, 'البث المباشر',
               'قناتا القرآن الكريم والسنة النبوية من هيئة الإذاعة والتلفزيون السعودية، وإذاعة القرآن الكريم من القاهرة والسعودية عبر روابط البث العامة الرسمية.',
               tone: Tone.coral),
+          _Block(Icons.portrait_rounded, 'صور القراء', kReciterPhotoCreditsText, tone: Tone.amethyst),
           _Block(Icons.campaign_rounded, 'أصوات الأذان',
               'تسجيلات أذان لمؤذنين معروفين مضمّنة في التطبيق لتعمل دون إنترنت، وتُنسب لأصحابها.',
               tone: Tone.sapphire),

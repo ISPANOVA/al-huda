@@ -5,7 +5,17 @@ import { drawPage, hizbLabel, JUZ, BASMALA, ayahText } from './page.js';
 import { player, listenSheet } from './player.js';
 
 const PAGES = 604;
-let root, pagesEl, page = 1, offPlayer, selected = 0;
+let root, pagesEl, page = 1, offPlayer, selected = 0, spread = false;
+
+/// Two pages side by side on wide screens in landscape (tablet, computer);
+/// a phone turned sideways reads one wide page, scrolled down.
+function layoutMode() {
+  const w = innerWidth, h = innerHeight;
+  spread = w >= 900 && w > h * 1.15;
+  root.classList.toggle('spread', spread);
+  root.classList.toggle('wide', !spread && w > h && h < 600);
+}
+const first = (p) => (spread ? p - ((p - 1) % 2) : p);
 
 export async function show(view, args) {
   const [m, names] = await Promise.all([meta(), surahs()]);
@@ -13,11 +23,13 @@ export async function show(view, args) {
   const start = Math.min(PAGES, Math.max(1, +args[0] || store.get('lastPage', 1)));
   view.innerHTML = `<div class="mushaf" id="mushaf">
     <div class="pages" id="pages">${Array.from({ length: PAGES }, (_, i) => `<section class="mpage" data-p="${i + 1}"><div class="inner"></div></section>`).join('')}</div>
+    <div class="spine" aria-hidden="true"></div>
     <div class="mbar topb">
       <a class="ibtn" href="#/">${icon('fwd')}</a>
       <button class="chip" id="surahChip"></button>
       <a class="ibtn" href="#/search">${icon('search')}</a>
       <span class="sp"></span>
+      <button class="ibtn" id="rotate" title="القراءة بالعرض">${icon('rotate')}</button>
       <button class="ibtn" id="tasmee" title="التسميع">${icon('mic')}</button>
       <button class="chip" id="juzChip"></button>
       <button class="ibtn" id="mark">${icon('bookmarkO')}</button>
@@ -31,6 +43,7 @@ export async function show(view, args) {
   root = $('#mushaf', view);
   pagesEl = $('#pages', view);
   document.body.classList.add('in-mushaf');
+  layoutMode();
   goTo(start, false);
 
   let ticking = false;
@@ -67,6 +80,7 @@ export async function show(view, args) {
   $('#juzChip', root).onclick = () => openIndex(m, names, 1);
   $('#pageChip', root).onclick = () => openIndex(m, names, 1);
   $('#tasmee', root).onclick = () => (location.hash = `#/tasmee/${page}`);
+  $('#rotate', root).onclick = rotate;
   $('#mark', root).onclick = () => toggleMark(m);
   $('#playPage', root).onclick = () => listenSheet(m.page.indexOf(page) + 1);
   offPlayer = player.on((it) => highlight(it?.ayah ?? 0, m));
@@ -74,8 +88,24 @@ export async function show(view, args) {
   update(m, names);
 }
 
+async function rotate() {
+  const landscape = innerWidth > innerHeight;
+  try {
+    if (landscape) {
+      screen.orientation?.unlock?.();
+      if (document.fullscreenElement) await document.exitFullscreen();
+      return;
+    }
+    await document.documentElement.requestFullscreen?.({ navigationUI: 'hide' });
+    await screen.orientation.lock('landscape');
+  } catch {
+    toast('لف التليفون بالعرض لتقرأ صفحة أكبر');
+  }
+}
+
 export function leave() {
   removeEventListener('resize', onResize);
+  if (document.fullscreenElement) { screen.orientation?.unlock?.(); document.exitFullscreen().catch(() => {}); }
   offPlayer?.();
   document.body.classList.remove('in-mushaf');
   $('#nav').classList.remove('hide');
@@ -84,14 +114,14 @@ export function leave() {
 function pageEl(p) { return pagesEl.children[p - 1]; }
 
 function goTo(p, smooth = true) {
-  page = p;
-  pageEl(p).scrollIntoView({ behavior: smooth ? 'smooth' : 'instant', inline: 'center', block: 'nearest' });
-  drawAround(p);
+  page = first(p);
+  pageEl(page).scrollIntoView({ behavior: smooth ? 'smooth' : 'instant', inline: spread ? 'start' : 'center', block: 'nearest' });
+  drawAround(page);
 }
 
 function onScroll(m, names) {
-  const w = pagesEl.clientWidth || 1;
-  const p = Math.min(PAGES, Math.max(1, Math.round(Math.abs(pagesEl.scrollLeft) / w) + 1));
+  const w = (pagesEl.clientWidth || 1) / (spread ? 2 : 1);
+  const p = first(Math.min(PAGES, Math.max(1, Math.round(Math.abs(pagesEl.scrollLeft) / w) + 1)));
   if (p === page) return;
   page = p;
   drawAround(p);
@@ -102,13 +132,14 @@ let resizeTimer;
 function onResize() {
   clearTimeout(resizeTimer);
   resizeTimer = setTimeout(() => {
-    for (const s of $$('.mpage .inner[data-drawn]', pagesEl)) { delete s.dataset.drawn; s.innerHTML = ''; }
+    for (const s of $$('.mpage .inner[data-drawn]', pagesEl)) { delete s.dataset.drawn; s.innerHTML = ''; s.style.height = ''; }
+    layoutMode();
     goTo(page, false);
   }, 150);
 }
 
 function drawAround(p) {
-  for (let q = p - 1; q <= p + 1; q++) {
+  for (let q = p - (spread ? 2 : 1); q <= p + (spread ? 3 : 1); q++) {
     if (q < 1 || q > PAGES) continue;
     const inner = pageEl(q).firstElementChild;
     if (+inner.dataset.drawn !== q) drawPage(inner, q).then(() => q === page && highlight(player.current?.ayah ?? 0));
@@ -125,7 +156,7 @@ function update(m, names) {
   // Pages read today (the wird and the statistics).
   const log = store.get('read', {});
   const d = today();
-  log[d] = [...new Set([...(log[d] || []), page])];
+  log[d] = [...new Set([...(log[d] || []), page, ...(spread && page < PAGES ? [page + 1] : [])])];
   const keys = Object.keys(log);
   if (keys.length > 120) delete log[keys[0]];
   store.set('read', log);
@@ -145,7 +176,7 @@ function highlight(a, m) {
   for (const s of $$(`span[data-a="${a}"]`, pagesEl)) s.classList.add('hl');
   if (m) {
     const p = m.page[a - 1];
-    if (p !== page) goTo(p);
+    if (first(p) !== page) goTo(p);
   }
 }
 

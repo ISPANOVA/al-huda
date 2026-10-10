@@ -11,16 +11,24 @@ export const pageData = (p) => data(`p/${p}.json`);
 /// extra classes for the i-th word of the page (the Tasmee's colours).
 export async function drawPage(inner, p, { word } = {}) {
   const [lines, m, names] = await Promise.all([pageData(p), meta(), data('surahs.json')]);
-  const W = inner.clientWidth, H = inner.clientHeight;
-  if (!W || !H) return;
+  const W = inner.clientWidth;
+  let H = inner.clientHeight;
+  if (!W || (!H && !inner.closest(".wide"))) return;
   const screenH = window.innerHeight;
   const opening = p <= 2;
   const slots = lines.length >= 13 ? lines.length : 15;
   let lineH = H / slots;
   let fs = Math.min(W / m.ref * 100, screenH * 0.68 / 15 / 1.62);
+  // A phone turned sideways: the page as wide as the screen, scrolled down.
+  if (inner.closest('.wide') && !word) {
+    fs = W / m.ref * 100;
+    lineH = fs * 2.05;
+    inner.style.height = `${(lineH * slots).toFixed(1)}px`;
+  }
   let top0 = 0;
   if (opening) {
     const widest = Math.max(...lines.map((l) => (typeof l[1] === 'number' ? l[1] : 0)), 1);
+    if (inner.closest('.wide') && !word) H = lineH * slots;
     lineH = Math.min(lineH * 1.45, H / (lines.length + 1));
     fs = Math.min(lineH / 1.8, W * 0.86 / widest * 100);
     top0 = (H - lineH * lines.length) / 2;

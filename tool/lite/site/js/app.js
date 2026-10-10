@@ -50,6 +50,7 @@ const P = {
   moon: 'M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9z',
   sun: 'M12 7a5 5 0 1 0 0 10 5 5 0 0 0 0-10zM11 1h2v3h-2zm0 19h2v3h-2zM1 11h3v2H1zm19 0h3v2h-3z',
   download: 'M11 3h2v10l3.5-3.5 1.4 1.4L12 16.8 6.1 10.9l1.4-1.4L11 13zM5 19h14v2H5z',
+  rotate: 'M16.5 2.5 15 4l2.5 2.5H13A6 6 0 0 0 7 12.5h2a4 4 0 0 1 4-4h4.5L15 11l1.5 1.5 5-5zM3 13h10v8H3zm2 2v4h6v-4z',
   phone: 'M7 1h10a2 2 0 0 1 2 2v18a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2zm0 3v15h10V4z',
 };
 export const icon = (name, cls = '') => `<svg class="${cls}" viewBox="0 0 24 24" aria-hidden="true"><path d="${P[name] || ''}"/></svg>`;
