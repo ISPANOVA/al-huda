@@ -292,11 +292,17 @@ class PhoneticTracker implements TasmeeFollower {
 
   @override
   void newUtterance({bool manual = false}) {
-    _heard = '';
+    // Before the place is found, what was said keeps counting (a short first
+    // phrase, «الم», is found with what follows it).
+    _prefix = located || manual ? '' : (_heard.length > 300 ? _heard.substring(_heard.length - 300) : _heard);
+    _heard = _prefix;
     _cut = 0;
     _speechStart = 0;
     _openingChecked = false;
   }
+
+  /// Heard before the current utterance while the place isn't known yet.
+  String _prefix = '';
 
   @override
   void hintNext() {
@@ -322,10 +328,11 @@ class PhoneticTracker implements TasmeeFollower {
   /// [raw]: everything the model heard in the current utterance (it only
   /// grows until [newUtterance]). [isFinal]: the reciter paused.
   TasmeeFeed feed(String raw, {required bool isFinal}) {
-    final h = PhoneticText.normalize(raw);
+    var h = _prefix + PhoneticText.normalize(raw);
     if (h.length < _heard.length && !_heard.startsWith(h)) {
       // The recogniser started over without telling.
       newUtterance();
+      h = _prefix + PhoneticText.normalize(raw);
     }
     _heard = h;
     if (_cut > h.length) _cut = h.length;
