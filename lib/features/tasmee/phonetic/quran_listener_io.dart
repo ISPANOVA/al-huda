@@ -211,6 +211,17 @@ class QuranListener {
 
   // ------------------------------------------------- the model isolate ---
 
+  /// A new stream primed with the model's first chunk of silence, so the
+  /// first sound said after a pause isn't lost.
+  static sherpa.OnlineStream _primed(sherpa.OnlineRecognizer r) {
+    final s = r.createStream();
+    s.acceptWaveform(samples: Float32List(_rate * 480 ~/ 1000), sampleRate: _rate);
+    while (r.isReady(s)) {
+      r.decode(s);
+    }
+    return s;
+  }
+
   static void _modelMain(List<dynamic> args) {
     final out = args[0] as SendPort;
     final port = ReceivePort();
@@ -233,7 +244,7 @@ class QuranListener {
         // silent through a long madd, its own endpoints would cut words.
         enableEndpoint: false,
       ));
-      stream = recognizer.createStream();
+      stream = _primed(recognizer);
       out.send(const ['ready']);
     } catch (e) {
       out.send(['error', '$e']);
@@ -256,7 +267,7 @@ class QuranListener {
       if (end) {
         if (text.isNotEmpty) out.send(['result', text, true]);
         s.free();
-        s = stream = r.createStream();
+        s = stream = _primed(r);
         last = '';
       } else if (text != last) {
         last = text;
@@ -275,7 +286,8 @@ class QuranListener {
       } else if (m is List && m.isNotEmpty) {
         switch (m[0]) {
           case 'reset':
-            r.reset(s);
+            s.free();
+            stream = _primed(r);
             pauses.reset();
             last = '';
           case 'flush':

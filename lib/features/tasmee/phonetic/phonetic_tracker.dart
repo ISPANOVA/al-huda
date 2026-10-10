@@ -15,6 +15,10 @@ class _WordSpan {
   /// The alignment went past the end of this word.
   bool complete = false;
 
+  /// It went past the word's last consonant (only a haraka or the ending
+  /// that changes at a stop is left): complete when the reciter paused.
+  bool nearly = false;
+
   /// Characters heard exactly as written in this word.
   int exact = 0;
 }
@@ -492,7 +496,7 @@ class PhoneticTracker implements TasmeeFollower {
         final w = a.first + k;
         if (w < a.startWord) continue;
         final s = a.spans[k];
-        if (!s.complete) break;
+        if (!s.complete && !(isFinal && s.nearly)) break;
         var after = 0;
         for (var j = k + 1; j < a.spans.length && after < 2; j++) {
           after += a.spans[j].exact;
@@ -592,6 +596,7 @@ class PhoneticTracker implements TasmeeFollower {
     final codes = <int>[];
     final wordOf = <int>[];
     final starts = <int>[]; // text index where each word starts
+    final lastSound = <int>[]; // text index just after each word's last consonant
     final del = <double>[];
     final alt = <int>[]; // a sound read instead at a stop (ت → ه), or 0
     final cheapSub = <int>{}; // text positions where any sound costs little
@@ -624,6 +629,11 @@ class PhoneticTracker implements TasmeeFollower {
         }
         if (quran.taMarbuta[w] && j > 0 && p.codeUnitAt(j - 1) == 0x062A) taAt = j - 1;
       }
+      var lastCons = 0;
+      for (var i = 0; i < math.min(stopFrom, p.length); i++) {
+        if (!PhoneticText.isVowel(p.codeUnitAt(i))) lastCons = i + 1;
+      }
+      lastSound.add(codes.length + lastCons);
       for (var i = 0; i < p.length; i++) {
         final c = p.codeUnitAt(i);
         codes.add(c);
@@ -789,6 +799,7 @@ class PhoneticTracker implements TasmeeFollower {
     // Leading insertions (before the path's first text char) are noise.
     for (var k = 0; k < spans.length; k++) {
       spans[k].complete = starts[k + 1] <= endR;
+      spans[k].nearly = spans[k].complete || (lastSound[k] <= endR && spans[k].hEnd >= 0);
     }
     // Words before the start were not recited in this passage.
     var startWord = first;

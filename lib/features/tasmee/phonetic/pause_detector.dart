@@ -25,8 +25,13 @@ class PauseDetector {
         sum += samples[i] * samples[i];
       }
       final rms = math.sqrt(sum / frame);
-      // Background level: follows quiet frames quickly, loud ones slowly.
-      _noise = rms < _noise ? 0.9 * rms + 0.1 * _noise : 0.999 * _noise + 0.001 * rms;
+      // Background level: follows quieter frames quickly, rises only with
+      // frames close to it (a fan, a street), never with the voice.
+      if (rms < _noise) {
+        _noise = math.max(0.0003, 0.9 * rms + 0.1 * _noise);
+      } else if (rms < _noise * 2) {
+        _noise = 0.99 * _noise + 0.01 * rms;
+      }
       // Low enough for a ghunna hummed with closed lips (quiet but speech).
       final loud = rms > math.max(0.0015, _noise * 3);
       if (loud) {

@@ -91,9 +91,9 @@ class PauseDetector:
         for o in range(0, len(x) - self.FRAME + 1, self.FRAME):
             rms = float(np.sqrt(np.mean(x[o:o + self.FRAME].astype(np.float64) ** 2)))
             if rms < self.noise:
-                self.noise = 0.9 * rms + 0.1 * self.noise
-            else:
-                self.noise = 0.999 * self.noise + 0.001 * rms
+                self.noise = max(0.0003, 0.9 * rms + 0.1 * self.noise)
+            elif rms < self.noise * 2:
+                self.noise = 0.99 * self.noise + 0.01 * rms
             if rms > max(0.0015, self.noise * 3):
                 self.speech = True
                 self.silent = 0
@@ -109,8 +109,18 @@ class PauseDetector:
 def run(rec, samples: np.ndarray):
     """Events as the app receives them: (text, is_final)."""
     events = []
-    stream = rec.create_stream()
     pauses = PauseDetector()
+
+    def new_stream():
+        # Primed with half a second of silence (the model's first chunk), so
+        # the first sound said after a pause isn't lost.
+        st = rec.create_stream()
+        st.accept_waveform(RATE, np.zeros(CHUNK, dtype=np.float32))
+        while rec.is_ready(st):
+            rec.decode_stream(st)
+        return st
+
+    stream = new_stream()
     last = ""
     for o in range(0, len(samples), CHUNK):
         chunk = samples[o:o + CHUNK]
@@ -127,7 +137,7 @@ def run(rec, samples: np.ndarray):
             text = rec.get_result(stream)
             if text:
                 events.append([text, True])
-            stream = rec.create_stream()
+            stream = new_stream()
             last = ""
         elif text != last:
             last = text
