@@ -30,6 +30,15 @@ jobs:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
           if [ -z "$HF_TOKEN" ]; then echo "no HF_TOKEN yet" | tee "$RUNNER_TEMP/out/model_log.txt"; exit 0; fi
+          # The model's output depends only on the evaluation script: reuse the
+          # last run's when it didn't change.
+          KEY=$(sha1sum tool/tasmee/eval_model.py | cut -c1-12)
+          echo "$KEY" > "$RUNNER_TEMP/out/events_key.txt"
+          if git fetch -q origin tasmee-lab-results 2>/dev/null && [ "$(git show FETCH_HEAD:events_key.txt 2>/dev/null)" = "$KEY" ]; then
+            for f in model_events_v3.json model_events_v3.1.json model_log.txt; do git show "FETCH_HEAD:$f" > "$RUNNER_TEMP/out/$f" || true; done
+            echo "reused events $KEY"
+            exit 0
+          fi
           sudo apt-get install -y -qq ffmpeg > /dev/null
           pip install -q sherpa-onnx numpy
           for v in v3 v3.1; do
