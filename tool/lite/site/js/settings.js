@@ -17,14 +17,14 @@ export async function show(view, args, name) {
     </div>
     <div class="section">التلاوة</div>
     <div class="card list">
-      <button id="rec">${icon('head', 'gold')}<span class="grow"><b>قارئ المصحف</b><br><small class="muted">${esc(cur.name)}</small></span>${icon('fwd', 'muted')}</button>
-      <div>${icon('play', 'gold')}<span class="grow"><b>سرعة التلاوة</b></span><span class="chips">${RATES.map((r) => `<button class="chip${r === rate ? ' on' : ''}" data-rate="${r}">${ar(r)}×</button>`).join('')}</span></div>
+      <button id="rec">${icon('head', 'gold')}<span class="grow"><b>قارئ المصحف</b><br><small class="muted">${esc(cur.name)}</small></span>${icon('back', 'muted')}</button>
+      <div style="flex-wrap:wrap">${icon('play', 'gold')}<span class="grow"><b>سرعة التلاوة</b></span><span class="chips" style="width:100%">${RATES.map((r) => `<button class="chip${r === rate ? ' on' : ''}" data-rate="${r}">${ar(r)}×</button>`).join('')}</span></div>
     </div>
     <div class="section">التطبيق</div>
     <div class="card list">
-      <a href="#/about">${icon('info', 'gold')}<span class="grow"><b>عن الهدى</b></span>${icon('fwd', 'muted')}</a>
-      <a href="#/about/privacy">${icon('eye', 'gold')}<span class="grow"><b>سياسة الخصوصية</b></span>${icon('fwd', 'muted')}</a>
-      <a href="#/about/sources">${icon('book', 'gold')}<span class="grow"><b>المصادر والحقوق</b></span>${icon('fwd', 'muted')}</a>
+      <a href="#/about">${icon('info', 'gold')}<span class="grow"><b>عن الهدى</b></span>${icon('back', 'muted')}</a>
+      <a href="#/about/privacy">${icon('eye', 'gold')}<span class="grow"><b>سياسة الخصوصية</b></span>${icon('back', 'muted')}</a>
+      <a href="#/about/sources">${icon('book', 'gold')}<span class="grow"><b>المصادر والحقوق</b></span>${icon('back', 'muted')}</a>
       <button id="share">${icon('share', 'gold')}<span class="grow"><b>شارك الهدى</b><br><small class="muted">الدال على الخير كفاعله</small></span></button>
     </div>
     <p class="center muted small" style="margin-top:20px">الهدى • الإصدار 1.0.0</p>`;

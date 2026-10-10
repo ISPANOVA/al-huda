@@ -37,8 +37,14 @@ export async function show(view) {
         <b>${ar(d)}</b><br><small style="font-size:10px;opacity:.7">${ar(g.getDate())}</small>${white && !isToday ? '<div style="height:3px;width:14px;margin:2px auto 0;border-radius:2px;background:var(--sky-t)"></div>' : ''}</div>`;
     }
     $('#grid', view).innerHTML = cells;
-    $('#occ', view).innerHTML = (occ.length ? occ.map((o) => `<div><span class="num">${ar(o[1])}</span><span class="grow"><b>${esc(o[2])}</b>${o[3] ? `<br><small class="muted">${esc(o[3])}</small>` : ''}</span>${o[4] ? '<small class="chip">صيام</small>' : ''}</div>`).join('') : '')
-      + `<div><span class="num">١٣</span><span class="grow"><b>الأيام البيض</b><br><small class="muted">صيام ١٣ و١٤ و١٥ من كل شهر هجري</small></span><small class="chip">صيام</small></div>`;
+    // Several days of one occasion (the white days, the ten days): one row.
+    const rows = [];
+    for (const o of occ) {
+      const last = rows[rows.length - 1];
+      if (last && last[2] === o[2] && last[5] === o[1] - 1) last[5] = o[1]; else rows.push([...o, o[1]]);
+    }
+    $('#occ', view).innerHTML = rows.map((o) => `<div><span class="num">${ar(o[1])}</span><span class="grow"><b>${esc(o[2])}</b>${o[5] > o[1] ? ` <small class="gold">(${ar(o[1])} – ${ar(o[5])})</small>` : ''}${o[3] ? `<br><small class="muted">${esc(o[3])}</small>` : ''}</span>${o[4] ? '<small class="chip">صيام</small>' : ''}</div>`).join('')
+      || '<p class="muted center">لا مناسبات في هذا الشهر</p>';
   };
   render();
   $('#nx', view).onclick = () => { if (--m < 1) { m = 12; y--; } render(); };

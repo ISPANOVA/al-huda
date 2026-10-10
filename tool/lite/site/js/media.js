@@ -23,7 +23,7 @@ export async function show(view, args) {
       const list = (q) => {
         const rs = media.reciters.filter((r) => !q || r.name.includes(q));
         const group = (title, items) => items.length ? `<div class="section">${title}</div><div class="card list">${items.map((r) =>
-          `<a href="#/media/r/${r.key}"><span class="num">${icon('head')}</span><span class="grow"><b>${esc(r.name)}</b><br><small class="muted">${esc(r.style)}</small></span>${icon('fwd', 'muted')}</a>`).join('')}</div>` : '';
+          `<a href="#/media/r/${r.key}"><span class="num">${icon('head')}</span><span class="grow"><b>${esc(r.name)}</b><br><small class="muted">${esc(r.style)}</small></span>${icon('back', 'muted')}</a>`).join('')}</div>` : '';
         $('#rl', body).innerHTML = (q ? '' : group('المختارون', rs.filter((r) => fav.has(r.key)))) +
           Object.entries(REGIONS).map(([k, v]) => group(v, rs.filter((r) => r.region === k))).join('');
       };

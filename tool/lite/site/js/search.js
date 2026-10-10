@@ -22,7 +22,7 @@ export async function show(view, args) {
     for (let i = 0; i < keys.length; i++) if (keys[i].includes(k)) hits.push(i);
     n.textContent = hits.length ? `${ar(hits.length)} نتيجة` : 'لا توجد نتائج';
     res.hidden = !hits.length;
-    res.innerHTML = hits.slice(0, 200).map((i) => `<a href="#/mushaf/${m.page[i]}"><span class="grow"><span style="line-height:1.9">${esc(texts[i])}</span><br><small class="gold">سورة ${esc(names[m.surah[i] - 1][1])} • ${ar(m.ayah[i])} • صفحة ${ar(m.page[i])}</small></span>${icon('fwd', 'muted')}</a>`).join('') +
+    res.innerHTML = hits.slice(0, 200).map((i) => `<a href="#/mushaf/${m.page[i]}"><span class="grow"><span style="line-height:1.9">${esc(texts[i])}</span><br><small class="gold">سورة ${esc(names[m.surah[i] - 1][1])} • ${ar(m.ayah[i])} • صفحة ${ar(m.page[i])}</small></span>${icon('back', 'muted')}</a>`).join('') +
       (hits.length > 200 ? `<p class="muted small center">عُرضت أول ٢٠٠ نتيجة، زِد كلمات البحث.</p>` : '');
   };
   q.oninput = () => { clearTimeout(timer); timer = setTimeout(run, 180); };

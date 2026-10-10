@@ -38,7 +38,7 @@ export function show(view, args, name) {
     <div class="section">الختمة</div>
     ${plan || `<div class="card"><p style="margin-top:0">اختر مدة الختمة، ونحسب لك ما تقرؤه كل يوم. تُحتسب كل صفحة تفتحها في المصحف.</p>
       <div class="grid3">${PLANS.map((d) => `<button class="card qa" data-p="${d}"><b style="font-size:22px" class="gold">${ar(d)}</b>يومًا<small class="muted">${ar(Math.ceil(604 / d))} ص يوميًا</small></button>`).join('')}</div></div>`}
-    <a class="card row" href="#/stats" style="margin-top:12px">${icon('chart', 'gold')}<span class="grow"><b>إحصائياتي</b><br><small class="muted">المداومة والإنجاز</small></span>${icon('fwd', 'muted')}</a>`;
+    <a class="card row" href="#/stats" style="margin-top:12px">${icon('chart', 'gold')}<span class="grow"><b>إحصائياتي</b><br><small class="muted">المداومة والإنجاز</small></span>${icon('back', 'muted')}</a>`;
   view.onclick = (e) => {
     const g = e.target.closest('[data-g]');
     if (g) { store.set('wirdGoal', +g.dataset.g); show(view, args, name); return; }

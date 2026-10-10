@@ -29,7 +29,7 @@ export async function show(view, args) {
       <button class="btn block" id="go" style="margin-top:14px">${icon('play')} ابدأ التكرار</button>
     </div>
     <div class="card" id="now" hidden style="margin-top:12px"><p class="small muted center" id="lbl" style="margin:0"></p><div class="verse" id="txt"></div></div>
-    <a class="card row" href="#/tasmee" style="margin-top:12px">${icon('mic', 'gold')}<span class="grow"><b>سمّع ما حفظت</b><br><small class="muted">التسميع يخفي الكلمات ويصحّح لك</small></span>${icon('fwd', 'muted')}</a>`;
+    <a class="card row" href="#/tasmee" style="margin-top:12px">${icon('mic', 'gold')}<span class="grow"><b>سمّع ما حفظت</b><br><small class="muted">التسميع يخفي الكلمات ويصحّح لك</small></span>${icon('back', 'muted')}</a>`;
   const fill = () => {
     const n = names[st.s - 1][2];
     st.f = Math.min(st.f, n); st.t = Math.min(Math.max(st.t, st.f), n);

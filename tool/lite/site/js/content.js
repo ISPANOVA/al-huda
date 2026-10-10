@@ -69,7 +69,7 @@ async function ruqyah(view, args) {
     for (const [i, [, s, f, to]] of RUQYAH_VERSES.entries()) {
       const g = await globalAyah(s, f);
       const parts = [];
-      for (let a = g; a <= g + (to - f); a++) parts.push(await ayahText(a) + ` ﴿${ar(a - g + f)}﴾`);
+      for (let a = g; a <= g + (to - f); a++) parts.push(await ayahText(a) + ` ${ar(a - g + f)}`);
       const el = box.querySelector(`[data-v="${i}"] [data-txt]`);
       if (!el) return;
       el.textContent = parts.join(' ');
