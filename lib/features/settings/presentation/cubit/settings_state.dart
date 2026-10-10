@@ -70,6 +70,9 @@ class SettingsState extends Equatable {
   /// Mushaf pages on wide screens: 'auto' (two in landscape), 'single', 'double'.
   final String mushafPages;
 
+  /// Tasmee: a word with one doubtful letter counts as a mistake too.
+  final bool tasmeeStrict;
+
   const SettingsState({
     this.themeType = AppThemeType.noirGold,
     this.themeMode = ThemeMode.dark,
@@ -106,6 +109,7 @@ class SettingsState extends Equatable {
     this.widgetOpacity = 1.0,
     this.widgetTextColor = 0xFFFFFFFF,
     this.mushafPages = 'auto',
+    this.tasmeeStrict = false,
   });
 
   SettingsState copyWith({
@@ -144,6 +148,7 @@ class SettingsState extends Equatable {
     double? widgetOpacity,
     int? widgetTextColor,
     String? mushafPages,
+    bool? tasmeeStrict,
   }) {
     return SettingsState(
       themeType: themeType ?? this.themeType,
@@ -181,6 +186,7 @@ class SettingsState extends Equatable {
       widgetOpacity: widgetOpacity ?? this.widgetOpacity,
       widgetTextColor: widgetTextColor ?? this.widgetTextColor,
       mushafPages: mushafPages ?? this.mushafPages,
+      tasmeeStrict: tasmeeStrict ?? this.tasmeeStrict,
     );
   }
 
@@ -220,6 +226,7 @@ class SettingsState extends Equatable {
         'widgetOpacity': widgetOpacity,
         'widgetTextColor': widgetTextColor,
         'mushafPages': mushafPages,
+        'tasmeeStrict': tasmeeStrict,
       };
 
   factory SettingsState.fromMap(Map<String, dynamic> m) {
@@ -266,6 +273,7 @@ class SettingsState extends Equatable {
       widgetOpacity: (m['widgetOpacity'] as num?)?.toDouble() ?? d.widgetOpacity,
       widgetTextColor: (m['widgetTextColor'] as num?)?.toInt() ?? d.widgetTextColor,
       mushafPages: m['mushafPages'] as String? ?? d.mushafPages,
+      tasmeeStrict: m['tasmeeStrict'] as bool? ?? d.tasmeeStrict,
     );
   }
 
@@ -306,5 +314,6 @@ class SettingsState extends Equatable {
         widgetOpacity,
         widgetTextColor,
         mushafPages,
+        tasmeeStrict,
       ];
 }

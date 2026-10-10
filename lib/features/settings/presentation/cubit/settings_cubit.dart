@@ -145,6 +145,7 @@ class SettingsCubit extends Cubit<SettingsState> {
   Future<void> setIqamaReminder(bool value) => _save(state.copyWith(iqamaReminder: value));
 
   Future<void> setMushafPages(String value) => _save(state.copyWith(mushafPages: value));
+  Future<void> setTasmeeStrict(bool value) => _save(state.copyWith(tasmeeStrict: value));
   Future<void> setPostPrayerMinutes(int minutes) => _save(state.copyWith(postPrayerMinutes: minutes.clamp(1, 90)));
   Future<void> setWirdPages(int pages) => _save(state.copyWith(wirdPages: pages.clamp(0, 60)));
 

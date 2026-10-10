@@ -137,14 +137,32 @@ void main() {
     expect(mistakes.map((m) => m.word), [words[start + 5].text]);
   });
 
-  test('a wrong letter is a mistake', () {
+  test('a letter said as another: a doubt, or a mistake when strict', () {
     final start = words.indexWhere((w) => w.surah == 1 && w.ayah == 2);
-    final mistakes = <TasmeeMistake>[];
-    final t = tracker(mistakes)..startAt(start);
     // «رَبِّ» said as «رَدِّ».
     final wrongWord = raw[start + 2].replaceAll('ب', 'د');
+    final mistakes = <TasmeeMistake>[], doubts = <TasmeeMistake>[];
+    final t = PhoneticTracker(words, quran, mistakes, openings: openings, doubts: doubts)..startAt(start);
     recite(t, said(start, start + 2) + wrongWord + said(start + 3, start + 12));
-    expect(mistakes.map((m) => m.word), [words[start + 2].text]);
+    expect(mistakes, isEmpty);
+    expect(doubts.map((m) => m.word), [words[start + 2].text]);
+    reset();
+    final strictMistakes = <TasmeeMistake>[];
+    final s = PhoneticTracker(words, quran, strictMistakes, openings: openings, strict: true)..startAt(start);
+    recite(s, said(start, start + 2) + wrongWord + said(start + 3, start + 12));
+    expect(strictMistakes.map((m) => m.word), [words[start + 2].text]);
+  });
+
+  test('a missing letter is a mistake', () {
+    final start = words.indexWhere((w) => w.surah == 112 && w.ayah == 2);
+    final mistakes = <TasmeeMistake>[];
+    final t = tracker(mistakes)..startAt(start);
+    // «ٱلصَّمَدُ» without its «م».
+    final w = raw[start + 1];
+    final i = w.indexOf('م');
+    final missing = w.substring(0, i) + w.substring(i + 2);
+    recite(t, said(start, start + 1) + missing + said(start + 2, start + 10));
+    expect(mistakes.map((m) => m.word), [words[start + 1].text]);
   });
 
   test('a wrong haraka is a mistake when two are wrong, not one', () {
@@ -190,11 +208,12 @@ void main() {
   test("isti'adha and basmala before reciting are not part of the text", () {
     final start = words.indexWhere((w) => w.surah == 67 && w.ayah == 1);
     final mistakes = <TasmeeMistake>[];
-    final t = tracker(mistakes);
+    final log = <String>[];
+    final t = tracker(mistakes)..debug = log.add;
     recite(t, openings[0] + openings[1] + said(start, start + 20));
     final shown = words.indexWhere((w) => w.state != TasmeeState.hidden);
     final why = 'located ${t.located}, expected ${t.expected} (start $start), first shown $shown '
-        '${shown >= 0 ? '${words[shown].surah}:${words[shown].ayah}' : ''}, mistakes ${mistakes.map((m) => '${m.word}/${m.heard}')}';
+        '${shown >= 0 ? '${words[shown].surah}:${words[shown].ayah}' : ''}, mistakes ${mistakes.map((m) => '${m.word}/${m.heard}')}\n${log.take(6).join('\n')}';
     expect(t.located, isTrue, reason: why);
     expect(words[start].state, TasmeeState.correct, reason: why);
     expect(mistakes, isEmpty, reason: mistakes.map((m) => '${m.word}/${m.heard}').join(', '));

@@ -17,6 +17,10 @@ class TasmeeWord {
   /// The reciter got this word wrong at least once (shown in red when revealed).
   bool missed = false;
 
+  /// One letter of it may have been wrong (the model isn't sure): shown in
+  /// amber, not counted as a mistake.
+  bool doubtful = false;
+
   /// For the disjoint letters (الم، كهيعص…): the key of how they are recited,
   /// letter by letter («ألف لام ميم»). Null for every other word.
   final String? spoken;

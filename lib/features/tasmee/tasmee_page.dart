@@ -18,6 +18,7 @@ import '../../core/utils/arabic_utils.dart';
 import '../../core/widgets/noor_ui.dart';
 import '../../core/widgets/state_views.dart';
 import '../audio/presentation/cubit/audio_cubit.dart';
+import '../settings/presentation/cubit/settings_cubit.dart';
 import '../quran/domain/repositories/quran_repository.dart';
 import '../quran/domain/entities/mushaf_line.dart';
 import '../quran/presentation/mushaf/mushaf_page.dart' show MushafPageView, MushafStyle, MushafWordPaint;
@@ -58,6 +59,9 @@ class _TasmeePageState extends State<TasmeePage> {
   String _heard = '';
   double _level = 0;
   final List<TasmeeMistake> _mistakes = [];
+
+  /// Words with one doubtful letter (on-device model): to review, not counted.
+  final List<TasmeeMistake> _doubts = [];
   late int _page = widget.startPage;
   TasmeeFollower? _tracker;
   bool _ready = false;
@@ -180,6 +184,7 @@ class _TasmeePageState extends State<TasmeePage> {
       for (final w in words) {
         w.state = TasmeeState.hidden;
         w.missed = false;
+        w.doubtful = false;
       }
     }
     if (!mounted) return;
@@ -197,7 +202,11 @@ class _TasmeePageState extends State<TasmeePage> {
     }
     if (!mounted) return;
     final TasmeeFollower tracker = _phonetic
-        ? PhoneticTracker(words, _phQuran!, _mistakes, openings: _openings, near: _pageStart[widget.startPage])
+        ? PhoneticTracker(words, _phQuran!, _mistakes,
+            openings: _openings,
+            doubts: _doubts,
+            strict: context.read<SettingsCubit>().state.tasmeeStrict,
+            near: _pageStart[widget.startPage])
         : TasmeeTracker(words, _mistakes, near: _pageStart[widget.startPage]);
     final start = widget.startAyah;
     if (start != null && start < _ayahStart.length && _ayahStart[start] >= 0) {
@@ -754,39 +763,70 @@ class _TasmeePageState extends State<TasmeePage> {
                 _stat(glass, '${ArabicUtils.toArabicDigits(_correctTotal)}', 'كلمة صحيحة'),
                 const SizedBox(width: 12),
                 _stat(glass, '${ArabicUtils.toArabicDigits(_mistakes.length)}', 'خطأ', error: true),
+                if (_doubts.isNotEmpty) ...[
+                  const SizedBox(width: 12),
+                  _stat(glass, '${ArabicUtils.toArabicDigits(_doubts.length)}', 'للمراجعة', color: _amber),
+                ],
               ],
             ),
             const SizedBox(height: 12),
             Expanded(
-              child: _mistakes.isEmpty
+              child: _mistakes.isEmpty && _doubts.isEmpty
                   ? Center(child: Text('لا أخطاء، ما شاء الله', style: TextStyle(color: glass.onGlassMuted)))
                   : ListView.separated(
-                      itemCount: _mistakes.length,
+                      itemCount: _mistakes.length + _doubts.length,
                       separatorBuilder: (_, _) => Divider(height: 1, color: glass.onGlass.withValues(alpha: 0.08)),
                       itemBuilder: (_, i) {
-                        final m = _mistakes[i];
+                        final doubt = i >= _mistakes.length;
+                        final m = doubt ? _doubts[i - _mistakes.length] : _mistakes[i];
                         return ListTile(
                           dense: true,
-                          leading: const Icon(Icons.close_rounded, color: Color(0xFFE5484D)),
+                          leading: doubt
+                              ? const Icon(Icons.help_outline_rounded, color: _amber)
+                              : const Icon(Icons.close_rounded, color: Color(0xFFE5484D)),
                           title: Text(m.word, style: QuranFont.amiriQuran.style(fontSize: 20, height: 1.6, color: glass.onGlass)),
                           subtitle: Text(
                             'سورة ${SurahMetadata.surah(m.surah).name} • الآية ${ArabicUtils.toArabicDigits(m.ayah)}'
-                            '${m.heard.isEmpty ? ' • كلمة متروكة' : ' • قلت: ${m.heard}'}',
+                            '${m.heard.isEmpty ? ' • كلمة متروكة' : ' • سُمع: ${m.heard}'}'
+                            '${doubt ? '\nحرف قد يكون غير صحيح، راجعه' : ''}',
                           ),
                         );
                       },
                     ),
             ),
+            if (_phonetic) ...[
+              StatefulBuilder(builder: (ctx, setInner) {
+                final strict = ctx.read<SettingsCubit>().state.tasmeeStrict;
+                return SwitchListTile(
+                  dense: true,
+                  contentPadding: EdgeInsets.zero,
+                  value: strict,
+                  title: const Text('دقة عالية جدًا', style: TextStyle(fontWeight: FontWeight.w800)),
+                  subtitle: Text('احسب الكلمة التي فيها حرف مشكوك فيه خطأً',
+                      style: TextStyle(color: glass.onGlassMuted, fontSize: 12)),
+                  onChanged: (v) {
+                    ctx.read<SettingsCubit>().setTasmeeStrict(v);
+                    final t = _tracker;
+                    if (t is PhoneticTracker) t.strict = v;
+                    setInner(() {});
+                  },
+                );
+              }),
+              Text('التصحيح الآلي قد يخطئ، ولا يغني عن القراءة على شيخ متقن.',
+                  textAlign: TextAlign.center, style: TextStyle(color: glass.onGlassMuted, fontSize: 11.5)),
+            ],
           ],
         ),
       );
     });
   }
 
-  Widget _stat(GlassTheme glass, String value, String label, {bool error = false}) {
-    final c = error ? const Color(0xFFE5484D) : glass.accent;
+  static const _amber = Color(0xFFF5A524);
+
+  Widget _stat(GlassTheme glass, String value, String label, {bool error = false, Color? color}) {
+    final c = color ?? (error ? const Color(0xFFE5484D) : glass.accent);
     return Container(
-      width: 120,
+      width: 104,
       padding: const EdgeInsets.symmetric(vertical: 12),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(18),
@@ -989,6 +1029,7 @@ class _TasmeePageState extends State<TasmeePage> {
     final wrong = w.missed || w.state == TasmeeState.mistake;
     if (w.revealed || !_hide) {
       if (wrong) return MushafWordPaint(color: red, background: bg);
+      if (w.doubtful) return MushafWordPaint(color: _amber, background: bg);
       if (w.state == TasmeeState.hinted) return MushafWordPaint(color: style.accent, background: bg);
       return bg == null ? null : MushafWordPaint(background: bg);
     }

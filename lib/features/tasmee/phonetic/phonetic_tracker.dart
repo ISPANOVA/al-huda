@@ -223,16 +223,32 @@ class PhoneticTracker implements TasmeeFollower {
   /// A word is wrong from this cost (one wrong letter, or two harakat).
   final double threshold;
 
+  /// From this cost the word is surely wrong (a letter missing or added, two
+  /// letters, another word); below it, one letter heard differently may be
+  /// the model mishearing: a doubt, unless [strict].
+  final double sureFrom;
+  bool strict;
+
+  /// Words with a doubtful letter (see [sureFrom]).
+  final List<TasmeeMistake> doubts;
+
+  /// For tests: what the tracker decides, step by step.
+  void Function(String)? debug;
+
   PhoneticTracker(
     this.words,
     this.quran,
     this.mistakes, {
     this.openings = const [],
     this.threshold = 1.0,
+    this.sureFrom = 1.5,
+    this.strict = false,
+    List<TasmeeMistake>? doubts,
     int from = 0,
     int? to,
     this.near,
-  })  : _from = from,
+  })  : doubts = doubts ?? [],
+        _from = from,
         _to = to ?? words.length;
 
   int _from;
@@ -346,6 +362,7 @@ class PhoneticTracker implements TasmeeFollower {
     if (!located) {
       final hit = locate(h.substring(_cut), near: near);
       if (hit == null) return const TasmeeFeed(0, 0);
+      debug?.call('located $hit at cut $_cut in "$h"');
       _sure = hit.sure;
       located = true;
       _placeAt(hit.word, _cut + hit.heardFrom);
@@ -500,6 +517,8 @@ class PhoneticTracker implements TasmeeFollower {
       if (hs.isEmpty) break;
       final a = _alignHere(hs, utteranceStart: _cut == _speechStart);
       if (a == null) break;
+      debug?.call('align "$hs" from word ${a.first} (expected $_expected): start ${a.startWord}, '
+          '${[for (var k = 0; k < a.spans.length && k < 12; k++) '${a.first + k}:${a.spans[k].cost.toStringAsFixed(2)}${a.spans[k].complete ? '' : '…'}'].join(' ')}');
       // Judge the words the reciter has moved past.
       var committed = -1;
       var cutAt = _cut;
@@ -577,8 +596,13 @@ class PhoneticTracker implements TasmeeFollower {
     final wrong = s.cost >= threshold;
     word.state = TasmeeState.correct;
     if (!wrong) return false;
-    word.missed = true;
     final said = s.hStart >= 0 && s.hEnd > s.hStart ? PhoneticText.readable(hs.substring(s.hStart, s.hEnd)) : '';
+    if (!strict && s.cost < sureFrom) {
+      word.doubtful = true;
+      doubts.add(TasmeeMistake(word.surah, word.ayah, word.text, said));
+      return false;
+    }
+    word.missed = true;
     mistakes.add(TasmeeMistake(word.surah, word.ayah, word.text, said));
     return true;
   }
