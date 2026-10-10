@@ -7,13 +7,11 @@ import { player, listenSheet } from './player.js';
 const PAGES = 604;
 let root, pagesEl, page = 1, offPlayer, selected = 0, spread = false;
 
-/// Two pages side by side on wide screens in landscape (tablet, computer);
-/// a phone turned sideways reads one wide page, scrolled down.
+/// Two pages side by side whenever the screen is sideways: a computer, a
+/// tablet or a phone turned to landscape.
 function layoutMode() {
-  const w = innerWidth, h = innerHeight;
-  spread = w >= 900 && w > h * 1.15;
+  spread = innerWidth >= 600 && innerWidth > innerHeight * 1.15;
   root.classList.toggle('spread', spread);
-  root.classList.toggle('wide', !spread && w > h && h < 600);
 }
 const first = (p) => (spread ? p - ((p - 1) % 2) : p);
 
@@ -29,7 +27,6 @@ export async function show(view, args) {
       <button class="chip" id="surahChip"></button>
       <a class="ibtn" href="#/search">${icon('search')}</a>
       <span class="sp"></span>
-      <button class="ibtn" id="rotate" title="القراءة بالعرض">${icon('rotate')}</button>
       <button class="ibtn" id="tasmee" title="التسميع">${icon('mic')}</button>
       <button class="chip" id="juzChip"></button>
       <button class="ibtn" id="mark">${icon('bookmarkO')}</button>
@@ -80,7 +77,6 @@ export async function show(view, args) {
   $('#juzChip', root).onclick = () => openIndex(m, names, 1);
   $('#pageChip', root).onclick = () => openIndex(m, names, 1);
   $('#tasmee', root).onclick = () => (location.hash = `#/tasmee/${page}`);
-  $('#rotate', root).onclick = rotate;
   $('#mark', root).onclick = () => toggleMark(m);
   $('#playPage', root).onclick = () => listenSheet(m.page.indexOf(page) + 1);
   offPlayer = player.on((it) => highlight(it?.ayah ?? 0, m));
@@ -106,21 +102,6 @@ function focus(on) {
 function onFullscreen() {
   // Leaving full screen (the back gesture) leaves focus too.
   if (!document.fullscreenElement && ownFullscreen) { ownFullscreen = false; if (root?.classList.contains('immersive')) focus(false); }
-}
-
-async function rotate() {
-  const landscape = innerWidth > innerHeight;
-  try {
-    if (landscape) {
-      screen.orientation?.unlock?.();
-      if (document.fullscreenElement) await document.exitFullscreen();
-      return;
-    }
-    await document.documentElement.requestFullscreen?.({ navigationUI: 'hide' });
-    await screen.orientation.lock('landscape');
-  } catch {
-    toast('لف التليفون بالعرض لتقرأ صفحة أكبر');
-  }
 }
 
 export function leave() {
