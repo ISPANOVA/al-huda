@@ -79,7 +79,7 @@ def recognizer():
 class PauseDetector:
     """Same rules as lib/features/tasmee/phonetic/pause_detector.dart."""
     FRAME = 480
-    PAUSE_MS = 900
+    PAUSE_MS = 1100
 
     def __init__(self):
         self.noise = 0.003
@@ -94,7 +94,7 @@ class PauseDetector:
                 self.noise = 0.9 * rms + 0.1 * self.noise
             else:
                 self.noise = 0.999 * self.noise + 0.001 * rms
-            if rms > max(0.006, self.noise * 4):
+            if rms > max(0.0015, self.noise * 3):
                 self.speech = True
                 self.silent = 0
             elif self.speech:
@@ -119,9 +119,15 @@ def run(rec, samples: np.ndarray):
             rec.decode_stream(stream)
         text = rec.get_result(stream)
         if pauses.feed(chunk):
+            # The last frames are decoded only when the stream is finished:
+            # finish it and start a new one (as the app does).
+            stream.input_finished()
+            while rec.is_ready(stream):
+                rec.decode_stream(stream)
+            text = rec.get_result(stream)
             if text:
                 events.append([text, True])
-            rec.reset(stream)
+            stream = rec.create_stream()
             last = ""
         elif text != last:
             last = text

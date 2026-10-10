@@ -10,7 +10,7 @@ class PauseDetector {
   static const frame = 480;
 
   /// Silence this long after speech is a pause.
-  static const pauseMs = 900;
+  static const pauseMs = 1100;
 
   double _noise = 0.003;
   int _silentFrames = 0;
@@ -27,7 +27,8 @@ class PauseDetector {
       final rms = math.sqrt(sum / frame);
       // Background level: follows quiet frames quickly, loud ones slowly.
       _noise = rms < _noise ? 0.9 * rms + 0.1 * _noise : 0.999 * _noise + 0.001 * rms;
-      final loud = rms > math.max(0.006, _noise * 4);
+      // Low enough for a ghunna hummed with closed lips (quiet but speech).
+      final loud = rms > math.max(0.0015, _noise * 3);
       if (loud) {
         _speech = true;
         _silentFrames = 0;

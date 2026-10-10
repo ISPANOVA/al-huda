@@ -243,14 +243,20 @@ class QuranListener {
     final pauses = PauseDetector();
     void emit({required bool end}) {
       final r = recognizer!;
-      final s = stream!;
+      var s = stream!;
+      if (end) {
+        // The last frames are decoded only when the stream is finished:
+        // finish it and go on with a new one.
+        s.inputFinished();
+      }
       while (r.isReady(s)) {
         r.decode(s);
       }
       final text = r.getResult(s).text;
       if (end) {
         if (text.isNotEmpty) out.send(['result', text, true]);
-        r.reset(s);
+        s.free();
+        s = stream = r.createStream();
         last = '';
       } else if (text != last) {
         last = text;
