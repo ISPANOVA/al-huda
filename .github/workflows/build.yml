@@ -59,6 +59,13 @@ jobs:
             dart run tool/configure_platforms.dart
           } 2>&1 | tee -a build_log.txt
 
+      - name: Tasmee model (on-device Quran recognition)
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          # Never fails the build: without the model the Tasmee uses the phone's speech recognition.
+          bash tool/tasmee/fetch_model.sh assets/tasmee 2>&1 | tee -a build_log.txt || echo "::warning::Tasmee model not bundled"
+
       - name: Signing config
         env:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}

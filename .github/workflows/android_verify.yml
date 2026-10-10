@@ -35,7 +35,9 @@ jobs:
       - name: Build signed release APK and AAB (same steps as build.yml)
         env:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
+          bash tool/tasmee/fetch_model.sh assets/tasmee || echo "::warning::Tasmee model not bundled"
           set -o pipefail
           mkdir -p shots
           {

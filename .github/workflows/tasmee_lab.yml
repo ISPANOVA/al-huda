@@ -25,6 +25,14 @@ jobs:
           mkdir -p "$RUNNER_TEMP/out"
           python3 tool/tasmee/make_phonemes.py . . 2>&1 | tee "$RUNNER_TEMP/out/phonemes_log.txt" | tail -20
           cp assets/tasmee/phonemes.txt assets/tasmee/extra.json "$RUNNER_TEMP/out/"
+      - name: Model on real recitations
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          if [ -z "$HF_TOKEN" ]; then echo "no HF_TOKEN yet" | tee "$RUNNER_TEMP/out/model_log.txt"; exit 0; fi
+          bash tool/tasmee/fetch_model.sh "$RUNNER_TEMP/model" 2>&1 | tee "$RUNNER_TEMP/out/model_log.txt"
+          pip install -q sherpa-onnx numpy
+          python3 tool/tasmee/eval_model.py "$RUNNER_TEMP/model" "$RUNNER_TEMP/audio" "$RUNNER_TEMP/out/model_events.json" 2>&1 | tee -a "$RUNNER_TEMP/out/model_log.txt" | tail -40
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: 3.47.5
@@ -36,6 +44,7 @@ jobs:
           flutter analyze --no-fatal-infos lib test > "$RUNNER_TEMP/out/analyze.txt" 2>&1 || true
           tail -30 "$RUNNER_TEMP/out/analyze.txt"
           flutter test test/tasmee_phonetic_test.dart -r expanded 2>&1 | tee "$RUNNER_TEMP/out/test.txt" | tail -60
+          TASMEE_EVENTS="$RUNNER_TEMP/out/model_events.json" flutter test test/tasmee_model_test.dart -r expanded 2>&1 | tee "$RUNNER_TEMP/out/model_test.txt" | tail -80
       - name: Publish results
         if: always()
         run: |
