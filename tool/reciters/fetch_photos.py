@@ -121,7 +121,11 @@ def portrait(img):
         det = cv2.CascadeClassifier(cv2.data.haarcascades + "haarcascade_frontalface_default.xml")
         faces = det.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=6, minSize=(max(24, w // 25), max(24, w // 25)))
     except Exception as e:
-        print("no face detection", e)
+        try:
+            import cv2 as c2
+            print("no face detection", e, getattr(c2, "__file__", None), getattr(c2, "__path__", None), getattr(c2, "__version__", None))
+        except Exception as e2:
+            print("no face detection", e, e2)
         faces = []
     if len(faces):
         x, y, fw, fh = max(faces, key=lambda f: f[2] * f[3])
