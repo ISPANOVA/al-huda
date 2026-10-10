@@ -75,7 +75,7 @@ jobs:
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
-      - name: Emulator: upgrade and open the Tasmee
+      - name: "Emulator: upgrade and open the Tasmee"
         timeout-minutes: 40
         run: PROBE_SCRIPT=tasmee_smoke.sh timeout 35m bash tool/ci/emulator.sh > shots/emu.txt 2>&1 || true
       - name: Publish test APK (pre-release)
