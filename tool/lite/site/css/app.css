@@ -26,8 +26,7 @@
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 html, body { margin: 0; height: 100%; }
 html { touch-action: manipulation; background: var(--bg); }
-/* One gradient for the whole screen, drawn once (no band while scrolling). */
-body::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none; background: linear-gradient(180deg, var(--bg), var(--bg2)); }
+/* One flat colour for the whole page: no band anywhere while scrolling. */
 body {
   background: var(--bg); min-height: 100%; color: var(--ink);
   font-family: Tajawal, system-ui, sans-serif; font-size: 15px; line-height: 1.6;
@@ -342,3 +341,29 @@ body.playing .mushaf .mbar.botb { opacity: 0; pointer-events: none; }
 .list > .now { background: rgba(226,194,117,.1); border-radius: 14px; }
 
 .mbar .chip { padding: 0 11px; } .mbar .ibtn { width: 38px; }
+
+/* ---- two pages side by side (tablets, computers) ---- */
+.spine { display: none; }
+.mushaf.spread .mpage { flex-basis: 50%; scroll-snap-align: none; scroll-snap-stop: normal; }
+.mushaf.spread .mpage:nth-child(odd) { scroll-snap-align: start; scroll-snap-stop: always; }
+.mushaf.spread .mpage .inner { width: min(calc(100% - 44px), calc(100dvh * .45)); }
+.mushaf.spread .mpage:nth-child(odd) .inner { margin-left: 26px; margin-right: auto; }   /* right page, by the spine */
+.mushaf.spread .mpage:nth-child(even) .inner { margin-right: 26px; margin-left: auto; }  /* left page */
+.mushaf.spread .spine { display: block; position: absolute; z-index: 4; left: 50%; width: 56px; margin-left: -28px; pointer-events: none;
+  top: calc(var(--safe-t) + 46px); bottom: calc(var(--safe-b) + 56px);
+  background: linear-gradient(90deg, transparent, rgba(0,0,0,.28) 38%, rgba(0,0,0,.55) 50%, rgba(0,0,0,.28) 62%, transparent); }
+[data-theme="light"] .mushaf.spread .spine { background: linear-gradient(90deg, transparent, rgba(80,55,10,.1) 38%, rgba(80,55,10,.22) 50%, rgba(80,55,10,.1) 62%, transparent); }
+.mushaf.spread .spine::after { content: ""; position: absolute; left: 50%; top: 0; bottom: 0; width: 2px; margin-left: -1px;
+  background: linear-gradient(transparent, var(--gold) 12%, var(--gold) 88%, transparent); opacity: .8; }
+
+/* ---- a phone turned sideways: one wide page, scrolled down ---- */
+.mushaf.wide .mpage { overflow-y: auto; overscroll-behavior: contain; }
+.mushaf.wide .mpage .inner { position: relative; top: auto; bottom: auto; left: auto; right: auto; width: calc(100% - 48px); margin: calc(var(--safe-t) + 52px) auto 140px; }
+.mushaf.wide .mbar.botb { bottom: calc(var(--safe-b) + 10px); }
+body.in-mushaf:has(.mushaf.wide) .nav { transform: translateY(140%); }
+@media (min-width: 900px) { #rotate { display: none; } }
+.mushaf.wide .mbar.topb { top: 0; padding-top: calc(var(--safe-t) + 6px); padding-bottom: 10px; background: linear-gradient(var(--paper) 75%, transparent); }
+.mushaf.wide .mbar.botb { bottom: 0; padding-bottom: calc(var(--safe-b) + 8px); padding-top: 10px; background: linear-gradient(transparent, var(--paper) 25%); }
+
+.ava.photo { object-fit: cover; background: var(--card); border: 2px solid rgba(226,194,117,.45); padding: 0; }
+.ava.photo.lg, .ava.photo.xl { border-width: 3px; }

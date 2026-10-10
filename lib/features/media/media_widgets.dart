@@ -6,6 +6,7 @@ import '../../core/theme/web_lite.dart';
 import '../../core/theme/app_themes.dart';
 import '../../core/theme/tones.dart';
 import '../../core/utils/arabic_utils.dart';
+import 'reciter_photos.dart';
 
 /// Shared visual pieces of the media section (الوسائط).
 
@@ -210,7 +211,8 @@ class MonogramAvatar extends StatelessWidget {
   Widget build(BuildContext context) {
     final accent = GlassTheme.of(context).accent;
     final tint = mediaTint(seed);
-    final avatar = DecoratedBox(
+    final key = seed.replaceAll('_mj', '');
+    final monogram = DecoratedBox(
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         gradient: LinearGradient(
@@ -236,6 +238,20 @@ class MonogramAvatar extends StatelessWidget {
         ),
       ),
     );
+    // A freely licensed portrait of the reciter where one exists.
+    final dpr = MediaQuery.devicePixelRatioOf(context);
+    final avatar = kReciterPhotos.contains(key)
+        ? ClipOval(
+            child: Image.asset(
+              'assets/reciters/$key.jpg',
+              fit: BoxFit.cover,
+              width: size,
+              height: size,
+              cacheWidth: (size * dpr).round(),
+              errorBuilder: (_, _, _) => monogram,
+            ),
+          )
+        : monogram;
     if (!ring) return SizedBox.square(dimension: size, child: avatar);
     return Container(
       width: size,
