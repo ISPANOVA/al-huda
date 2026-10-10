@@ -83,6 +83,8 @@ function showCategory(view, cat, i) {
     store.set(key(), p);
     navigator.vibrate?.(n + 1 >= t.count ? [20, 40, 20] : 12);
     paint();
+    const c = $('[data-c]', card);
+    c.classList.remove('pop'); void c.offsetWidth; c.classList.add('pop');
     if (n + 1 >= t.count) {
       const next = card.nextElementSibling;
       if (next) setTimeout(() => next.scrollIntoView({ behavior: 'smooth', block: 'center' }), 250);

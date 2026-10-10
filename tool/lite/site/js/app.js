@@ -99,21 +99,33 @@ export function toast(msg) {
 }
 
 let sheetClose = null;
-export function sheet(html, onOpen) {
+let backing = null; // a sheet closing: its history entry is going away
+export async function sheet(html, onOpen) {
+  if (backing) await backing;
   const s = $('#sheet');
+  if (sheetClose) { const f = sheetClose; sheetClose = null; f(); } else history.pushState({ sheet: 1 }, '');
   $('.sheet-body', s).innerHTML = html;
+  $('.sheet-body', s).scrollTop = 0;
   s.hidden = false;
-  history.pushState({ sheet: 1 }, '');
+  s.classList.remove('closing');
   return new Promise((done) => {
-    sheetClose = (v) => { s.hidden = true; sheetClose = null; done(v); };
+    sheetClose = (v) => { hideSheet(); sheetClose = null; done(v); };
     onOpen?.($('.sheet-body', s), (v) => { closeSheet(v); });
   });
+}
+function hideSheet() {
+  const s = $('#sheet');
+  s.classList.add('closing');
+  setTimeout(() => { if (s.classList.contains('closing')) { s.hidden = true; s.classList.remove('closing'); } }, 180);
 }
 export function closeSheet(v) {
   if (!sheetClose) return;
   const f = sheetClose;
   f(v);
-  if (history.state?.sheet) history.back();
+  if (history.state?.sheet) {
+    backing = new Promise((r) => addEventListener('popstate', () => { backing = null; r(); }, { once: true }));
+    history.back();
+  }
 }
 $('#sheet').addEventListener('click', (e) => { if (e.target.id === 'sheet') closeSheet(); });
 
@@ -163,7 +175,7 @@ let seq = 0;
 function highlight(name) {
   const tab = TABS[name] ?? 'home';
   for (const a of $$('#nav a')) a.className = a.dataset.tab === tab ? `on t-${TONES[tab]}` : '';
-  $('#nav').classList.toggle('hide', name === 'mushaf' || name === 'tasmee');
+  $('#nav').classList.toggle('hide', name === 'tasmee');
 }
 // The new page fades in as soon as it is written.
 const view0 = $('#view');
@@ -173,7 +185,6 @@ new MutationObserver(() => {
   void view0.offsetWidth;
   view0.classList.add('in');
 }).observe(view0, { childList: true });
-view0.addEventListener('animationend', () => view0.classList.remove('in'));
 
 async function route() {
   if (sheetClose) { const f = sheetClose; f(); }

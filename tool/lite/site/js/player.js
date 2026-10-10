@@ -1,7 +1,8 @@
 // One audio player for the whole site: ayah-by-ayah recitation (with the
 // ayah highlighted in the Mushaf), full surahs, radio stations. A small bar
-// above the navigation shows what is playing.
-import { $, icon, esc, store } from './app.js';
+// above the navigation shows what is playing; tapping it opens the full
+// player (seek, previous/next, speed, repetition).
+import { $, ar, icon, esc, store, data, meta, surahs, sheet } from './app.js';
 
 const audio = new Audio();
 audio.preload = 'auto';
@@ -37,8 +38,12 @@ export const player = {
     if (audio.paused) audio.play().catch(() => {}); else audio.pause();
   },
   next() { if (index + 1 < queue.length) { index++; played = 0; load(); } },
-  prev() { if (index > 0) { index--; played = 0; load(); } },
-  stop() { audio.pause(); queue = []; render(); emit(); },
+  prev() {
+    if (audio.currentTime > 3 && !live) { audio.currentTime = 0; return; }
+    if (index > 0) { index--; played = 0; load(); }
+  },
+  stop() { audio.pause(); queue = []; document.body.classList.remove('playing'); render(); emit(); },
+  open: () => openPlayer(),
 };
 
 function load() {
@@ -67,28 +72,103 @@ audio.addEventListener('ended', () => {
   if (index + 1 < queue.length) { index++; load(); return; }
   rangePlayed++;
   if (rangeRepeat === 0 || rangePlayed < rangeRepeat) { index = 0; load(); return; }
-  queue = []; render(); emit();
+  player.stop();
 });
 audio.addEventListener('play', () => { render(); emit(); });
 audio.addEventListener('pause', () => { render(); emit(); });
+audio.addEventListener('timeupdate', progress);
 audio.addEventListener('error', () => {
   const it = queue[index];
   // Radios have mirrors: try the next one.
   if (it?.alt?.length) { it.url = it.alt.shift(); load(); }
 });
 
+const fmt = (s) => (isFinite(s) ? ar(`${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`) : '');
+
+function progress() {
+  const p = audio.duration ? (audio.currentTime / audio.duration) * 100 : 0;
+  const bar = $('#player .pline > i');
+  if (bar) bar.style.width = `${p}%`;
+  const big = $('#fp');
+  if (!big) return;
+  const r = $('#fpSeek', big);
+  if (r && !r.matches(':active')) r.value = String(p);
+  $('#fpT0', big).textContent = fmt(audio.currentTime);
+  $('#fpT1', big).textContent = fmt(audio.duration);
+}
+
 function render() {
   const bar = $('#player');
   const it = queue[index];
-  if (!it || document.body.classList.contains('no-player')) { bar.hidden = true; return; }
+  document.body.classList.toggle('playing', !!it);
+  if (!it) { bar.hidden = true; paintBig(); return; }
   bar.hidden = false;
-  bar.innerHTML = `<button class="pbtn" id="pp">${icon(audio.paused ? 'play' : 'pause')}</button>
-    <div class="grow"><b>${esc(it.label || title)}</b><small>${esc(title)}</small></div>
-    ${live ? '' : `<button class="pbtn ghost" id="pn">${icon('prev')}</button>`}
-    <button class="pbtn ghost" id="px">${icon('close')}</button>`;
+  bar.innerHTML = `<button class="pbtn" id="pp" aria-label="${audio.paused ? 'تشغيل' : 'إيقاف مؤقت'}">${icon(audio.paused ? 'play' : 'pause')}</button>
+    <button class="grow" id="po" style="text-align:right"><b>${esc(it.label || title)}</b><small>${esc(title)}${live ? ' • <span class="live">مباشر</span>' : ''}</small></button>
+    ${live ? '' : `<button class="pbtn ghost" id="pn" aria-label="التالي">${icon('next')}</button>`}
+    <button class="pbtn ghost" id="px" aria-label="إغلاق">${icon('close')}</button>
+    ${live ? '' : '<div class="pline"><i></i></div>'}`;
   bar.querySelector('#pp').onclick = () => player.toggle();
+  bar.querySelector('#po').onclick = () => openPlayer();
   bar.querySelector('#pn')?.addEventListener('click', () => player.next());
   bar.querySelector('#px').onclick = () => player.stop();
+  progress();
+  paintBig();
+}
+
+// ------------------------------------------------------- the full player ---
+function paintBig() {
+  const big = $('#fp');
+  if (!big) return;
+  const it = queue[index];
+  if (!it) { big.innerHTML = '<p class="muted center">لا يوجد تشغيل الآن</p>'; return; }
+  $('#fpL', big).textContent = it.label || title;
+  $('#fpS', big).textContent = live ? 'بث مباشر' : `${title}${queue.length > 1 ? ` • ${ar(index + 1)} من ${ar(queue.length)}` : ''}`;
+  $('#fpPP', big).innerHTML = icon(audio.paused ? 'play' : 'pause');
+  const rep = [];
+  if (repeatEach > 1) rep.push(`تكرار كل آية ${ar(repeatEach)} مرات (الآن ${ar(played + 1)})`);
+  if (rangeRepeat !== 1) rep.push(rangeRepeat === 0 ? 'تكرار المقطع بلا توقف' : `تكرار المقطع ${ar(rangeRepeat)} مرات (الآن ${ar(rangePlayed + 1)})`);
+  $('#fpR', big).textContent = rep.join(' • ');
+  progress();
+}
+
+function openPlayer() {
+  if (!queue[index]) return;
+  const rate = store.get('rate', 1);
+  sheet(`<div id="fp" class="fp">
+      <div class="fp-art ${audio.paused ? '' : 'on'}">${icon(live ? 'radio' : 'head')}</div>
+      <h3 id="fpL" style="margin-bottom:2px"></h3>
+      <p class="muted small center" id="fpS" style="margin:0"></p>
+      ${live ? '' : `<input type="range" id="fpSeek" min="0" max="100" step="0.1" value="0" class="seek">
+      <div class="row small muted" style="justify-content:space-between"><span id="fpT0"></span><span id="fpT1"></span></div>`}
+      <div class="row" style="justify-content:center;gap:18px;margin:10px 0">
+        ${live ? '' : `<button class="pbtn ghost big2" id="fpN" aria-label="التالي">${icon('next')}</button>`}
+        <button class="pbtn big" id="fpPP"></button>
+        ${live ? '' : `<button class="pbtn ghost big2" id="fpP" aria-label="السابق">${icon('prev')}</button>`}
+      </div>
+      <p class="gold small center" id="fpR"></p>
+      ${live ? '' : `<div class="chips" style="justify-content:center">${[0.75, 1, 1.25, 1.5].map((r) => `<button class="chip${r === rate ? ' on' : ''}" data-rate="${r}">${ar(r)}×</button>`).join('')}</div>`}
+      <button class="btn ghost block" id="fpX" style="margin-top:14px">${icon('stop')} إيقاف التشغيل</button>
+    </div>`, (body, close) => {
+    paintBig();
+    $('#fpPP', body).onclick = () => player.toggle();
+    $('#fpN', body)?.addEventListener('click', () => player.next());
+    $('#fpP', body)?.addEventListener('click', () => player.prev());
+    $('#fpX', body).onclick = () => { player.stop(); close(); };
+    const seek = $('#fpSeek', body);
+    if (seek) seek.oninput = () => { if (audio.duration) audio.currentTime = (seek.value / 100) * audio.duration; };
+    body.onclick = (e) => {
+      const b = e.target.closest('[data-rate]');
+      if (!b) return;
+      store.set('rate', +b.dataset.rate);
+      audio.playbackRate = +b.dataset.rate;
+      for (const c of body.querySelectorAll('[data-rate]')) c.classList.toggle('on', c === b);
+    };
+    const art = $('.fp-art', body);
+    const off = player.on((_, playing) => art?.classList.toggle('on', playing));
+    const mo = new MutationObserver(() => { if (!body.contains(art)) { off(); mo.disconnect(); } });
+    mo.observe(body, { childList: true });
+  });
 }
 
 /// Ayah recitation: global ayah numbers from [from] to [to].
@@ -97,4 +177,58 @@ export function ayahItems(from, to, reciter, labelOf) {
   const out = [];
   for (let g = from; g <= to; g++) out.push({ url: `${CDN}/${r.bitrate}/${r.id}/${g}.mp3`, ayah: g, label: labelOf?.(g) });
   return out;
+}
+
+/// «استماع»: choose from which ayah to which, the repetitions and the
+/// reciter, then play. [g]: the global ayah to start from.
+export async function listenSheet(g) {
+  const [m, names, reciters] = await Promise.all([meta(), surahs(), data('reciters.json')]);
+  const opts = store.get('listen', { each: 1, times: 1 });
+  const rec = store.get('reciter', { id: 'ar.alafasy', bitrate: 128 });
+  let s = m.surah[g - 1];
+  let f = m.ayah[g - 1];
+  let t = names[s - 1][2];
+  sheet(`<h3>الاستماع</h3>
+    <label class="small muted">السورة</label>
+    <select class="field" id="ls">${names.map((x) => `<option value="${x[0]}"${x[0] === s ? ' selected' : ''}>${ar(x[0])}. ${esc(x[1])}</option>`).join('')}</select>
+    <div class="grid" style="margin-top:10px;grid-template-columns:1fr 1fr">
+      <div><label class="small muted">من الآية</label><select class="field" id="lf"></select></div>
+      <div><label class="small muted">إلى الآية</label><select class="field" id="lt"></select></div>
+    </div>
+    <div class="row" style="margin-top:14px"><span class="grow">تكرار كل آية</span><button class="chip" data-d="each,-1">−</button><b id="le" class="cnt"></b><button class="chip" data-d="each,1">+</button></div>
+    <div class="row" style="margin-top:10px"><span class="grow">تكرار المقطع</span><button class="chip" data-d="times,-1">−</button><b id="lr" class="cnt"></b><button class="chip" data-d="times,1">+</button></div>
+    <label class="small muted" style="display:block;margin-top:14px">القارئ</label>
+    <select class="field" id="lq">${reciters.map((r) => `<option value="${r.id}"${r.id === rec.id ? ' selected' : ''}>${esc(r.name)}${r.style ? ' • ' + esc(r.style) : ''}</option>`).join('')}</select>
+    <button class="btn block" id="lgo" style="margin-top:16px">${icon('play')} تشغيل</button>`, (body, close) => {
+    const fill = () => {
+      const n = names[s - 1][2];
+      f = Math.min(f, n); t = Math.min(Math.max(t, f), n);
+      const opt = (v, min) => Array.from({ length: n - min + 1 }, (_, i) => i + min).map((a) => `<option${a === v ? ' selected' : ''}>${a}</option>`).join('');
+      $('#lf', body).innerHTML = opt(f, 1);
+      $('#lt', body).innerHTML = opt(t, f);
+      $('#le', body).textContent = ar(opts.each);
+      $('#lr', body).textContent = opts.times ? ar(opts.times) : '∞';
+    };
+    fill();
+    $('#ls', body).onchange = (e) => { s = +e.target.value; f = 1; t = names[s - 1][2]; fill(); };
+    $('#lf', body).onchange = (e) => { f = +e.target.value; fill(); };
+    $('#lt', body).onchange = (e) => { t = +e.target.value; fill(); };
+    body.onclick = (e) => {
+      const d = e.target.closest('[data-d]');
+      if (d) {
+        const [k, v] = d.dataset.d.split(',');
+        opts[k] = Math.max(k === 'times' ? 0 : 1, Math.min(20, opts[k] + +v));
+        fill();
+        return;
+      }
+      if (!e.target.closest('#lgo')) return;
+      const r = reciters.find((x) => x.id === $('#lq', body).value) || reciters[0];
+      store.set('reciter', { id: r.id, bitrate: r.bitrate });
+      store.set('listen', opts);
+      const g0 = m.surah.indexOf(s) + f;
+      close();
+      player.play(ayahItems(g0, g0 + (t - f), { id: r.id, bitrate: r.bitrate }, (x) => `سورة ${names[s - 1][1]} • الآية ${ar(m.ayah[x - 1])}`),
+        `${r.name} • سورة ${names[s - 1][1]}`, { each: opts.each, times: opts.times });
+    };
+  });
 }

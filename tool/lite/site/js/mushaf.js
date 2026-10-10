@@ -2,7 +2,7 @@
 // only around the page in view, ayah menu, index, tafseer and recitation.
 import { $, $$, ar, esc, icon, store, data, meta, surahs, sheet, closeSheet, toast, today } from './app.js';
 import { drawPage, hizbLabel, JUZ, BASMALA, ayahText } from './page.js';
-import { player, ayahItems } from './player.js';
+import { player, listenSheet } from './player.js';
 
 const PAGES = 604;
 let root, pagesEl, page = 1, offPlayer, selected = 0;
@@ -30,7 +30,7 @@ export async function show(view, args) {
   </div>`;
   root = $('#mushaf', view);
   pagesEl = $('#pages', view);
-  document.body.classList.add('no-player');
+  document.body.classList.add('in-mushaf');
   goTo(start, false);
 
   let ticking = false;
@@ -41,17 +41,34 @@ export async function show(view, args) {
   }, { passive: true });
   addEventListener('resize', onResize);
 
-  pagesEl.addEventListener('click', (e) => {
+  // A tap shows or hides the bars; holding an ayah opens its menu.
+  let hold, held = false, x0 = 0, y0 = 0;
+  pagesEl.addEventListener('pointerdown', (e) => {
+    held = false;
+    x0 = e.clientX; y0 = e.clientY;
     const w = e.target.closest('span[data-a]');
     const a = w ? +w.dataset.a : 0;
-    if (a) ayahMenu(a, m, names); else root.classList.toggle('immersive');
+    clearTimeout(hold);
+    if (!a) return;
+    hold = setTimeout(() => { held = true; navigator.vibrate?.(15); ayahMenu(a, m, names); }, 480);
+  });
+  const cancel = () => clearTimeout(hold);
+  pagesEl.addEventListener('pointermove', (e) => { if (Math.abs(e.clientX - x0) + Math.abs(e.clientY - y0) > 12) cancel(); });
+  pagesEl.addEventListener('pointerup', cancel);
+  pagesEl.addEventListener('pointercancel', cancel);
+  pagesEl.addEventListener('scroll', cancel, { passive: true });
+  pagesEl.addEventListener('contextmenu', (e) => e.preventDefault());
+  pagesEl.addEventListener('click', () => {
+    if (held) { held = false; return; }
+    const on = root.classList.toggle('immersive');
+    $('#nav').classList.toggle('hide', on);
   });
   $('#surahChip', root).onclick = () => openIndex(m, names);
   $('#juzChip', root).onclick = () => openIndex(m, names, 1);
   $('#pageChip', root).onclick = () => openIndex(m, names, 1);
   $('#tasmee', root).onclick = () => (location.hash = `#/tasmee/${page}`);
   $('#mark', root).onclick = () => toggleMark(m);
-  $('#playPage', root).onclick = () => playFrom(m.page.indexOf(page) + 1, m, names);
+  $('#playPage', root).onclick = () => listenSheet(m.page.indexOf(page) + 1);
   offPlayer = player.on((it) => highlight(it?.ayah ?? 0, m));
   highlight(player.current?.ayah ?? 0, m);
   update(m, names);
@@ -60,7 +77,8 @@ export async function show(view, args) {
 export function leave() {
   removeEventListener('resize', onResize);
   offPlayer?.();
-  document.body.classList.remove('no-player');
+  document.body.classList.remove('in-mushaf');
+  $('#nav').classList.remove('hide');
 }
 
 function pageEl(p) { return pagesEl.children[p - 1]; }
@@ -141,12 +159,6 @@ function toggleMark(m) {
 
 function label(g, m, names) { return `${names[m.surah[g - 1] - 1][1]} • ${ar(m.ayah[g - 1])}`; }
 
-function playFrom(g, m, names) {
-  const s = m.surah[g - 1];
-  let end = g;
-  while (end < m.surah.length && m.surah[end] === s) end++;
-  player.play(ayahItems(g, end, null, (x) => `سورة ${label(x, m, names)}`), `سورة ${names[s - 1][1]}`);
-}
 
 async function ayahMenu(a, m, names) {
   for (const s of $$('span.sel', pagesEl)) s.classList.remove('sel');
@@ -155,7 +167,7 @@ async function ayahMenu(a, m, names) {
   const name = names[m.surah[a - 1] - 1][1];
   await sheet(`<h3>سورة ${esc(name)} • الآية ${ar(m.ayah[a - 1])}</h3>
     <div class="list">
-      <button data-x="play">${icon('play')}<span class="grow">الاستماع من هذه الآية</span></button>
+      <button data-x="play">${icon('play')}<span class="grow">الاستماع من هذه الآية<br><small class="muted">حدّد النطاق والتكرار والقارئ</small></span></button>
       <button data-x="tafsir">${icon('book')}<span class="grow">التفسير الميسر</span></button>
       <button data-x="tasmee">${icon('mic')}<span class="grow">سمّع من هذه الآية</span></button>
       <button data-x="hifz">${icon('repeat')}<span class="grow">احفظ هذه الآية (تكرار)</span></button>
@@ -166,7 +178,7 @@ async function ayahMenu(a, m, names) {
       const x = e.target.closest('[data-x]')?.dataset.x;
       if (!x) return;
       const ref = `﴿${text}﴾ [${name}: ${ar(m.ayah[a - 1])}]`;
-      if (x === 'play') { close(); playFrom(a, m, names); }
+      if (x === 'play') { close(); setTimeout(() => listenSheet(a), 50); }
       if (x === 'tafsir') { close(); setTimeout(() => tafsir(a, m, names), 50); }
       if (x === 'tasmee') { close(); location.hash = `#/tasmee/${m.page[a - 1]}/${a}`; }
       if (x === 'hifz') { close(); location.hash = `#/hifz/${a}`; }
