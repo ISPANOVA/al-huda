@@ -9,6 +9,8 @@ import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart';
 import 'package:sherpa_onnx/sherpa_onnx.dart' as sherpa;
 
+import 'pause_detector.dart';
+
 /// The on-device Quran recogniser: a streaming phoneme model
 /// (Quran-Lab zipformer_p-arabic-v3, run by sherpa-onnx) listening to the
 /// microphone. Everything runs on the phone, without the internet.
@@ -227,11 +229,9 @@ class QuranListener {
           provider: 'cpu',
           debug: false,
         ),
-        enableEndpoint: true,
-        // A pause of this long after speech ends an utterance.
-        rule1MinTrailingSilence: 2.4,
-        rule2MinTrailingSilence: 1.0,
-        rule3MinUtteranceLength: 300,
+        // Pauses are told from the sound (PauseDetector): the model is
+        // silent through a long madd, its own endpoints would cut words.
+        enableEndpoint: false,
       ));
       stream = recognizer.createStream();
       out.send(const ['ready']);
@@ -240,6 +240,7 @@ class QuranListener {
       return;
     }
     var last = '';
+    final pauses = PauseDetector();
     void emit({required bool end}) {
       final r = recognizer!;
       final s = stream!;
@@ -247,7 +248,7 @@ class QuranListener {
         r.decode(s);
       }
       final text = r.getResult(s).text;
-      if (end || r.isEndpoint(s)) {
+      if (end) {
         if (text.isNotEmpty) out.send(['result', text, true]);
         r.reset(s);
         last = '';
@@ -264,11 +265,12 @@ class QuranListener {
       if (m is TransferableTypedData) {
         final samples = m.materialize().asFloat32List();
         s.acceptWaveform(samples: samples, sampleRate: _rate);
-        emit(end: false);
+        emit(end: pauses.feed(samples));
       } else if (m is List && m.isNotEmpty) {
         switch (m[0]) {
           case 'reset':
             r.reset(s);
+            pauses.reset();
             last = '';
           case 'flush':
             // Half a second of silence lets the model finish the last word.

@@ -891,7 +891,7 @@ class _TasmeePageState extends State<TasmeePage> {
                     child: Text(
                       first == null
                           ? ''
-                          : '${SurahMetadata.surah(first.surah).name} • ${ArabicUtils.toArabicDigits(_page)}',
+                          : '${SurahMetadata.surah(first.surah).name} • صفحة ${ArabicUtils.toArabicDigits(_page)}',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       textAlign: TextAlign.center,
@@ -1072,7 +1072,10 @@ class _TasmeePageState extends State<TasmeePage> {
                 width: 76,
                 height: 64,
                 child: Center(
-                  child: GestureDetector(
+                  child: Semantics(
+                    button: true,
+                    label: _active ? 'إيقاف الاستماع' : 'ابدأ التسميع بالميكروفون',
+                    child: GestureDetector(
                     onTap: _toggleMic,
                     child: AnimatedScale(
                       duration: const Duration(milliseconds: 120),
@@ -1094,6 +1097,7 @@ class _TasmeePageState extends State<TasmeePage> {
                         child: Icon(_active ? Icons.stop_rounded : Icons.mic_rounded, color: Colors.black, size: 30),
                       ),
                     ),
+                  ),
                   ),
                 ),
               ),

@@ -71,25 +71,54 @@ def recognizer():
         num_threads=2,
         sample_rate=RATE,
         feature_dim=80,
-        enable_endpoint_detection=True,
-        rule1_min_trailing_silence=2.4,
-        rule2_min_trailing_silence=1.0,
-        rule3_min_utterance_length=300,
+        enable_endpoint_detection=False,
         decoding_method="greedy_search",
     )
+
+
+class PauseDetector:
+    """Same rules as lib/features/tasmee/phonetic/pause_detector.dart."""
+    FRAME = 480
+    PAUSE_MS = 900
+
+    def __init__(self):
+        self.noise = 0.003
+        self.silent = 0
+        self.speech = False
+
+    def feed(self, x: np.ndarray) -> bool:
+        paused = False
+        for o in range(0, len(x) - self.FRAME + 1, self.FRAME):
+            rms = float(np.sqrt(np.mean(x[o:o + self.FRAME].astype(np.float64) ** 2)))
+            if rms < self.noise:
+                self.noise = 0.9 * rms + 0.1 * self.noise
+            else:
+                self.noise = 0.999 * self.noise + 0.001 * rms
+            if rms > max(0.006, self.noise * 4):
+                self.speech = True
+                self.silent = 0
+            elif self.speech:
+                self.silent += 1
+                if self.silent * 30 >= self.PAUSE_MS:
+                    self.speech = False
+                    self.silent = 0
+                    paused = True
+        return paused
 
 
 def run(rec, samples: np.ndarray):
     """Events as the app receives them: (text, is_final)."""
     events = []
     stream = rec.create_stream()
+    pauses = PauseDetector()
     last = ""
     for o in range(0, len(samples), CHUNK):
-        stream.accept_waveform(RATE, samples[o:o + CHUNK])
+        chunk = samples[o:o + CHUNK]
+        stream.accept_waveform(RATE, chunk)
         while rec.is_ready(stream):
             rec.decode_stream(stream)
         text = rec.get_result(stream)
-        if rec.is_endpoint(stream):
+        if pauses.feed(chunk):
             if text:
                 events.append([text, True])
             rec.reset(stream)

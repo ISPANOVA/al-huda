@@ -63,7 +63,22 @@ class PhoneticQuran {
   /// the next ayah instead of stopping.
   final List<bool> ayahEnd;
 
-  PhoneticQuran(this.ph, this.waslStart, this.ayahEnd);
+  /// How a word may change when the reciter stops on it or starts from it
+  /// (وقف وابتداء), which the table (read joined) doesn't show:
+  /// [tanween]: its ending «ن» is dropped (or becomes a long «ا»);
+  /// [taMarbuta]: its ending «ت» is read «ه»;
+  /// [hamzatWasl]: it begins with a hamzat wasl, said when starting on it.
+  final List<bool> tanween;
+  final List<bool> taMarbuta;
+  final List<bool> hamzatWasl;
+
+  PhoneticQuran(this.ph, this.waslStart, this.ayahEnd, {List<bool>? tanween, List<bool>? taMarbuta, List<bool>? hamzatWasl})
+      : tanween = tanween ?? List<bool>.filled(ph.length, false),
+        taMarbuta = taMarbuta ?? List<bool>.filled(ph.length, false),
+        hamzatWasl = hamzatWasl ?? List<bool>.filled(ph.length, false);
+
+  static final _tanween = RegExp('[\u064B-\u064D\u08F0-\u08F2]');
+  static final _marks = RegExp('[\u0610-\u061A\u064B-\u065F\u0670\u06D6-\u06ED\u08F0-\u08F2]');
 
   /// From assets/tasmee/phonemes.txt ([lines]: one per ayah, one item per
   /// word) for the Mushaf's [words] in page order. [global]: the global
@@ -72,6 +87,9 @@ class PhoneticQuran {
     final ph = List<String>.filled(words.length, '');
     final wasl = List<bool>.filled(words.length, false);
     final end = List<bool>.filled(words.length, false);
+    final tanween = List<bool>.filled(words.length, false);
+    final ta = List<bool>.filled(words.length, false);
+    final hamza = List<bool>.filled(words.length, false);
     var lastAyah = -1;
     var k = 0;
     List<String> items = const [];
@@ -87,9 +105,12 @@ class PhoneticQuran {
       final item = k < items.length ? items[k] : '';
       ph[i] = item == '-' ? '' : PhoneticText.normalize(item);
       end[i] = w.endsAyah;
+      tanween[i] = _tanween.hasMatch(w.text);
+      ta[i] = w.text.replaceAll(_marks, '').endsWith('ة');
+      hamza[i] = w.text.startsWith('ٱ');
       k++;
     }
-    return PhoneticQuran(ph, wasl, end);
+    return PhoneticQuran(ph, wasl, end, tanween: tanween, taMarbuta: ta, hamzatWasl: hamza);
   }
 
   // Index of consonant trigrams over the whole text.
@@ -548,6 +569,7 @@ class PhoneticTracker implements TasmeeFollower {
     final wordOf = <int>[];
     final starts = <int>[]; // text index where each word starts
     final del = <double>[];
+    final alt = <int>[]; // a sound read instead at a stop (ت → ه), or 0
     for (var w = first; w < last; w++) {
       starts.add(codes.length);
       final p = quran.ph[w];
@@ -559,11 +581,31 @@ class PhoneticTracker implements TasmeeFollower {
           tail--;
         }
       }
+      // Where the ending that changes at a stop begins: the tanween «ن» (and
+      // the haraka after it), the ta marbuta.
+      var stopFrom = p.length;
+      var taAt = -1;
+      if (quran.tanween[w] || quran.taMarbuta[w]) {
+        var j = p.length;
+        while (j > 0 && PhoneticText.isVowel(p.codeUnitAt(j - 1))) {
+          j--;
+        }
+        if (quran.tanween[w] && j > 0 && p.codeUnitAt(j - 1) == 0x0646) {
+          stopFrom = j - 1;
+          j--;
+          while (j > 0 && PhoneticText.isVowel(p.codeUnitAt(j - 1))) {
+            j--;
+          }
+        }
+        if (quran.taMarbuta[w] && j > 0 && p.codeUnitAt(j - 1) == 0x062A) taAt = j - 1;
+      }
       for (var i = 0; i < p.length; i++) {
         final c = p.codeUnitAt(i);
         codes.add(c);
         wordOf.add(w - first);
+        alt.add(i == taAt ? 0x0647 : 0);
         var d = PhoneticText.del(c);
+        if (i >= stopFrom || (taAt >= 0 && i > taAt)) d = math.min(d, 0.25);
         if (i >= tail) d = 0;
         // A hamzat wasl that starts an ayah is silent when joined to the
         // previous ayah.
@@ -607,7 +649,7 @@ class PhoneticTracker implements TasmeeFollower {
       back[row] = 2;
       for (var r = 1; r <= m; r++) {
         final rc = codes[r - 1];
-        var best = d[prow + r - 1] + PhoneticText.sub(rc, hc);
+        var best = d[prow + r - 1] + (alt[r - 1] == hc ? 0.25 : PhoneticText.sub(rc, hc));
         var how = 1;
         final ins = d[prow + r] + insCost;
         if (ins < best) {
@@ -640,6 +682,7 @@ class PhoneticTracker implements TasmeeFollower {
     // Insertions waiting to be given to a word (a run at a word boundary).
     var pendingIns = 0.0;
     var pendingRun = 0;
+    final pendingChars = <int>[];
     var startR = 0;
     void flushIns(int wordAfter) {
       if (pendingRun == 0) return;
@@ -647,11 +690,18 @@ class PhoneticTracker implements TasmeeFollower {
       // word after it; a long one is extra speech (a word repeated, a sound).
       final prevWord = wordAfter - 1;
       final afterAyahEnd = prevWord >= 0 && quran.ayahEnd[first + prevWord];
-      if (pendingRun <= 2 && wordAfter < spans.length && !afterAyahEnd) {
+      // Only vowels (a stop on a tanween read «ا», a connecting haraka), or
+      // the hamza of starting on a hamzat wasl: no mistake.
+      final vowels = pendingChars.every(PhoneticText.isVowel);
+      final startHamza = wordAfter < spans.length &&
+          quran.hamzatWasl[first + wordAfter] &&
+          pendingChars.every((c) => c == 0x0621 || PhoneticText.isVowel(c));
+      if (pendingRun <= 2 && wordAfter < spans.length && !afterAyahEnd && !vowels && !startHamza) {
         spans[wordAfter].cost += pendingIns;
       }
       pendingIns = 0;
       pendingRun = 0;
+      pendingChars.clear();
     }
 
     while (i > 0 || r > 0) {
@@ -662,7 +712,8 @@ class PhoneticTracker implements TasmeeFollower {
       }
       if (how == 1) {
         final w = wordOf[r - 1];
-        final c = PhoneticText.sub(codes[r - 1], hs.codeUnitAt(i - 1));
+        final hc = hs.codeUnitAt(i - 1);
+        final c = alt[r - 1] == hc ? 0.25 : PhoneticText.sub(codes[r - 1], hc);
         final s = spans[w];
         s.cost += c;
         if (c == 0) s.exact++;
@@ -677,6 +728,7 @@ class PhoneticTracker implements TasmeeFollower {
             s.cost += pendingIns;
             pendingIns = 0;
             pendingRun = 0;
+            pendingChars.clear();
           }
         }
         i--;
@@ -687,6 +739,7 @@ class PhoneticTracker implements TasmeeFollower {
         if (!leading) {
           pendingIns += PhoneticText.ins(hc);
           pendingRun++;
+          pendingChars.add(hc);
         }
         i--;
       } else {
@@ -700,6 +753,7 @@ class PhoneticTracker implements TasmeeFollower {
             spans[w].cost += pendingIns;
             pendingIns = 0;
             pendingRun = 0;
+            pendingChars.clear();
           }
         }
         r--;
