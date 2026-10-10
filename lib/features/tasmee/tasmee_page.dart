@@ -13,15 +13,14 @@ import 'package:speech_to_text/speech_to_text.dart';
 import '../../core/data/surah_metadata.dart';
 import '../../core/platform/web_env.dart';
 import '../../core/theme/app_themes.dart';
-import '../../core/theme/tones.dart';
 import '../../core/utils/arabic_utils.dart';
-import '../../core/widgets/gradient_background.dart';
 import '../../core/widgets/noor_ui.dart';
 import '../../core/widgets/state_views.dart';
 import '../audio/presentation/cubit/audio_cubit.dart';
 import '../quran/domain/repositories/quran_repository.dart';
 import '../quran/domain/entities/mushaf_line.dart';
 import '../quran/presentation/mushaf/mushaf_page.dart' show MushafPageView, MushafStyle, MushafWordPaint;
+import '../quran/presentation/mushaf/mushaf_reader_page.dart' show MushafChip, MushafPageProportion, MushafToolIcon, mushafPaperColor;
 import 'tasmee_engine.dart';
 import 'tasmee_locator.dart';
 import 'web_speech.dart';
@@ -68,7 +67,6 @@ class _TasmeePageState extends State<TasmeePage> {
   bool _helpShown = false;
   bool _active = false; // user wants to listen
   bool _listening = false;
-  bool _peek = false;
   late String _status = _idleStatus;
   String? _localeId;
   int _flashIndex = -1;
@@ -698,6 +696,7 @@ class _TasmeePageState extends State<TasmeePage> {
   @override
   Widget build(BuildContext context) {
     final glass = GlassTheme.of(context);
+    final style = MushafStyle.of(context);
     final t = _tracker;
     return PopScope(
       canPop: _leaving || (_mistakes.isEmpty && !(t?.located ?? false)),
@@ -707,40 +706,21 @@ class _TasmeePageState extends State<TasmeePage> {
         _stt.stop();
         _showSummaryThenLeave();
       },
-      child: GlassScaffold(
-        title: 'التسميع',
-        icon: Icons.record_voice_over_rounded,
-        tone: Tone.coral,
-        actions: [
-          IconButton(
-            tooltip: 'انتقل إلى سورة أو آية',
-            icon: const Icon(Icons.search_rounded),
-            onPressed: _openSearch,
-          ),
-          IconButton(
-            tooltip: _peek ? 'إخفاء النص' : 'إظهار النص للمراجعة',
-            icon: Icon(_peek ? Icons.visibility_off_rounded : Icons.visibility_rounded),
-            onPressed: () => setState(() => _peek = !_peek),
-          ),
-          IconButton(
-            tooltip: 'النتيجة',
-            icon: Badge(
-              isLabelVisible: _mistakes.isNotEmpty,
-              label: Text(ArabicUtils.toArabicDigits(_mistakes.length)),
-              child: const Icon(Icons.fact_check_rounded),
-            ),
-            onPressed: () => _showSummary(),
-          ),
-        ],
-        body: t == null
-            ? const Center(child: CircularProgressIndicator())
-            : Column(
-                children: [
-                  _topBar(glass, t),
-                  Expanded(child: _mushaf(glass, t)),
-                  _controls(glass, t),
-                ],
-              ),
+      // The same page as the Mushaf reader: flat paper colour, the page at
+      // full height with the same proportions, chips and icons above it.
+      child: Scaffold(
+        backgroundColor: mushafPaperColor(context),
+        body: SafeArea(
+          child: t == null
+              ? const LoadingView()
+              : Column(
+                  children: [
+                    _topBar(glass, style, t),
+                    Expanded(child: _mushaf(glass, style, t)),
+                    _controls(glass, style, t),
+                  ],
+                ),
+        ),
       ),
     );
   }
@@ -754,79 +734,91 @@ class _TasmeePageState extends State<TasmeePage> {
     });
   }
 
-  Widget _topBar(GlassTheme glass, TasmeeTracker t) {
+  /// Like the reader's header: back • what is tested ▾ • tools.
+  Widget _topBar(GlassTheme glass, MushafStyle style, TasmeeTracker t) {
     final start = _pageStart[_page];
     final end = _pageStart[_page + 1];
-    final first = start < end ? t.words[start] : null;
     var recited = 0;
     for (var i = start; i < end; i++) {
       if (t.words[i].revealed) recited++;
     }
     final progress = end > start ? recited / (end - start) : 0.0;
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 4, 16, 6),
+    const red = Color(0xFFE5484D);
+    return SizedBox(
+      height: 52,
       child: Column(
         children: [
-          Row(
-            children: [
-              // What is being tested: the whole Quran or one surah.
-              InkWell(
-                borderRadius: BorderRadius.circular(14),
-                onTap: _openScope,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: glass.accent.withValues(alpha: 0.45)),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 6),
+              child: Row(
+                children: [
+                  MushafToolIcon(
+                    icon: Icons.arrow_forward_rounded,
+                    color: style.accent,
+                    tooltip: 'رجوع',
+                    onTap: () => Navigator.of(context).maybePop(),
                   ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.tune_rounded, size: 16, color: glass.accent),
-                      const SizedBox(width: 6),
-                      Text(
-                        _scopeSurah == null ? 'القرآن كله' : 'سورة ${SurahMetadata.surah(_scopeSurah!).name}',
-                        style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13, color: glass.accent),
+                  Flexible(
+                    child: MushafChip(
+                      style: style,
+                      onTap: _openScope,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Flexible(
+                            child: Text(
+                              _scopeSurah == null ? 'القرآن كله' : SurahMetadata.surah(_scopeSurah!).name,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: style.accent),
+                            ),
+                          ),
+                          const SizedBox(width: 2),
+                          Icon(Icons.keyboard_arrow_down_rounded, size: 20, color: style.accent),
+                        ],
                       ),
-                      Icon(Icons.expand_more_rounded, size: 18, color: glass.accent),
-                    ],
+                    ),
                   ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  first == null ? '' : 'سورة ${SurahMetadata.surah(first.surah).name} • صفحة ${ArabicUtils.toArabicDigits(_page)}',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(color: glass.onGlassMuted, fontWeight: FontWeight.w700, fontSize: 13),
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12),
-                  color: (_mistakes.isEmpty ? glass.accent : const Color(0xFFE5484D)).withValues(alpha: 0.15),
-                ),
-                child: Text(
-                  'الأخطاء ${ArabicUtils.toArabicDigits(_mistakes.length)}',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w800,
-                    fontSize: 12.5,
-                    color: _mistakes.isEmpty ? glass.accent : const Color(0xFFE5484D),
+                  const Spacer(),
+                  MushafToolIcon(
+                    icon: Icons.search_rounded,
+                    color: style.accent,
+                    tooltip: 'انتقل إلى سورة أو آية',
+                    onTap: _openSearch,
                   ),
-                ),
+                  MushafToolIcon(
+                    icon: _hide ? Icons.visibility_rounded : Icons.visibility_off_rounded,
+                    color: style.accent,
+                    tooltip: _hide ? 'إظهار الآيات' : 'إخفاء الآيات (اختبار الحفظ)',
+                    onTap: () => setState(() => _hide = !_hide),
+                  ),
+                  IconButton(
+                    tooltip: 'النتيجة',
+                    visualDensity: VisualDensity.compact,
+                    onPressed: () => _showSummary(),
+                    icon: Badge(
+                      isLabelVisible: _mistakes.isNotEmpty,
+                      backgroundColor: red,
+                      label: Text(ArabicUtils.toArabicDigits(_mistakes.length)),
+                      child: Icon(Icons.fact_check_rounded, color: style.accent, size: 24),
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
-          const SizedBox(height: 8),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(6),
-            child: LinearProgressIndicator(
-              value: progress,
-              minHeight: 5,
-              color: glass.accent,
-              backgroundColor: glass.onGlass.withValues(alpha: 0.08),
+          // The page's progress, as a hairline under the header.
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(2),
+              child: LinearProgressIndicator(
+                value: progress,
+                minHeight: 2,
+                color: style.accent,
+                backgroundColor: style.accent.withValues(alpha: 0.10),
+              ),
             ),
           ),
         ],
@@ -834,10 +826,9 @@ class _TasmeePageState extends State<TasmeePage> {
     );
   }
 
-  /// The Mushaf itself, page by page, swiped exactly like the reader.
-  Widget _mushaf(GlassTheme glass, TasmeeTracker t) {
+  /// The Mushaf itself, page by page, exactly as in the reader.
+  Widget _mushaf(GlassTheme glass, MushafStyle style, TasmeeTracker t) {
     final repo = context.read<QuranRepository>();
-    final style = MushafStyle.of(context);
     return PageView.builder(
       controller: _pages,
       itemCount: 604,
@@ -848,15 +839,17 @@ class _TasmeePageState extends State<TasmeePage> {
         final base = _pageStart[page];
         return RepaintBoundary(
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(10, 4, 10, 6),
-            child: MushafPageView(
-              page: page,
-              lines: repo.linesOnPage(page),
-              referenceWidth: repo.referenceLineWidth,
-              style: style,
-              onAyahTap: (_) {},
-              revision: _revision * 4 + (_peek ? 1 : 0) + (_active ? 2 : 0),
-              wordPaint: (k) => _paintWord(glass, t, base + k),
+            padding: const EdgeInsets.fromLTRB(10, 6, 10, 4),
+            child: MushafPageProportion(
+              child: MushafPageView(
+                page: page,
+                lines: repo.linesOnPage(page),
+                referenceWidth: repo.referenceLineWidth,
+                style: style,
+                onAyahTap: (_) {},
+                revision: _revision * 4 + (_hide ? 1 : 0) + (_active ? 2 : 0),
+                wordPaint: (k) => _paintWord(style, t, base + k),
+              ),
             ),
           ),
         );
@@ -864,57 +857,54 @@ class _TasmeePageState extends State<TasmeePage> {
     );
   }
 
-  MushafWordPaint _hiddenPaint(GlassTheme glass) => MushafWordPaint(
-        hidden: true,
-        peekOpacity: _peek ? 0.28 : 0,
-        underline: glass.onGlass.withValues(alpha: 0.22),
-      );
+  /// Shown (default): the page reads like the Mushaf; the word to recite is
+  /// marked, mistakes are red, hints gold. Hidden: a memorisation test, each
+  /// word appears when it is recited.
+  static bool _hide = false;
 
-  MushafWordPaint? _paintWord(GlassTheme glass, TasmeeTracker t, int k) {
-    if (k >= t.words.length) return _hiddenPaint(glass);
+  MushafWordPaint? _paintWord(MushafStyle style, TasmeeTracker t, int k) {
     const red = Color(0xFFE5484D);
+    if (k >= t.words.length) return _hide ? MushafWordPaint(hidden: true, underline: style.ink.withValues(alpha: 0.12)) : null;
     final w = t.words[k];
     final flash = k == _flashIndex;
     final current = k == t.expected && _active && t.located;
-    final bg = flash ? red.withValues(alpha: 0.18) : (current ? glass.accent.withValues(alpha: 0.10) : null);
-    if (w.revealed) {
-      if (w.missed) return MushafWordPaint(color: red, background: bg);
-      if (w.state == TasmeeState.hinted) return MushafWordPaint(color: glass.accent, background: bg);
+    final bg = flash ? red.withValues(alpha: 0.20) : (current ? style.highlight : null);
+    final wrong = w.missed || w.state == TasmeeState.mistake;
+    if (w.revealed || !_hide) {
+      if (wrong) return MushafWordPaint(color: red, background: bg);
+      if (w.state == TasmeeState.hinted) return MushafWordPaint(color: style.accent, background: bg);
       return bg == null ? null : MushafWordPaint(background: bg);
     }
-    final mistake = w.state == TasmeeState.mistake;
     return MushafWordPaint(
       hidden: true,
-      peekOpacity: _peek ? 0.28 : 0,
       background: bg,
-      underline: mistake || flash ? red : (current ? glass.accent : glass.onGlass.withValues(alpha: 0.22)),
-      underlineWidth: mistake || flash || current ? 2.4 : 1.2,
+      underline: wrong || flash ? red : (current ? style.accent : style.ink.withValues(alpha: 0.12)),
+      underlineWidth: wrong || flash || current ? 2.2 : 1,
     );
   }
 
-  /// Icon above a one-line label: same size whatever the text or screen width.
-  Widget _hintButton(GlassTheme glass, IconData icon, String label, VoidCallback? onTap) {
-    final color = onTap == null ? glass.onGlassMuted.withValues(alpha: 0.5) : glass.accent;
+  /// A small tool under the page: icon above a one-line label.
+  Widget _hintButton(MushafStyle style, IconData icon, String label, VoidCallback? onTap) {
+    final color = onTap == null ? style.muted.withValues(alpha: 0.5) : style.accent;
     return SizedBox(
-      height: 64,
-      child: OutlinedButton(
+      height: 54,
+      child: TextButton(
         onPressed: onTap,
-        style: OutlinedButton.styleFrom(
-          padding: const EdgeInsets.symmetric(horizontal: 6),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          side: BorderSide(color: color.withValues(alpha: 0.5)),
+        style: TextButton.styleFrom(
+          padding: const EdgeInsets.symmetric(horizontal: 4),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(icon, size: 20, color: color),
-            const SizedBox(height: 4),
+            const SizedBox(height: 3),
             FittedBox(
               fit: BoxFit.scaleDown,
               child: Text(label,
                   maxLines: 1,
                   softWrap: false,
-                  style: TextStyle(color: color, fontSize: 13, fontWeight: FontWeight.w700)),
+                  style: TextStyle(color: color, fontSize: 12.5, fontWeight: FontWeight.w700)),
             ),
           ],
         ),
@@ -922,54 +912,42 @@ class _TasmeePageState extends State<TasmeePage> {
     );
   }
 
-  Widget _controls(GlassTheme glass, TasmeeTracker t) {
+  Widget _controls(GlassTheme glass, MushafStyle style, TasmeeTracker t) {
     final canHint = !t.done;
-    return Container(
-      padding: const EdgeInsets.fromLTRB(16, 10, 16, 12),
-      decoration: BoxDecoration(
-        color: noorSurface(context),
-        border: Border(top: BorderSide(color: glass.accent.withValues(alpha: 0.18))),
-      ),
+    final heard = _active && _heard.isNotEmpty ? _heard.split(' ').reversed.take(6).toList().reversed.join(' ') : '';
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 0, 12, 6),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
+          // One fixed-height line, so the page above never moves.
           SizedBox(
-            height: 38,
-            child: Center(
-              child: Text(_status,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: glass.onGlassMuted, fontSize: 12.5, height: 1.5)),
-            ),
-          ),
-          // Fixed height so the page above never jumps while speaking.
-          SizedBox(
-            height: 24,
+            height: 20,
             child: Center(
               child: Text(
-                _active && _heard.isNotEmpty
-                    ? '«${_heard.split(' ').reversed.take(7).toList().reversed.join(' ')}»'
-                    : '',
+                heard.isNotEmpty && (t.located) ? '«$heard»' : _status,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.center,
-                style: TextStyle(color: glass.accent.withValues(alpha: 0.85), fontSize: 13, fontWeight: FontWeight.w700),
+                style: TextStyle(
+                  color: heard.isNotEmpty && t.located ? style.accent.withValues(alpha: 0.9) : style.muted,
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
             ),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 4),
           Row(
             children: [
               Expanded(
-                child: _hintButton(glass, Icons.lightbulb_outline_rounded, 'الكلمة التالية', canHint ? _hintWord : null),
+                child: _hintButton(style, Icons.lightbulb_outline_rounded, 'الكلمة التالية', canHint ? _hintWord : null),
               ),
-              const SizedBox(width: 12),
               // The mic keeps a fixed footprint; the sound level only scales
               // its painting, so the buttons beside it never move.
               SizedBox(
-                width: 88,
-                height: 88,
+                width: 76,
+                height: 64,
                 child: Center(
                   child: GestureDetector(
                     onTap: _toggleMic,
@@ -977,34 +955,30 @@ class _TasmeePageState extends State<TasmeePage> {
                       duration: const Duration(milliseconds: 120),
                       scale: 1 + (_active ? _level * 0.12 : 0),
                       child: Container(
-                        width: 72,
-                        height: 72,
+                        width: 58,
+                        height: 58,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: _active ? const Color(0xFFE5484D) : glass.accent,
+                          color: _active ? const Color(0xFFE5484D) : style.accent,
                           boxShadow: [
                             BoxShadow(
-                              color: (_active ? const Color(0xFFE5484D) : glass.accent)
-                                  .withValues(alpha: _listening ? 0.6 : 0.3),
-                              blurRadius: _listening ? 18 + _level * 22 : 12,
+                              color: (_active ? const Color(0xFFE5484D) : style.accent)
+                                  .withValues(alpha: _listening ? 0.55 : 0.25),
+                              blurRadius: _listening ? 14 + _level * 18 : 10,
                             ),
                           ],
                         ),
-                        child: Icon(_active ? Icons.stop_rounded : Icons.mic_rounded, color: Colors.black, size: 36),
+                        child: Icon(_active ? Icons.stop_rounded : Icons.mic_rounded, color: Colors.black, size: 30),
                       ),
                     ),
                   ),
                 ),
               ),
-              const SizedBox(width: 12),
               Expanded(
-                child: _hintButton(glass, Icons.subject_rounded, 'باقي الآية', canHint ? _hintAyah : null),
+                child: _hintButton(style, Icons.subject_rounded, 'باقي الآية', canHint ? _hintAyah : null),
               ),
             ],
           ),
-          const SizedBox(height: 4),
-          Text('اسحب يمينًا أو يسارًا لتقليب الصفحات',
-              style: TextStyle(fontSize: 11, color: glass.onGlassMuted.withValues(alpha: 0.7))),
         ],
       ),
     );
