@@ -1,0 +1,300 @@
+out:
+total 16
+drwxr-xr-x 4 runner runner 4096 Oct 10 13:23 .
+drwxr-xr-x 5 runner runner 4096 Oct 10 13:23 ..
+-rw-r--r-- 1 runner runner    0 Oct 10 13:23 _ls.txt
+drwxr-xr-x 6 runner runner 4096 Oct 10 13:23 rq
+drwxr-xr-x 2 runner runner 4096 Oct 10 13:23 sherpa
+
+out/rq:
+total 68
+drwxr-xr-x 6 runner runner  4096 Oct 10 13:23 .
+drwxr-xr-x 4 runner runner  4096 Oct 10 13:23 ..
+-rw-r--r-- 1 runner runner  1635 Sep  2 14:47 CHANGELOG.md
+-rw-r--r-- 1 runner runner  1776 Aug 22 18:56 LICENSE
+-rw-r--r-- 1 runner runner 21361 Sep  2 14:47 README.md
+-rw-r--r-- 1 runner runner  5289 Oct 10 13:23 _pub.json
+drwxr-xr-x 3 runner runner  4096 Jan  1  1970 assets
+drwxr-xr-x 2 runner runner  4096 Jan  1  1970 bin
+drwxr-xr-x 8 runner runner  4096 Jan  1  1970 example
+drwxr-xr-x 7 runner runner  4096 Jan  1  1970 lib
+-rw-r--r-- 1 runner runner   856 Sep  2 14:47 pubspec.yaml
+
+out/rq/assets:
+total 12
+drwxr-xr-x 3 runner runner 4096 Jan  1  1970 .
+drwxr-xr-x 6 runner runner 4096 Oct 10 13:23 ..
+drwxr-xr-x 2 runner runner 4096 Jan  1  1970 model
+
+out/rq/assets/model:
+total 17420
+drwxr-xr-x 2 runner runner     4096 Jan  1  1970 .
+drwxr-xr-x 3 runner runner     4096 Jan  1  1970 ..
+-rw-r--r-- 1 runner runner 12827409 Aug 19 22:27 ordered_quran_phonemes.json
+-rw-r--r-- 1 runner runner  4366532 Jul 24 18:31 ph_index.npy
+-rw-r--r-- 1 runner runner   623772 Jul 24 18:31 ref_norm_ph.txt
+-rw-r--r-- 1 runner runner     2597 Jul 24 18:31 tokens.txt
+
+out/rq/bin:
+total 16
+drwxr-xr-x 2 runner runner 4096 Jan  1  1970 .
+drwxr-xr-x 6 runner runner 4096 Oct 10 13:23 ..
+-rw-r--r-- 1 runner runner 7360 Aug 23 01:59 download_model.dart
+
+out/rq/example:
+total 36
+drwxr-xr-x 8 runner runner 4096 Jan  1  1970 .
+drwxr-xr-x 6 runner runner 4096 Oct 10 13:23 ..
+drwxr-xr-x 4 runner runner 4096 Jan  1  1970 android
+drwxr-xr-x 5 runner runner 4096 Jan  1  1970 assets
+drwxr-xr-x 7 runner runner 4096 Jan  1  1970 ios
+drwxr-xr-x 4 runner runner 4096 Jan  1  1970 lib
+-rw-r--r-- 1 runner runner  866 Sep  2 22:30 pubspec.yaml
+drwxr-xr-x 3 runner runner 4096 Jan  1  1970 web
+drwxr-xr-x 4 runner runner 4096 Jan  1  1970 windows
+
+out/rq/example/android:
+total 28
+drwxr-xr-x 4 runner runner 4096 Jan  1  1970 .
+drwxr-xr-x 8 runner runner 4096 Jan  1  1970 ..
+drwxr-xr-x 3 runner runner 4096 Jan  1  1970 app
+-rw-r--r-- 1 runner runner  561 Jul 24 18:31 build.gradle.kts
+drwxr-xr-x 3 runner runner 4096 Jan  1  1970 gradle
+-rw-r--r-- 1 runner runner  793 Jul 24 18:31 gradle.properties
+-rw-r--r-- 1 runner runner  797 Aug 19 22:27 settings.gradle.kts
+
+out/rq/example/android/app:
+total 20
+drwxr-xr-x 3 runner runner 4096 Jan  1  1970 .
+drwxr-xr-x 4 runner runner 4096 Jan  1  1970 ..
+-rw-r--r-- 1 runner runner 2965 Aug 19 22:27 build.gradle.kts
+-rw-r--r-- 1 runner runner  551 Jul 24 18:31 proguard-rules.pro
+drwxr-xr-x 5 runner runner 4096 Jan  1  1970 src
+
+out/rq/example/android/app/src:
+total 20
+drwxr-xr-x 5 runner runner 4096 Jan  1  1970 .
+drwxr-xr-x 3 runner runner 4096 Jan  1  1970 ..
+drwxr-xr-x 2 runner runner 4096 Jan  1  1970 debug
+drwxr-xr-x 5 runner runner 4096 Jan  1  1970 main
+drwxr-xr-x 2 runner runner 4096 Jan  1  1970 profile
+
+out/rq/example/android/app/src/debug:
+total 12
+drwxr-xr-x 2 runner runner 4096 Jan  1  1970 .
+drwxr-xr-x 5 runner runner 4096 Jan  1  1970 ..
+-rw-r--r-- 1 runner runner  385 Jul 24 18:31 AndroidManifest.xml
+
+out/rq/example/android/app/src/main:
+total 24
+drwxr-xr-x  5 runner runner 4096 Jan  1  1970 .
+drwxr-xr-x  5 runner runner 4096 Jan  1  1970 ..
+-rw-r--r--  1 runner runner 2723 Aug 19 22:27 AndroidManifest.xml
+drwxr-xr-x  3 runner runner 4096 Jan  1  1970 java
+drwxr-xr-x  3 runner runner 4096 Jan  1  1970 kotlin
+drwxr-xr-x 13 runner runner 4096 Jan  1  1970 res
+
+out/rq/example/android/app/src/main/java:
+total 12
+drwxr-xr-x 3 runner runner 4096 Jan  1  1970 .
+drwxr-xr-x 5 runner runner 4096 Jan  1  1970 ..
+drwxr-xr-x 3 runner runner 4096 Jan  1  1970 io
+
+out/rq/example/android/app/src/main/java/io:
+total 12
+drwxr-xr-x 3 runner runner 4096 Jan  1  1970 .
+drwxr-xr-x 3 runner runner 4096 Jan  1  1970 ..
+drwxr-xr-x 3 runner runner 4096 Jan  1  1970 flutter
+
+out/rq/example/android/app/src/main/java/io/flutter:
+total 12
+drwxr-xr-x 3 runner runner 4096 Jan  1  1970 .
+drwxr-xr-x 3 runner runner 4096 Jan  1  1970 ..
+drwxr-xr-x 2 runner runner 4096 Jan  1  1970 plugins
+
+out/rq/example/android/app/src/main/java/io/flutter/plugins:
+total 8
+drwxr-xr-x 2 runner runner 4096 Jan  1  1970 .
+drwxr-xr-x 3 runner runner 4096 Jan  1  1970 ..
+
+out/rq/example/android/app/src/main/kotlin:
+total 12
+drwxr-xr-x 3 runner runner 4096 Jan  1  1970 .
+drwxr-xr-x 5 runner runner 4096 Jan  1  1970 ..
+drwxr-xr-x 3 runner runner 4096 Jan  1  1970 com
+
+out/rq/example/android/app/src/main/kotlin/com:
+total 12
+drwxr-xr-x 3 runner runner 4096 Jan  1  1970 .
+drwxr-xr-x 3 runner runner 4096 Jan  1  1970 ..
+drwxr-xr-x 3 runner runner 4096 Jan  1  1970 recitequran
+
+out/rq/example/android/app/src/main/kotlin/com/recitequran:
+total 12
+drwxr-xr-x 3 runner runner 4096 Jan  1  1970 .
+drwxr-xr-x 3 runner runner 4096 Jan  1  1970 ..
+drwxr-xr-x 2 runner runner 4096 Jan  1  1970 app
+
+out/rq/example/android/app/src/main/kotlin/com/recitequran/app:
+total 12
+drwxr-xr-x 2 runner runner 4096 Jan  1  1970 .
+drwxr-xr-x 3 runner runner 4096 Jan  1  1970 ..
+-rw-r--r-- 1 runner runner 2435 Aug 19 22:27 MainActivity.kt
+
+out/rq/example/android/app/src/main/res:
+total 52
+drwxr-xr-x 13 runner runner 4096 Jan  1  1970 .
+drwxr-xr-x  5 runner runner 4096 Jan  1  1970 ..
+drwxr-xr-x  2 runner runner 4096 Jan  1  1970 drawable
+drwxr-xr-x  2 runner runner 4096 Jan  1  1970 drawable-v21
+drwxr-xr-x  2 runner runner 4096 Jan  1  1970 mipmap-hdpi
+drwxr-xr-x  2 runner runner 4096 Jan  1  1970 mipmap-mdpi
+drwxr-xr-x  2 runner runner 4096 Jan  1  1970 mipmap-xhdpi
+drwxr-xr-x  2 runner runner 4096 Jan  1  1970 mipmap-xxhdpi
+drwxr-xr-x  2 runner runner 4096 Jan  1  1970 mipmap-xxxhdpi
+drwxr-xr-x  2 runner runner 4096 Jan  1  1970 values
+drwxr-xr-x  2 runner runner 4096 Jan  1  1970 values-ar
+drwxr-xr-x  2 runner runner 4096 Jan  1  1970 values-night
+drwxr-xr-x  2 runner runner 4096 Jan  1  1970 values-v28
+
+out/rq/example/android/app/src/main/res/drawable:
+total 12
+drwxr-xr-x  2 runner runner 4096 Jan  1  1970 .
+drwxr-xr-x 13 runner runner 4096 Jan  1  1970 ..
+-rw-r--r--  1 runner runner  446 Jul 24 18:31 launch_background.xml
+
+out/rq/example/android/app/src/main/res/drawable-v21:
+total 12
+drwxr-xr-x  2 runner runner 4096 Jan  1  1970 .
+drwxr-xr-x 13 runner runner 4096 Jan  1  1970 ..
+-rw-r--r--  1 runner runner  450 Jul 24 18:31 launch_background.xml
+
+out/rq/example/android/app/src/main/res/mipmap-hdpi:
+total 12
+drwxr-xr-x  2 runner runner 4096 Jan  1  1970 .
+drwxr-xr-x 13 runner runner 4096 Jan  1  1970 ..
+-rw-r--r--  1 runner runner 3825 Jul 24 18:31 ic_launcher.png
+
+out/rq/example/android/app/src/main/res/mipmap-mdpi:
+total 12
+drwxr-xr-x  2 runner runner 4096 Jan  1  1970 .
+drwxr-xr-x 13 runner runner 4096 Jan  1  1970 ..
+-rw-r--r--  1 runner runner 1949 Jul 24 18:31 ic_launcher.png
+
+out/rq/example/android/app/src/main/res/mipmap-xhdpi:
+total 16
+drwxr-xr-x  2 runner runner 4096 Jan  1  1970 .
+drwxr-xr-x 13 runner runner 4096 Jan  1  1970 ..
+-rw-r--r--  1 runner runner 5213 Jul 24 18:31 ic_launcher.png
+
+out/rq/example/android/app/src/main/res/mipmap-xxhdpi:
+total 20
+drwxr-xr-x  2 runner runner 4096 Jan  1  1970 .
+drwxr-xr-x 13 runner runner 4096 Jan  1  1970 ..
+-rw-r--r--  1 runner runner 8870 Jul 24 18:31 ic_launcher.png
+
+out/rq/example/android/app/src/main/res/mipmap-xxxhdpi:
+total 24
+drwxr-xr-x  2 runner runner  4096 Jan  1  1970 .
+drwxr-xr-x 13 runner runner  4096 Jan  1  1970 ..
+-rw-r--r--  1 runner runner 13728 Jul 24 18:31 ic_launcher.png
+
+out/rq/example/android/app/src/main/res/values:
+total 16
+drwxr-xr-x  2 runner runner 4096 Jan  1  1970 .
+drwxr-xr-x 13 runner runner 4096 Jan  1  1970 ..
+-rw-r--r--  1 runner runner  118 Jul 24 18:31 strings.xml
+-rw-r--r--  1 runner runner 1014 Jul 24 18:31 styles.xml
+
+out/rq/example/android/app/src/main/res/values-ar:
+total 12
+drwxr-xr-x  2 runner runner 4096 Jan  1  1970 .
+drwxr-xr-x 13 runner runner 4096 Jan  1  1970 ..
+-rw-r--r--  1 runner runner  127 Jul 24 18:31 strings.xml
+
+out/rq/example/android/app/src/main/res/values-night:
+total 12
+drwxr-xr-x  2 runner runner 4096 Jan  1  1970 .
+drwxr-xr-x 13 runner runner 4096 Jan  1  1970 ..
+-rw-r--r--  1 runner runner 1013 Jul 24 18:31 styles.xml
+
+out/rq/example/android/app/src/main/res/values-v28:
+total 12
+drwxr-xr-x  2 runner runner 4096 Jan  1  1970 .
+drwxr-xr-x 13 runner runner 4096 Jan  1  1970 ..
+-rw-r--r--  1 runner runner  574 Jul 24 18:31 styles.xml
+
+out/rq/example/android/app/src/profile:
+total 12
+drwxr-xr-x 2 runner runner 4096 Jan  1  1970 .
+drwxr-xr-x 5 runner runner 4096 Jan  1  1970 ..
+-rw-r--r-- 1 runner runner  385 Jul 24 18:31 AndroidManifest.xml
+
+out/rq/example/android/gradle:
+total 12
+drwxr-xr-x 3 runner runner 4096 Jan  1  1970 .
+drwxr-xr-x 4 runner runner 4096 Jan  1  1970 ..
+drwxr-xr-x 2 runner runner 4096 Jan  1  1970 wrapper
+
+out/rq/example/android/gradle/wrapper:
+total 12
+drwxr-xr-x 2 runner runner 4096 Jan  1  1970 .
+drwxr-xr-x 3 runner runner 4096 Jan  1  1970 ..
+-rw-r--r-- 1 runner runner  207 Aug 19 22:27 gradle-wrapper.properties
+
+out/rq/example/assets:
+total 20
+drwxr-xr-x 5 runner runner 4096 Jan  1  1970 .
+drwxr-xr-x 8 runner runner 4096 Jan  1  1970 ..
+drwxr-xr-x 2 runner runner 4096 Jan  1  1970 fonts
+drwxr-xr-x 2 runner runner 4096 Jan  1  1970 icon
+drwxr-xr-x 2 runner runner 4096 Jan  1  1970 model
+
+out/rq/example/assets/fonts:
+total 304
+drwxr-xr-x 2 runner runner   4096 Jan  1  1970 .
+drwxr-xr-x 5 runner runner   4096 Jan  1  1970 ..
+-rw-r--r-- 1 runner runner 301184 Aug 22 18:48 HafsSmart_08.ttf
+
+out/rq/example/assets/icon:
+total 476
+drwxr-xr-x 2 runner runner   4096 Jan  1  1970 .
+drwxr-xr-x 5 runner runner   4096 Jan  1  1970 ..
+-rw-r--r-- 1 runner runner 475501 Aug 22 18:48 app_icon.png
+
+out/rq/example/assets/model:
+total 8
+drwxr-xr-x 2 runner runner 4096 Jan  1  1970 .
+drwxr-xr-x 5 runner runner 4096 Jan  1  1970 ..
+
+out/rq/example/ios:
+total 32
+drwxr-xr-x 7 runner runner 4096 Jan  1  1970 .
+drwxr-xr-x 8 runner runner 4096 Jan  1  1970 ..
+drwxr-xr-x 2 runner runner 4096 Jan  1  1970 Flutter
+-rw-r--r-- 1 runner runner 1434 Aug 19 22:28 Podfile
+drwxr-xr-x 4 runner runner 4096 Jan  1  1970 Runner
+drwxr-xr-x 4 runner runner 4096 Jan  1  1970 Runner.xcodeproj
+drwxr-xr-x 3 runner runner 4096 Jan  1  1970 Runner.xcworkspace
+drwxr-xr-x 2 runner runner 4096 Jan  1  1970 RunnerTests
+
+out/rq/example/ios/Flutter:
+total 28
+drwxr-xr-x 2 runner runner 4096 Jan  1  1970 .
+drwxr-xr-x 7 runner runner 4096 Jan  1  1970 ..
+-rw-r--r-- 1 runner runner  744 Jul 24 18:31 AppFrameworkInfo.plist
+-rw-r--r-- 1 runner runner  109 Aug 19 22:28 Debug.xcconfig
+-rw-r--r-- 1 runner runner  671 Aug 18 03:34 Generated.xcconfig
+-rw-r--r-- 1 runner runner  111 Aug 19 22:28 Release.xcconfig
+-rw-r--r-- 1 runner runner  710 Aug 18 03:34 flutter_export_environment.sh
+
+out/rq/example/ios/Runner:
+total 40
+drwxr-xr-x 4 runner runner 4096 Jan  1  1970 .
+drwxr-xr-x 7 runner runner 4096 Jan  1  1970 ..
+-rw-r--r-- 1 runner runner  555 Jul 24 18:31 AppDelegate.swift
+drwxr-xr-x 4 runner runner 4096 Jan  1  1970 Assets.xcassets
+drwxr-xr-x 2 runner runner 4096 Jan  1  1970 Base.lproj
+-rw-r--r-- 1 runner runner  378 Jul 13 09:31 GeneratedPluginRegistrant.h
+-rw-r--r-- 1 runner runner 2004 Jul 13 09:31 GeneratedPluginRegistrant.m
+-rw-r--r-- 1 runner runner 2461 Jul 24 18:31 Info.plist
