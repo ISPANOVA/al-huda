@@ -111,9 +111,25 @@ def image_of(qid):
     return human, file, desc, label
 
 
-def portrait(img):
+# Photos the detector gets wrong, checked by eye: "top" = the top-centre
+# square; (cx, cy, side) = a square inside it, as fractions of its side.
+CROPS = {"ajbr": "top", "mustafa": (0.64, 0.2, 0.42)}
+
+
+def portrait(img, key=""):
     """A square around the face (OpenCV's face detector), else the top centre."""
     w, h = img.size
+    fix = CROPS.get(key)
+    if fix:
+        s = min(w, h)
+        img = img.crop(((w - s) // 2, 0, (w - s) // 2 + s, s))
+        if fix == "top":
+            return img
+        cx, cy, side = fix
+        a = int(side * s)
+        left = int(min(max(cx * s - a / 2, 0), s - a))
+        top = int(min(max(cy * s - a / 2, 0), s - a))
+        return img.crop((left, top, left + a, top + a))
     try:
         import cv2
         import numpy as np
@@ -180,7 +196,7 @@ def main():
         lic = meta.get("LicenseShortName", {}).get("value", "")
         artist = re.sub("<[^>]+>", "", meta.get("Artist", {}).get("value", "")).strip()
         img = Image.open(io.BytesIO(get(ii["thumburl"]))).convert("RGB")
-        img = portrait(img)
+        img = portrait(img, key)
         img = img.resize((256, 256), Image.LANCZOS)
         img.save(os.path.join(OUT, f"{key}.jpg"), "JPEG", quality=82, optimize=True)
         credits[key] = {"name": ar, "file": file, "license": lic, "author": artist,
