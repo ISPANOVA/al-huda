@@ -55,7 +55,13 @@ void main() {
       for (var i = first; i <= last; i++) {
         if (words[i].state == TasmeeState.correct) judged++;
       }
-      final found = words[first].state == TasmeeState.correct || words[first].state == TasmeeState.given;
+      // Found: most words of the first ayah were followed.
+      final firstAyahEnd = words.indexWhere((w) => w.endsAyah, first);
+      var firstOk = 0;
+      for (var i = first; i <= firstAyahEnd; i++) {
+        if (words[i].state != TasmeeState.hidden) firstOk++;
+      }
+      final found = firstOk * 2 > firstAyahEnd - first + 1;
       if (found) foundAll++;
       judgedAll += judged;
       wrongAll += mistakes.length;
