@@ -1,0 +1,33 @@
+name: Reciter photos (Wikimedia Commons)
+
+# Push to reciter-photos: finds a freely licensed portrait of each reciter and
+# publishes them (with their credits) to the reciter-photos-results branch for
+# review. Never touches the app build.
+on:
+  push:
+    branches: [reciter-photos]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  photos:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch
+        run: |
+          pip install --quiet --break-system-packages pillow || pip install --quiet pillow
+          python3 tool/reciters/fetch_photos.py "$RUNNER_TEMP/out" 2>&1 | tee "$RUNNER_TEMP/log.txt"
+      - name: Publish
+        if: always()
+        run: |
+          OUT="$RUNNER_TEMP/out"; mkdir -p "$OUT"
+          cp "$RUNNER_TEMP/log.txt" "$OUT/" || true
+          cd "$OUT"
+          git init -q -b reciter-photos-results
+          git config user.name ci-bot && git config user.email ci-bot@users.noreply.github.com
+          git add -A && git commit -qm "reciter photos ${GITHUB_RUN_NUMBER}"
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${GITHUB_REPOSITORY}.git" HEAD:reciter-photos-results
