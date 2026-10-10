@@ -1,0 +1,44 @@
+name: Tasmee lab
+# Phonetic Tasmee: builds the phoneme table and runs its tests.
+# Push to tasmee-lab; results go to the tasmee-lab-results branch.
+on:
+  push:
+    branches: [tasmee-lab]
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: tasmee-lab
+  cancel-in-progress: true
+jobs:
+  lab:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Phoneme table
+        run: |
+          pip install -q quran-transcript==0.6.4
+          mkdir -p "$RUNNER_TEMP/out"
+          python3 tool/tasmee/make_phonemes.py . . 2>&1 | tee "$RUNNER_TEMP/out/phonemes_log.txt" | tail -20
+          cp assets/tasmee/phonemes.txt assets/tasmee/extra.json "$RUNNER_TEMP/out/"
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.47.5
+          channel: stable
+          cache: true
+      - name: Tests
+        run: |
+          flutter pub get > /dev/null
+          flutter test test/tasmee_phonetic_test.dart -r expanded 2>&1 | tee "$RUNNER_TEMP/out/test.txt" | tail -60
+      - name: Publish results
+        if: always()
+        run: |
+          echo "${GITHUB_SHA}" > "$RUNNER_TEMP/out/SHA.txt"
+          cd "$RUNNER_TEMP/out"
+          git init -q -b r && git config user.name ci-bot && git config user.email ci-bot@users.noreply.github.com
+          git add -A && git commit -qm "lab ${GITHUB_RUN_NUMBER}"
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${GITHUB_REPOSITORY}.git" HEAD:tasmee-lab-results

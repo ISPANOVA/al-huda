@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'tasmee_engine.dart';
+import 'tasmee_follower.dart';
 
 /// Where the recited words were found.
 class TasmeeHit {
@@ -253,7 +254,8 @@ class TasmeeLocator {
 /// wherever the reciter starts and follows them: the place is found from the
 /// first words recited, and found again when, after a pause, they go on from
 /// another ayah. Words recited stay shown wherever the reciter goes.
-class TasmeeTracker {
+class TasmeeTracker implements TasmeeFollower {
+  @override
   final List<TasmeeWord> words;
   final List<TasmeeMistake> mistakes;
   late final TasmeeSession session = TasmeeSession(words, mistakes);
@@ -262,11 +264,10 @@ class TasmeeTracker {
   int _to;
   late TasmeeLocator _locator;
 
-  /// The place is known (found, or chosen by the reciter).
+  @override
   bool located = false;
 
-  /// Where the reciter probably is before anything is found (the page they
-  /// opened): preferred between equal places.
+  @override
   int? near;
 
   TasmeeTracker(this.words, this.mistakes, {int from = 0, int? to, this.near})
@@ -275,12 +276,22 @@ class TasmeeTracker {
     _locator = TasmeeLocator(words, from: _from, to: _to);
   }
 
+  @override
   int get from => _from;
+  @override
   int get to => _to;
+  @override
   int get expected => session.expected;
+  @override
   bool get done => located && session.expected >= _to;
 
-  /// Searches another range from now on (a chosen surah, or all).
+  @override
+  void hintNext() => session.hintNext();
+
+  @override
+  void revealAyah() => session.revealAyah();
+
+  @override
   void setScope(int from, int to) {
     _from = from;
     _to = to;
@@ -289,8 +300,7 @@ class TasmeeTracker {
     session.newUtterance();
   }
 
-  /// Starts at [index] (chosen by the reciter): words before it on the same
-  /// page ([pageStart]) are shown as already read.
+  @override
   void startAt(int index, {int? pageStart}) {
     _sure = true;
     if (pageStart != null) {
@@ -309,6 +319,7 @@ class TasmeeTracker {
   /// anywhere (another surah, the middle of an ayah).
   bool _anywhere = false;
 
+  @override
   void newUtterance({bool manual = false}) {
     _sure = true;
     if (manual) _anywhere = true;

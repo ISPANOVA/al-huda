@@ -89,8 +89,8 @@ class _TasmeePageState extends State<TasmeePage> {
   bool _leaving = false;
 
   String get _idleStatus => _scopeSurah == null
-      ? 'اضغط على الميكروفون واقرأ من أي موضع في القرآن، وسأحدد السورة والآية'
-      : 'اضغط على الميكروفون واقرأ من أي آية في سورة ${SurahMetadata.surah(_scopeSurah!).name}';
+      ? 'اضغط الميكروفون واقرأ من أي موضع، وسأعرف مكانك'
+      : 'اضغط الميكروفون واقرأ من أي آية في سورة ${SurahMetadata.surah(_scopeSurah!).name}';
 
   @override
   void initState() {
@@ -449,7 +449,7 @@ class _TasmeePageState extends State<TasmeePage> {
   String get _listeningStatus => _tracker?.located ?? false
       ? 'أستمع إليك… اقرأ من حفظك'
       : _outside ?? (_scopeSurah == null
-          ? 'أستمع… اقرأ من أي موضع وسأحدد السورة والآية'
+          ? 'أستمع… اقرأ من أي موضع'
           : 'أستمع… اقرأ من أي آية في سورة ${SurahMetadata.surah(_scopeSurah!).name}');
 
   void _onResult(SpeechRecognitionResult r) {
@@ -743,6 +743,7 @@ class _TasmeePageState extends State<TasmeePage> {
       if (t.words[i].revealed) recited++;
     }
     final progress = end > start ? recited / (end - start) : 0.0;
+    final first = start < end ? t.words[start] : null;
     const red = Color(0xFFE5484D);
     return SizedBox(
       height: 52,
@@ -759,28 +760,34 @@ class _TasmeePageState extends State<TasmeePage> {
                     tooltip: 'رجوع',
                     onTap: () => Navigator.of(context).maybePop(),
                   ),
-                  Flexible(
-                    child: MushafChip(
-                      style: style,
-                      onTap: _openScope,
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Flexible(
-                            child: Text(
-                              _scopeSurah == null ? 'القرآن كله' : SurahMetadata.surah(_scopeSurah!).name,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: style.accent),
-                            ),
-                          ),
-                          const SizedBox(width: 2),
-                          Icon(Icons.keyboard_arrow_down_rounded, size: 20, color: style.accent),
-                        ],
-                      ),
+                  MushafChip(
+                    style: style,
+                    onTap: _openScope,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          _scopeSurah == null ? 'القرآن كله' : SurahMetadata.surah(_scopeSurah!).name,
+                          maxLines: 1,
+                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: style.accent),
+                        ),
+                        const SizedBox(width: 2),
+                        Icon(Icons.keyboard_arrow_down_rounded, size: 20, color: style.accent),
+                      ],
                     ),
                   ),
-                  const Spacer(),
+                  // Where the page is: surah • page number.
+                  Expanded(
+                    child: Text(
+                      first == null
+                          ? ''
+                          : '${SurahMetadata.surah(first.surah).name} • ${ArabicUtils.toArabicDigits(_page)}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: style.muted, fontWeight: FontWeight.w700, fontSize: 12.5),
+                    ),
+                  ),
                   MushafToolIcon(
                     icon: Icons.search_rounded,
                     color: style.accent,
@@ -922,16 +929,17 @@ class _TasmeePageState extends State<TasmeePage> {
         children: [
           // One fixed-height line, so the page above never moves.
           SizedBox(
-            height: 20,
+            height: 34,
             child: Center(
               child: Text(
-                heard.isNotEmpty && (t.located) ? '«$heard»' : _status,
-                maxLines: 1,
+                heard.isNotEmpty && t.located ? '«$heard»' : _status,
+                maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: heard.isNotEmpty && t.located ? style.accent.withValues(alpha: 0.9) : style.muted,
                   fontSize: 12.5,
+                  height: 1.35,
                   fontWeight: FontWeight.w700,
                 ),
               ),
