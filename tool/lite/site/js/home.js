@@ -60,7 +60,7 @@ export async function show(view) {
       <a class="card solid t-emerald tile" href="#/mushaf${last ? '/' + last : ''}" style="grid-column:1/-1">
         <small>${last ? 'تابع القراءة' : 'ابدأ القراءة'}</small>
         <b style="font-size:20px">سورة ${esc(s[1])}</b>
-        <small>الصفحة ${ar(last || 1)}${last ? ` • <span dir="ltr">${ar(((last / 604) * 100).toFixed(1)).replace('.', '٫')}٪</span> من المصحف` : ''}</small>
+        <small>الصفحة ${ar(last || 1)}${last ? ` • أنجزت ${last < 7 ? 'أقل من ١' : ar(Math.round((last / 604) * 100))}٪ من المصحف` : ''}</small>
         <div class="bar" style="width:100%;margin-top:6px"><i style="width:${((last || 0) / 604) * 100}%"></i></div>
       </a>
       <a class="card solid t-rose tile" href="#/athkar/${athkar[0]}">${icon(athkar[2])}<b>${athkar[1]}</b><small>حصّن يومك</small></a>
