@@ -171,7 +171,7 @@ void main() {
     final mistakes = <TasmeeMistake>[];
     final t = tracker(mistakes)..startAt(start);
     // «… وَيَتَفَكَّرُونَ وَيَتَفَكَّرُونَ فِي خَلۡقِ …»
-    final k = words.indexWhere((w) => w.text.startsWith('وَيَتَفَكَّرُونَ'), start);
+    final k = [for (var i = start; i < start + 30; i++) i].firstWhere((i) => quran.ph[i].contains('تَفَكَرُ'));
     recite(t, said(start, k + 1) + said(k, k + 10));
     expect(mistakes, isEmpty, reason: mistakes.map((m) => '${m.word}/${m.heard}').join(', '));
     expect(t.expected, greaterThanOrEqualTo(k + 9));
@@ -192,8 +192,11 @@ void main() {
     final mistakes = <TasmeeMistake>[];
     final t = tracker(mistakes);
     recite(t, openings[0] + openings[1] + said(start, start + 20));
-    expect(t.located, isTrue);
-    expect(words[start].state, TasmeeState.correct);
+    final shown = words.indexWhere((w) => w.state != TasmeeState.hidden);
+    final why = 'located ${t.located}, expected ${t.expected} (start $start), first shown $shown '
+        '${shown >= 0 ? '${words[shown].surah}:${words[shown].ayah}' : ''}, mistakes ${mistakes.map((m) => '${m.word}/${m.heard}')}';
+    expect(t.located, isTrue, reason: why);
+    expect(words[start].state, TasmeeState.correct, reason: why);
     expect(mistakes, isEmpty, reason: mistakes.map((m) => '${m.word}/${m.heard}').join(', '));
   });
 
