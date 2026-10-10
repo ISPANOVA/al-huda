@@ -1,0 +1,39 @@
+Analyzing 2 items...                                            
+
+   info • 'onReorder' is deprecated and shouldn't be used. Use the onReorderItem callback instead. The onReorderItem callback adjusts the newIndex parameter for a removed item at the oldIndex. This feature was deprecated after v3.41.0-0.0.pre. Try replacing the use of the deprecated member with the replacement • lib/features/home/presentation/quick_actions.dart:239:15 • deprecated_member_use
+   info • Angle brackets will be interpreted as HTML. Try using backticks around the content with angle brackets, or try replacing `<` with `&lt;` and `>` with `&gt;` • lib/features/prayer/domain/adhan_voices.dart:1:58 • unintended_html_in_doc_comment
+   info • Angle brackets will be interpreted as HTML. Try using backticks around the content with angle brackets, or try replacing `<` with `&lt;` and `>` with `&gt;` • lib/features/prayer/domain/adhan_voices.dart:2:25 • unintended_html_in_doc_comment
+   info • Angle brackets will be interpreted as HTML. Try using backticks around the content with angle brackets, or try replacing `<` with `&lt;` and `>` with `&gt;` • lib/features/prayer/presentation/widgets/adhan_settings.dart:30:8 • unintended_html_in_doc_comment
+   info • Angle brackets will be interpreted as HTML. Try using backticks around the content with angle brackets, or try replacing `<` with `&lt;` and `>` with `&gt;` • lib/features/prayer/presentation/widgets/adhan_settings.dart:30:16 • unintended_html_in_doc_comment
+   info • Unnecessary use of multiple underscores. Try using '_' • lib/features/prayer/presentation/widgets/adhan_settings.dart:394:53 • unnecessary_underscores
+   info • 'of' is deprecated and shouldn't be used. Use TickerMode.valuesOf to get both enabled and forceFrames. This feature was deprecated after v3.35.0-0.0.pre. Try replacing the use of the deprecated member with the replacement • lib/features/quran/presentation/mushaf/mushaf_reader_page.dart:156:42 • deprecated_member_use
+   info • 'of' is deprecated and shouldn't be used. Use TickerMode.valuesOf to get both enabled and forceFrames. This feature was deprecated after v3.35.0-0.0.pre. Try replacing the use of the deprecated member with the replacement • lib/features/quran/presentation/mushaf/mushaf_reader_page.dart:258:32 • deprecated_member_use
+   info • Local variables should be final. Try making the variable final • lib/features/quran/presentation/mushaf/mushaf_reader_page.dart:293:5 • prefer_final_locals
+   info • Constructors for public widgets should have a named 'key' parameter. Try adding a named parameter to the constructor • lib/features/quran/presentation/mushaf/mushaf_reader_page.dart:601:9 • use_key_in_widget_constructors
+   info • Constructors for public widgets should have a named 'key' parameter. Try adding a named parameter to the constructor • lib/features/quran/presentation/mushaf/mushaf_reader_page.dart:628:9 • use_key_in_widget_constructors
+   info • Constructors for public widgets should have a named 'key' parameter. Try adding a named parameter to the constructor • lib/features/quran/presentation/mushaf/mushaf_reader_page.dart:798:9 • use_key_in_widget_constructors
+   info • Unnecessary use of multiple underscores. Try using '_' • lib/features/quran/presentation/mushaf/reader_guide.dart:28:24 • unnecessary_underscores
+   info • Unnecessary use of multiple underscores. Try using '_' • lib/features/quran/presentation/mushaf/reader_guide.dart:28:28 • unnecessary_underscores
+   info • Unnecessary use of multiple underscores. Try using '_' • lib/features/quran/presentation/mushaf/reader_guide.dart:29:33 • unnecessary_underscores
+   info • Unnecessary use of multiple underscores. Try using '_' • lib/features/quran/presentation/pages/ayah_image_page.dart:120:37 • unnecessary_underscores
+   info • Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation • lib/features/quran/presentation/pages/ayah_image_page.dart:316:7 • prefer_const_constructors
+   info • Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check. Guard a 'State.context' use with a 'mounted' check on the State, and other BuildContext use with a 'mounted' check on the BuildContext • lib/features/quran/presentation/widgets/listen_sheet.dart:54:11 • use_build_context_synchronously
+   info • Local variables should be final. Try making the variable final • lib/features/tasmee/phonetic/phonetic_tracker.dart:390:5 • prefer_final_locals
+   info • Dangling library doc comment. Add a 'library' directive after the library comment • lib/features/tasmee/phonetic/quran_listener.dart:1:1 • dangling_library_doc_comments
+   info • Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation • lib/features/tasmee/phonetic/quran_listener_io.dart:263:15 • prefer_const_constructors
+   info • Statements in an if should be enclosed in a block. Try wrapping the statement in a block • lib/features/tasmee/tasmee_engine.dart:111:28 • curly_braces_in_flow_control_structures
+   info • Statements in an if should be enclosed in a block. Try wrapping the statement in a block • lib/features/tasmee/tasmee_engine.dart:112:14 • curly_braces_in_flow_control_structures
+   info • Unnecessary braces in a string interpolation. Try removing the braces • lib/features/tasmee/tasmee_engine.dart:144:47 • unnecessary_brace_in_string_interps
+   info • Use interpolation to compose strings and values. Try using string interpolation to build the composite string • lib/features/tasmee/tasmee_engine.dart:257:27 • prefer_interpolation_to_compose_strings
+   info • Use interpolation to compose strings and values. Try using string interpolation to build the composite string • lib/features/tasmee/tasmee_engine.dart:257:43 • prefer_interpolation_to_compose_strings
+   info • Local variables should be final. Try making the variable final • lib/features/tasmee/tasmee_locator.dart:131:5 • prefer_final_locals
+   info • 'localeId' is deprecated and shouldn't be used. Use SpeechListenOptions.localeId instead. Try replacing the use of the deprecated member with the replacement • lib/features/tasmee/tasmee_page.dart:456:9 • deprecated_member_use
+   info • 'listenFor' is deprecated and shouldn't be used. Use SpeechListenOptions.listenFor instead. Try replacing the use of the deprecated member with the replacement • lib/features/tasmee/tasmee_page.dart:457:9 • deprecated_member_use
+   info • 'pauseFor' is deprecated and shouldn't be used. Use SpeechListenOptions.pauseFor instead. Try replacing the use of the deprecated member with the replacement • lib/features/tasmee/tasmee_page.dart:458:9 • deprecated_member_use
+   info • Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation • lib/features/tasmee/tasmee_page.dart:554:11 • prefer_const_constructors
+   info • Unnecessary use of string interpolation. Try replacing the string literal with the variable name • lib/features/tasmee/tasmee_page.dart:807:30 • unnecessary_string_interpolations
+   info • Unnecessary use of string interpolation. Try replacing the string literal with the variable name • lib/features/tasmee/tasmee_page.dart:809:30 • unnecessary_string_interpolations
+   info • Unnecessary use of string interpolation. Try replacing the string literal with the variable name • lib/features/tasmee/tasmee_page.dart:812:32 • unnecessary_string_interpolations
+   info • Use the null-aware marker '?' rather than a null check via an 'if'. Try using '?' • lib/features/virtues/virtues_pages.dart:559:31 • use_null_aware_elements
+
+35 issues found. (ran in 18.5s)
