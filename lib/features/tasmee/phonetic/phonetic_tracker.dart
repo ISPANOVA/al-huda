@@ -421,6 +421,8 @@ class PhoneticTracker implements TasmeeFollower {
           continue;
         }
         final end = _prefixMatch(p, rest);
+        // Sure only once something follows it (the end may still be coming).
+        if (end != null && !isFinal && end > rest.length - 4) return null;
         if (end != null) {
           at += end;
           if (o == 1) _saidBasmala = true;
