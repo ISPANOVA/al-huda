@@ -344,10 +344,24 @@ class _TasmeePageState extends State<TasmeePage> {
       return;
     }
     final listener = _listener ??= QuranListener();
-    setState(() => _status = 'جارٍ تجهيز التسميع على هاتفك…');
-    final ok = await listener.prepare(onProgress: (p) {
-      if (mounted && p < 1) setState(() => _status = 'جارٍ تجهيز التسميع لأول مرة… ${ArabicUtils.toArabicDigits((p * 100).round())}٪');
-    });
+    // The model is downloaded once, the first time (it isn't in the app).
+    if (!await QuranListener.modelReady()) {
+      if (!mounted || !await _askDownload()) return;
+      if (!mounted) return;
+      setState(() => _status = 'جارٍ تحميل ملف التسميع…');
+      final got = await QuranListener.download(onProgress: (p) {
+        if (mounted) {
+          setState(() => _status = 'جارٍ تحميل ملف التسميع (مرة واحدة فقط)… ${ArabicUtils.toArabicDigits((p * 100).floor())}٪');
+        }
+      });
+      if (!mounted) return;
+      if (!got) {
+        setState(() => _status = 'تعذر التحميل، تأكد من الإنترنت ثم اضغط الميكروفون مرة أخرى');
+        return;
+      }
+    }
+    setState(() => _status = 'جارٍ تجهيز التسميع…');
+    final ok = await listener.prepare();
     if (!mounted) return;
     if (!ok) {
       setState(() => _status = 'تعذر تشغيل التسميع على هذا الهاتف');
@@ -370,6 +384,36 @@ class _TasmeePageState extends State<TasmeePage> {
       _listening = true;
       _status = _listeningStatus;
     });
+  }
+
+  /// Asks before the one-time download of the model.
+  Future<bool> _askDownload() async {
+    final glass = GlassTheme.of(context);
+    final yes = await showGlassSheet<bool>(context, builder: (ctx) {
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const Text('تحميل التسميع', textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.w900, fontSize: 18)),
+          const SizedBox(height: 10),
+          Text(
+            'التسميع يعمل على هاتفك نفسه دون إنترنت، ويحتاج تحميل ملف التعرّف على التلاوة مرة واحدة فقط '
+            '(حوالي ${ArabicUtils.toArabicDigits(QuranListener.downloadMb)} ميجابايت). يُفضّل التحميل على شبكة Wi-Fi.',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: glass.onGlassMuted, height: 1.6),
+          ),
+          const SizedBox(height: 16),
+          FilledButton.icon(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            icon: const Icon(Icons.download_rounded),
+            label: const Text('تحميل الآن'),
+          ),
+          const SizedBox(height: 6),
+          TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('لاحقًا')),
+        ],
+      );
+    });
+    return yes ?? false;
   }
 
   void _onPhonemes(String text, bool isFinal) {

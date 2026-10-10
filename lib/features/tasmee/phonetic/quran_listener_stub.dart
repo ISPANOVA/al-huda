@@ -4,6 +4,10 @@ import 'dart:async';
 class QuranListener {
   static Future<bool> available() async => false;
 
+  static const downloadMb = 70;
+  static Future<bool> modelReady() async => false;
+  static Future<bool> download({void Function(double progress)? onProgress}) async => false;
+
   /// Prepares the model; false when it can't run here.
   Future<bool> prepare({void Function(double progress)? onProgress}) async => false;
 

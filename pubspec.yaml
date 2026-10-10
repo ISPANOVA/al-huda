@@ -54,6 +54,7 @@ dependencies:
   # On-device Quran recognition for the Tasmee (Android)
   sherpa_onnx: ^1.13.8
   record: ^7.1.2
+  crypto: ^3.0.6
 
   # Web build only (browser speech recognition, compass, page helpers)
   web: ^1.1.0
