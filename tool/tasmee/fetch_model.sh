@@ -17,8 +17,8 @@ TREE=$(curl -sSf -H "$H" "https://huggingface.co/api/models/$REPO/tree/main?recu
 }
 FILES=$(python3 -c 'import json,sys; print("\n".join(f["path"] for f in json.loads(sys.stdin.read()) if f.get("type")=="file"))' <<<"$TREE")
 echo "$FILES" | grep -Ei "onnx|tokens" || true
-# TASMEE_MODEL: v3 (default) or v3.1; each with its own tokens.
-case "${TASMEE_MODEL:-v3}" in
+# TASMEE_MODEL: v3.1 (default, the better one in the Tasmee lab) or v3; each with its own tokens.
+case "${TASMEE_MODEL:-v3.1}" in
   v3.1) MODEL=$(echo "$FILES" | grep -xE 'zipformer_p_arabic_v3\.1\.int8\.onnx' | head -1)
         TOKENS=$(echo "$FILES" | grep -xE 'sdk/v3\.1/tokens\.txt' | head -1) ;;
   *)    MODEL=$(echo "$FILES" | grep -xE 'zipformer_p_arabic_v3\.int8\.onnx' | head -1)
