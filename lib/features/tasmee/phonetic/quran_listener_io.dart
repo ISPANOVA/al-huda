@@ -20,7 +20,8 @@ import 'pause_detector.dart';
 /// downloaded once, the first time the Tasmee is used, and checked
 /// (SHA-256) before it is used.
 class QuranListener {
-  static const _base = 'https://github.com/ISPANOVA/al-huda/releases/download/tasmee-model-v3.1';
+  // A separate public repository, so the app's own can be private.
+  static const _base = 'https://github.com/ISPANOVA/al-huda-files/releases/download/tasmee-model-v3.1';
   static const _files = {
     'model.int8.onnx': (size: 72705392, sha: '31755836528da336a6192121cd7bc82cb41752dddb65566fd000b89c8686da6b'),
     'tokens.txt': (size: 2346, sha: '252c10687e442aa9291973065fae19fa39bcd681c4f5612ec496a647e20b43a1'),

@@ -218,10 +218,10 @@ class CreditsCard extends StatelessWidget {
                     children: [
                       const Text('صدقة جارية',
                           style: TextStyle(color: Color(0xFFFFE3A3), fontSize: 13, fontWeight: FontWeight.w800)),
-                      const Text('عن روح والدي رحمه الله وجميع المسلمين',
+                      const Text('عن روح والدي سمير، وعن سعد، وعن جميع المسلمين الأحياء منهم والأموات',
                           style: TextStyle(color: Colors.white, fontSize: 16, height: 1.5, fontWeight: FontWeight.w900)),
                       const SizedBox(height: 4),
-                      Text('اللهم اغفر له وارحمه، واجعل كل حرف يُقرأ هنا في ميزان حسناته',
+                      Text('اللهم اغفر لهم وارحمهم، واجعل كل حرف يُقرأ هنا في ميزان حسناتهم',
                           style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 12, height: 1.6)),
                       const SizedBox(height: 8),
                       Text('تطوير SMRH',

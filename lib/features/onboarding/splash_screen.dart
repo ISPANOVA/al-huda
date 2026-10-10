@@ -132,7 +132,7 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
               child: const Column(
                 children: [
                   Text(
-                    'صدقة جارية عن روح والدي رحمه الله وجميع المسلمين',
+                    'صدقة جارية عن روح والدي سمير، وعن سعد،\nوعن جميع المسلمين الأحياء منهم والأموات',
                     textAlign: TextAlign.center,
                     style: TextStyle(fontSize: 13, color: Color(0xB3F7E2A3), decoration: TextDecoration.none),
                   ),
