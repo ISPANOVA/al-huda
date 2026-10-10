@@ -497,7 +497,9 @@ class PhoneticTracker implements TasmeeFollower {
         for (var j = k + 1; j < a.spans.length && after < 2; j++) {
           after += a.spans[j].exact;
         }
-        if (!isFinal && after < 2) break;
+        // Going back to repeat right after this word: it is done.
+        final repeat = !isFinal && after < 2 && w >= _expected && s.hEnd > 0 && _repeatsAfter(hs, s.hEnd, w);
+        if (!isFinal && after < 2 && !repeat) break;
         if (w >= _expected) {
           final r = _judge(w, s, hs);
           if (r) {
@@ -507,6 +509,7 @@ class PhoneticTracker implements TasmeeFollower {
         }
         committed = w;
         if (s.hEnd >= 0) cutAt = _cut + s.hEnd;
+        if (repeat) break;
       }
       if (committed >= 0) {
         _expected = math.max(_expected, committed + 1);
@@ -529,6 +532,27 @@ class PhoneticTracker implements TasmeeFollower {
       break;
     }
     return TasmeeFeed(math.max(0, _expected - before), newMistakes, flash);
+  }
+
+  /// What was heard after word [w] (from [at] in [hs]) is the reciter
+  /// going back a few words, not the words that follow [w].
+  bool _repeatsAfter(String hs, int at, int w) {
+    final rest = hs.substring(at);
+    if (rest.length < 8) return false;
+    final first = math.max(_from, w - 8);
+    if (first > w) return false;
+    var last = w + 1;
+    var chars = 0;
+    while (last < _to && chars < rest.length * 1.6 + 20) {
+      chars += quran.ph[last].length;
+      last++;
+    }
+    final back = _dp(rest, first, last, startFrom: first, startTo: w);
+    final n = rest.length;
+    if (back.startWord > w || back.cost / n > 0.35) return false;
+    if (w + 1 >= last) return true;
+    final ahead = _dp(rest, w + 1, last, startFrom: w + 1, startTo: w + 1);
+    return back.cost + 0.15 * n < ahead.cost;
   }
 
   /// Marks word [w]; true when it is a new mistake.
@@ -570,6 +594,7 @@ class PhoneticTracker implements TasmeeFollower {
     final starts = <int>[]; // text index where each word starts
     final del = <double>[];
     final alt = <int>[]; // a sound read instead at a stop (ت → ه), or 0
+    final cheapSub = <int>{}; // text positions where any sound costs little
     for (var w = first; w < last; w++) {
       starts.add(codes.length);
       final p = quran.ph[w];
@@ -606,6 +631,8 @@ class PhoneticTracker implements TasmeeFollower {
         alt.add(i == taAt ? 0x0647 : 0);
         var d = PhoneticText.del(c);
         if (i >= stopFrom || (taAt >= 0 && i > taAt)) d = math.min(d, 0.25);
+        // The tanween «ن» merges into the next sound (إدغام): any sound there.
+        if (i == stopFrom && stopFrom < p.length) cheapSub.add(codes.length - 1);
         if (i >= tail) d = 0;
         // A hamzat wasl that starts an ayah is silent when joined to the
         // previous ayah.
@@ -649,7 +676,7 @@ class PhoneticTracker implements TasmeeFollower {
       back[row] = 2;
       for (var r = 1; r <= m; r++) {
         final rc = codes[r - 1];
-        var best = d[prow + r - 1] + (alt[r - 1] == hc ? 0.25 : PhoneticText.sub(rc, hc));
+        var best = d[prow + r - 1] + (alt[r - 1] == hc || (rc != hc && cheapSub.contains(r - 1)) ? 0.25 : PhoneticText.sub(rc, hc));
         var how = 1;
         final ins = d[prow + r] + insCost;
         if (ins < best) {
@@ -713,7 +740,7 @@ class PhoneticTracker implements TasmeeFollower {
       if (how == 1) {
         final w = wordOf[r - 1];
         final hc = hs.codeUnitAt(i - 1);
-        final c = alt[r - 1] == hc ? 0.25 : PhoneticText.sub(codes[r - 1], hc);
+        final c = alt[r - 1] == hc || (codes[r - 1] != hc && cheapSub.contains(r - 1)) ? 0.25 : PhoneticText.sub(codes[r - 1], hc);
         final s = spans[w];
         s.cost += c;
         if (c == 0) s.exact++;

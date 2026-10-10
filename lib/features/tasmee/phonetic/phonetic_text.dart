@@ -46,7 +46,7 @@ class PhoneticText {
   }
 
   /// Letters a recogniser (and a reciter's accent) brings close together.
-  static const _close = ['سصث', 'تط', 'دض', 'ذظز', 'كق', 'حه', 'ءع', 'غخ'];
+  static const _close = ['سصثش', 'تط', 'دض', 'ذظز', 'كق', 'حه', 'ءع', 'غخ'];
 
   static bool _closePair(int a, int b) {
     final x = String.fromCharCode(a), y = String.fromCharCode(b);
