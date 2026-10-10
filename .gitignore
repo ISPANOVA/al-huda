@@ -25,3 +25,7 @@ android/key.properties
 /web/
 build_log.txt
 update.zip
+
+# Tasmee model: downloaded when the app is built (never committed)
+assets/tasmee/model.int8.onnx
+assets/tasmee/tokens.txt

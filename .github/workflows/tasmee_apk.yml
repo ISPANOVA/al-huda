@@ -1,0 +1,100 @@
+name: Tasmee test APK
+# Push to tasmee-apk: builds the signed release APK (with the Tasmee model)
+# exactly like build.yml, installs it over the latest published build on an
+# emulator, opens the Tasmee and turns the microphone on, then publishes the
+# APK as a pre-release for testing on a phone. Never touches main.
+on:
+  push:
+    branches: [tasmee-apk]
+permissions:
+  contents: write
+concurrency:
+  group: tasmee-apk
+  cancel-in-progress: true
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 100
+    env:
+      BUILD_NAME: 1.0.0
+    steps:
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/.ghcup /opt/hostedtoolcache/CodeQL /usr/local/share/boost /usr/local/lib/node_modules /usr/share/swift || true
+      - uses: actions/checkout@v4
+      - name: Latest published build
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG=$(gh release list -R "$GITHUB_REPOSITORY" --exclude-pre-releases -L 30 --json tagName -q '[.[].tagName|select(startswith("build-"))][0]')
+          echo "OLD_TAG=$TAG" >> "$GITHUB_ENV"
+          # Same version code as the published build: installs over it, and the
+          # next official build installs over this one.
+          echo "BUILD_NUMBER=${TAG#build-}" >> "$GITHUB_ENV"
+          gh release download "$TAG" -p '*.apk' -R "$GITHUB_REPOSITORY" -O old.apk
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.47.5
+          channel: stable
+          cache: true
+      - name: Build signed release APK (same steps as build.yml)
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          set -o pipefail
+          mkdir -p shots
+          {
+            bash tool/tasmee/fetch_model.sh assets/tasmee
+            flutter create --platforms=android --org com.alhuda.islamic --project-name al_huda .
+            flutter pub get
+            dart run flutter_launcher_icons -f flutter_launcher_icons_android.yaml
+            dart run tool/configure_platforms.dart
+            {
+              echo "storePassword=$KEYSTORE_PASSWORD"
+              echo "keyPassword=$KEYSTORE_PASSWORD"
+              echo "keyAlias=alhuda"
+              echo "storeFile=$GITHUB_WORKSPACE/keystore/alhuda-upload.p12"
+            } > android/key.properties
+            flutter build apk --release --build-name=$BUILD_NAME --build-number=$BUILD_NUMBER --dart-define=APP_BUILD=$BUILD_NUMBER --dart-define=APP_VERSION=$BUILD_NAME
+          } 2>&1 | tee shots/build_log.txt
+          rm -f android/key.properties
+          cp build/app/outputs/flutter-apk/app-release.apk new.apk
+          ls -la old.apk new.apk | tee shots/sizes.txt
+          unzip -l new.apk | grep -E "lib/.*\.so|tasmee" | awk '{print $1, $4}' | tee -a shots/sizes.txt
+          (cd android && ./gradlew --stop) || true
+          pkill -f GradleDaemon || true
+          pkill -f KotlinCompileDaemon || true
+          rm -rf build/app/intermediates android/.gradle ~/.gradle/caches
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: "Emulator: upgrade and open the Tasmee"
+        timeout-minutes: 40
+        run: PROBE_SCRIPT=tasmee_smoke.sh timeout 35m bash tool/ci/emulator.sh > shots/emu.txt 2>&1 || true
+      - name: Publish test APK (pre-release)
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: tasmee-test-${{ github.run_number }}
+          name: الهدى • تجربة التسميع الجديد ${{ github.run_number }}
+          prerelease: true
+          make_latest: false
+          target_commitish: ${{ github.sha }}
+          body: |
+            نسخة تجربة للتسميع الجديد (يعمل على الهاتف بدون إنترنت). تُثبَّت فوق النسخة الحالية وتحتفظ ببياناتك.
+            ${{ github.event.head_commit.message }}
+          files: new.apk
+      - name: Push results
+        if: always()
+        run: |
+          echo "${GITHUB_SHA}" > shots/SHA.txt
+          cd shots
+          git init -q -b r && git config user.name ci-bot && git config user.email ci-bot@users.noreply.github.com
+          git add -A && git commit -qm "tasmee apk ${{ github.run_number }}"
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${GITHUB_REPOSITORY}.git" HEAD:tasmee-apk-results

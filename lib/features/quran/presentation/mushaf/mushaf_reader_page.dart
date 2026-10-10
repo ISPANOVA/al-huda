@@ -314,7 +314,7 @@ class _MushafReaderPageState extends State<MushafReaderPage> {
                           left: i * 2 + 2 <= QuranRepository.pageCount ? pageView(i * 2 + 2) : null,
                           divider: style.accent,
                         )
-                      : _PageProportion(child: pageView(i + 1)),
+                      : MushafPageProportion(child: pageView(i + 1)),
                 ),
               ),
             );
@@ -409,7 +409,7 @@ class _MushafReaderPageState extends State<MushafReaderPage> {
     );
     // Calm, flat page colour behind the text (no glows or patterns).
     content = DecoratedBox(
-      decoration: BoxDecoration(color: _paperColor(context)),
+      decoration: BoxDecoration(color: mushafPaperColor(context)),
       child: content,
     );
     content = SafeArea(bottom: !widget.embedded, child: content);
@@ -433,7 +433,8 @@ class _MushafReaderPageState extends State<MushafReaderPage> {
   }
 }
 
-Color _paperColor(BuildContext context) {
+/// The flat page colour behind the Mushaf (also used by the Tasmee).
+Color mushafPaperColor(BuildContext context) {
   final g = GlassTheme.of(context).backgroundGradient;
   final dark = Theme.of(context).brightness == Brightness.dark;
   return dark ? Color.lerp(g[0], g[1], 0.45)! : Color.lerp(g[0], Colors.white, 0.35)!;
@@ -471,7 +472,7 @@ class _Header extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 10),
       child: Row(
         children: [
-          _Chip(
+          MushafChip(
             style: style,
             onTap: onSurahs,
             child: Row(
@@ -486,12 +487,12 @@ class _Header extends StatelessWidget {
               ],
             ),
           ),
-          _ToolIcon(icon: Icons.search_rounded, color: style.accent, onTap: onSearch, tooltip: 'بحث'),
+          MushafToolIcon(icon: Icons.search_rounded, color: style.accent, onTap: onSearch, tooltip: 'بحث'),
           const Spacer(),
-          fade(_ToolIcon(icon: Icons.mic_rounded, color: style.accent, onTap: onTasmee, tooltip: 'التسميع')),
-          fade(_ToolIcon(icon: Icons.grid_view_rounded, color: style.accent, onTap: onIndex, tooltip: 'الفهرس')),
+          fade(MushafToolIcon(icon: Icons.mic_rounded, color: style.accent, onTap: onTasmee, tooltip: 'التسميع')),
+          fade(MushafToolIcon(icon: Icons.grid_view_rounded, color: style.accent, onTap: onIndex, tooltip: 'الفهرس')),
           const Spacer(),
-          _Chip(
+          MushafChip(
             style: style,
             child: Text(
               juzName(first.juz),
@@ -499,7 +500,7 @@ class _Header extends StatelessWidget {
               style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: style.accent),
             ),
           ),
-          _ToolIcon(
+          MushafToolIcon(
             icon: bookmarked ? Icons.bookmark_rounded : Icons.bookmark_border_rounded,
             color: style.accent,
             tooltip: 'حفظ موضع القراءة',
@@ -539,7 +540,7 @@ class _Footer extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 10),
       child: Row(
         children: [
-          _Chip(
+          MushafChip(
             style: style,
             onTap: onJuz,
             child: Row(
@@ -560,7 +561,7 @@ class _Footer extends StatelessWidget {
           fade(Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              _ToolIcon(icon: Icons.tune_rounded, color: style.accent, onTap: onSettings, tooltip: 'إعدادات القراءة'),
+              MushafToolIcon(icon: Icons.tune_rounded, color: style.accent, onTap: onSettings, tooltip: 'إعدادات القراءة'),
               const SizedBox(width: 4),
               Material(
                 color: style.primary,
@@ -577,7 +578,7 @@ class _Footer extends StatelessWidget {
               ),
               if (onClose != null) ...[
                 const SizedBox(width: 4),
-                _ToolIcon(icon: Icons.close_rounded, color: style.accent, onTap: onClose!, tooltip: 'إغلاق'),
+                MushafToolIcon(icon: Icons.close_rounded, color: style.accent, onTap: onClose!, tooltip: 'إغلاق'),
               ],
             ],
           )),
@@ -592,12 +593,12 @@ String _hizbLabel(Ayah a) {
   return '${quarters[a.quarterInHizb]}الحزب ${ArabicUtils.toArabicDigits(a.hizb)}';
 }
 
-class _Chip extends StatelessWidget {
+class MushafChip extends StatelessWidget {
   final Widget child;
   final MushafStyle style;
   final VoidCallback? onTap;
 
-  const _Chip({required this.child, required this.style, this.onTap});
+  const MushafChip({required this.child, required this.style, this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -618,13 +619,13 @@ class _Chip extends StatelessWidget {
   }
 }
 
-class _ToolIcon extends StatelessWidget {
+class MushafToolIcon extends StatelessWidget {
   final IconData icon;
   final Color color;
   final VoidCallback onTap;
   final String tooltip;
 
-  const _ToolIcon({required this.icon, required this.color, required this.onTap, required this.tooltip});
+  const MushafToolIcon({required this.icon, required this.color, required this.onTap, required this.tooltip});
 
   @override
   Widget build(BuildContext context) {
@@ -791,10 +792,10 @@ class _IndexSheetState extends State<_IndexSheet> {
 /// page keeps its shape in the centre instead of stretching its lines.
 const double _pageAspect = 0.66;
 
-class _PageProportion extends StatelessWidget {
+class MushafPageProportion extends StatelessWidget {
   final Widget child;
 
-  const _PageProportion({required this.child});
+  const MushafPageProportion({required this.child});
 
   @override
   Widget build(BuildContext context) {
