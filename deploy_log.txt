@@ -1,0 +1,12 @@
+
+ ⛅️ wrangler 4.149.0
+────────────────────
+Uploading... (71/74)
+Uploading... (72/74)
+Uploading... (73/74)
+Uploading... (74/74)
+✨ Success! Uploaded 3 files (71 already uploaded) (2.73 sec)
+
+✨ Uploading _headers
+🌎 Deploying...
+✨ Deployment complete! Take a peek over at https://142b41f3.al-huda-brf.pages.dev
