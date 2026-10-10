@@ -4,8 +4,7 @@ import 'dart:isolate';
 import 'dart:math' as math;
 import 'dart:typed_data';
 
-import 'package:crypto/crypto.dart';
-import 'package:dio/dio.dart';
+import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart';
 import 'package:sherpa_onnx/sherpa_onnx.dart' as sherpa;
@@ -16,94 +15,81 @@ import 'pause_detector.dart';
 /// (Quran-Lab zipformer_p-arabic-v3.1, run by sherpa-onnx) listening to the
 /// microphone. Everything runs on the phone, without the internet.
 ///
-/// The model (about 70 MB) isn't in the app, to keep it small: it is
-/// downloaded once, the first time the Tasmee is used, and checked
-/// (SHA-256) before it is used.
+/// The model is in the app (assets/tasmee/, added when the app is built);
+/// it is copied to the app's files once per version (the runtime needs a
+/// file path).
 class QuranListener {
-  // A separate public repository, so the app's own can be private.
-  static const _base = 'https://github.com/ISPANOVA/al-huda-files/releases/download/tasmee-model-v3.1';
-  static const _files = {
-    'model.int8.onnx': (size: 72705392, sha: '31755836528da336a6192121cd7bc82cb41752dddb65566fd000b89c8686da6b'),
-    'tokens.txt': (size: 2346, sha: '252c10687e442aa9291973065fae19fa39bcd681c4f5612ec496a647e20b43a1'),
-  };
-
-  /// Size of the download, for the question shown before it.
-  static const downloadMb = 70;
+  static const _modelAsset = 'assets/tasmee/model.int8.onnx';
+  static const _tokensAsset = 'assets/tasmee/tokens.txt';
 
   /// 16 kHz mono, sent to the model every 480 ms (its chunk).
   static const _rate = 16000;
   static const _chunkBytes = _rate * 2 * 480 ~/ 1000;
 
-  /// The on-device Tasmee runs on this platform.
-  static Future<bool> available() async => true;
+  static bool? _available;
 
-  static Future<File> _file(String name) async {
-    final dir = await getApplicationSupportDirectory();
-    return File('${dir.path}/tasmee_v31_$name');
-  }
-
-  /// The model was downloaded (and checked) already.
-  static Future<bool> modelReady() async {
-    for (final e in _files.entries) {
-      final f = await _file(e.key);
-      final ok = File('${f.path}.ok');
-      if (!await f.exists() || !await ok.exists() || await f.length() != e.value.size) return false;
-    }
-    return true;
-  }
-
-  /// Downloads the model (resuming an interrupted download); false without
-  /// the internet or when the file isn't right.
-  static Future<bool> download({void Function(double progress)? onProgress}) async {
+  /// The model is in this build of the app.
+  static Future<bool> available() async {
+    if (_available != null) return _available!;
     try {
-      // Files of the test build that had the model inside (no longer used).
-      final dir = await getApplicationSupportDirectory();
-      for (final old in ['tasmee_model.int8.onnx', 'tasmee_tokens.txt']) {
-        for (final f in [File('${dir.path}/$old'), File('${dir.path}/$old.build')]) {
-          if (await f.exists()) await f.delete();
-        }
-      }
-      final total = _files.values.fold<int>(0, (a, b) => a + b.size);
-      var done = 0;
-      for (final e in _files.entries) {
-        final f = await _file(e.key);
-        final ok = File('${f.path}.ok');
-        if (await f.exists() && await ok.exists() && await f.length() == e.value.size) {
-          done += e.value.size;
-          continue;
-        }
-        final part = File('${f.path}.part');
-        var have = await part.exists() ? await part.length() : 0;
-        if (have > e.value.size) {
-          await part.delete();
-          have = 0;
-        }
-        if (have < e.value.size) {
-          final dio = Dio();
-          await dio.download(
-            '$_base/${e.key}',
-            part.path,
-            deleteOnError: false,
-            fileAccessMode: have > 0 ? FileAccessMode.append : FileAccessMode.write,
-            options: Options(headers: have > 0 ? {'Range': 'bytes=$have-'} : null),
-            onReceiveProgress: (r, _) => onProgress?.call(((done + have + r) / total).clamp(0.0, 1.0)),
-          );
-        }
-        final path = part.path;
-        final sha = await Isolate.run(() => sha256.convert(File(path).readAsBytesSync()).toString());
-        if (sha != e.value.sha) {
-          await part.delete();
-          return false;
-        }
-        await part.rename(f.path);
-        await ok.writeAsString(sha);
-        done += e.value.size;
-        onProgress?.call(done / total);
-      }
-      return true;
+      final manifest = await AssetManifest.loadFromAssetBundle(rootBundle);
+      final assets = manifest.listAssets();
+      _available = assets.contains(_modelAsset) && assets.contains(_tokensAsset);
     } catch (_) {
-      return false;
+      _available = false;
     }
+    return _available!;
+  }
+
+  /// Copies the model out of the app ahead of time (in the background, when
+  /// the Mushaf opens), so the microphone starts at once.
+  static Future<void> warmUp() async {
+    if (!await available()) return;
+    try {
+      await _extract(_modelAsset);
+      await _extract(_tokensAsset);
+    } catch (_) {}
+  }
+
+  static final Map<String, Future<String>> _copies = {};
+
+  /// Asset copied to the app's files, once per build of the app (atomically:
+  /// a broken copy from an interrupted run is never used).
+  static Future<String> _extract(String asset) => _copies[asset] ??= _copy(asset).catchError((Object e) {
+        _copies.remove(asset);
+        throw e;
+      });
+
+  static Future<String> _copy(String asset) async {
+    final dir = await getApplicationSupportDirectory();
+    final file = File('${dir.path}/tasmee_${asset.split('/').last}');
+    final mark = File('${file.path}.build');
+    const build = String.fromEnvironment('APP_BUILD', defaultValue: 'dev');
+    if (await file.exists() && await mark.exists() && (await mark.readAsString()) == build) return file.path;
+    // Files of an earlier way of getting the model (downloaded): not used.
+    for (final old in ['tasmee_v31_model.int8.onnx', 'tasmee_v31_tokens.txt']) {
+      for (final f in [File('${dir.path}/$old'), File('${dir.path}/$old.ok'), File('${dir.path}/$old.part')]) {
+        if (await f.exists()) await f.delete();
+      }
+    }
+    final data = await rootBundle.load(asset);
+    final tmp = File('${file.path}.tmp');
+    final sink = tmp.openWrite();
+    const step = 4 << 20;
+    final bytes = data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
+    for (var o = 0; o < bytes.length; o += step) {
+      sink.add(Uint8List.sublistView(bytes, o, math.min(bytes.length, o + step)));
+      await Future<void>.delayed(Duration.zero);
+    }
+    await sink.flush();
+    await sink.close();
+    if (await tmp.length() != data.lengthInBytes) {
+      await tmp.delete();
+      throw StateError('copy of $asset incomplete');
+    }
+    await tmp.rename(file.path);
+    await mark.writeAsString(build);
+    return file.path;
   }
 
   Isolate? _isolate;
@@ -122,15 +108,18 @@ class QuranListener {
 
   bool get listening => _listening;
 
-  /// Loads the (downloaded) model in a background isolate. False when it
-  /// isn't downloaded or can't run on this phone.
-  Future<bool> prepare({void Function(double progress)? onProgress}) async {
+  /// Loads the model in a background isolate. False when it can't run on
+  /// this phone.
+  Future<bool> prepare() async {
     if (_ready != null) return _ready!.future;
-    if (!await modelReady()) return false;
     final ready = _ready = Completer<bool>();
     try {
-      final model = (await _file('model.int8.onnx')).path;
-      final tokens = (await _file('tokens.txt')).path;
+      if (!await available()) {
+        ready.complete(false);
+        return false;
+      }
+      final model = await _extract(_modelAsset);
+      final tokens = await _extract(_tokensAsset);
       final port = _fromModel = ReceivePort();
       port.listen(_onMessage);
       _isolate = await Isolate.spawn(_modelMain, [port.sendPort, model, tokens]);

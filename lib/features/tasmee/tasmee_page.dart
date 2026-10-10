@@ -43,6 +43,9 @@ class TasmeePage extends StatefulWidget {
 
   const TasmeePage({super.key, required this.startPage, this.startAyah});
 
+  /// Prepares the Tasmee in the background so its page opens at once.
+  static Future<void> preload(QuranRepository repo) => _TasmeePageState.preload(repo);
+
   static Route<void> route({required int page, int? ayah}) =>
       MaterialPageRoute(builder: (_) => TasmeePage(startPage: page, startAyah: ayah));
 
@@ -146,61 +149,110 @@ class _TasmeePageState extends State<TasmeePage> {
   /// Index of each ayah's first word, by global ayah number.
   static List<int> _ayahStart = const [];
 
-  static final _ayahNumber = RegExp('[\\s\u00A0]+[٠-٩]+\$');
+  /// Prepares the Tasmee's words in the background (the Mushaf calls it
+  /// when it opens), so the Tasmee page opens at once.
+  static Future<void> preload(QuranRepository repo) => _loaded ??= _load(repo).catchError((Object e) {
+        _loaded = null;
+        throw e;
+      });
+  static Future<void>? _loaded;
+
+  static Future<void> _load(QuranRepository repo) async {
+    await repo.ensureLoaded();
+    // Plain data for the background isolate: each page's words (global ayah
+    // number and text).
+    final pages = <List<(int, String)>>[];
+    for (var page = 1; page <= QuranRepository.pageCount; page++) {
+      final list = <(int, String)>[];
+      for (final line in repo.linesOnPage(page)) {
+        if (line.type != MushafLineType.text && line.type != MushafLineType.centered) continue;
+        for (final w in line.words) {
+          if (w.ayah != 0) list.add((w.ayah, w.text));
+        }
+      }
+      pages.add(list);
+    }
+    final phonetic = !kIsWeb && await QuranListener.available();
+    String? phonemes, extra;
+    if (phonetic) {
+      phonemes = await rootBundle.loadString('assets/tasmee/phonemes.txt');
+      extra = await rootBundle.loadString('assets/tasmee/extra.json');
+    }
+    final data = await compute(_build, (pages, phonemes, extra));
+    _all = data.words;
+    _pageStart = data.pageStart;
+    _ayahStart = data.ayahStart;
+    _phQuran = data.quran;
+    _openings = data.openings;
+    // The model copied out of the app now, so the microphone starts at once.
+    if (phonetic) unawaited(QuranListener.warmUp());
+  }
+
+  static final _ayahNumber = RegExp('[\\s ]+[٠-٩]+\$');
+
+  /// Runs in a background isolate: every word with its keys and phonemes,
+  /// and the index to find any passage.
+  static ({
+    List<TasmeeWord> words,
+    List<int> pageStart,
+    List<int> ayahStart,
+    PhoneticQuran? quran,
+    List<String> openings,
+  }) _build((List<List<(int, String)>>, String?, String?) input) {
+    final (pages, phonemes, extra) = input;
+    final words = <TasmeeWord>[];
+    final pageStart = List<int>.filled(QuranRepository.pageCount + 2, 0);
+    final ayahStart = List<int>.filled(6237, -1);
+    for (var page = 1; page <= pages.length; page++) {
+      pageStart[page] = words.length;
+      for (final (ayah, text) in pages[page - 1]) {
+        final ref = SurahMetadata.fromGlobal(ayah);
+        final number = _ayahNumber.firstMatch(text);
+        if (ayah < ayahStart.length && ayahStart[ayah] < 0) ayahStart[ayah] = words.length;
+        words.add(TasmeeWord(
+          surah: ref.surah,
+          ayah: ref.ayah,
+          text: number == null ? text : text.substring(0, number.start),
+          endsAyah: number != null,
+        ));
+      }
+    }
+    pageStart[QuranRepository.pageCount + 1] = words.length;
+    PhoneticQuran? quran;
+    var openings = const <String>[];
+    if (phonemes != null && extra != null) {
+      final lines = phonemes.split('\n');
+      final ex = jsonDecode(extra) as Map<String, dynamic>;
+      openings = [
+        PhoneticText.normalize((ex['istiadha'] as List).join()),
+        PhoneticText.normalize(lines.first.replaceAll(' ', '')),
+      ];
+      quran = PhoneticQuran.build(words, lines, SurahMetadata.globalAyah)..warmUp();
+    }
+    return (words: words, pageStart: pageStart, ayahStart: ayahStart, quran: quran, openings: openings);
+  }
 
   Future<void> _prepare() async {
     final repo = context.read<QuranRepository>();
-    await repo.ensureLoaded();
-    var words = _all;
-    if (words == null) {
-      words = <TasmeeWord>[];
-      final pageStart = List<int>.filled(QuranRepository.pageCount + 2, 0);
-      final ayahStart = List<int>.filled(6237, -1);
-      for (var page = 1; page <= QuranRepository.pageCount; page++) {
-        pageStart[page] = words.length;
-        for (final line in repo.linesOnPage(page)) {
-          if (line.type != MushafLineType.text && line.type != MushafLineType.centered) continue;
-          for (final w in line.words) {
-            if (w.ayah == 0) continue;
-            final ref = SurahMetadata.fromGlobal(w.ayah);
-            final number = _ayahNumber.firstMatch(w.text);
-            if (w.ayah < ayahStart.length && ayahStart[w.ayah] < 0) ayahStart[w.ayah] = words.length;
-            words.add(TasmeeWord(
-              surah: ref.surah,
-              ayah: ref.ayah,
-              text: number == null ? w.text : w.text.substring(0, number.start),
-              endsAyah: number != null,
-            ));
-          }
-        }
-        // Keep the screen responsive while the words are prepared.
-        if (page % 40 == 0) await Future<void>.delayed(Duration.zero);
+    if (_all == null) {
+      try {
+        await preload(repo);
+      } catch (_) {
+        if (mounted) setState(() => _status = 'تعذر تجهيز التسميع');
+        return;
       }
-      pageStart[QuranRepository.pageCount + 1] = words.length;
-      _all = words;
-      _pageStart = pageStart;
-      _ayahStart = ayahStart;
     } else {
-      for (final w in words) {
+      for (final w in _all!) {
         w.state = TasmeeState.hidden;
         w.missed = false;
         w.doubtful = false;
       }
     }
+    final words = _all!;
     if (!mounted) return;
     // The on-device model when this build has it.
-    if (!kIsWeb && await QuranListener.available()) {
-      try {
-        _phQuran ??= await _loadPhonetics(words);
-        _phonetic = true;
-        // Ready before the first words are recited.
-        final ph = _phQuran!;
-        Future<void>.delayed(const Duration(milliseconds: 400), ph.warmUp);
-      } catch (_) {
-        _phonetic = false;
-      }
-    }
-    if (!mounted) return;
+    _phonetic = _phQuran != null;
+    if (_phonetic) unawaited(QuranListener.warmUp());
     final TasmeeFollower tracker = _phonetic
         ? PhoneticTracker(words, _phQuran!, _mistakes,
             openings: _openings,
@@ -216,18 +268,6 @@ class _TasmeePageState extends State<TasmeePage> {
       _tracker = tracker;
       _revision++;
     });
-  }
-
-  /// The phonetic script of every word (assets/tasmee/phonemes.txt).
-  static Future<PhoneticQuran> _loadPhonetics(List<TasmeeWord> words) async {
-    final text = await rootBundle.loadString('assets/tasmee/phonemes.txt');
-    final lines = text.split('\n');
-    final extra = jsonDecode(await rootBundle.loadString('assets/tasmee/extra.json')) as Map<String, dynamic>;
-    _openings = [
-      PhoneticText.normalize((extra['istiadha'] as List).join()),
-      PhoneticText.normalize(lines.first.replaceAll(' ', '')),
-    ];
-    return PhoneticQuran.build(words, lines, SurahMetadata.globalAyah);
   }
 
   /// Page showing word [index].
@@ -344,22 +384,6 @@ class _TasmeePageState extends State<TasmeePage> {
       return;
     }
     final listener = _listener ??= QuranListener();
-    // The model is downloaded once, the first time (it isn't in the app).
-    if (!await QuranListener.modelReady()) {
-      if (!mounted || !await _askDownload()) return;
-      if (!mounted) return;
-      setState(() => _status = 'جارٍ تحميل ملف التسميع…');
-      final got = await QuranListener.download(onProgress: (p) {
-        if (mounted) {
-          setState(() => _status = 'جارٍ تحميل ملف التسميع (مرة واحدة فقط)… ${ArabicUtils.toArabicDigits((p * 100).floor())}٪');
-        }
-      });
-      if (!mounted) return;
-      if (!got) {
-        setState(() => _status = 'تعذر التحميل، تأكد من الإنترنت ثم اضغط الميكروفون مرة أخرى');
-        return;
-      }
-    }
     setState(() => _status = 'جارٍ تجهيز التسميع…');
     final ok = await listener.prepare();
     if (!mounted) return;
@@ -384,36 +408,6 @@ class _TasmeePageState extends State<TasmeePage> {
       _listening = true;
       _status = _listeningStatus;
     });
-  }
-
-  /// Asks before the one-time download of the model.
-  Future<bool> _askDownload() async {
-    final glass = GlassTheme.of(context);
-    final yes = await showGlassSheet<bool>(context, builder: (ctx) {
-      return Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          const Text('تحميل التسميع', textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.w900, fontSize: 18)),
-          const SizedBox(height: 10),
-          Text(
-            'التسميع يعمل على هاتفك نفسه دون إنترنت، ويحتاج تحميل ملف التعرّف على التلاوة مرة واحدة فقط '
-            '(حوالي ${ArabicUtils.toArabicDigits(QuranListener.downloadMb)} ميجابايت). يُفضّل التحميل على شبكة Wi-Fi.',
-            textAlign: TextAlign.center,
-            style: TextStyle(color: glass.onGlassMuted, height: 1.6),
-          ),
-          const SizedBox(height: 16),
-          FilledButton.icon(
-            onPressed: () => Navigator.of(ctx).pop(true),
-            icon: const Icon(Icons.download_rounded),
-            label: const Text('تحميل الآن'),
-          ),
-          const SizedBox(height: 6),
-          TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('لاحقًا')),
-        ],
-      );
-    });
-    return yes ?? false;
   }
 
   void _onPhonemes(String text, bool isFinal) {
