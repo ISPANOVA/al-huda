@@ -1,0 +1,41 @@
+name: Tasmee model release
+# Push to tasmee-model: puts the Tasmee model (Quran-Lab zipformer_p-arabic,
+# NPL licence, redistribution allowed) on the release «tasmee-model-v3.1»,
+# from where the app downloads it once, the first time the Tasmee is used.
+on:
+  push:
+    branches: [tasmee-model]
+permissions:
+  contents: write
+jobs:
+  model:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download from Hugging Face
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          TASMEE_MODEL=v3.1 bash tool/tasmee/fetch_model.sh out
+          cd out && sha256sum model.int8.onnx tokens.txt | tee SHA256SUMS.txt
+          ls -l model.int8.onnx tokens.txt | awk '{print $5, $9}' | tee SIZES.txt
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: tasmee-model-v3.1
+          name: ملفات التسميع (النموذج) • لا تُحذف
+          prerelease: true
+          make_latest: false
+          body: |
+            نموذج التعرّف على التلاوة الذي يحمّله تطبيق الهدى مرة واحدة عند أول تسميع. لا تحذف هذا الإصدار.
+            Quran-Lab/zipformer_p-arabic-v3.1 (NPL-1.2, non-profit; free apps only). Automatic feedback can be wrong and does not replace a qualified teacher.
+          files: |
+            out/model.int8.onnx
+            out/tokens.txt
+            out/SHA256SUMS.txt
+      - name: Checksums to a branch
+        run: |
+          cd out && rm -f model.int8.onnx tokens.txt
+          git init -q -b r && git config user.name ci-bot && git config user.email ci-bot@users.noreply.github.com
+          git add -A && git commit -qm "model ${{ github.run_number }}"
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${GITHUB_REPOSITORY}.git" HEAD:tasmee-model-results
