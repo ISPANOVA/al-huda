@@ -73,9 +73,9 @@ export async function show(view, args) {
   pagesEl.addEventListener('contextmenu', (e) => e.preventDefault());
   pagesEl.addEventListener('click', () => {
     if (held) { held = false; return; }
-    const on = root.classList.toggle('immersive');
-    $('#nav').classList.toggle('hide', on);
+    focus(!root.classList.contains('immersive'));
   });
+  document.addEventListener('fullscreenchange', onFullscreen);
   $('#surahChip', root).onclick = () => openIndex(m, names);
   $('#juzChip', root).onclick = () => openIndex(m, names, 1);
   $('#pageChip', root).onclick = () => openIndex(m, names, 1);
@@ -86,6 +86,26 @@ export async function show(view, args) {
   offPlayer = player.on((it) => highlight(it?.ayah ?? 0, m));
   highlight(player.current?.ayah ?? 0, m);
   update(m, names);
+}
+
+// Focus: the page alone, as large as the screen allows (full screen where
+// the browser lets a site do it: Android; on iPhone only the bars hide).
+let ownFullscreen = false;
+function focus(on) {
+  root.classList.toggle('immersive', on);
+  document.body.classList.toggle('focus', on);
+  $('#nav').classList.toggle('hide', on);
+  if (on && !document.fullscreenElement && document.documentElement.requestFullscreen) {
+    document.documentElement.requestFullscreen({ navigationUI: 'hide' }).then(() => { ownFullscreen = true; }).catch(() => {});
+  } else if (!on && ownFullscreen && document.fullscreenElement) {
+    ownFullscreen = false;
+    document.exitFullscreen().catch(() => {});
+  }
+  relayout();
+}
+function onFullscreen() {
+  // Leaving full screen (the back gesture) leaves focus too.
+  if (!document.fullscreenElement && ownFullscreen) { ownFullscreen = false; if (root?.classList.contains('immersive')) focus(false); }
 }
 
 async function rotate() {
@@ -105,6 +125,8 @@ async function rotate() {
 
 export function leave() {
   removeEventListener('resize', onResize);
+  document.removeEventListener('fullscreenchange', onFullscreen);
+  document.body.classList.remove('focus');
   if (document.fullscreenElement) { screen.orientation?.unlock?.(); document.exitFullscreen().catch(() => {}); }
   offPlayer?.();
   document.body.classList.remove('in-mushaf');
@@ -131,11 +153,12 @@ function onScroll(m, names) {
 let resizeTimer;
 function onResize() {
   clearTimeout(resizeTimer);
-  resizeTimer = setTimeout(() => {
-    for (const s of $$('.mpage .inner[data-drawn]', pagesEl)) { delete s.dataset.drawn; s.innerHTML = ''; s.style.height = ''; }
-    layoutMode();
-    goTo(page, false);
-  }, 150);
+  resizeTimer = setTimeout(relayout, 150);
+}
+function relayout() {
+  for (const s of $$('.mpage .inner[data-drawn]', pagesEl)) { delete s.dataset.drawn; s.innerHTML = ''; s.style.height = ''; s.style.width = ''; }
+  layoutMode();
+  goTo(page, false);
 }
 
 function drawAround(p) {
