@@ -2,8 +2,11 @@
 // and the athkar open without the internet after the first visit.
 const VERSION = '__BUILD__';
 const CACHE = 'alhuda-' + VERSION;
-const SHELL = ['./', 'index.html', 'css/app.css', 'js/app.js', 'js/home.js', 'js/player.js', 'js/prayerlib.js', 'js/page.js',
-  'data/meta.json', 'data/surahs.json', 'fonts/Tajawal-Regular.woff2', 'fonts/Tajawal-Bold.woff2', 'manifest.json'];
+const JS = ['app', 'home', 'player', 'prayerlib', 'page', 'mushaf', 'tasmee', 'search', 'athkar', 'prayer', 'qibla', 'tasbeeh',
+  'media', 'calendar', 'content', 'khatmah', 'hifz', 'settings', 'more', 'core'].map((n) => `js/${n}.js`);
+const DATA = ['meta', 'surahs', 'athkar', 'duas', 'virtues', 'media', 'reciters', 'calendar'].map((n) => `data/${n}.json`);
+const FONTS = ['Tajawal-Regular', 'Tajawal-Bold', 'Tajawal-ExtraBold', 'ReemKufi-Bold', 'UthmanicHafs18'].map((n) => `fonts/${n}.woff2`);
+const SHELL = ['./', 'index.html', 'css/app.css', 'manifest.json', ...JS, ...DATA, ...FONTS];
 
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).catch(() => {}).then(() => self.skipWaiting()));

@@ -160,30 +160,40 @@ const TONES = { home: 'gold', mushaf: 'emerald', media: 'amethyst', prayer: 'sap
 
 let current = null;
 let seq = 0;
+function highlight(name) {
+  const tab = TABS[name] ?? 'home';
+  for (const a of $$('#nav a')) a.className = a.dataset.tab === tab ? `on t-${TONES[tab]}` : '';
+  $('#nav').classList.toggle('hide', name === 'mushaf' || name === 'tasmee');
+}
+// The new page fades in as soon as it is written.
+const view0 = $('#view');
+new MutationObserver(() => {
+  if (!view0.classList.contains('enter') || view0.firstElementChild?.classList.contains('spin')) return;
+  view0.classList.remove('enter');
+  void view0.offsetWidth;
+  view0.classList.add('in');
+}).observe(view0, { childList: true });
+view0.addEventListener('animationend', () => view0.classList.remove('in'));
+
 async function route() {
   if (sheetClose) { const f = sheetClose; f(); }
   const [name, ...args] = location.hash.replace(/^#\/?/, '').split('/');
   const loader = routes[name] ?? routes[''];
   const my = ++seq;
-  const view = $('#view');
+  const view = view0;
+  // The tap answers at once: the tab lights up, the old page leaves.
+  highlight(name in routes ? name : '');
   try {
     const mod = await loader();
     if (my !== seq) return;
     current?.leave?.();
-    view.className = 'view';
-    view.onclick = null;
-    view.innerHTML = '';
-    window.scrollTo(0, 0);
     current = mod;
-    const tab = TABS[name] ?? 'home';
-    for (const a of $$('#nav a')) {
-      const on = a.dataset.tab === tab;
-      a.classList.toggle('on', on);
-      if (on) a.className = `on t-${TONES[tab]}`;
-      else a.className = '';
-    }
-    $('#nav').classList.toggle('hide', name === 'mushaf' || name === 'tasmee');
+    view.className = 'view enter';
+    view.onclick = null;
+    view.innerHTML = '<div class="spin"></div>';
+    window.scrollTo(0, 0);
     await mod.show(view, args.map(decodeURIComponent), name);
+    if (!view.className.includes('full')) view.classList.remove('enter');
   } catch (e) {
     console.error(e);
     view.innerHTML = `<div class="card center" style="margin-top:40px">تعذر فتح الصفحة. تأكد من الاتصال ثم أعد المحاولة.<br><br><button class="btn" onclick="location.reload()">إعادة المحاولة</button></div>`;
@@ -192,9 +202,21 @@ async function route() {
 addEventListener('hashchange', route);
 addEventListener('popstate', () => { if (sheetClose && !history.state?.sheet) { const f = sheetClose; f(); } });
 
+// After the first page: every other page (and its small data) is fetched in
+// the background, so moving between pages never waits for the network.
+const idle = (f) => (window.requestIdleCallback ? requestIdleCallback(f, { timeout: 2000 }) : setTimeout(f, 200));
+async function warm() {
+  for (const load of new Set(Object.values(routes))) { try { await load(); } catch {} }
+  for (const f of ['surahs.json', 'meta.json', 'athkar.json', 'duas.json', 'virtues.json', 'media.json', 'reciters.json', 'calendar.json']) {
+    try { await data(f); } catch {}
+  }
+  setTimeout(() => idle(() => core().catch(() => {})), 1500);
+}
+
 route().then(() => {
   const s = $('#splash');
   setTimeout(() => { s.classList.add('out'); setTimeout(() => s.remove(), 400); }, 350);
+  setTimeout(() => idle(warm), 600);
 });
 
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
