@@ -95,6 +95,14 @@ android {
         'signingConfig = if (keystorePropertiesFile.exists()) signingConfigs.getByName("release") else signingConfigs.getByName("debug")',
       );
     }
+    // Phones only: the Tasmee libraries for x86 emulators are left out of the
+    // APK (about 30 MB); the app itself is built for ARM only.
+    if (!s.contains('lib/x86_64/**')) {
+      s = s.replaceFirst(
+        RegExp(r'\nandroid\s*\{'),
+        '\nandroid {\n    packaging {\n        jniLibs {\n            excludes += setOf("lib/x86/**", "lib/x86_64/**")\n        }\n    }\n',
+      );
+    }
     kts.writeAsStringSync(s);
   } else if (groovy.existsSync()) {
     var s = groovy.readAsStringSync();
