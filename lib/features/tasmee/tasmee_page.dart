@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
@@ -21,7 +22,11 @@ import '../quran/domain/repositories/quran_repository.dart';
 import '../quran/domain/entities/mushaf_line.dart';
 import '../quran/presentation/mushaf/mushaf_page.dart' show MushafPageView, MushafStyle, MushafWordPaint;
 import '../quran/presentation/mushaf/mushaf_reader_page.dart' show MushafChip, MushafPageProportion, MushafToolIcon, mushafPaperColor;
+import 'phonetic/phonetic_text.dart';
+import 'phonetic/phonetic_tracker.dart';
+import 'phonetic/quran_listener.dart';
 import 'tasmee_engine.dart';
+import 'tasmee_follower.dart';
 import 'tasmee_locator.dart';
 import 'web_speech.dart';
 
@@ -54,8 +59,15 @@ class _TasmeePageState extends State<TasmeePage> {
   double _level = 0;
   final List<TasmeeMistake> _mistakes = [];
   late int _page = widget.startPage;
-  TasmeeTracker? _tracker;
+  TasmeeFollower? _tracker;
   bool _ready = false;
+
+  /// The on-device Quran model listens (Android); otherwise the platform's
+  /// speech recognition (the browser's, on the web).
+  bool _phonetic = false;
+  QuranListener? _listener;
+  static PhoneticQuran? _phQuran;
+  static List<String> _openings = const [];
 
   /// The surah being tested (null: the whole Quran).
   int? _scopeSurah;
@@ -108,6 +120,7 @@ class _TasmeePageState extends State<TasmeePage> {
     _settleTimer?.cancel();
     _statusTimer?.cancel();
     _stt.cancel();
+    _listener?.dispose();
     _pages.dispose();
     _fx.dispose();
     super.dispose();
@@ -170,7 +183,19 @@ class _TasmeePageState extends State<TasmeePage> {
       }
     }
     if (!mounted) return;
-    final tracker = TasmeeTracker(words, _mistakes, near: _pageStart[widget.startPage]);
+    // The on-device model when this build has it.
+    if (!kIsWeb && await QuranListener.available()) {
+      try {
+        _phQuran ??= await _loadPhonetics(words);
+        _phonetic = true;
+      } catch (_) {
+        _phonetic = false;
+      }
+    }
+    if (!mounted) return;
+    final TasmeeFollower tracker = _phonetic
+        ? PhoneticTracker(words, _phQuran!, _mistakes, openings: _openings, near: _pageStart[widget.startPage])
+        : TasmeeTracker(words, _mistakes, near: _pageStart[widget.startPage]);
     final start = widget.startAyah;
     if (start != null && start < _ayahStart.length && _ayahStart[start] >= 0) {
       tracker.startAt(_ayahStart[start], pageStart: _pageStart[widget.startPage]);
@@ -179,6 +204,18 @@ class _TasmeePageState extends State<TasmeePage> {
       _tracker = tracker;
       _revision++;
     });
+  }
+
+  /// The phonetic script of every word (assets/tasmee/phonemes.txt).
+  static Future<PhoneticQuran> _loadPhonetics(List<TasmeeWord> words) async {
+    final text = await rootBundle.loadString('assets/tasmee/phonemes.txt');
+    final lines = text.split('\n');
+    final extra = jsonDecode(await rootBundle.loadString('assets/tasmee/extra.json')) as Map<String, dynamic>;
+    _openings = [
+      PhoneticText.normalize((extra['istiadha'] as List).join()),
+      PhoneticText.normalize(lines.first.replaceAll(' ', '')),
+    ];
+    return PhoneticQuran.build(words, lines, SurahMetadata.globalAyah);
   }
 
   /// Page showing word [index].
@@ -249,6 +286,7 @@ class _TasmeePageState extends State<TasmeePage> {
   }
 
   Future<void> _toggleMic() async {
+    if (_phonetic) return _togglePhonetic();
     if (_active) {
       _active = false;
       _watchdog?.cancel();
@@ -275,6 +313,72 @@ class _TasmeePageState extends State<TasmeePage> {
       if (_active && !_starting && !_stt.isListening) _listen();
     });
     await _listen(manual: true);
+  }
+
+  // ---------------------------------------------- the on-device model ---
+
+  Future<void> _togglePhonetic() async {
+    final t = _tracker;
+    if (t is! PhoneticTracker) return;
+    if (_active) {
+      _active = false;
+      await _listener?.stop();
+      if (!mounted) return;
+      setState(() {
+        _listening = false;
+        _level = 0;
+        _status = 'متوقف مؤقتًا • اضغط للمتابعة';
+      });
+      return;
+    }
+    final listener = _listener ??= QuranListener();
+    setState(() => _status = 'جارٍ تجهيز التسميع على هاتفك…');
+    final ok = await listener.prepare(onProgress: (p) {
+      if (mounted && p < 1) setState(() => _status = 'جارٍ تجهيز التسميع لأول مرة… ${ArabicUtils.toArabicDigits((p * 100).round())}٪');
+    });
+    if (!mounted) return;
+    if (!ok) {
+      setState(() => _status = 'تعذر تشغيل التسميع على هذا الهاتف');
+      return;
+    }
+    t.newUtterance(manual: true);
+    final started = await listener.start(
+      onResult: _onPhonemes,
+      onLevel: (l) {
+        if (mounted && _active) setState(() => _level = l);
+      },
+    );
+    if (!mounted) return;
+    if (!started) {
+      setState(() => _status = 'يحتاج التسميع إذن الميكروفون من إعدادات التطبيق');
+      return;
+    }
+    setState(() {
+      _active = true;
+      _listening = true;
+      _status = _listeningStatus;
+    });
+  }
+
+  void _onPhonemes(String text, bool isFinal) {
+    final t = _tracker;
+    if (t is! PhoneticTracker || !mounted) return;
+    final wasLocated = t.located;
+    final before = t.expected;
+    final res = t.feed(text, isFinal: isFinal);
+    _heard = t.heardText;
+    if (isFinal) t.newUtterance();
+    _afterFeed(t, res, wasLocated: wasLocated, before: before);
+  }
+
+  Future<void> _stopListening() async {
+    _active = false;
+    _watchdog?.cancel();
+    if (_phonetic) {
+      await _listener?.stop();
+    } else {
+      await _stt.stop();
+    }
   }
 
   /// When the current listening started: an end reported right after it
@@ -483,11 +587,10 @@ class _TasmeePageState extends State<TasmeePage> {
     List<List<String>> alternates = const [],
   }) {
     final t = _tracker;
-    if (t == null || !mounted) return;
+    if (t is! TasmeeTracker || !mounted) return;
     final wasLocated = t.located;
     final before = t.expected;
     final res = t.feed(heard, isFinal: isFinal, alternates: alternates);
-    if (res.mistakes > 0) _onMistake(res.flash);
     // A surah was chosen but the reciter is in another one: say where.
     if (!t.located && _scopeSurah != null && heard.length >= 5) {
       final hit = (_fullLocator ??= TasmeeLocator(t.words)).locate(heard);
@@ -498,6 +601,13 @@ class _TasmeePageState extends State<TasmeePage> {
         _status = _outside!;
       }
     }
+    _afterFeed(t, res, wasLocated: wasLocated, before: before);
+  }
+
+  /// What follows a result: the warning for a mistake, where the reciter
+  /// is, the page turned to the word being recited.
+  void _afterFeed(TasmeeFollower t, TasmeeFeed res, {required bool wasLocated, required int before}) {
+    if (res.mistakes > 0) _onMistake(res.flash);
     if (t.located && (!wasLocated || (t.expected - before).abs() > 8)) {
       // Found (or moved to) the place being recited.
       HapticFeedback.mediumImpact();
@@ -531,9 +641,7 @@ class _TasmeePageState extends State<TasmeePage> {
   /// The whole range (the surah, or the Quran) was recited.
   Future<void> _finished() async {
     HapticFeedback.mediumImpact();
-    _active = false;
-    _watchdog?.cancel();
-    await _stt.stop();
+    await _stopListening();
     if (mounted) _showSummary(finished: true);
   }
 
@@ -601,20 +709,20 @@ class _TasmeePageState extends State<TasmeePage> {
 
   // ------------------------------------------------------------- hints ---
 
-  void _hint(void Function(TasmeeSession s) reveal) {
+  void _hint(void Function(TasmeeFollower t) reveal) {
     final t = _tracker;
     if (t == null || t.done) return;
     // Before the place is known, a hint starts from the page on screen.
     if (!t.located) t.startAt(_pageStart[_page]);
-    reveal(t.session);
+    reveal(t);
     HapticFeedback.selectionClick();
     setState(() => _revision++);
     if (t.expected < t.words.length) _showPage(_pageOf(t.expected));
     if (t.done) _finished();
   }
 
-  void _hintWord() => _hint((s) => s.hintNext());
-  void _hintAyah() => _hint((s) => s.revealAyah());
+  void _hintWord() => _hint((t) => t.hintNext());
+  void _hintAyah() => _hint((t) => t.revealAyah());
 
   /// Words recited correctly (not hinted, not missed).
   int get _correctTotal {
@@ -702,8 +810,7 @@ class _TasmeePageState extends State<TasmeePage> {
       canPop: _leaving || (_mistakes.isEmpty && !(t?.located ?? false)),
       onPopInvokedWithResult: (didPop, _) {
         if (didPop) return;
-        _active = false;
-        _stt.stop();
+        _stopListening();
         _showSummaryThenLeave();
       },
       // The same page as the Mushaf reader: flat paper colour, the page at
@@ -735,7 +842,7 @@ class _TasmeePageState extends State<TasmeePage> {
   }
 
   /// Like the reader's header: back • what is tested ▾ • tools.
-  Widget _topBar(GlassTheme glass, MushafStyle style, TasmeeTracker t) {
+  Widget _topBar(GlassTheme glass, MushafStyle style, TasmeeFollower t) {
     final start = _pageStart[_page];
     final end = _pageStart[_page + 1];
     var recited = 0;
@@ -834,7 +941,7 @@ class _TasmeePageState extends State<TasmeePage> {
   }
 
   /// The Mushaf itself, page by page, exactly as in the reader.
-  Widget _mushaf(GlassTheme glass, MushafStyle style, TasmeeTracker t) {
+  Widget _mushaf(GlassTheme glass, MushafStyle style, TasmeeFollower t) {
     final repo = context.read<QuranRepository>();
     return PageView.builder(
       controller: _pages,
@@ -869,7 +976,7 @@ class _TasmeePageState extends State<TasmeePage> {
   /// word appears when it is recited.
   static bool _hide = false;
 
-  MushafWordPaint? _paintWord(MushafStyle style, TasmeeTracker t, int k) {
+  MushafWordPaint? _paintWord(MushafStyle style, TasmeeFollower t, int k) {
     const red = Color(0xFFE5484D);
     if (k >= t.words.length) return _hide ? MushafWordPaint(hidden: true, underline: style.ink.withValues(alpha: 0.12)) : null;
     final w = t.words[k];
@@ -919,9 +1026,14 @@ class _TasmeePageState extends State<TasmeePage> {
     );
   }
 
-  Widget _controls(GlassTheme glass, MushafStyle style, TasmeeTracker t) {
+  Widget _controls(GlassTheme glass, MushafStyle style, TasmeeFollower t) {
     final canHint = !t.done;
-    final heard = _active && _heard.isNotEmpty ? _heard.split(' ').reversed.take(6).toList().reversed.join(' ') : '';
+    final heard = !_active || _heard.isEmpty
+        ? ''
+        : _phonetic
+            // The model hears sounds, not words: the last ones heard.
+            ? (_heard.length > 34 ? '…${_heard.substring(_heard.length - 34)}' : _heard)
+            : _heard.split(' ').reversed.take(6).toList().reversed.join(' ');
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 0, 12, 6),
       child: Column(

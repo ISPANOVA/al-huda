@@ -33,6 +33,8 @@ jobs:
       - name: Tests
         run: |
           flutter pub get > /dev/null
+          flutter analyze --no-fatal-infos lib test > "$RUNNER_TEMP/out/analyze.txt" 2>&1 || true
+          tail -30 "$RUNNER_TEMP/out/analyze.txt"
           flutter test test/tasmee_phonetic_test.dart -r expanded 2>&1 | tee "$RUNNER_TEMP/out/test.txt" | tail -60
       - name: Publish results
         if: always()

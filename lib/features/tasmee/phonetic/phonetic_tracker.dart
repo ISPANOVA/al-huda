@@ -567,6 +567,9 @@ class PhoneticTracker implements TasmeeFollower {
         if (quran.waslStart[w] && i < 2) d = 0;
         // The last haraka of a word is dropped when stopping on it.
         if (i == p.length - 1 && PhoneticText.isVowel(c) && d > 0.25) d = 0.25;
+        // The same sound ending one word and starting the next is heard once
+        // when they are joined (مِن نَّار): the second needs no sound of its own.
+        if (i == 0 && codes.length >= 2 && codes[codes.length - 2] == c) d = 0;
         del.add(d);
       }
     }

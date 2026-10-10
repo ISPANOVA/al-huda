@@ -51,6 +51,9 @@ dependencies:
   file_picker: ">=8.0.0 <11.0.0"
   flutter_tts: ">=4.0.0 <6.0.0"
   speech_to_text: ^7.0.0
+  # On-device Quran recognition for the Tasmee (Android)
+  sherpa_onnx: ^1.13.8
+  record: ^7.1.2
 
   # Web build only (browser speech recognition, compass, page helpers)
   web: ^1.1.0
@@ -70,6 +73,7 @@ flutter:
     - assets/icon/
     - assets/quran/
     - assets/sounds/
+    - assets/tasmee/
   fonts:
     - family: AmiriQuran
       fonts:
