@@ -119,7 +119,13 @@ def portrait(img):
         import numpy as np
         gray = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2GRAY)
         det = cv2.CascadeClassifier(cv2.data.haarcascades + "haarcascade_frontalface_default.xml")
-        faces = det.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=6, minSize=(max(24, w // 25), max(24, w // 25)))
+        faces, weights = [], []
+        for n in (6, 3):  # strict first; looser for small faces in wide shots
+            found, _, w8 = det.detectMultiScale3(gray, scaleFactor=1.08, minNeighbors=n, minSize=(max(20, w // 40), max(20, w // 40)),
+                                                 outputRejectLevels=True)
+            if len(found):
+                faces, weights = list(found), [float(x) for x in np.array(w8).ravel()]
+                break
     except Exception as e:
         try:
             import cv2 as c2
@@ -128,7 +134,8 @@ def portrait(img):
             print("no face detection", e, e2)
         faces = []
     if len(faces):
-        x, y, fw, fh = max(faces, key=lambda f: f[2] * f[3])
+        # The most certain face (not the largest: curtains and patterns fool it).
+        x, y, fw, fh = faces[max(range(len(faces)), key=lambda i: weights[i])]
         side = int(max(fw, fh) * 2.4)
         side = min(side, w, h)
         cx, cy = x + fw / 2, y + fh / 2 + fh * 0.18
