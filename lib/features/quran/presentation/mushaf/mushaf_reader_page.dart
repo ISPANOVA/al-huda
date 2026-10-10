@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -108,6 +109,13 @@ class _MushafReaderPageState extends State<MushafReaderPage> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _onPageShown(_page);
     });
+    // The Tasmee prepared in the background (on the phone only: the web has
+    // no background isolate), so its page opens at once from here.
+    if (!kIsWeb) {
+      Future<void>.delayed(const Duration(seconds: 2), () {
+        if (mounted) TasmeePage.preload(_repo).catchError((Object _) {});
+      });
+    }
     if (widget.surah != null && widget.ayah != null) _flashSelection(SurahMetadata.globalAyah(widget.surah!, widget.ayah!));
     final pending = _pending ?? context.read<QuranNavCubit>().state;
     if (pending != null && widget.embedded) {

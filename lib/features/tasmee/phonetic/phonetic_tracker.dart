@@ -124,8 +124,9 @@ class PhoneticQuran {
   Int32List? _keyPos;
 
   static const _base = 64;
-  static final Map<int, int> _alphabet = {};
-  static int _code(int c) => _alphabet.putIfAbsent(c, () => _alphabet.length % (_base - 1) + 1);
+  /// The same code for a letter in every isolate (the index may be built in
+  /// the background): Arabic letters ء…ي are 1…42, anything else 63.
+  static int _code(int c) => c >= 0x0621 && c <= 0x064A ? c - 0x0620 : _base - 1;
 
   void _buildIndex() {
     if (_skel != null) return;
