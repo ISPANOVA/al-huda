@@ -43,6 +43,9 @@ class TasmeePage extends StatefulWidget {
 
   const TasmeePage({super.key, required this.startPage, this.startAyah});
 
+  /// Prepares the Tasmee in the background so its page opens at once.
+  static Future<void> preload(QuranRepository repo) => _TasmeePageState.preload(repo);
+
   static Route<void> route({required int page, int? ayah}) =>
       MaterialPageRoute(builder: (_) => TasmeePage(startPage: page, startAyah: ayah));
 
