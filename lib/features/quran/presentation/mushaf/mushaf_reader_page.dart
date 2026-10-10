@@ -6,7 +6,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/data/surah_metadata.dart';
-import '../../../../core/utils/app_orientation.dart';
 import '../../../../core/theme/app_themes.dart';
 import '../../../../core/utils/arabic_utils.dart';
 import '../../../../core/widgets/gradient_background.dart';
@@ -84,14 +83,6 @@ class _MushafReaderPageState extends State<MushafReaderPage> {
   QuranNavRequest? _pending;
   final Set<int> _loggedPages = {};
 
-  /// Read sideways on a phone (the footer's rotate button).
-  bool _landscape = false;
-
-  void _toggleLandscape() {
-    setState(() => _landscape = !_landscape);
-    AppOrientation.setMushafLandscape(_landscape);
-  }
-
   /// Largest bottom system inset seen; kept so hiding the gesture bar never
   /// changes the page size.
   double _bottomInset = 0;
@@ -139,7 +130,6 @@ class _MushafReaderPageState extends State<MushafReaderPage> {
     // Not during unmounting: the frame rebuilds at the end of this frame.
     WidgetsBinding.instance.addPostFrameCallback((_) => WebFrame.wide.value = false);
     if (!widget.embedded) MushafReaderPage.setImmersive(false);
-    if (_landscape) AppOrientation.setMushafLandscape(false);
     super.dispose();
   }
 
@@ -275,14 +265,6 @@ class _MushafReaderPageState extends State<MushafReaderPage> {
     final route = ModalRoute.of(context);
     final visible = TickerMode.of(context) &&
         (route == null || route.isCurrent || (route.isActive && WebFrame.popupOnTop));
-    // Leaving the Mushaf (another tab, a pushed screen): back to portrait.
-    if (!visible && _landscape) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted || !_landscape) return;
-        setState(() => _landscape = false);
-        AppOrientation.setMushafLandscape(false);
-      });
-    }
     if (WebFrame.wide.value == visible) return;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) WebFrame.wide.value = visible;
@@ -321,9 +303,6 @@ class _MushafReaderPageState extends State<MushafReaderPage> {
         : LayoutBuilder(builder: (context, box) {
             final spread = _useSpread(pagesMode, box.maxWidth, box.maxHeight);
             final controller = _controllerFor(spread);
-            // A phone turned sideways: one page as wide as the screen,
-            // scrolled down (its text as large as the width allows).
-            final sideways = !spread && !kIsWeb && !AppOrientation.isLargeScreen && box.maxWidth > box.maxHeight;
             return PageView.builder(
               key: ValueKey(spread),
               controller: controller,
@@ -335,23 +314,7 @@ class _MushafReaderPageState extends State<MushafReaderPage> {
                 _onPageShown(page, withNext: spread);
               },
               itemBuilder: (context, i) => RepaintBoundary(
-                child: sideways
-                    ? SingleChildScrollView(
-                        padding: EdgeInsets.fromLTRB(24, headerH, 24, footerH + bottomInset + 24),
-                        child: LayoutBuilder(builder: (context, c) {
-                          final w = c.maxWidth;
-                          return SizedBox(
-                            width: w,
-                            height: w * 3000 / _repo.referenceLineWidth,
-                            child: MediaQuery(
-                              // The font follows the width, not the short screen height.
-                              data: MediaQuery.of(context).copyWith(size: Size(w, 100000)),
-                              child: pageView(i + 1),
-                            ),
-                          );
-                        }),
-                      )
-                    : Padding(
+                child: Padding(
                   padding: EdgeInsets.fromLTRB(10, headerH, 10, footerH + bottomInset),
                   child: spread
                       ? _MushafSpread(
@@ -442,8 +405,6 @@ class _MushafReaderPageState extends State<MushafReaderPage> {
                         onJuz: () => _openIndex(1),
                         onPlay: () => _playPage(_page),
                         onSettings: () => showReaderSettingsSheet(context),
-                        onRotate: kIsWeb || AppOrientation.isLargeScreen ? null : _toggleLandscape,
-                        landscape: _landscape,
                         onClose: widget.embedded ? null : () => Navigator.of(context).maybePop(),
                       ),
                     ),
@@ -569,12 +530,8 @@ class _Footer extends StatelessWidget {
   final VoidCallback onPlay;
   final VoidCallback onSettings;
   final VoidCallback? onClose;
-  final VoidCallback? onRotate;
-  final bool landscape;
 
   const _Footer({
-    this.onRotate,
-    this.landscape = false,
     required this.page,
     required this.first,
     required this.style,
@@ -612,13 +569,6 @@ class _Footer extends StatelessWidget {
           fade(Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              if (onRotate != null)
-                MushafToolIcon(
-                  icon: landscape ? Icons.stay_current_portrait_rounded : Icons.screen_rotation_rounded,
-                  color: style.accent,
-                  onTap: onRotate!,
-                  tooltip: landscape ? 'القراءة بالطول' : 'القراءة بالعرض',
-                ),
               MushafToolIcon(icon: Icons.tune_rounded, color: style.accent, onTap: onSettings, tooltip: 'إعدادات القراءة'),
               const SizedBox(width: 4),
               Material(
