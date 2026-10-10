@@ -1,0 +1,24 @@
+-rw-r--r-- 1 runner runner 160960548 Oct 10 16:07 new.apk
+-rw-r--r-- 1 runner runner 218882709 Oct 10 15:59 old.apk
+10486664 lib/arm64-v8a/libapp.so
+131248 lib/arm64-v8a/libdartjni.so
+11747864 lib/arm64-v8a/libflutter.so
+22249552 lib/arm64-v8a/libonnxruntime.so
+4499112 lib/arm64-v8a/libsherpa-onnx-c-api.so
+437880 lib/arm64-v8a/libsherpa-onnx-cxx-api.so
+11731528 lib/armeabi-v7a/libapp.so
+81444 lib/armeabi-v7a/libdartjni.so
+8615900 lib/armeabi-v7a/libflutter.so
+15359576 lib/armeabi-v7a/libonnxruntime.so
+3202776 lib/armeabi-v7a/libsherpa-onnx-c-api.so
+277076 lib/armeabi-v7a/libsherpa-onnx-cxx-api.so
+10814344 lib/x86_64/libapp.so
+116640 lib/x86_64/libdartjni.so
+13051424 lib/x86_64/libflutter.so
+25581112 lib/x86_64/libonnxruntime.so
+5002888 lib/x86_64/libsherpa-onnx-c-api.so
+423512 lib/x86_64/libsherpa-onnx-cxx-api.so
+15038 assets/flutter_assets/assets/sounds/tasmee_error.wav
+10186 assets/flutter_assets/assets/sounds/tasmee_page.wav
+116 assets/flutter_assets/assets/tasmee/extra.json
+1382230 assets/flutter_assets/assets/tasmee/phonemes.txt
