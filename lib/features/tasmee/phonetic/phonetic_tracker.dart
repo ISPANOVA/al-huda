@@ -461,6 +461,10 @@ class PhoneticTracker implements TasmeeFollower {
     return best <= m * 0.25 ? bestI : null;
   }
 
+  /// Cost of going back to repeat (so a repeat is taken only when the
+  /// words heard are those words again).
+  static const _jump = 0.5;
+
   /// Edit cost of [a] (heard) against [b] (text), whole strings.
   static double _align(String a, String b) {
     var prev = Float64List(b.length + 1);
@@ -667,8 +671,15 @@ class PhoneticTracker implements TasmeeFollower {
     final n = hs.length;
     const inf = 1e9;
     final width = m + 1;
+    final isStart = List<bool>.filled(m + 1, false);
+    for (final st in starts) {
+      isStart[st] = true;
+    }
+    final words = last - first;
     final d = Float64List((n + 1) * width);
-    final back = Uint8List((n + 1) * width); // 0 start, 1 diag, 2 ins, 3 del
+    // 0 start, 1 diag, 2 ins, 3 del, 4 jump back (a repeat; from jumpFrom).
+    final back = Uint8List((n + 1) * width);
+    final jumpFrom = Int32List((n + 1) * width);
     // Row 0: the path starts at an allowed word start, then may skip text.
     for (var r = 0; r <= m; r++) {
       d[r] = inf;
@@ -708,6 +719,27 @@ class PhoneticTracker implements TasmeeFollower {
         d[row + r] = best;
         back[row + r] = how;
       }
+      // Going back to repeat: after any word, the start of it or of one of
+      // the 8 words before it.
+      for (var k = 0; k < words; k++) {
+        final b = starts[k];
+        var bestSrc = -1;
+        var bestV = d[row + b];
+        for (var j = k; j < words && j <= k + 8; j++) {
+          final e = starts[j + 1];
+          if (e <= b) continue;
+          final v = d[row + e] + _jump;
+          if (v < bestV) {
+            bestV = v;
+            bestSrc = e;
+          }
+        }
+        if (bestSrc >= 0) {
+          d[row + b] = bestV;
+          back[row + b] = 4;
+          jumpFrom[row + b] = bestSrc;
+        }
+      }
     }
     // The heard text is used whole; the text may end anywhere (ties go to
     // the furthest point).
@@ -722,6 +754,9 @@ class PhoneticTracker implements TasmeeFollower {
     }
     // Back-trace: costs and heard ranges per word.
     final spans = [for (var w = first; w < last; w++) _WordSpan()];
+    // Words recited again later: what was said of them before the repeat is
+    // not judged (the last reading counts).
+    final redone = List<bool>.filled(words, false);
     var i = n, r = endR;
     // Insertions waiting to be given to a word (a run at a word boundary).
     var pendingIns = 0.0;
@@ -740,7 +775,7 @@ class PhoneticTracker implements TasmeeFollower {
       final startHamza = wordAfter < spans.length &&
           quran.hamzatWasl[first + wordAfter] &&
           pendingChars.every((c) => c == 0x0621 || PhoneticText.isVowel(c));
-      if (pendingRun <= 2 && wordAfter < spans.length && !afterAyahEnd && !vowels && !startHamza) {
+      if (pendingRun <= 2 && wordAfter < spans.length && !afterAyahEnd && !vowels && !startHamza && !redone[wordAfter]) {
         spans[wordAfter].cost += pendingIns;
       }
       pendingIns = 0;
@@ -750,26 +785,39 @@ class PhoneticTracker implements TasmeeFollower {
 
     while (i > 0 || r > 0) {
       final how = back[i * width + r];
-      if (i == 0 && (how == 0 || d[r] == 0)) {
+      if (i == 0 && how == 0) {
         startR = r;
         break;
+      }
+      if (how == 4) {
+        // Before this point the reciter was further on: words from here to
+        // there were recited again.
+        final src = jumpFrom[i * width + r];
+        flushIns(wordOf[r]);
+        for (var k = wordOf[r]; k < words && starts[k] < src; k++) {
+          redone[k] = true;
+        }
+        r = src;
+        continue;
       }
       if (how == 1) {
         final w = wordOf[r - 1];
         final hc = hs.codeUnitAt(i - 1);
         final c = alt[r - 1] == hc || (codes[r - 1] != hc && cheapSub.contains(r - 1)) ? 0.25 : PhoneticText.sub(codes[r - 1], hc);
         final s = spans[w];
-        s.cost += c;
-        if (c == 0) s.exact++;
-        if (s.hEnd < 0) s.hEnd = i;
-        s.hStart = i - 1;
+        if (!redone[w]) {
+          s.cost += c;
+          if (c == 0) s.exact++;
+          if (s.hEnd < 0) s.hEnd = i;
+          s.hStart = i - 1;
+        }
         // Insertions just after this char (inside the word or at its end).
         if (pendingRun > 0) {
-          final atBoundary = r < m && starts.contains(r);
+          final atBoundary = r < m && isStart[r];
           if (atBoundary) {
             flushIns(wordOf[r]);
           } else {
-            s.cost += pendingIns;
+            if (!redone[w]) s.cost += pendingIns;
             pendingIns = 0;
             pendingRun = 0;
             pendingChars.clear();
@@ -788,13 +836,13 @@ class PhoneticTracker implements TasmeeFollower {
         i--;
       } else {
         final w = wordOf[r - 1];
-        spans[w].cost += del[r - 1];
+        if (!redone[w]) spans[w].cost += del[r - 1];
         if (pendingRun > 0) {
-          final atBoundary = r < m && starts.contains(r);
+          final atBoundary = r < m && isStart[r];
           if (atBoundary) {
             flushIns(wordOf[r]);
           } else {
-            spans[w].cost += pendingIns;
+            if (!redone[w]) spans[w].cost += pendingIns;
             pendingIns = 0;
             pendingRun = 0;
             pendingChars.clear();

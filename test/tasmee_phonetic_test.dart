@@ -166,6 +166,27 @@ void main() {
     expect(t.expected, greaterThanOrEqualTo(start + 15));
   });
 
+  test('a word said again right away is not a mistake', () {
+    final start = words.indexWhere((w) => w.surah == 3 && w.ayah == 191);
+    final mistakes = <TasmeeMistake>[];
+    final t = tracker(mistakes)..startAt(start);
+    // «… وَيَتَفَكَّرُونَ وَيَتَفَكَّرُونَ فِي خَلۡقِ …»
+    final k = words.indexWhere((w) => w.text.startsWith('وَيَتَفَكَّرُونَ'), start);
+    recite(t, said(start, k + 1) + said(k, k + 10));
+    expect(mistakes, isEmpty, reason: mistakes.map((m) => '${m.word}/${m.heard}').join(', '));
+    expect(t.expected, greaterThanOrEqualTo(k + 9));
+  });
+
+  test('a wrong word corrected at once counts as corrected', () {
+    final start = words.indexWhere((w) => w.surah == 67 && w.ayah == 2);
+    final mistakes = <TasmeeMistake>[];
+    final t = tracker(mistakes)..startAt(start);
+    // Says word 3 with a wrong letter, goes back two words and says it right.
+    final wrong = raw[start + 3].replaceFirst(RegExp('[بتثجحخدذرزسشصضطظعغفقكلمنهوي]'), 'ف');
+    recite(t, said(start, start + 3) + wrong + said(start + 1, start + 12));
+    expect(mistakes, isEmpty, reason: mistakes.map((m) => '${m.word}/${m.heard}').join(', '));
+  });
+
   test("isti'adha and basmala before reciting are not part of the text", () {
     final start = words.indexWhere((w) => w.surah == 67 && w.ayah == 1);
     final mistakes = <TasmeeMistake>[];
