@@ -188,6 +188,9 @@ class _TasmeePageState extends State<TasmeePage> {
       try {
         _phQuran ??= await _loadPhonetics(words);
         _phonetic = true;
+        // Ready before the first words are recited.
+        final ph = _phQuran!;
+        Future<void>.delayed(const Duration(milliseconds: 400), ph.warmUp);
       } catch (_) {
         _phonetic = false;
       }

@@ -140,6 +140,9 @@ class PhoneticQuran {
     _keyPos = pos;
   }
 
+  /// Builds the passage index ahead of the first search.
+  void warmUp() => _buildIndex();
+
   static int _key(Int32List s, int i) => (s[i] * _base + s[i + 1]) * _base + s[i + 2];
 
   /// Candidate words where the heard consonants [q] could begin, best first.

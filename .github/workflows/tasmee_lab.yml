@@ -31,6 +31,7 @@ jobs:
         run: |
           if [ -z "$HF_TOKEN" ]; then echo "no HF_TOKEN yet" | tee "$RUNNER_TEMP/out/model_log.txt"; exit 0; fi
           bash tool/tasmee/fetch_model.sh "$RUNNER_TEMP/model" 2>&1 | tee "$RUNNER_TEMP/out/model_log.txt"
+          sudo apt-get install -y -qq ffmpeg > /dev/null
           pip install -q sherpa-onnx numpy
           python3 tool/tasmee/eval_model.py "$RUNNER_TEMP/model" "$RUNNER_TEMP/audio" "$RUNNER_TEMP/out/model_events.json" 2>&1 | tee -a "$RUNNER_TEMP/out/model_log.txt" | tail -40
       - uses: subosito/flutter-action@v2
