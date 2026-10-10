@@ -107,37 +107,28 @@ class PauseDetector:
 
 
 def run(rec, samples: np.ndarray):
-    """Events as the app receives them: (text, is_final)."""
+    """Events as the app receives them: (text, is_final). One stream for the
+    whole recitation (as the app): a pause only marks where the next
+    utterance's text begins."""
     events = []
     pauses = PauseDetector()
-
-    def new_stream():
-        # Primed with half a second of silence (the model's first chunk), so
-        # the first sound said after a pause isn't lost.
-        st = rec.create_stream()
-        st.accept_waveform(RATE, np.zeros(CHUNK, dtype=np.float32))
-        while rec.is_ready(st):
-            rec.decode_stream(st)
-        return st
-
-    stream = new_stream()
+    stream = rec.create_stream()
+    stream.accept_waveform(RATE, np.zeros(CHUNK, dtype=np.float32))
+    while rec.is_ready(stream):
+        rec.decode_stream(stream)
+    base = 0
     last = ""
     for o in range(0, len(samples), CHUNK):
         chunk = samples[o:o + CHUNK]
         stream.accept_waveform(RATE, chunk)
         while rec.is_ready(stream):
             rec.decode_stream(stream)
-        text = rec.get_result(stream)
+        full = rec.get_result(stream)
+        text = full[base:]
         if pauses.feed(chunk):
-            # The last frames are decoded only when the stream is finished:
-            # finish it and start a new one (as the app does).
-            stream.input_finished()
-            while rec.is_ready(stream):
-                rec.decode_stream(stream)
-            text = rec.get_result(stream)
             if text:
                 events.append([text, True])
-            stream = new_stream()
+            base = len(full)
             last = ""
         elif text != last:
             last = text
@@ -146,7 +137,7 @@ def run(rec, samples: np.ndarray):
     stream.input_finished()
     while rec.is_ready(stream):
         rec.decode_stream(stream)
-    text = rec.get_result(stream)
+    text = rec.get_result(stream)[base:]
     if text:
         events.append([text, True])
     return events
