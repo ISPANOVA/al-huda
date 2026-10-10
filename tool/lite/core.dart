@@ -3,7 +3,7 @@
 // the app, so both give the same results.
 //
 // window.alhuda.prayerTimes(lat, lng, y, m, d, method, madhab) -> [ms × 6]
-// window.alhuda.tasmeeInit(wordsJson)            words: [[surah, ayah, text, endsAyah 0/1], …]
+// window.alhuda.tasmeeInit(wordsJson) -> pageStart   words.json text (parsed once, in Dart)
 // window.alhuda.tasmeeFeed(transcript, isFinal) -> '{"expected":…,"located":…,"mistakes":…,"flash":…}'
 // window.alhuda.tasmeeStates(from, to)          -> one character per word: h c n m g (hidden, correct, hinted, mistake, given) + upper case when missed
 // window.alhuda.tasmeeNewUtterance(manual), tasmeeStartAt(index, pageStart), tasmeeHint(ayah), tasmeeScope(from, to), tasmeeMistakes()
@@ -12,6 +12,7 @@ import 'dart:js_interop';
 import 'dart:js_interop_unsafe';
 
 import 'package:adhan/adhan.dart' as adhan;
+import 'package:hijri/hijri_calendar.dart';
 import 'package:al_huda/features/tasmee/tasmee_engine.dart';
 import 'package:al_huda/features/tasmee/tasmee_locator.dart';
 
@@ -48,9 +49,15 @@ List<TasmeeWord> _words = [];
 List<TasmeeMistake> _mistakes = [];
 TasmeeTracker? _tracker;
 
-void _tasmeeInit(JSString json) {
-  final list = jsonDecode(json.toDart) as List<dynamic>;
+/// [json]: words.json ({"words": [[surah, ayah, text, endsAyah], …], "pageStart": […]})
+/// or just the list. Returns the first word of every page (empty for a list).
+JSArray<JSNumber> _tasmeeInit(JSString json) {
+  var pageStart = <int>[];
   if (_words.isEmpty) {
+    final data = jsonDecode(json.toDart);
+    final list = (data is Map ? data['words'] : data) as List<dynamic>;
+    if (data is Map) pageStart = [for (final n in data['pageStart'] as List<dynamic>) n as int];
+    _pageStart = pageStart;
     _words = [
       for (final w in list)
         TasmeeWord(
@@ -61,6 +68,7 @@ void _tasmeeInit(JSString json) {
         ),
     ];
   } else {
+    pageStart = _pageStart;
     for (final w in _words) {
       w.state = TasmeeState.hidden;
       w.missed = false;
@@ -68,7 +76,10 @@ void _tasmeeInit(JSString json) {
   }
   _mistakes = [];
   _tracker = TasmeeTracker(_words, _mistakes);
+  return [for (final n in pageStart) n.toJS].toJS;
 }
+
+List<int> _pageStart = [];
 
 JSString _tasmeeFeed(JSString transcript, JSBoolean isFinal) {
   final t = _tracker!;
@@ -106,8 +117,25 @@ JSString _tasmeeMistakes() => jsonEncode([
       for (final m in _mistakes) [m.surah, m.ayah, m.word, m.heard],
     ]).toJS;
 
+/// Umm al-Qura hijri date of a Gregorian date: [y, m, d].
+JSArray<JSNumber> _hijri(JSNumber y, JSNumber m, JSNumber d) {
+  final h = HijriCalendar.fromDate(DateTime(y.toDartInt, m.toDartInt, d.toDartInt));
+  return [h.hYear.toJS, h.hMonth.toJS, h.hDay.toJS].toJS;
+}
+
+/// Gregorian date of a hijri date: [y, m, d].
+JSArray<JSNumber> _gregorian(JSNumber y, JSNumber m, JSNumber d) {
+  final g = HijriCalendar().hijriToGregorian(y.toDartInt, m.toDartInt, d.toDartInt);
+  return [g.year.toJS, g.month.toJS, g.day.toJS].toJS;
+}
+
+JSNumber _hijriDays(JSNumber y, JSNumber m) => HijriCalendar().getDaysInMonth(y.toDartInt, m.toDartInt).toJS;
+
 void main() {
   final api = JSObject();
+  api['hijri'] = _hijri.toJS;
+  api['gregorian'] = _gregorian.toJS;
+  api['hijriDays'] = _hijriDays.toJS;
   api['prayerTimes'] = _prayerTimes.toJS;
   api['tasmeeInit'] = _tasmeeInit.toJS;
   api['tasmeeFeed'] = _tasmeeFeed.toJS;
@@ -126,6 +154,15 @@ void main() {
     }
   }).toJS;
   api['tasmeeScope'] = ((JSNumber from, JSNumber to) => _tracker?.setScope(from.toDartInt, to.toDartInt)).toJS;
+  // First word of an ayah (surah, ayah); the word count for (115, 1).
+  api['tasmeeWordOf'] = ((JSNumber surah, JSNumber ayah) {
+    final s = surah.toDartInt, a = ayah.toDartInt;
+    for (var i = 0; i < _words.length; i++) {
+      final w = _words[i];
+      if (w.surah > s || (w.surah == s && w.ayah >= a)) return i.toJS;
+    }
+    return _words.length.toJS;
+  }).toJS;
   api['tasmeeExpected'] = (() => (_tracker?.expected ?? 0).toJS).toJS;
   api['tasmeeLocated'] = (() => (_tracker?.located ?? false).toJS).toJS;
   globalContext['alhuda'] = api;

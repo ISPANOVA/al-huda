@@ -34,14 +34,26 @@ jobs:
         run: |
           set -o pipefail
           mkdir -p web && cp -r tool/web/. web/
+          LITE="$RUNNER_TEMP/lite"
           {
             flutter --version
             flutter pub get
-            flutter build web --release --base-href / --no-web-resources-cdn --wasm
+            pip install --quiet --break-system-packages fonttools brotli || pip install --quiet fonttools brotli
+            # The light site (plain HTML/JS, no Flutter): the main website.
+            python3 tool/lite/build_lite.py "$LITE"
+            LITE_OUT="$LITE/data" flutter test tool/lite/export_test.dart
+            dart compile js -O2 tool/lite/core.dart -o "$LITE/js/core.js"
+            rm -f "$LITE/js/core.js.deps" "$LITE/js/core.js.map"
+            ls -la "$LITE" "$LITE/data" "$LITE/js"
+            # The full Flutter version stays available at /full/.
+            flutter build web --release --base-href /full/ --no-web-resources-cdn --wasm
+            mkdir -p build/site && cp -r "$LITE/." build/site/
+            cp -r build/web build/site/full
+            du -sh build/site build/site/full build/site/data
           } 2>&1 | tee "$RUNNER_TEMP/web_log.txt" || echo failed > "$RUNNER_TEMP/failed"
 
       - name: Deploy to Cloudflare Pages (main only)
-        if: github.ref_name == 'main' && hashFiles('build/web/index.html') != ''
+        if: github.ref_name == 'main' && hashFiles('build/site/index.html') != '' && hashFiles('build/site/js/core.js') != ''
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
@@ -50,9 +62,8 @@ jobs:
             echo "::notice::Add CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID secrets to publish the site."
             exit 0
           fi
-          cp tool/web/_headers build/web/_headers
           npx --yes wrangler@4 pages project create al-huda --production-branch main 2>&1 | tail -3 || true
-          npx --yes wrangler@4 pages deploy build/web --project-name al-huda --branch main --commit-dirty=true 2>&1 | tee "$RUNNER_TEMP/deploy.txt"
+          npx --yes wrangler@4 pages deploy build/site --project-name al-huda --branch main --commit-dirty=true 2>&1 | tee "$RUNNER_TEMP/deploy.txt"
           grep -o 'https://[a-z0-9.-]*pages.dev' "$RUNNER_TEMP/deploy.txt" | tail -1 > "$RUNNER_TEMP/url.txt" || true
 
       - name: Publish to branch
@@ -62,11 +73,11 @@ jobs:
           [ "${GITHUB_REF_NAME}" = "main" ] || TARGET=web-dist-preview
           OUT="$RUNNER_TEMP/site"
           mkdir -p "$OUT"
-          if [ -f "$RUNNER_TEMP/failed" ] || [ ! -f build/web/index.html ]; then
+          if [ -f "$RUNNER_TEMP/failed" ] || [ ! -f build/site/index.html ]; then
             # Keep the last good site; publish only the log for diagnosis.
             TARGET="$TARGET-log"
           else
-            cp -r build/web/. "$OUT/"
+            cp -r build/site/. "$OUT/"
           fi
           cp "$RUNNER_TEMP/web_log.txt" "$OUT/build_log.txt" 2>/dev/null || true
           cp "$RUNNER_TEMP/deploy.txt" "$OUT/deploy_log.txt" 2>/dev/null || true
