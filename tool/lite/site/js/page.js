@@ -13,26 +13,16 @@ export async function drawPage(inner, p, { word } = {}) {
   const [lines, m, names] = await Promise.all([pageData(p), meta(), data('surahs.json')]);
   let W = inner.clientWidth;
   let H = inner.clientHeight;
-  if (!W || (!H && !inner.closest(".wide"))) return;
+  if (!W || !H) return;
   const screenH = window.innerHeight;
   const opening = p <= 2;
   const slots = lines.length >= 13 ? lines.length : 15;
   let lineH = H / slots;
-  // The width decides, unless the page is short; in focus the page box is taller.
-  let fs = Math.min(W / m.ref * 100, Math.max(screenH * 0.68 / 15 / 1.62, H / slots / 1.62));
-  // A phone turned sideways: the page as wide as the screen, scrolled down.
-  if (inner.closest('.wide') && !word) {
-    // Readable, not zoomed in: at most this size, the page centred.
-    const cap = 28;
-    fs = W / m.ref * 100;
-    if (fs > cap) { fs = cap; W = m.ref * cap / 100; inner.style.width = `${W.toFixed(1)}px`; }
-    lineH = fs * 2.05;
-    inner.style.height = `${(lineH * slots).toFixed(1)}px`;
-  }
+  // As large as the page box allows: the width, or the 15 lines' height.
+  let fs = Math.min(W / m.ref * 100, H / slots / 1.6);
   let top0 = 0;
   if (opening) {
     const widest = Math.max(...lines.map((l) => (typeof l[1] === 'number' ? l[1] : 0)), 1);
-    if (inner.closest('.wide') && !word) H = lineH * slots;
     lineH = Math.min(lineH * 1.45, H / (lines.length + 1));
     fs = Math.min(lineH / 1.8, W * 0.86 / widest * 100);
     top0 = (H - lineH * lines.length) / 2;
