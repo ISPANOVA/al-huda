@@ -1,0 +1,95 @@
+
+::group::✅ Passing tests
+✅ /home/runner/work/al-huda/al-huda/tool/preview/flag_preview_test.dart: flag egypt still
+✅ /home/runner/work/al-huda/al-huda/tool/preview/flag_preview_test.dart: flag egypt waving
+✅ /home/runner/work/al-huda/al-huda/tool/preview/flag_preview_test.dart: flag saudi still
+✅ /home/runner/work/al-huda/al-huda/tool/preview/flag_preview_test.dart: flag saudi waving
+✅ /home/runner/work/al-huda/al-huda/tool/preview/media_preview_test.dart: hub dark
+✅ /home/runner/work/al-huda/al-huda/tool/preview/media_preview_test.dart: hub light
+✅ /home/runner/work/al-huda/al-huda/tool/preview/settings_preview_test.dart: settings look dark
+✅ /home/runner/work/al-huda/al-huda/tool/preview/settings_preview_test.dart: settings look light
+✅ /home/runner/work/al-huda/al-huda/tool/preview/media_preview_test.dart: all reciters
+✅ /home/runner/work/al-huda/al-huda/tool/preview/tasmee_engine_test.dart: uthmani vs plain spelling
+✅ /home/runner/work/al-huda/al-huda/tool/preview/tasmee_engine_test.dart: reveals words as they are recited
+✅ /home/runner/work/al-huda/al-huda/tool/preview/tasmee_engine_test.dart: wrong word is a mistake and stays hidden
+✅ /home/runner/work/al-huda/al-huda/tool/preview/tasmee_engine_test.dart: ya ayyuha split and basmala ignored
+✅ /home/runner/work/al-huda/al-huda/tool/preview/tasmee_engine_test.dart: a dropped short word is a mistake too
+✅ /home/runner/work/al-huda/al-huda/tool/preview/tasmee_engine_test.dart: one letter added, dropped or changed is a mistake
+✅ /home/runner/work/al-huda/al-huda/tool/preview/tasmee_engine_test.dart: skipped long word is a mistake
+✅ /home/runner/work/al-huda/al-huda/tool/preview/tasmee_engine_test.dart: last word shows while still speaking
+✅ /home/runner/work/al-huda/al-huda/tool/preview/tasmee_engine_test.dart: restarting from the beginning is not a mistake
+✅ /home/runner/work/al-huda/al-huda/tool/preview/tasmee_engine_test.dart: repeating the last few words is not a mistake
+✅ /home/runner/work/al-huda/al-huda/tool/preview/tasmee_engine_test.dart: a new utterance continues where it stopped
+✅ /home/runner/work/al-huda/al-huda/tool/preview/tasmee_engine_test.dart: disjoint letters recited by their names
+✅ /home/runner/work/al-huda/al-huda/tool/preview/tasmee_engine_test.dart: disjoint letters while still speaking and across utterances
+✅ /home/runner/work/al-huda/al-huda/tool/preview/tasmee_engine_test.dart: other disjoint letters
+✅ /home/runner/work/al-huda/al-huda/tool/preview/tasmee_engine_test.dart: a similar but different word is a mistake
+✅ /home/runner/work/al-huda/al-huda/tool/preview/tasmee_engine_test.dart: a wrong word that appears earlier on the page is a mistake
+✅ /home/runner/work/al-huda/al-huda/tool/preview/tasmee_engine_test.dart: wrong word then correcting it
+✅ /home/runner/work/al-huda/al-huda/tool/preview/tasmee_engine_test.dart: a mistake judged after a pause is cancelled when the word is corrected
+✅ /home/runner/work/al-huda/al-huda/tool/preview/tasmee_engine_test.dart: a real mistake after a pause stays
+✅ /home/runner/work/al-huda/al-huda/tool/preview/tasmee_engine_test.dart: recogniser merging words does not shift the position
+✅ /home/runner/work/al-huda/al-huda/tool/preview/tasmee_engine_test.dart: another transcript of the recogniser is accepted
+✅ /home/runner/work/al-huda/al-huda/tool/preview/tasmee_engine_test.dart: letters the recogniser confuses
+✅ /home/runner/work/al-huda/al-huda/tool/preview/tasmee_engine_test.dart: noise between correct words is not a mistake
+✅ /home/runner/work/al-huda/al-huda/tool/preview/tasmee_engine_test.dart: a rewritten transcript is judged again from scratch
+✅ /home/runner/work/al-huda/al-huda/tool/preview/tasmee_engine_test.dart: words are not revealed unless they were heard
+✅ /home/runner/work/al-huda/al-huda/tool/preview/tasmee_engine_test.dart: a wrong word followed by the rest of the ayah is shown red and passed
+✅ /home/runner/work/al-huda/al-huda/tool/preview/tasmee_engine_test.dart: growing partial results with half-spoken last words make no mistakes
+✅ /home/runner/work/al-huda/al-huda/tool/preview/tasmee_engine_test.dart: a fresh transcript mid-listening continues instead of starting over
+✅ /home/runner/work/al-huda/al-huda/tool/preview/tasmee_engine_test.dart: a fresh transcript right after a page change is read from its start
+✅ /home/runner/work/al-huda/al-huda/tool/preview/tasmee_engine_test.dart: an empty result between sentences does not erase progress
+✅ /home/runner/work/al-huda/al-huda/tool/preview/tasmee_engine_test.dart: listening restarted while the transcript continues
+✅ /home/runner/work/al-huda/al-huda/tool/preview/tasmee_engine_test.dart: progress never goes back to an earlier surah
+✅ /home/runner/work/al-huda/al-huda/tool/preview/tasmee_engine_test.dart: a word still being spoken is judged once the reciter goes on or pauses
+✅ /home/runner/work/al-huda/al-huda/tool/preview/tasmee_engine_test.dart: the beginning of the expected word is not a mistake
+✅ /home/runner/work/al-huda/al-huda/tool/preview/tasmee_engine_test.dart: short words differing by one letter are different words
+✅ /home/runner/work/al-huda/al-huda/tool/preview/tasmee_engine_test.dart: في instead of على is a mistake even if another transcript has على
+✅ /home/runner/work/al-huda/al-huda/tool/preview/tasmee_engine_test.dart: عليك instead of إليك is a mistake
+✅ /home/runner/work/al-huda/al-huda/tool/preview/tasmee_engine_test.dart: the correct ayah still has no mistakes
+✅ /home/runner/work/al-huda/al-huda/tool/preview/arabic_count_test.dart: arabic counting of minutes
+✅ /home/runner/work/al-huda/al-huda/tool/preview/patterns_preview_test.dart: pattern khatam dark
+✅ /home/runner/work/al-huda/al-huda/tool/preview/patterns_preview_test.dart: pattern arabesque dark
+✅ /home/runner/work/al-huda/al-huda/tool/preview/patterns_preview_test.dart: pattern hexagram dark
+✅ /home/runner/work/al-huda/al-huda/tool/preview/patterns_preview_test.dart: pattern mashrabiya dark
+✅ /home/runner/work/al-huda/al-huda/tool/preview/patterns_preview_test.dart: pattern mihrab dark
+✅ /home/runner/work/al-huda/al-huda/tool/preview/patterns_preview_test.dart: pattern starryNight dark
+✅ /home/runner/work/al-huda/al-huda/tool/preview/patterns_preview_test.dart: pattern khatam light
+✅ /home/runner/work/al-huda/al-huda/tool/preview/tasmee_mushaf_preview_test.dart: tasmee on the mushaf page
+✅ /home/runner/work/al-huda/al-huda/tool/preview/patterns_preview_test.dart: pattern mihrab light
+✅ /home/runner/work/al-huda/al-huda/tool/preview/tasmee_locator_test.dart: the Mushaf has all its words
+✅ /home/runner/work/al-huda/al-huda/tool/preview/tasmee_locator_test.dart: finds the place of well-known openings
+✅ /home/runner/work/al-huda/al-huda/tool/preview/tasmee_locator_test.dart: isti'adha and basmala before the recitation are skipped
+✅ /home/runner/work/al-huda/al-huda/tool/preview/tasmee_locator_test.dart: a word dropped or misheard by the recogniser still finds the place
+✅ /home/runner/work/al-huda/al-huda/tool/preview/tasmee_locator_test.dart: too little to be sure: waits
+✅ /home/runner/work/al-huda/al-huda/tool/preview/tasmee_locator_test.dart: a repeated ayah is taken near the reciter
+✅ /home/runner/work/al-huda/al-huda/tool/preview/noor_preview_test.dart: noor kit
+::endgroup::
+::group::✅ /home/runner/work/al-huda/al-huda/tool/preview/tasmee_locator_test.dart: a place is never wrong: random passages, read word by word
+located 400 / 400, 3.5 words on average
+::endgroup::
+::group::✅ /home/runner/work/al-huda/al-huda/tool/preview/tasmee_locator_test.dart: locating is fast
+locate: 193.28 µs
+::endgroup::
+::group::✅ /home/runner/work/al-huda/al-huda/tool/preview/tasmee_locator_test.dart: the whole Quran in plain spelling has no mistakes
+plain spelling: 0 words judged wrong
+
+::endgroup::
+::group::✅ /home/runner/work/al-huda/al-huda/tool/preview/tasmee_locator_test.dart: noisy recogniser: few false mistakes, real ones caught
+noisy: 7614 words, 1 false mistakes (0.01%), caught 188 / 188 real mistakes
+20:11 نُودِيَ← | فلما أتاها والله يا موسى
+::endgroup::
+::group::✅ Passing tests
+✅ /home/runner/work/al-huda/al-huda/tool/preview/tasmee_locator_test.dart: tracker starts wherever the reciter starts
+✅ /home/runner/work/al-huda/al-huda/tool/preview/tasmee_locator_test.dart: tracker after a pause, another surah is followed
+✅ /home/runner/work/al-huda/al-huda/tool/preview/tasmee_locator_test.dart: tracker drifting into another passage without a pause is a mistake, not a move
+✅ /home/runner/work/al-huda/al-huda/tool/preview/tasmee_locator_test.dart: tracker words lost while the microphone restarts are not mistakes
+✅ /home/runner/work/al-huda/al-huda/tool/preview/tasmee_locator_test.dart: tracker a surah chosen: only its ayahs are searched
+✅ /home/runner/work/al-huda/al-huda/tool/preview/tasmee_locator_test.dart: tracker al-Fatiha: its basmala is recited, or shown when it was not said
+✅ /home/runner/work/al-huda/al-huda/tool/preview/tasmee_locator_test.dart: tracker microphone turned off and on: another surah, from its disjoint letters
+✅ /home/runner/work/al-huda/al-huda/tool/preview/tasmee_locator_test.dart: tracker microphone turned on again: the middle of an ayah in another surah
+✅ /home/runner/work/al-huda/al-huda/tool/preview/tasmee_locator_test.dart: tracker numbers written in digits
+✅ /home/runner/work/al-huda/al-huda/tool/preview/tasmee_locator_test.dart: tracker a real wrong word is still caught
+::endgroup::
+
+🎉 78 tests passed.
