@@ -89,15 +89,50 @@ def candidates(name, lang):
 
 
 def image_of(qid):
-    r = api("https://www.wikidata.org/w/api.php", action="wbgetentities", ids=qid, props="claims|labels|descriptions", languages="ar|en")
+    r = api("https://www.wikidata.org/w/api.php", action="wbgetentities", ids=qid, props="claims|labels|descriptions|sitelinks", languages="ar|en")
     e = r["entities"][qid]
     claims = e.get("claims", {})
     human = any(c["mainsnak"].get("datavalue", {}).get("value", {}).get("id") == "Q5" for c in claims.get("P31", []))
     p18 = claims.get("P18", [])
     file = p18[0]["mainsnak"]["datavalue"]["value"] if p18 else None
+    if human and not file:
+        # The freely licensed lead image of its Wikipedia article.
+        for wiki, host in (("arwiki", "ar"), ("enwiki", "en")):
+            title = e.get("sitelinks", {}).get(wiki, {}).get("title")
+            if not title:
+                continue
+            pi = api(f"https://{host}.wikipedia.org/w/api.php", action="query", titles=title, prop="pageimages", piprop="name", pilicense="free")
+            pg = next(iter(pi["query"]["pages"].values()))
+            if pg.get("pageimage"):
+                file = pg["pageimage"]
+                break
     desc = " / ".join(e.get("descriptions", {}).get(l, {}).get("value", "") for l in ("ar", "en"))
     label = e.get("labels", {}).get("ar", e.get("labels", {}).get("en", {})).get("value", "")
     return human, file, desc, label
+
+
+def portrait(img):
+    """A square around the face (OpenCV's face detector), else the top centre."""
+    w, h = img.size
+    try:
+        import cv2
+        import numpy as np
+        gray = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2GRAY)
+        det = cv2.CascadeClassifier(cv2.data.haarcascades + "haarcascade_frontalface_default.xml")
+        faces = det.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=6, minSize=(max(24, w // 25), max(24, w // 25)))
+    except Exception as e:
+        print("no face detection", e)
+        faces = []
+    if len(faces):
+        x, y, fw, fh = max(faces, key=lambda f: f[2] * f[3])
+        side = int(max(fw, fh) * 2.4)
+        side = min(side, w, h)
+        cx, cy = x + fw / 2, y + fh / 2 + fh * 0.18
+        left = int(min(max(cx - side / 2, 0), w - side))
+        top = int(min(max(cy - side / 2, 0), h - side))
+        return img.crop((left, top, left + side, top + side))
+    s = min(w, h)
+    return img.crop(((w - s) // 2, 0, (w - s) // 2 + s, s))
 
 
 def main():
@@ -124,18 +159,17 @@ def main():
             continue
         qid, file, desc, label = found
         info = api("https://commons.wikimedia.org/w/api.php", action="query", titles="File:" + file, prop="imageinfo",
-                   iiprop="url|extmetadata", iiurlwidth=400)
+                   iiprop="url|extmetadata", iiurlwidth=900)
         page = next(iter(info["query"]["pages"].values()))
+        if "imageinfo" not in page:  # not on Commons (a local, non-free file)
+            report.append({"key": key, "name": ar, "found": False, "why": "not on Commons " + file})
+            continue
         ii = page["imageinfo"][0]
         meta = ii.get("extmetadata", {})
         lic = meta.get("LicenseShortName", {}).get("value", "")
         artist = re.sub("<[^>]+>", "", meta.get("Artist", {}).get("value", "")).strip()
         img = Image.open(io.BytesIO(get(ii["thumburl"]))).convert("RGB")
-        # A square portrait from the upper part of the photo (the face).
-        w, h = img.size
-        s = min(w, h)
-        top = 0 if h > w else 0
-        img = img.crop(((w - s) // 2, top, (w - s) // 2 + s, top + s))
+        img = portrait(img)
         img = img.resize((256, 256), Image.LANCZOS)
         img.save(os.path.join(OUT, f"{key}.jpg"), "JPEG", quality=82, optimize=True)
         credits[key] = {"name": ar, "file": file, "license": lic, "author": artist,

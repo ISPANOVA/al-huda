@@ -19,7 +19,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Fetch
         run: |
-          pip install --quiet --break-system-packages pillow || pip install --quiet pillow
+          pip install --quiet --break-system-packages pillow opencv-python-headless || pip install --quiet pillow opencv-python-headless
           python3 tool/reciters/fetch_photos.py "$RUNNER_TEMP/out" 2>&1 | tee "$RUNNER_TEMP/log.txt"
       - name: Publish
         if: always()
