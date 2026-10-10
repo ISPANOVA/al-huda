@@ -657,7 +657,8 @@ class PhoneticTracker implements TasmeeFollower {
         while (j > 0 && PhoneticText.isVowel(p.codeUnitAt(j - 1))) {
           j--;
         }
-        if (quran.tanween[w] && j > 0 && p.codeUnitAt(j - 1) == 0x0646) {
+        // The tanween's «ن», or the sound it merged into (إدغام: كَوۡكَبٗا وَ…).
+        if (quran.tanween[w] && j > 1) {
           stopFrom = j - 1;
           j--;
           while (j > 0 && PhoneticText.isVowel(p.codeUnitAt(j - 1))) {
@@ -732,7 +733,10 @@ class PhoneticTracker implements TasmeeFollower {
         final rc = codes[r - 1];
         var best = d[prow + r - 1] + (alt[r - 1] == hc || (rc != hc && cheapSub.contains(r - 1)) ? 0.25 : PhoneticText.sub(rc, hc));
         var how = 1;
-        final ins = d[prow + r] + insCost;
+        // A sound heard twice (a stutter, or the model doubling it) is not
+        // another letter.
+        final twice = hc == rc || (r < m && hc == codes[r]);
+        final ins = d[prow + r] + (twice ? math.min(insCost, 0.4) : insCost);
         if (ins < best) {
           best = ins;
           how = 2;
@@ -854,8 +858,9 @@ class PhoneticTracker implements TasmeeFollower {
       } else if (how == 2) {
         final hc = hs.codeUnitAt(i - 1);
         final leading = utteranceStart && i <= 2 && (hc == 0x0621 || PhoneticText.isVowel(hc));
+        final twice = (r > 0 && hc == codes[r - 1]) || (r < m && hc == codes[r]);
         if (!leading) {
-          pendingIns += PhoneticText.ins(hc);
+          pendingIns += twice ? math.min(PhoneticText.ins(hc), 0.4) : PhoneticText.ins(hc);
           pendingRun++;
           pendingChars.add(hc);
         }
