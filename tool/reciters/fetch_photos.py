@@ -186,7 +186,7 @@ def main():
             continue
         qid, file, desc, label = found
         info = api("https://commons.wikimedia.org/w/api.php", action="query", titles="File:" + file, prop="imageinfo",
-                   iiprop="url|extmetadata", iiurlwidth=900)
+                   iiprop="url|extmetadata", iiurlwidth=1600)
         page = next(iter(info["query"]["pages"].values()))
         if "imageinfo" not in page:  # not on Commons (a local, non-free file)
             report.append({"key": key, "name": ar, "found": False, "why": "not on Commons " + file})
@@ -197,8 +197,9 @@ def main():
         artist = re.sub("<[^>]+>", "", meta.get("Artist", {}).get("value", "")).strip()
         img = Image.open(io.BytesIO(get(ii["thumburl"]))).convert("RGB")
         img = portrait(img, key)
-        img = img.resize((256, 256), Image.LANCZOS)
-        img.save(os.path.join(OUT, f"{key}.jpg"), "JPEG", quality=82, optimize=True)
+        os.makedirs(os.path.join(OUT, "raw"), exist_ok=True)
+        side = min(img.size[0], 768)
+        img.resize((side, side), Image.LANCZOS).save(os.path.join(OUT, "raw", f"{key}.png"))
         credits[key] = {"name": ar, "file": file, "license": lic, "author": artist,
                         "source": "https://commons.wikimedia.org/wiki/File:" + urllib.parse.quote(file.replace(" ", "_"))}
         report.append({"key": key, "name": ar, "found": True, "qid": qid, "label": label, "desc": desc, "file": file, "license": lic, "author": artist})
