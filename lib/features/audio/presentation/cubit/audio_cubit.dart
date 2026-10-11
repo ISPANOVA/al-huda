@@ -153,11 +153,11 @@ class AudioCubit extends Cubit<AudioState> {
   }
 
   /// Plays a 24/7 station, trying each mirror in [urls] until one opens.
-  Future<bool> playRadio(List<String> urls, String title, {String artist = 'بث مباشر'}) async {
+  Future<bool> playRadio(List<String> urls, String title, {String artist = 'بث مباشر', String? reciter}) async {
     emit(state.copyWith(isMemorization: false, clearError: true));
     for (final url in urls) {
       try {
-        await _handler.playStream(url: url, title: title, artist: artist);
+        await _handler.playStream(url: url, title: title, artist: artist, reciter: reciter);
         return true;
       } catch (_) {
         // try the next mirror

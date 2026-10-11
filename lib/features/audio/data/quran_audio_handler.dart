@@ -10,6 +10,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:just_audio/just_audio.dart';
 
 import 'car_media.dart';
+import 'reciter_art.dart';
 
 /// Background-capable player exposed to the OS media session
 /// (notification, lock screen, headset buttons, Bluetooth controls).
@@ -61,7 +62,34 @@ class QuranAudioHandler extends BaseAudioHandler with SeekHandler {
     }
   }
 
-  MediaItem _withArt(MediaItem item) => item.artUri == null && _art != null ? item.copyWith(artUri: _art) : item;
+  MediaItem _withArt(MediaItem item, [Uri? photo]) {
+    if (item.artUri != null) return item;
+    final art = photo ?? _art;
+    return art == null ? item : item.copyWith(artUri: art);
+  }
+
+  /// The reciter's photo as the now-playing art (notification, lock screen,
+  /// Android Auto). Copied once from the assets to a file: a file is what the
+  /// media session turns into a picture.
+  final Map<String, Uri?> _photos = {};
+  Future<Uri?> _photoArt(String? reciterId) async {
+    final key = ReciterArt.keyFor(reciterId);
+    if (key == null || kIsWeb) return null;
+    if (_photos.containsKey(key)) return _photos[key];
+    Uri? uri;
+    try {
+      final dir = await getTemporaryDirectory();
+      final file = File('${dir.path}/alhuda_reciter_$key.jpg');
+      if (!await file.exists()) {
+        final data = await rootBundle.load('assets/reciters/$key.jpg');
+        await file.writeAsBytes(data.buffer.asUint8List(), flush: true);
+      }
+      uri = Uri.file(file.path);
+    } catch (e) {
+      debugPrint('Reciter photo unavailable: $e');
+    }
+    return _photos[key] = uri;
+  }
 
   Future<void> _init() async {
     unawaited(_prepareArtwork());
@@ -125,7 +153,8 @@ class QuranAudioHandler extends BaseAudioHandler with SeekHandler {
     final start = initialIndex.clamp(0, items.length - 1);
     _active = true;
     if (_art == null) await _prepareArtwork();
-    items = [for (final i in items) _withArt(i)];
+    final photo = await _photoArt(items[start].extras?['reciter'] as String?);
+    items = [for (final i in items) _withArt(i, photo)];
     queue.add(items);
     mediaItem.add(items[start]);
     _broadcastState(_player.playbackEvent); // «loading» with the new item
@@ -140,7 +169,7 @@ class QuranAudioHandler extends BaseAudioHandler with SeekHandler {
   }
 
   /// Live radio stream (single item, no looping).
-  Future<void> playStream({required String url, required String title, required String artist}) async {
+  Future<void> playStream({required String url, required String title, required String artist, String? reciter}) async {
     _infiniteLoop = false;
     _loopsRemaining = 0;
     _emitLoopState();
@@ -153,7 +182,7 @@ class QuranAudioHandler extends BaseAudioHandler with SeekHandler {
     );
     _active = true;
     if (_art == null) await _prepareArtwork();
-    final item = _withArt(live);
+    final item = _withArt(live, await _photoArt(reciter));
     queue.add([item]);
     mediaItem.add(item);
     _broadcastState(_player.playbackEvent);
