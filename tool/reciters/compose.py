@@ -33,6 +33,21 @@ def background():
     return bg
 
 
+# Photos whose cut-out is not clean (checked by eye): the photo itself fades
+# into the background instead, from an oval around the face.
+BLEND = {"afs", "bader", "hthfi", "husr", "jbrl", "maher", "minsh", "mustafa", "shur"}
+
+
+def blended(base, img):
+    img = img.resize((S, S), Image.LANCZOS).convert("RGBA")
+    mask = Image.new("L", (S, S), 0)
+    ImageDraw.Draw(mask).ellipse((S * 0.08, S * 0.02, S * 0.92, S * 1.12), fill=255)
+    img.putalpha(mask.filter(ImageFilter.GaussianBlur(S * 0.07)))
+    out = base.copy()
+    out.alpha_composite(img)
+    return out
+
+
 def main():
     session = new_session("u2net_human_seg")
     base = background()
@@ -40,6 +55,11 @@ def main():
         key = os.path.splitext(os.path.basename(f))[0]
         img = Image.open(f).convert("RGB")
         img = ImageEnhance.Contrast(img).enhance(1.04)
+        if key in BLEND:
+            out = blended(base, img).convert("RGB").filter(ImageFilter.UnsharpMask(radius=1.2, percent=60, threshold=2))
+            out.save(os.path.join(D, f"{key}.jpg"), "JPEG", quality=86, optimize=True, progressive=True)
+            print("blended", key)
+            continue
         cut = remove(img, session=session, post_process_mask=True).resize((S, S), Image.LANCZOS)
         # Soften the cut edge a little so it sits in the scene.
         a = cut.getchannel("A").filter(ImageFilter.GaussianBlur(0.8))
