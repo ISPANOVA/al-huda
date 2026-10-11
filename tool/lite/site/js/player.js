@@ -104,7 +104,7 @@ function render() {
   if (!it) { bar.hidden = true; paintBig(); return; }
   bar.hidden = false;
   bar.innerHTML = `<button class="pbtn" id="pp" aria-label="${audio.paused ? 'تشغيل' : 'إيقاف مؤقت'}">${icon(audio.paused ? 'play' : 'pause')}</button>
-    <button class="grow" id="po" style="text-align:right"><b>${esc(it.label || title)}</b><small>${esc(title)}${live ? ' • <span class="live">مباشر</span>' : ''}</small></button>
+    <button class="grow" id="po" style="text-align:right"><b>${esc(it.label || title)}</b><small>${esc(title)}${live ? '، <span class="live">مباشر</span>' : ''}</small></button>
     ${live ? '' : `<button class="pbtn ghost" id="pn" aria-label="التالي">${icon('next')}</button>`}
     <button class="pbtn ghost" id="px" aria-label="إغلاق">${icon('close')}</button>
     ${live ? '' : '<div class="pline"><i></i></div>'}`;
@@ -123,12 +123,12 @@ function paintBig() {
   const it = queue[index];
   if (!it) { big.innerHTML = '<p class="muted center">لا يوجد تشغيل الآن</p>'; return; }
   $('#fpL', big).textContent = it.label || title;
-  $('#fpS', big).textContent = live ? 'بث مباشر' : `${title}${queue.length > 1 ? ` • ${ar(index + 1)} من ${ar(queue.length)}` : ''}`;
+  $('#fpS', big).textContent = live ? 'بث مباشر' : `${title}${queue.length > 1 ? `، ${ar(index + 1)} من ${ar(queue.length)}` : ''}`;
   $('#fpPP', big).innerHTML = icon(audio.paused ? 'play' : 'pause');
   const rep = [];
   if (repeatEach > 1) rep.push(`تكرار كل آية ${ar(repeatEach)} مرات (الآن ${ar(played + 1)})`);
   if (rangeRepeat !== 1) rep.push(rangeRepeat === 0 ? 'تكرار المقطع بلا توقف' : `تكرار المقطع ${ar(rangeRepeat)} مرات (الآن ${ar(rangePlayed + 1)})`);
-  $('#fpR', big).textContent = rep.join(' • ');
+  $('#fpR', big).textContent = rep.join('، ');
   progress();
 }
 
@@ -198,7 +198,7 @@ export async function listenSheet(g) {
     <div class="row" style="margin-top:14px"><span class="grow">تكرار كل آية</span><button class="chip" data-d="each,-1">−</button><b id="le" class="cnt"></b><button class="chip" data-d="each,1">+</button></div>
     <div class="row" style="margin-top:10px"><span class="grow">تكرار المقطع</span><button class="chip" data-d="times,-1">−</button><b id="lr" class="cnt"></b><button class="chip" data-d="times,1">+</button></div>
     <label class="small muted" style="display:block;margin-top:14px">القارئ</label>
-    <select class="field" id="lq">${reciters.map((r) => `<option value="${r.id}"${r.id === rec.id ? ' selected' : ''}>${esc(r.name)}${r.style ? ' • ' + esc(r.style) : ''}</option>`).join('')}</select>
+    <select class="field" id="lq">${reciters.map((r) => `<option value="${r.id}"${r.id === rec.id ? ' selected' : ''}>${esc(r.name)}${r.style ? '، ' + esc(r.style) : ''}</option>`).join('')}</select>
     <button class="btn block" id="lgo" style="margin-top:16px">${icon('play')} تشغيل</button>`, (body, close) => {
     const fill = () => {
       const n = names[s - 1][2];
@@ -227,8 +227,8 @@ export async function listenSheet(g) {
       store.set('listen', opts);
       const g0 = m.surah.indexOf(s) + f;
       close();
-      player.play(ayahItems(g0, g0 + (t - f), { id: r.id, bitrate: r.bitrate }, (x) => `سورة ${names[s - 1][1]} • الآية ${ar(m.ayah[x - 1])}`),
-        `${r.name} • سورة ${names[s - 1][1]}`, { each: opts.each, times: opts.times });
+      player.play(ayahItems(g0, g0 + (t - f), { id: r.id, bitrate: r.bitrate }, (x) => `سورة ${names[s - 1][1]}، الآية ${ar(m.ayah[x - 1])}`),
+        `${r.name}، سورة ${names[s - 1][1]}`, { each: opts.each, times: opts.times });
     };
   });
 }

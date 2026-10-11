@@ -22,19 +22,21 @@ export function streak() {
   return n;
 }
 
-const QUICK = [
-  ['#/tasmee', 'التسميع', 'mic', 'emerald'],
-  ['#/qibla', 'القبلة', 'compass', 'amber'],
-  ['#/tasbeeh', 'المسبحة', 'beads', 'teal'],
-  ['#/duas', 'الأدعية', 'hands', 'rose'],
-  ['#/calendar', 'التقويم', 'cal', 'sky'],
-  ['#/hifz', 'الحفظ', 'repeat', 'amethyst'],
+const TOOLS = [
+  ['#/tasmee', 'التسميع', 'mic'],
+  ['#/athkar', 'الأذكار', 'heart'],
+  ['#/qibla', 'القبلة', 'compass'],
+  ['#/tasbeeh', 'المسبحة', 'beads'],
+  ['#/duas', 'الأدعية', 'hands'],
+  ['#/calendar', 'التقويم', 'cal'],
+  ['#/hifz', 'الحفظ', 'repeat'],
+  ['#/search', 'البحث', 'search'],
 ];
 
 export async function show(view) {
   const [m, names] = await Promise.all([meta(), surahs()]);
   const hour = new Date().getHours();
-  const athkar = hour >= 3 && hour < 14 ? ['morning', 'أذكار الصباح', 'sun'] : ['evening', 'أذكار المساء', 'moon'];
+  const athkar = hour >= 3 && hour < 14 ? ['morning', 'أذكار الصباح'] : ['evening', 'أذكار المساء'];
   const last = store.get('lastPage', 0);
   const g = last ? m.page.indexOf(last) + 1 : 1;
   const s = names[m.surah[g - 1] - 1];
@@ -42,62 +44,84 @@ export async function show(view) {
   const doneToday = (store.get('read', {})[today()] || []).length;
   const k = store.get('khatmah', null);
   const st = streak();
-  const day = new Date().getDay();
+  const friday = new Date().getDay() === 5;
 
   view.innerHTML = `
-    <div class="row" style="padding:6px 0 14px">
-      <div class="grow"><h1 style="margin:0;font-family:ReemKufi,Tajawal;color:var(--gold);font-size:30px;line-height:1.2">الهدى</h1>
-      <p class="muted small" style="margin:0" id="hdate">رفيقك اليومي مع القرآن</p></div>
-      <a class="back" href="#/settings" aria-label="الإعدادات">${icon('gear')}</a>
-    </div>
-    <a class="card solid t-sapphire hero" href="#/prayer" id="next" style="display:block">
-      <small>الصلاة القادمة</small>
-      <div class="big" id="nname">…</div>
-      <div class="row" style="margin-top:6px"><span class="grow" id="ntime"></span><b id="ncount" style="font-size:20px;font-variant-numeric:tabular-nums"></b></div>
-    </a>
-    ${day === 5 ? `<div class="card wash t-amber" style="margin-top:12px"><b>جمعة مباركة</b><br><small class="muted">اقرأ سورة الكهف، وأكثر من الصلاة على النبي ﷺ</small></div>` : ''}
-    <div class="grid" style="margin-top:12px">
-      <a class="card solid t-emerald tile" href="#/mushaf${last ? '/' + last : ''}" style="grid-column:1/-1">
-        <small>${last ? 'تابع القراءة' : 'ابدأ القراءة'}</small>
-        <b style="font-size:20px">سورة ${esc(s[1])}</b>
-        <small>الصفحة ${ar(last || 1)}${last ? ` • أنجزت ${last < 7 ? 'أقل من ١' : ar(Math.round((last / 604) * 100))}٪ من المصحف` : ''}</small>
-        <div class="bar" style="width:100%;margin-top:6px"><i style="width:${((last || 0) / 604) * 100}%"></i></div>
-      </a>
-      <a class="card solid t-rose tile" href="#/athkar/${athkar[0]}">${icon(athkar[2])}<b>${athkar[1]}</b><small>حصّن يومك</small></a>
-      <a class="card solid t-gold tile" href="#/tasmee">${icon('mic')}<b>التسميع</b><small>سمّع حفظك ويصحّح لك</small></a>
-    </div>
-    <div class="grid3" style="margin-top:12px">
-      <a class="card qa" href="#/khatmah"><div class="ticon t-emerald">${icon('book')}</div>${goal ? `${ar(Math.min(doneToday, goal))}/${ar(goal)}` : 'حدّد هدفك'}<small class="muted">وردي</small></a>
-      <a class="card qa" href="#/khatmah"><div class="ticon t-amethyst">${icon('flag')}</div>${k ? ar(Math.round((k.pages.length / 604) * 100)) + '٪' : 'ابدأ'}<small class="muted">الختمة</small></a>
-      <a class="card qa" href="#/stats"><div class="ticon t-amber">${icon('star')}</div>${ar(st)} ${st === 1 ? 'يوم' : 'أيام'}<small class="muted">المداومة</small></a>
-    </div>
-    <div class="section">الوصول السريع</div>
-    <div class="grid3">${QUICK.map(([h, t, ic, tone]) => `<a class="card qa" href="${h}"><div class="ticon t-${tone}">${icon(ic)}</div>${t}</a>`).join('')}</div>
-    <div class="section">آية اليوم</div>
-    <div class="card" id="aotd"><p class="muted center">…</p></div>
-    <p class="center muted small" style="margin-top:22px">صدقة جارية عن روح سمير حجازي وسعد صالح وجميع المسلمين</p>`;
+    <header class="masthead">
+      <div class="grow"><h1 class="brand">الهُدى</h1><p class="muted small" id="hdate"></p></div>
+      <a class="iconbtn" href="#/settings" aria-label="الإعدادات">${icon('gear')}</a>
+    </header>
 
-  hijriToday().then((h) => { $('#hdate').textContent = `${ar(h.d)} ${HMONTHS[h.m - 1]} ${ar(h.y)} هـ`; }).catch(() => {});
+    <div class="home-top">
+    <a class="day" href="#/prayer" id="next">
+      <svg class="star" viewBox="0 0 100 100" aria-hidden="true"><rect x="21" y="21" width="58" height="58"/><rect x="21" y="21" width="58" height="58" transform="rotate(45 50 50)"/><circle cx="50" cy="50" r="17"/></svg>
+      <span class="day-label" id="nlabel">الصلاة القادمة</span>
+      <span class="day-name" id="nname">مواقيت الصلاة</span>
+      <span class="day-meta"><b id="ncount"></b><span id="ntime">اضغط لتحديد موقعك</span></span>
+      <span class="line" id="line"></span>
+    </a>
+
+    <a class="resume" href="#/mushaf${last ? '/' + last : ''}">
+      <span class="grow">
+        <span class="muted small">${last ? 'تابع القراءة' : 'ابدأ القراءة'}</span>
+        <span class="resume-surah">سورة ${esc(s[1])}</span>
+        <span class="muted small">الصفحة ${ar(last || 1)} من ٦٠٤</span>
+      </span>
+      <span class="resume-go">${icon('book')}</span>
+      <span class="resume-bar"><i style="width:${((last || 0) / 604) * 100}%"></i></span>
+    </a>
+
+    <div class="stats">
+      <a href="#/khatmah"><b>${goal ? `${ar(Math.min(doneToday, goal))} من ${ar(goal)}` : 'حدّد وردك'}</b><span>الورد اليومي</span></a>
+      <a href="#/khatmah"><b>${k ? ar(Math.round((k.pages.length / 604) * 100)) + '٪' : 'لم تبدأ'}</b><span>الختمة</span></a>
+      <a href="#/stats"><b>${ar(st)} ${st === 1 ? 'يوم' : st > 2 && st < 11 ? 'أيام' : 'يومًا'}</b><span>المداومة</span></a>
+    </div>
+
+    <a class="athkar-now" href="#/athkar/${athkar[0]}">${icon(hour >= 3 && hour < 14 ? 'sun' : 'moon')}<span class="grow">${athkar[1]}</span>${icon('back')}</a>
+    </div>
+
+    ${friday ? '<p class="note">يوم الجمعة: سورة الكهف، والإكثار من الصلاة على النبي ﷺ.</p>' : ''}
+    <h2 class="h2">الأدوات</h2>
+    <nav class="tools">${TOOLS.map(([h, t, ic]) => `<a href="${h}">${icon(ic)}<span>${t}</span></a>`).join('')}</nav>
+
+    <h2 class="h2">آية اليوم</h2>
+    <figure class="ayah-day" id="aotd"><p class="muted center">…</p></figure>
+
+    <p class="dedication">صدقة جارية عن روح سمير حجازي، وعن سعد صالح، وعن جميع المسلمين</p>`;
+
+  hijriToday().then((h) => {
+    const city = location()?.city;
+    $('#hdate').textContent = `${ar(h.d)} ${HMONTHS[h.m - 1]} ${ar(h.y)} هـ${city ? '، ' + city : ''}`;
+  }).catch(() => {});
   tickPrayer();
   ayahOfDay(m, names);
 }
 
+/// The day's six times on one line: what has passed, the next, and now.
+function dayLine(times, next) {
+  const t0 = times[0].getTime(), t1 = times[5].getTime();
+  const pos = (t) => Math.min(100, Math.max(0, ((t - t0) / (t1 - t0)) * 100));
+  const now = Date.now();
+  return `<i class="track"></i><i class="done" style="width:${pos(now)}%"></i>` +
+    times.map((t, i) => `<i class="dot${t.getTime() <= now ? ' past' : ''}${i === next ? ' next' : ''}" style="right:${pos(t.getTime())}%"><em>${NAMES[i]}</em></i>`).join('');
+}
+
 async function tickPrayer() {
   const el = $('#next');
-  if (!location()) {
-    $('#nname').textContent = 'مواقيت الصلاة';
-    $('#ntime').textContent = 'اضغط لتحديد موقعك';
-    return;
-  }
+  if (!location()) return;
   let np = await nextPrayer().catch(() => null);
   if (!np || !el.isConnected) return;
-  const city = location().city;
+  let drawn = -1;
   const paint = async () => {
     if (!el.isConnected) return clearInterval(timer);
     if (np[1] <= new Date()) np = await nextPrayer();
     $('#nname').textContent = NAMES[np[0]];
-    $('#ntime').textContent = `${hm(np[1])}${city ? ' • ' + city : ''}`;
-    $('#ncount').textContent = `باقي ${countdown(np[1])}`;
+    $('#nlabel').textContent = np[0] === 1 ? 'الشروق' : 'الصلاة القادمة';
+    $('#ntime').textContent = hm(np[1]);
+    $('#ncount').textContent = `بعد ${countdown(np[1])}`;
+    const sameDay = np[1].toDateString() === new Date().toDateString();
+    const key = np[0] * 10 + (sameDay ? 1 : 0) + Math.floor(Date.now() / 60000) * 100;
+    if (key !== drawn) { drawn = key; $('#line').innerHTML = dayLine(np[2], sameDay ? np[0] : -1); }
   };
   paint();
   clearInterval(timer);
@@ -113,14 +137,14 @@ async function ayahOfDay(m, names) {
     const t = await ayahText(g);
     const name = names[m.surah[g - 1] - 1][1];
     const ref = `﴿${t}﴾ [${name}: ${ar(m.ayah[g - 1])}]`;
-    box.innerHTML = `<div class="verse">${esc(t)}</div>
-      <p class="center muted small">سورة ${esc(name)} • الآية ${ar(m.ayah[g - 1])}</p>
-      <div class="row" style="justify-content:center;gap:10px">
-        <button class="btn ghost" id="al">${icon('play')} استماع</button>
-        <button class="btn ghost" id="as">${icon('share')} مشاركة</button>
-        <a class="btn ghost" href="#/mushaf/${m.page[g - 1]}">${icon('book')}</a>
+    box.innerHTML = `<blockquote class="verse">${esc(t)}</blockquote>
+      <figcaption>سورة ${esc(name)}، الآية ${ar(m.ayah[g - 1])}</figcaption>
+      <div class="ayah-actions">
+        <button id="al">${icon('play')} استماع</button>
+        <button id="as">${icon('share')} مشاركة</button>
+        <a href="#/mushaf/${m.page[g - 1]}">${icon('book')} في المصحف</a>
       </div>`;
-    $('#al', box).onclick = () => player.play(ayahItems(g, g, null, () => `سورة ${name} • ${ar(m.ayah[g - 1])}`), 'آية اليوم');
+    $('#al', box).onclick = () => player.play(ayahItems(g, g, null, () => `سورة ${name}، الآية ${ar(m.ayah[g - 1])}`), 'آية اليوم');
     $('#as', box).onclick = () => {
       if (navigator.share) navigator.share({ text: ref }).catch(() => {});
       else navigator.clipboard?.writeText(ref).then(() => toast('نُسخت الآية'));

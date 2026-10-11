@@ -44,7 +44,7 @@ export async function show(view, args, name) {
   const render = () => {
     const cat = cats[c];
     $('#items', view).innerHTML = (cat.subtitle ? `<p class="muted small center">${esc(cat.subtitle)}</p>` : '') +
-      cat.items.map((d) => item(d.text, d.source, d.note ? ` • ${esc(d.note)}` : '', !!d.quran)).join('');
+      cat.items.map((d) => item(d.text, d.source, d.note ? `، ${esc(d.note)}` : '', !!d.quran)).join('');
   };
   render();
   view.onclick = (e) => {
@@ -62,7 +62,7 @@ async function ruqyah(view, args) {
     <p class="muted small center">تُقرأ بيقين وحضور قلب، مع النفث على موضع الألم أو في الماء، والله هو الشافي.</p><div id="items"></div>`;
   const render = async () => {
     const box = $('#items', view);
-    if (tab === 1) { box.innerHTML = RUQYAH_DUAS.map(([t, s, r]) => item(t, s, r ? ` • ${r}` : '')).join(''); return; }
+    if (tab === 1) { box.innerHTML = RUQYAH_DUAS.map(([t, s, r]) => item(t, s, r ? `، ${r}` : '')).join(''); return; }
     box.innerHTML = RUQYAH_VERSES.map(([t, s, f, to, n], i) => `<div class="card" data-share data-v="${i}">
       <div class="row"><b class="grow gold">${t}</b>${n ? `<small class="chip">${ar(n)} مرات</small>` : ''}<button class="ibtn" data-play="${i}">${icon('play')}</button><button class="ibtn" data-sh>${icon('share')}</button></div>
       <div class="quran" data-txt>…</div></div>`).join('');

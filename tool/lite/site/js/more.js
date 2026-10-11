@@ -32,5 +32,5 @@ export function show(view) {
       `<a class="card tile wash t-${tone}" href="${h}"><div class="ticon t-${tone}" style="width:44px;height:44px">${icon(ic)}</div><b>${n}</b><small>${s}</small></a>`).join('')}</div>`).join('') +
     `<a class="card solid t-gold center" href="#/about" style="display:block;margin-top:20px">
       <b>صدقة جارية</b><p style="margin:6px 0;line-height:1.8">عن روح والدي سمير حجازي، وعن سعد صالح، وعن جميع المسلمين الأحياء منهم والأموات</p>
-      <small>تطوير SMRH • الإصدار 1.0.0</small></a>`;
+      <small>تطوير SMRH، الإصدار 1.0.0</small></a>`;
 }

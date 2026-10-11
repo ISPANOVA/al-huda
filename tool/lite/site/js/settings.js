@@ -28,7 +28,7 @@ export async function show(view, args, name) {
       <a href="#/about/sources">${icon('book', 'gold')}<span class="grow"><b>المصادر والحقوق</b></span>${icon('back', 'muted')}</a>
       <button id="share">${icon('share', 'gold')}<span class="grow"><b>شارك الهدى</b><br><small class="muted">الدال على الخير كفاعله</small></span></button>
     </div>
-    <p class="center muted small" style="margin-top:20px">الهدى • الإصدار 1.0.0</p>`;
+    <p class="center muted small" style="margin-top:20px">الهدى، الإصدار 1.0.0</p>`;
   $('#theme', view).onclick = () => { store.set('theme', theme === 'light' ? 'dark' : 'light'); applyTheme(); show(view, args, name); };
   $('#rec', view).onclick = () => sheet(`<h3>قارئ المصحف</h3><div class="list">${reciters.map((r) => `<button data-id="${r.id}">${icon(r.id === rec.id ? 'check' : 'head', r.id === rec.id ? 'gold' : 'muted')}<span class="grow">${esc(r.name)}<br><small class="muted">${esc(r.style || '')}</small></span></button>`).join('')}</div>`,
     (body, close) => { body.onclick = (e) => { const b = e.target.closest('[data-id]'); if (!b) return; const r = reciters.find((x) => x.id === b.dataset.id); store.set('reciter', { id: r.id, bitrate: r.bitrate }); close(); show(view, args, name); }; });

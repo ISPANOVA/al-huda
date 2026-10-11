@@ -23,7 +23,7 @@ export function show(view, args, name) {
     plan = `<div class="card solid t-emerald">
       <div class="row"><b class="grow" style="font-size:19px">ختمتك في ${ar(k.days)} يومًا</b><b style="font-size:24px">${ar(Math.round(pct * 100))}٪</b></div>
       <div class="bar" style="margin:10px 0"><i style="width:${pct * 100}%"></i></div>
-      <small>قرأت ${ar(k.pages.length)} من ٦٠٤ صفحة • اليوم ${ar(Math.min(elapsed, k.days))} من ${ar(k.days)} • المطلوب يوميًا ${ar(perDay)} صفحة</small>
+      <small>قرأت ${ar(k.pages.length)} من ٦٠٤ صفحة، اليوم ${ar(Math.min(elapsed, k.days))} من ${ar(k.days)}، المطلوب يوميًا ${ar(perDay)} صفحة</small>
     </div>
     ${next <= 604 ? `<a class="btn block" href="#/mushaf/${next}" style="margin-top:12px">${icon('book')} تابع من الصفحة ${ar(next)}</a>` : `<div class="card center gold" style="margin-top:12px"><b>ختمت القرآن، تقبّل الله منك</b></div>`}
     <button class="btn ghost block" id="end" style="margin-top:10px">إنهاء الختمة</button>`;

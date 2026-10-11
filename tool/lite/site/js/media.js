@@ -96,7 +96,7 @@ async function reciter(view, media, key) {
   const url = (n) => `${r.server}${String(n).padStart(3, '0')}.mp3`;
   const items = names.map((s) => ({ url: url(s[0]), label: `سورة ${s[1]}`, surah: s[0] }));
   view.innerHTML = `<div class="top"><button class="back" onclick="history.length>1?history.back():location.hash='#/media'">${icon('fwd')}</button><span class="grow"></span></div>
-    <div class="card wash t-${tone(r.key)} center rhead">${avatar(r, 'xl')}<h2>${esc(r.name)}</h2><small class="muted">${esc(r.style)} • ١١٤ سورة</small>
+    <div class="card wash t-${tone(r.key)} center rhead">${avatar(r, 'xl')}<h2>${esc(r.name)}</h2><small class="muted">${esc(r.style)}، ١١٤ سورة</small>
       <div class="row" style="justify-content:center;gap:10px;margin-top:14px">
         <button class="btn" id="all">${icon('play')} تشغيل الكل</button>
         <button class="btn ghost" id="shuf">${icon('repeat')} عشوائي</button>
@@ -106,7 +106,7 @@ async function reciter(view, media, key) {
   const list = (q) => {
     const now = player.current?.url;
     $('#sl', view).innerHTML = names.filter((s) => !q || s[1].includes(q) || String(s[0]) === q).map((s) =>
-      `<button data-s="${s[0]}" class="${now === url(s[0]) ? 'now' : ''}"><span class="num">${ar(s[0])}</span><span class="grow"><b>سورة ${esc(s[1])}</b><br><small class="muted">${s[3] ? 'مكية' : 'مدنية'} • ${ar(s[2])} آية</small></span>${now === url(s[0]) && player.playing ? eq : icon('play', 'gold')}</button>`).join('');
+      `<button data-s="${s[0]}" class="${now === url(s[0]) ? 'now' : ''}"><span class="num">${ar(s[0])}</span><span class="grow"><b>سورة ${esc(s[1])}</b><br><small class="muted">${s[3] ? 'مكية' : 'مدنية'}، ${ar(s[2])} آية</small></span>${now === url(s[0]) && player.playing ? eq : icon('play', 'gold')}</button>`).join('');
   };
   list('');
   $('#q', view).oninput = (e) => list(e.target.value.trim());
