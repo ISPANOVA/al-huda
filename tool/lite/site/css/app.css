@@ -374,3 +374,9 @@ body.focus .player { display: none; }
   .mbar.botb { bottom: calc(var(--safe-b) + 8px); }
   body.in-mushaf .player { bottom: calc(var(--safe-b) + 8px); }
 }
+
+/* The Mushaf has no menu bar (its arrow goes back home): the whole screen is the page. */
+.mbar.botb { bottom: calc(var(--safe-b) + 8px); }
+.mushaf::after { height: calc(var(--safe-b) + 64px); }
+body.in-mushaf .player { bottom: calc(var(--safe-b) + 8px); }
+@media (min-width: 1000px) { .mushaf::after { height: 64px; } }

@@ -27,6 +27,7 @@ export async function show(view, args) {
       <button class="chip" id="surahChip"></button>
       <a class="ibtn" href="#/search">${icon('search')}</a>
       <span class="sp"></span>
+      <button class="ibtn" id="full" title="ملء الشاشة">${icon('expand')}</button>
       <button class="ibtn" id="tasmee" title="التسميع">${icon('mic')}</button>
       <button class="chip" id="juzChip"></button>
       <button class="ibtn" id="mark">${icon('bookmarkO')}</button>
@@ -77,6 +78,7 @@ export async function show(view, args) {
   $('#juzChip', root).onclick = () => openIndex(m, names, 1);
   $('#pageChip', root).onclick = () => openIndex(m, names, 1);
   $('#tasmee', root).onclick = () => (location.hash = `#/tasmee/${page}`);
+  $('#full', root).onclick = fullscreen;
   $('#mark', root).onclick = () => toggleMark(m);
   $('#playPage', root).onclick = () => listenSheet(m.page.indexOf(page) + 1);
   offPlayer = player.on((it) => highlight(it?.ayah ?? 0, m));
@@ -88,20 +90,27 @@ export async function show(view, args) {
 // the browser lets a site do it: Android; on iPhone only the bars hide).
 let ownFullscreen = false;
 function focus(on) {
+  // A tap on the page: the bars hide or show (the page never moves).
   root.classList.toggle('immersive', on);
   document.body.classList.toggle('focus', on);
-  $('#nav').classList.toggle('hide', on);
-  if (on && !document.fullscreenElement && document.documentElement.requestFullscreen) {
-    document.documentElement.requestFullscreen({ navigationUI: 'hide' }).then(() => { ownFullscreen = true; }).catch(() => {});
-  } else if (!on && ownFullscreen && document.fullscreenElement) {
-    ownFullscreen = false;
-    document.exitFullscreen().catch(() => {});
+}
+/// The full-screen button: the browser's own bars hide too (Android, computers).
+async function fullscreen() {
+  try {
+    if (document.fullscreenElement) { ownFullscreen = false; await document.exitFullscreen(); return; }
+    await document.documentElement.requestFullscreen({ navigationUI: 'hide' });
+    ownFullscreen = true;
+    if (innerHeight > innerWidth) screen.orientation?.lock?.('portrait').catch(() => {});
+    focus(true);
+  } catch {
+    toast('المتصفح لا يسمح بملء الشاشة. على آيفون: أضف الموقع إلى الشاشة الرئيسية');
   }
-  relayout();
 }
 function onFullscreen() {
-  // Leaving full screen (the back gesture) leaves focus too.
-  if (!document.fullscreenElement && ownFullscreen) { ownFullscreen = false; if (root?.classList.contains('immersive')) focus(false); }
+  const on = !!document.fullscreenElement;
+  $('#full', root).innerHTML = icon(on ? 'shrink' : 'expand');
+  // Leaving full screen (the back gesture) shows the bars again.
+  if (!on && ownFullscreen) { ownFullscreen = false; focus(false); }
 }
 
 export function leave() {
