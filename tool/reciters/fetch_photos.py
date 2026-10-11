@@ -124,7 +124,7 @@ def image_of(qid):
 
 # Photos the detector gets wrong, checked by eye: "top" = the top-centre
 # square; (cx, cy, side) = a square inside it, as fractions of its side.
-CROPS = {"ajbr": "top"}
+CROPS = {"ajbr": "top", "hthfi": "top", "mansor": (0.58, 0.57, 0.62)}
 
 
 def portrait(img, key=""):

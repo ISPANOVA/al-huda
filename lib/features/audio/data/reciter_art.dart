@@ -1,7 +1,7 @@
 import '../../media/reciter_photos.dart';
 
-/// Which reciter photo (assets/reciters/<key>.jpg, and its small copy
-/// drawable/car_r_<key> for Android Auto) belongs to a reciter id.
+/// Which reciter photo (`assets/reciters/<key>.jpg`, and its small copy
+/// `drawable/car_r_<key>` for Android Auto) belongs to a reciter id.
 class ReciterArt {
   ReciterArt._();
 
