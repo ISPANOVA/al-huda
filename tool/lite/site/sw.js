@@ -29,9 +29,17 @@ self.addEventListener('fetch', (e) => {
       .catch(() => caches.match('index.html')));
     return;
   }
-  // Everything else is versioned by the cache name: the cache first.
-  e.respondWith(caches.match(req).then((hit) => hit || fetch(req).then((r) => {
-    if (r.ok && !url.pathname.endsWith('words.json')) { const copy = r.clone(); caches.open(CACHE).then((c) => c.put(req, copy)); }
+  // Fonts, page data and pictures never change: the cache first.
+  if (/\/(fonts|data|img|icons)\//.test(url.pathname)) {
+    e.respondWith(caches.match(req).then((hit) => hit || fetch(req).then((r) => {
+      if (r.ok && !url.pathname.endsWith('words.json')) { const copy = r.clone(); caches.open(CACHE).then((c) => c.put(req, copy)); }
+      return r;
+    })));
+    return;
+  }
+  // Code and styles: always the newest from the network, the cache offline.
+  e.respondWith(fetch(req).then((r) => {
+    if (r.ok) { const copy = r.clone(); caches.open(CACHE).then((c) => c.put(req, copy)); }
     return r;
-  })));
+  }).catch(() => caches.match(req)));
 });

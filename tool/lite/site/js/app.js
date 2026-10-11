@@ -51,6 +51,8 @@ const P = {
   sun: 'M12 7a5 5 0 1 0 0 10 5 5 0 0 0 0-10zM11 1h2v3h-2zm0 19h2v3h-2zM1 11h3v2H1zm19 0h3v2h-3z',
   download: 'M11 3h2v10l3.5-3.5 1.4 1.4L12 16.8 6.1 10.9l1.4-1.4L11 13zM5 19h14v2H5z',
   rotate: 'M16.5 2.5 15 4l2.5 2.5H13A6 6 0 0 0 7 12.5h2a4 4 0 0 1 4-4h4.5L15 11l1.5 1.5 5-5zM3 13h10v8H3zm2 2v4h6v-4z',
+  expand: 'M4 4h6v2H6v4H4zm10 0h6v6h-2V6h-4zM4 14h2v4h4v2H4zm14 0h2v6h-6v-2h4z',
+  shrink: 'M8 4h2v6H4V8h4zm6 0h2v4h4v2h-6zM4 14h6v6H8v-4H4zm10 0h6v2h-4v4h-2z',
   phone: 'M7 1h10a2 2 0 0 1 2 2v18a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2zm0 3v15h10V4z',
 };
 export const icon = (name, cls = '') => `<svg class="${cls}" viewBox="0 0 24 24" aria-hidden="true"><path d="${P[name] || ''}"/></svg>`;
@@ -176,7 +178,7 @@ let seq = 0;
 function highlight(name) {
   const tab = TABS[name] ?? 'home';
   for (const a of $$('#nav a')) a.className = a.dataset.tab === tab ? `on t-${TONES[tab]}` : '';
-  $('#nav').classList.toggle('hide', name === 'tasmee');
+  $('#nav').classList.toggle('hide', name === 'tasmee' || name === 'mushaf');
 }
 // The new page fades in as soon as it is written.
 const view0 = $('#view');
