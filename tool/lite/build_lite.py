@@ -88,6 +88,24 @@ def main():
         except Exception as e:  # fontTools missing: plain TTF
             print("woff2 skipped", f, e)
             shutil.copy(src, os.path.join(fonts, f.replace(".ttf", ".woff2")))
+    # The splash's one word in the Hafs font: a few KB instead of the whole
+    # font (the full font loads later, when Quran text is shown).
+    try:
+        from fontTools import subset
+        from fontTools.ttLib import TTFont
+
+        opts = subset.Options()
+        opts.flavor = "woff2"
+        opts.layout_features = ["*"]
+        font = TTFont(os.path.join(ROOT, "assets/fonts/UthmanicHafs18.ttf"))
+        sub = subset.Subsetter(opts)
+        sub.populate(text="الهُدَىٰ")
+        sub.subset(font)
+        font.flavor = "woff2"
+        font.save(os.path.join(fonts, "HafsSplash.woff2"))
+    except Exception as e:  # without fontTools the splash uses the full font
+        print("splash subset skipped", e)
+
     # A new cache for the service worker on every build.
     sw = os.path.join(OUT, "sw.js")
     version = (os.environ.get("GITHUB_SHA") or str(int(os.path.getmtime(sw))))[:12]

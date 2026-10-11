@@ -4,6 +4,7 @@
 @font-face { font-family: Tajawal; src: url(../fonts/Tajawal-ExtraBold.woff2); font-weight: 800 900; font-display: swap; }
 @font-face { font-family: ReemKufi; src: url(../fonts/ReemKufi-Bold.woff2); font-weight: 700; font-display: swap; }
 @font-face { font-family: Hafs; src: url(../fonts/UthmanicHafs18.woff2); font-display: block; }
+@font-face { font-family: HafsSplash; src: url(../fonts/HafsSplash.woff2); font-display: block; }
 
 :root {
   --bg: #000; --bg2: #121110; --surface: #0e0d0b; --card: rgba(255,255,255,.055); --line: rgba(226,194,117,.16);
@@ -42,7 +43,7 @@ svg { width: 24px; height: 24px; fill: currentColor; flex: none; }
 .splash { position: fixed; inset: 0; z-index: 99; display: flex; flex-direction: column; align-items: center; justify-content: center;
   background: radial-gradient(circle at 50% 42%, #2a2010 0, #000 62%); transition: opacity .35s; }
 .splash.out { opacity: 0; pointer-events: none; }
-.splash-mark { font-family: Hafs, serif; font-size: 72px; color: var(--gold); text-shadow: 0 0 40px rgba(226,194,117,.45); }
+.splash-mark { font-family: HafsSplash, Hafs, serif; font-size: 72px; color: var(--gold); text-shadow: 0 0 40px rgba(226,194,117,.45); }
 .splash-note { position: absolute; bottom: calc(52px + var(--safe-b)); text-align: center; color: rgba(247,226,163,.75); font-size: 13px; padding: 0 20px; }
 .splash-by { position: absolute; bottom: calc(26px + var(--safe-b)); color: var(--gold); letter-spacing: 3px; font-weight: 800; font-size: 13px; }
 
@@ -435,3 +436,7 @@ body.in-mushaf .player { bottom: calc(var(--safe-b) + 8px); }
 .dedication { text-align: center; color: var(--muted); font-size: 13px; margin: 26px 0 0; }
 @media (min-width: 600px) { .tools { grid-template-columns: repeat(8, 1fr); } .sky { margin: 0; border-radius: 34px; height: 360px; } }
 @media (min-width: 1000px) { .sky { height: 400px; } .nextp { max-width: 520px; left: auto; right: 20px; bottom: 20px; } }
+
+/* Long lists: rows out of view are not laid out or painted until needed. */
+.list > *, .thikr, .rgrid > .rcard { content-visibility: auto; contain-intrinsic-size: auto 64px; }
+.thikr { contain-intrinsic-size: auto 220px; }

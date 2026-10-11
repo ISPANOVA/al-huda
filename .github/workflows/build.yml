@@ -76,18 +76,20 @@ jobs:
       - name: Build APK (universal, full size)
         run: |
           set -o pipefail
-          flutter build apk --release --target-platform android-arm,android-arm64 --build-name=$BUILD_NAME --build-number=$BUILD_NUMBER --dart-define=APP_BUILD=$BUILD_NUMBER --dart-define=APP_VERSION=$BUILD_NAME 2>&1 | tee -a build_log.txt
+          flutter build apk --release --target-platform android-arm,android-arm64 --split-debug-info=build/symbols --build-name=$BUILD_NAME --build-number=$BUILD_NUMBER --dart-define=APP_BUILD=$BUILD_NUMBER --dart-define=APP_VERSION=$BUILD_NAME 2>&1 | tee -a build_log.txt
 
       - name: Build App Bundle (Google Play)
         run: |
           set -o pipefail
-          flutter build appbundle --release --target-platform android-arm,android-arm64 --build-name=$BUILD_NAME --build-number=$BUILD_NUMBER --dart-define=APP_BUILD=$BUILD_NUMBER --dart-define=APP_VERSION=$BUILD_NAME 2>&1 | tee -a build_log.txt
+          flutter build appbundle --release --target-platform android-arm,android-arm64 --split-debug-info=build/symbols --build-name=$BUILD_NAME --build-number=$BUILD_NUMBER --dart-define=APP_BUILD=$BUILD_NUMBER --dart-define=APP_VERSION=$BUILD_NAME 2>&1 | tee -a build_log.txt
 
       - name: Rename outputs
         run: |
           mkdir -p dist
           cp build/app/outputs/flutter-apk/app-release.apk dist/AlHuda-$BUILD_NAME-build$BUILD_NUMBER.apk
           cp build/app/outputs/bundle/release/app-release.aab dist/AlHuda-$BUILD_NAME-build$BUILD_NUMBER.aab
+          # Debug symbols kept apart (smaller app; crash reports can still be read).
+          (cd build && zip -qr ../dist/AlHuda-$BUILD_NAME-build$BUILD_NUMBER-symbols.zip symbols)
           ls -la dist
 
       - name: Publish release
@@ -104,6 +106,7 @@ jobs:
           files: |
             dist/AlHuda-${{ env.BUILD_NAME }}-build${{ env.BUILD_NUMBER }}.apk
             dist/AlHuda-${{ env.BUILD_NAME }}-build${{ env.BUILD_NUMBER }}.aab
+            dist/AlHuda-${{ env.BUILD_NAME }}-build${{ env.BUILD_NUMBER }}-symbols.zip
 
       - name: Save log on failure
         if: failure()

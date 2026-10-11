@@ -282,6 +282,10 @@ class HomeSkyHero extends StatelessWidget {
     final hijri = HijriCalendar.now();
     final greg = DateFormat('EEEE d MMMM', 'ar').format(DateTime.now());
     return BlocBuilder<PrayerCubit, PrayerState>(
+      // The sky moves by the minute; only the countdown ring ticks each second.
+      buildWhen: (p, c) =>
+          p.today != c.today || p.next != c.next || p.location != c.location || p.loading != c.loading ||
+          p.error != c.error || p.countdown.inMinutes != c.countdown.inMinutes,
       builder: (context, s) {
         final today = s.today;
         final sky = skyState(
@@ -357,7 +361,7 @@ class HomeSkyHero extends StatelessWidget {
                   left: 14,
                   right: 14,
                   bottom: fullBleed ? 16 : 14,
-                  child: _NextPrayerGlass(state: s),
+                  child: BlocBuilder<PrayerCubit, PrayerState>(builder: (context, s) => _NextPrayerGlass(state: s)),
                 ),
               ],
             ),

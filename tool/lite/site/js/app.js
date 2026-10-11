@@ -230,7 +230,8 @@ async function warm() {
 route().then(() => {
   const s = $('#splash');
   setTimeout(() => { s.classList.add('out'); setTimeout(() => s.remove(), 400); }, 350);
-  setTimeout(() => idle(warm), 600);
+  // Other pages are fetched once the first one has everything it needs.
+  setTimeout(() => idle(warm), 2500);
 });
 
 if ('serviceWorker' in navigator && location.protocol === 'https:') {

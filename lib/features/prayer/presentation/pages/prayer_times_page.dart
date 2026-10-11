@@ -114,7 +114,9 @@ class _SunPathHero extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // The sky moves by the minute; only the countdown below ticks each second.
     return BlocBuilder<PrayerCubit, PrayerState>(
+      buildWhen: (p, c) => p.today != c.today || p.next != c.next || p.countdown.inMinutes != c.countdown.inMinutes,
       builder: (context, s) {
         final today = s.today!;
         final next = s.next!;
@@ -171,14 +173,17 @@ class _SunPathHero extends StatelessWidget {
                   children: [
                     Text(next.name.isPrayer ? 'باقي على صلاة ${next.name.nameOn(next.time)}' : 'باقي على الشروق',
                         style: TextStyle(color: Colors.white.withValues(alpha: 0.8), fontWeight: FontWeight.w700)),
-                    Text(
-                      ArabicUtils.formatDuration(s.countdown),
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 42,
-                        fontWeight: FontWeight.w900,
-                        height: 1.15,
-                        fontFeatures: [FontFeature.tabularFigures()],
+                    BlocBuilder<PrayerCubit, PrayerState>(
+                      buildWhen: (p, c) => p.countdown != c.countdown,
+                      builder: (context, s) => Text(
+                        ArabicUtils.formatDuration(s.countdown),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 42,
+                          fontWeight: FontWeight.w900,
+                          height: 1.15,
+                          fontFeatures: [FontFeature.tabularFigures()],
+                        ),
                       ),
                     ),
                     Container(

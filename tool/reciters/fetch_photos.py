@@ -113,7 +113,7 @@ def image_of(qid):
 
 # Photos the detector gets wrong, checked by eye: "top" = the top-centre
 # square; (cx, cy, side) = a square inside it, as fractions of its side.
-CROPS = {"ajbr": "top", "mustafa": (0.6, 0.26, 0.56)}
+CROPS = {"ajbr": "top", "mustafa": (0.6, 0.34, 0.7)}
 
 
 def portrait(img, key=""):
@@ -152,9 +152,10 @@ def portrait(img, key=""):
     if len(faces):
         # The most certain face (not the largest: curtains and patterns fool it).
         x, y, fw, fh = faces[max(range(len(faces)), key=lambda i: weights[i])]
-        side = int(max(fw, fh) * 2.4)
+        # Head and shoulders: the face in the upper third, the chest to the bottom edge.
+        side = int(max(fw, fh) * 3.4)
         side = min(side, w, h)
-        cx, cy = x + fw / 2, y + fh / 2 + fh * 0.18
+        cx, cy = x + fw / 2, y + fh / 2 + fh * 0.95
         left = int(min(max(cx - side / 2, 0), w - side))
         top = int(min(max(cy - side / 2, 0), h - side))
         return img.crop((left, top, left + side, top + side))
@@ -186,7 +187,7 @@ def main():
             continue
         qid, file, desc, label = found
         info = api("https://commons.wikimedia.org/w/api.php", action="query", titles="File:" + file, prop="imageinfo",
-                   iiprop="url|extmetadata", iiurlwidth=900)
+                   iiprop="url|extmetadata", iiurlwidth=1600)
         page = next(iter(info["query"]["pages"].values()))
         if "imageinfo" not in page:  # not on Commons (a local, non-free file)
             report.append({"key": key, "name": ar, "found": False, "why": "not on Commons " + file})
@@ -197,8 +198,9 @@ def main():
         artist = re.sub("<[^>]+>", "", meta.get("Artist", {}).get("value", "")).strip()
         img = Image.open(io.BytesIO(get(ii["thumburl"]))).convert("RGB")
         img = portrait(img, key)
-        img = img.resize((256, 256), Image.LANCZOS)
-        img.save(os.path.join(OUT, f"{key}.jpg"), "JPEG", quality=82, optimize=True)
+        os.makedirs(os.path.join(OUT, "raw"), exist_ok=True)
+        side = min(img.size[0], 768)
+        img.resize((side, side), Image.LANCZOS).save(os.path.join(OUT, "raw", f"{key}.png"))
         credits[key] = {"name": ar, "file": file, "license": lic, "author": artist,
                         "source": "https://commons.wikimedia.org/wiki/File:" + urllib.parse.quote(file.replace(" ", "_"))}
         report.append({"key": key, "name": ar, "found": True, "qid": qid, "label": label, "desc": desc, "file": file, "license": lic, "author": artist})

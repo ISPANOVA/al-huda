@@ -23,6 +23,32 @@ jobs:
           "$RUNNER_TEMP/venv/bin/pip" install --quiet pillow "opencv-python-headless==4.10.0.84"
           "$RUNNER_TEMP/venv/bin/python" -c "import cv2; print(cv2.__version__, cv2.data.haarcascades)"
           "$RUNNER_TEMP/venv/bin/python" tool/reciters/fetch_photos.py "$RUNNER_TEMP/out" 2>&1 | tee "$RUNNER_TEMP/log.txt"
+          "$RUNNER_TEMP/venv/bin/pip" install --quiet "rembg[cpu]" 2>&1 | tail -2
+          "$RUNNER_TEMP/venv/bin/python" tool/reciters/compose.py "$RUNNER_TEMP/out" assets/icon/logo_mark.png 2>&1 | tee -a "$RUNNER_TEMP/log.txt"
+      - name: Ali Jaber studio recording complete?
+        if: always()
+        run: |
+          mkdir -p "$RUNNER_TEMP/out"; : > "$RUNNER_TEMP/out/jaber_studio.txt"
+          for n in $(seq -w 1 114); do n3=$(printf "%03d" $((10#$n)));
+            c=$(curl -s -o /dev/null -w "%{http_code} %{size_download}" -r 0-0 "https://download.quranicaudio.com/quran/abdullaah_alee_jaabir_studio/$n3.mp3")
+            echo "$n3 $c" >> "$RUNNER_TEMP/out/jaber_studio.txt"; done
+          awk '$2!="206" && $2!="200"' "$RUNNER_TEMP/out/jaber_studio.txt" | head; echo "checked"
+      - name: Ali Jaber recordings (mp3quran, quranicaudio)
+        if: always()
+        run: |
+          mkdir -p "$RUNNER_TEMP/out"
+          curl -s "https://mp3quran.net/api/v3/reciters?language=ar" | python3 -c "
+          import json,sys
+          d=json.load(sys.stdin)
+          out=[r for r in d['reciters'] if 'جابر' in r['name']]
+          json.dump(out, open('$RUNNER_TEMP/out/jaber_mp3quran.json','w'), ensure_ascii=False, indent=1)
+          print(json.dumps(out, ensure_ascii=False)[:3000])" || true
+          curl -s "https://quranicaudio.com/api/qaris" | python3 -c "
+          import json,sys
+          d=json.load(sys.stdin)
+          out=[r for r in d if 'jaber' in (r.get('name','')+r.get('relative_path','')).lower() or 'جابر' in (r.get('arabic_name') or '')]
+          json.dump(out, open('$RUNNER_TEMP/out/jaber_quranicaudio.json','w'), ensure_ascii=False, indent=1)
+          print(json.dumps(out, ensure_ascii=False)[:3000])" || true
       - name: Publish
         if: always()
         run: |

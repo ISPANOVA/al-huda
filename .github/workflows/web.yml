@@ -44,6 +44,11 @@ jobs:
             LITE_OUT="$LITE/data" flutter test tool/lite/export_test.dart
             dart compile js -O2 tool/lite/core.dart -o "$LITE/js/core.js"
             rm -f "$LITE/js/core.js.deps" "$LITE/js/core.js.map"
+            # Smaller code and styles (core.js is already minified by Dart).
+            du -sh "$LITE/js" "$LITE/css"
+            npx --yes esbuild@0.24.0 $(ls "$LITE"/js/*.js | grep -v '/core.js$') --minify --outdir="$LITE/js" --allow-overwrite --log-level=warning
+            npx --yes esbuild@0.24.0 "$LITE/css/app.css" --minify --outfile="$LITE/css/app.css" --allow-overwrite --log-level=warning
+            du -sh "$LITE/js" "$LITE/css"
             ls -la "$LITE" "$LITE/data" "$LITE/js"
             # The full Flutter version stays available at /full/.
             flutter build web --release --base-href /full/ --no-web-resources-cdn --wasm
