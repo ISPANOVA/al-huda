@@ -25,6 +25,14 @@ jobs:
           "$RUNNER_TEMP/venv/bin/python" tool/reciters/fetch_photos.py "$RUNNER_TEMP/out" 2>&1 | tee "$RUNNER_TEMP/log.txt"
           "$RUNNER_TEMP/venv/bin/pip" install --quiet "rembg[cpu]" 2>&1 | tail -2
           "$RUNNER_TEMP/venv/bin/python" tool/reciters/compose.py "$RUNNER_TEMP/out" assets/icon/logo_mark.png 2>&1 | tee -a "$RUNNER_TEMP/log.txt"
+      - name: Ali Jaber studio recording complete?
+        if: always()
+        run: |
+          mkdir -p "$RUNNER_TEMP/out"; : > "$RUNNER_TEMP/out/jaber_studio.txt"
+          for n in $(seq -w 1 114); do n3=$(printf "%03d" $((10#$n)));
+            c=$(curl -s -o /dev/null -w "%{http_code} %{size_download}" -r 0-0 "https://download.quranicaudio.com/quran/abdullaah_alee_jaabir_studio/$n3.mp3")
+            echo "$n3 $c" >> "$RUNNER_TEMP/out/jaber_studio.txt"; done
+          awk '$2!="206" && $2!="200"' "$RUNNER_TEMP/out/jaber_studio.txt" | head; echo "checked"
       - name: Ali Jaber recordings (mp3quran, quranicaudio)
         if: always()
         run: |

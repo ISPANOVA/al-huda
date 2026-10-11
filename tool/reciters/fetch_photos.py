@@ -113,7 +113,7 @@ def image_of(qid):
 
 # Photos the detector gets wrong, checked by eye: "top" = the top-centre
 # square; (cx, cy, side) = a square inside it, as fractions of its side.
-CROPS = {"ajbr": "top", "mustafa": (0.6, 0.26, 0.56)}
+CROPS = {"ajbr": "top", "mustafa": (0.6, 0.34, 0.7)}
 
 
 def portrait(img, key=""):
@@ -152,9 +152,10 @@ def portrait(img, key=""):
     if len(faces):
         # The most certain face (not the largest: curtains and patterns fool it).
         x, y, fw, fh = faces[max(range(len(faces)), key=lambda i: weights[i])]
-        side = int(max(fw, fh) * 2.4)
+        # Head and shoulders: the face in the upper third, the chest to the bottom edge.
+        side = int(max(fw, fh) * 3.4)
         side = min(side, w, h)
-        cx, cy = x + fw / 2, y + fh / 2 + fh * 0.18
+        cx, cy = x + fw / 2, y + fh / 2 + fh * 0.95
         left = int(min(max(cx - side / 2, 0), w - side))
         top = int(min(max(cy - side / 2, 0), h - side))
         return img.crop((left, top, left + side, top + side))

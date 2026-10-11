@@ -34,7 +34,7 @@ def background():
 
 
 def main():
-    session = new_session("isnet-general-use")
+    session = new_session("u2net_human_seg")
     base = background()
     for f in sorted(glob.glob(os.path.join(D, "raw", "*.png"))):
         key = os.path.splitext(os.path.basename(f))[0]
