@@ -1,0 +1,68 @@
+no photo basit عبد الباسط عبد الصمد
+ok minsh Q3959320 محمد صديق المنشاوي | قارئ قرآن مصري (1338 – 1388هـ / 1920 – 1969م) / Quran reciter (1920-1969) | Elminshwey.jpg Public domain
+ok husr Q6734373 محمود الحصري | قارئ مصري للقرآن الكريم (1335–1401 هـ / 1917–1980 م) / Egyptian Quran reciter (1917–1980) | Hussary.jpg Public domain
+ok mustafa None مصطفى إسماعيل | picked by eye | Mustafa Ismail (1).jpg Public domain
+no photo bna محمود علي البنا
+no photo tblawi محمد محمود الطبلاوي
+ok nuaina Q20386256 أحمد نعينع | قارئ مصري / Egyptian Quran reciter and physician | DrAhmedNeinaa.jpg CC BY-SA 4.0
+no photo shahhat عبد الرحمن الشحات
+ok afs Q948361 مشاري العفاسي | قارئ القرآن الكريم وإمام المسجد الكبير في دولة الكويت / Imam of Grand Mosque (Kuwait), Quran reciter, preacher, Nasheed artist | Мишари Рашид.jpg Copyrighted free use
+ok yasser Q12251502 ياسر الدوسري | قارئ قرآن وإمام وخطيب المسجد الحرام / Imam of Masjid-al-Haraam | Yasser Al-Dosari.png CC BY-SA 3.0
+ok maher Q1530120 ماهر المعيقلي | قارئ قرآن سعودي وإمام وخطيب المسجد الحرام (مواليد 1969) / Saudi imam | Maher Al Mueaqly.png CC BY-SA 3.0
+ok sds Q317948 عبد الرحمن السديس | عالم دين سعودي وإمام وخطيب في الحرم المكي ورئيس شؤون الحرمين الشريفين بمرتبة وزير / imam and preacher at the Grand Mosque in Mecca | Abdul-Rahman Al-Sudais (Cropped, 2011).jpg GODL-India
+ok shur Q270540 سعود الشريم | قاضي سعودي و إمام وخطيب المسجد الحرام سابقًا (مواليد 1966) / Former Imam Saudi at Masjid al-Haram | Saud Shuraim doing the Khutbah.png CC BY-SA 4.0
+ok qtm Q6880178 ناصر القطامي | قارئ وإمام وخطيب سعودي / Saudi writer | صورة شخصية الشيخ ناصر القطامي.jpg CC BY-SA 4.0
+ok ajm None أحمد بن علي العجمي | picked by eye | Ahmad bin Ali Al-Ajmi.png CC BY-SA 3.0
+no photo shatri أبو بكر الشاطري
+ok hthfi None علي الحذيفي | picked by eye | Ali al-Hudhayfi.jpg CC BY 3.0
+no photo ayyub محمد أيوب
+no photo bsfr عبد الله بصفر
+no photo hani هاني الرفاعي
+ok jbrl Q12240333 محمد جبريل | قارئ مصري / Egyptian Quran Reciter (born 1964) | Qari Muhammad Jebril, Ramadan 2019.png CC BY 3.0
+no photo abkr إدريس أبكر
+no photo frs فارس عباد
+ok gmd Q3082522 سعد الغامدي | رجل دين سعودي وقارئ القرآن الكريم / Saudi Arabian Imam and Qari | Saad al Ghamdi.jpg CC BY-SA 4.0
+no photo jleel خالد الجليل
+no photo lhdan محمد اللحيدان
+ok klb Q12222190 عادل الكلباني | إمام سعودي وإمام جامع المحيسن سابقًا في شرق الرياض (مواليد 1959) / Saudi Arabian Muslim cleric | Kalbani.jpg CC BY-SA 3.0
+ok jhn Q12223339 عبد الله الجهني | رجل دين سعودي وإمام المسجد الحرام / Saudi imam | Abdullah Al Juhany (Cropped).png CC BY-SA 4.0
+no photo kyat عبد الله خياط
+ok bud None صلاح البدير | picked by eye | Salah Ibn Mohammed Al Budair.jpg CC BY-SA 4.0
+ok qasm Q6156088 عبد المحسن القاسم | عالم سعودي وإمام وخطيب المسجد النبوي (مواليد 1967) / Saudi Scholar and Imam of Prophet's Mosque | Abdul Mohsin Al-Qasim.jpg CC BY 4.0
+no photo akdr إبراهيم الأخضر
+ok bader Q133693358 بدر التركي | إمام وقارئ وخطيب سعودي في الحرم المكي /  | Photo of badr al-turki in 2023.jpg CC0
+no photo tnjy خليفة الطنيجي
+ok mansor None منصور السالمي | picked by eye | Mansurahsalme.jpg CC BY-SA 4.0
+no photo aloosi عبد الرحمن العوسي
+no photo nabil نبيل الرفاعي
+ok ajbr Q3093361 علي عبد الله جابر | قارئ سعودي وإمام الحرم المكي سابقًا (1953 - 2005) / former Imam of Masjid al-Haram (1954–2005) | الشيخ علي جابر.png CC0
+ok mtrod Q12223422 عبد الله المطرود | قارئ وإمام وخطيب جامع الأمير بندر بن عبد العزيز آل سعود، السعودية / Saudi Qari and Imam | Abdullah Al Matroud.jpg CC BY-SA 4.0
+no photo dosri إبراهيم الدوسري
+no photo mrifai محمود الرفاعي
+ok alzain None الزين محمد أحمد | picked by eye | الزين محمد أحمد.png CC BY-SA 4.0
+[0;93m2026-10-11 23:54:54.023795948 [W:onnxruntime:Default, device_discovery.cc:95 GetPciBusId] Skipping pci_bus_id for PCI path at "/sys/devices/LNXSYSTM:00/LNXSYBUS:00/ACPI0004:00/MSFT1000:00/5620e0c7-8062-4dce-aeb7-520c7ef76171" because filename "5620e0c7-8062-4dce-aeb7-520c7ef76171" did not match expected pattern of [0-9a-f]+:[0-9a-f]+:[0-9a-f]+[.][0-9a-f]+[m
+Downloading data from 'https://github.com/danielgatis/rembg/releases/download/v0.0.0/u2net_human_seg.onnx' to file '/home/runner/.rembg/models/u2net_human_seg/u2net_human_seg.onnx'.
+  0%|                                               | 0.00/176M [00:00<?, ?B/s]  1%|▍                                     | 1.88M/176M [00:00<00:09, 18.7MB/s]  4%|█▍                                    | 6.75M/176M [00:00<00:04, 36.3MB/s]  7%|██▌                                   | 11.6M/176M [00:00<00:03, 42.1MB/s] 12%|████▌                                 | 21.0M/176M [00:00<00:02, 57.9MB/s] 17%|██████▌                               | 30.4M/176M [00:00<00:02, 70.4MB/s] 22%|████████▍                             | 38.9M/176M [00:00<00:01, 75.2MB/s] 27%|██████████▍                           | 48.1M/176M [00:00<00:01, 80.6MB/s] 32%|████████████▏                         | 56.2M/176M [00:00<00:01, 80.2MB/s] 37%|██████████████▏                       | 65.6M/176M [00:00<00:01, 84.7MB/s] 42%|████████████████                      | 74.1M/176M [00:01<00:01, 81.7MB/s] 47%|█████████████████▉                    | 83.3M/176M [00:01<00:01, 84.8MB/s] 52%|███████████████████▊                  | 91.8M/176M [00:01<00:01, 69.1MB/s] 57%|██████████████████████▎                | 101M/176M [00:01<00:01, 74.6MB/s] 62%|████████████████████████               | 109M/176M [00:01<00:00, 75.4MB/s] 66%|█████████████████████████▊             | 117M/176M [00:01<00:00, 76.1MB/s] 72%|███████████████████████████▉           | 126M/176M [00:01<00:00, 80.7MB/s] 77%|██████████████████████████████         | 136M/176M [00:01<00:00, 85.6MB/s] 82%|███████████████████████████████▉       | 144M/176M [00:01<00:00, 83.6MB/s] 87%|█████████████████████████████████▊     | 153M/176M [00:02<00:00, 83.8MB/s] 92%|███████████████████████████████████▋   | 161M/176M [00:02<00:00, 84.1MB/s] 97%|█████████████████████████████████████▉ | 171M/176M [00:02<00:00, 88.0MB/s]  0%|                                               | 0.00/176M [00:00<?, ?B/s]100%|███████████████████████████████████████| 176M/176M [00:00<00:00, 1.17TB/s]
+blended afs
+composed ajbr
+composed ajm
+composed alzain
+blended bader
+composed bud
+composed gmd
+composed hthfi
+blended husr
+blended jbrl
+composed jhn
+composed klb
+blended maher
+composed mansor
+blended minsh
+composed mtrod
+blended mustafa
+composed nuaina
+composed qasm
+composed qtm
+composed sds
+blended shur
+composed yasser

@@ -1,0 +1,350 @@
+[
+ {
+  "key": "basit",
+  "name": "عبد الباسط عبد الصمد",
+  "found": false
+ },
+ {
+  "key": "minsh",
+  "name": "محمد صديق المنشاوي",
+  "found": true,
+  "qid": "Q3959320",
+  "label": "محمد صديق المنشاوي",
+  "desc": "قارئ قرآن مصري (1338 – 1388هـ / 1920 – 1969م) / Quran reciter (1920-1969)",
+  "file": "Elminshwey.jpg",
+  "license": "Public domain",
+  "author": "Unknown authorUnknown author"
+ },
+ {
+  "key": "husr",
+  "name": "محمود خليل الحصري",
+  "found": true,
+  "qid": "Q6734373",
+  "label": "محمود الحصري",
+  "desc": "قارئ مصري للقرآن الكريم (1335–1401 هـ / 1917–1980 م) / Egyptian Quran reciter (1917–1980)",
+  "file": "Hussary.jpg",
+  "license": "Public domain",
+  "author": "Zubairkhan1"
+ },
+ {
+  "key": "mustafa",
+  "name": "مصطفى إسماعيل",
+  "found": true,
+  "qid": null,
+  "label": "مصطفى إسماعيل",
+  "desc": "picked by eye",
+  "file": "Mustafa Ismail (1).jpg",
+  "license": "Public domain",
+  "author": "Unknown authorUnknown author"
+ },
+ {
+  "key": "bna",
+  "name": "محمود علي البنا",
+  "found": false
+ },
+ {
+  "key": "tblawi",
+  "name": "محمد محمود الطبلاوي",
+  "found": false
+ },
+ {
+  "key": "nuaina",
+  "name": "أحمد نعينع",
+  "found": true,
+  "qid": "Q20386256",
+  "label": "أحمد نعينع",
+  "desc": "قارئ مصري / Egyptian Quran reciter and physician",
+  "file": "DrAhmedNeinaa.jpg",
+  "license": "CC BY-SA 4.0",
+  "author": "NeinaaQari"
+ },
+ {
+  "key": "shahhat",
+  "name": "عبد الرحمن الشحات",
+  "found": false
+ },
+ {
+  "key": "afs",
+  "name": "مشاري راشد العفاسي",
+  "found": true,
+  "qid": "Q948361",
+  "label": "مشاري العفاسي",
+  "desc": "قارئ القرآن الكريم وإمام المسجد الكبير في دولة الكويت / Imam of Grand Mosque (Kuwait), Quran reciter, preacher, Nasheed artist",
+  "file": "Мишари Рашид.jpg",
+  "license": "Copyrighted free use",
+  "author": "http://quranic.ru/"
+ },
+ {
+  "key": "yasser",
+  "name": "ياسر الدوسري",
+  "found": true,
+  "qid": "Q12251502",
+  "label": "ياسر الدوسري",
+  "desc": "قارئ قرآن وإمام وخطيب المسجد الحرام / Imam of Masjid-al-Haraam",
+  "file": "Yasser Al-Dosari.png",
+  "license": "CC BY-SA 3.0",
+  "author": "أحمد زين"
+ },
+ {
+  "key": "maher",
+  "name": "ماهر المعيقلي",
+  "found": true,
+  "qid": "Q1530120",
+  "label": "ماهر المعيقلي",
+  "desc": "قارئ قرآن سعودي وإمام وخطيب المسجد الحرام (مواليد 1969) / Saudi imam",
+  "file": "Maher Al Mueaqly.png",
+  "license": "CC BY-SA 3.0",
+  "author": "وليد أيوب"
+ },
+ {
+  "key": "sds",
+  "name": "عبد الرحمن السديس",
+  "found": true,
+  "qid": "Q317948",
+  "label": "عبد الرحمن السديس",
+  "desc": "عالم دين سعودي وإمام وخطيب في الحرم المكي ورئيس شؤون الحرمين الشريفين بمرتبة وزير / imam and preacher at the Grand Mosque in Mecca",
+  "file": "Abdul-Rahman Al-Sudais (Cropped, 2011).jpg",
+  "license": "GODL-India",
+  "author": "Prime Minister's Office"
+ },
+ {
+  "key": "shur",
+  "name": "سعود الشريم",
+  "found": true,
+  "qid": "Q270540",
+  "label": "سعود الشريم",
+  "desc": "قاضي سعودي و إمام وخطيب المسجد الحرام سابقًا (مواليد 1966) / Former Imam Saudi at Masjid al-Haram",
+  "file": "Saud Shuraim doing the Khutbah.png",
+  "license": "CC BY-SA 4.0",
+  "author": "Sobi2203"
+ },
+ {
+  "key": "qtm",
+  "name": "ناصر القطامي",
+  "found": true,
+  "qid": "Q6880178",
+  "label": "ناصر القطامي",
+  "desc": "قارئ وإمام وخطيب سعودي / Saudi writer",
+  "file": "صورة شخصية الشيخ ناصر القطامي.jpg",
+  "license": "CC BY-SA 4.0",
+  "author": "Ayman dhū alghiná"
+ },
+ {
+  "key": "ajm",
+  "name": "أحمد بن علي العجمي",
+  "found": true,
+  "qid": null,
+  "label": "أحمد بن علي العجمي",
+  "desc": "picked by eye",
+  "file": "Ahmad bin Ali Al-Ajmi.png",
+  "license": "CC BY-SA 3.0",
+  "author": "أحمد زين"
+ },
+ {
+  "key": "shatri",
+  "name": "أبو بكر الشاطري",
+  "found": false
+ },
+ {
+  "key": "hthfi",
+  "name": "علي الحذيفي",
+  "found": true,
+  "qid": null,
+  "label": "علي الحذيفي",
+  "desc": "picked by eye",
+  "file": "Ali al-Hudhayfi.jpg",
+  "license": "CC BY 3.0",
+  "author": "آيات"
+ },
+ {
+  "key": "ayyub",
+  "name": "محمد أيوب",
+  "found": false
+ },
+ {
+  "key": "bsfr",
+  "name": "عبد الله بصفر",
+  "found": false
+ },
+ {
+  "key": "hani",
+  "name": "هاني الرفاعي",
+  "found": false
+ },
+ {
+  "key": "jbrl",
+  "name": "محمد جبريل",
+  "found": true,
+  "qid": "Q12240333",
+  "label": "محمد جبريل",
+  "desc": "قارئ مصري / Egyptian Quran Reciter (born 1964)",
+  "file": "Qari Muhammad Jebril, Ramadan 2019.png",
+  "license": "CC BY 3.0",
+  "author": "Alhidaya Croydon"
+ },
+ {
+  "key": "abkr",
+  "name": "إدريس أبكر",
+  "found": false
+ },
+ {
+  "key": "frs",
+  "name": "فارس عباد",
+  "found": false
+ },
+ {
+  "key": "gmd",
+  "name": "سعد الغامدي",
+  "found": true,
+  "qid": "Q3082522",
+  "label": "سعد الغامدي",
+  "desc": "رجل دين سعودي وقارئ القرآن الكريم / Saudi Arabian Imam and Qari",
+  "file": "Saad al Ghamdi.jpg",
+  "license": "CC BY-SA 4.0",
+  "author": "الشيخ هيثم الدخين"
+ },
+ {
+  "key": "jleel",
+  "name": "خالد الجليل",
+  "found": false
+ },
+ {
+  "key": "lhdan",
+  "name": "محمد اللحيدان",
+  "found": false
+ },
+ {
+  "key": "klb",
+  "name": "عادل الكلباني",
+  "found": true,
+  "qid": "Q12222190",
+  "label": "عادل الكلباني",
+  "desc": "إمام سعودي وإمام جامع المحيسن سابقًا في شرق الرياض (مواليد 1959) / Saudi Arabian Muslim cleric",
+  "file": "Kalbani.jpg",
+  "license": "CC BY-SA 3.0",
+  "author": "I3bdulghani"
+ },
+ {
+  "key": "jhn",
+  "name": "عبد الله الجهني",
+  "found": true,
+  "qid": "Q12223339",
+  "label": "عبد الله الجهني",
+  "desc": "رجل دين سعودي وإمام المسجد الحرام / Saudi imam",
+  "file": "Abdullah Al Juhany (Cropped).png",
+  "license": "CC BY-SA 4.0",
+  "author": "الشيخ هيثم الدخين"
+ },
+ {
+  "key": "kyat",
+  "name": "عبد الله خياط",
+  "found": false
+ },
+ {
+  "key": "bud",
+  "name": "صلاح البدير",
+  "found": true,
+  "qid": null,
+  "label": "صلاح البدير",
+  "desc": "picked by eye",
+  "file": "Salah Ibn Mohammed Al Budair.jpg",
+  "license": "CC BY-SA 4.0",
+  "author": "Salah Al Budair"
+ },
+ {
+  "key": "qasm",
+  "name": "عبد المحسن القاسم",
+  "found": true,
+  "qid": "Q6156088",
+  "label": "عبد المحسن القاسم",
+  "desc": "عالم سعودي وإمام وخطيب المسجد النبوي (مواليد 1967) / Saudi Scholar and Imam of Prophet's Mosque",
+  "file": "Abdul Mohsin Al-Qasim.jpg",
+  "license": "CC BY 4.0",
+  "author": "শেখ শরীফ"
+ },
+ {
+  "key": "akdr",
+  "name": "إبراهيم الأخضر",
+  "found": false
+ },
+ {
+  "key": "bader",
+  "name": "بدر التركي",
+  "found": true,
+  "qid": "Q133693358",
+  "label": "بدر التركي",
+  "desc": "إمام وقارئ وخطيب سعودي في الحرم المكي / ",
+  "file": "Photo of badr al-turki in 2023.jpg",
+  "license": "CC0",
+  "author": "Abo.ibrahim0"
+ },
+ {
+  "key": "tnjy",
+  "name": "خليفة الطنيجي",
+  "found": false
+ },
+ {
+  "key": "mansor",
+  "name": "منصور السالمي",
+  "found": true,
+  "qid": null,
+  "label": "منصور السالمي",
+  "desc": "picked by eye",
+  "file": "Mansurahsalme.jpg",
+  "license": "CC BY-SA 4.0",
+  "author": "Sarah owis"
+ },
+ {
+  "key": "aloosi",
+  "name": "عبد الرحمن العوسي",
+  "found": false
+ },
+ {
+  "key": "nabil",
+  "name": "نبيل الرفاعي",
+  "found": false
+ },
+ {
+  "key": "ajbr",
+  "name": "علي جابر",
+  "found": true,
+  "qid": "Q3093361",
+  "label": "علي عبد الله جابر",
+  "desc": "قارئ سعودي وإمام الحرم المكي سابقًا (1953 - 2005) / former Imam of Masjid al-Haram (1954–2005)",
+  "file": "الشيخ علي جابر.png",
+  "license": "CC0",
+  "author": "Engalali9"
+ },
+ {
+  "key": "mtrod",
+  "name": "عبد الله المطرود",
+  "found": true,
+  "qid": "Q12223422",
+  "label": "عبد الله المطرود",
+  "desc": "قارئ وإمام وخطيب جامع الأمير بندر بن عبد العزيز آل سعود، السعودية / Saudi Qari and Imam",
+  "file": "Abdullah Al Matroud.jpg",
+  "license": "CC BY-SA 4.0",
+  "author": "Unknown authorUnknown author"
+ },
+ {
+  "key": "dosri",
+  "name": "إبراهيم الدوسري",
+  "found": false
+ },
+ {
+  "key": "mrifai",
+  "name": "محمود الرفاعي",
+  "found": false
+ },
+ {
+  "key": "alzain",
+  "name": "الزين محمد أحمد",
+  "found": true,
+  "qid": null,
+  "label": "الزين محمد أحمد",
+  "desc": "picked by eye",
+  "file": "الزين محمد أحمد.png",
+  "license": "CC BY-SA 4.0",
+  "author": "Hammam haom"
+ }
+]
