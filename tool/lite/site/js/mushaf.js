@@ -120,7 +120,6 @@ export function leave() {
   if (document.fullscreenElement) { screen.orientation?.unlock?.(); document.exitFullscreen().catch(() => {}); }
   offPlayer?.();
   document.body.classList.remove('in-mushaf');
-  $('#nav').classList.remove('hide');
 }
 
 function pageEl(p) { return pagesEl.children[p - 1]; }
