@@ -30,7 +30,7 @@ export function show(view) {
     $('#phrase', view).textContent = PHRASES[s.phrase];
     num.textContent = ar(s.count);
     ring.style.strokeDashoffset = `${s.target ? C * (1 - s.count / s.target) : C}`;
-    $('#info', view).textContent = `${s.target ? `الهدف ${ar(s.target)} • ` : ''}الجولات ${ar(s.rounds)} • المجموع ${ar(s.total)}`;
+    $('#info', view).textContent = `${s.target ? `الهدف ${ar(s.target)}، ` : ''}الجولات ${ar(s.rounds)}، المجموع ${ar(s.total)}`;
     if (pop) { num.classList.remove('pop'); void num.offsetWidth; num.classList.add('pop'); }
   };
   const choose = (i) => {
@@ -62,7 +62,7 @@ export function show(view) {
       save();
       if (s.auto) {
         const next = (s.phrase + 1) % PHRASES.length;
-        toast(`أتممت ${ar(s.target)} • التالي: ${PHRASES[next]}`);
+        toast(`أتممت ${ar(s.target)}، التالي: ${PHRASES[next]}`);
         setTimeout(() => choose(next), 450);
       } else {
         toast(`أتممت ${ar(s.target)}، تقبّل الله`);

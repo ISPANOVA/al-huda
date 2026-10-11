@@ -200,7 +200,7 @@ function toggleMark(m) {
   $('#mark', root).innerHTML = icon(i >= 0 ? 'bookmarkO' : 'bookmark');
 }
 
-function label(g, m, names) { return `${names[m.surah[g - 1] - 1][1]} • ${ar(m.ayah[g - 1])}`; }
+function label(g, m, names) { return `${names[m.surah[g - 1] - 1][1]}، ${ar(m.ayah[g - 1])}`; }
 
 
 async function ayahMenu(a, m, names) {
@@ -208,7 +208,7 @@ async function ayahMenu(a, m, names) {
   for (const s of $$(`span[data-a="${a}"]`, pagesEl)) s.classList.add('sel');
   const text = await ayahText(a);
   const name = names[m.surah[a - 1] - 1][1];
-  await sheet(`<h3>سورة ${esc(name)} • الآية ${ar(m.ayah[a - 1])}</h3>
+  await sheet(`<h3>سورة ${esc(name)}، الآية ${ar(m.ayah[a - 1])}</h3>
     <div class="list">
       <button data-x="play">${icon('play')}<span class="grow">الاستماع من هذه الآية<br><small class="muted">حدّد النطاق والتكرار والقارئ</small></span></button>
       <button data-x="tafsir">${icon('book')}<span class="grow">التفسير الميسر</span></button>
@@ -237,7 +237,7 @@ async function tafsir(a, m, names) {
   const text = await ayahText(a);
   await sheet(`<h3>التفسير الميسر</h3>
     <div class="quran center">${esc(text)}</div>
-    <p class="muted small center">سورة ${esc(names[m.surah[a - 1] - 1][1])} • الآية ${ar(m.ayah[a - 1])}</p>
+    <p class="muted small center">سورة ${esc(names[m.surah[a - 1] - 1][1])}، الآية ${ar(m.ayah[a - 1])}</p>
     <div class="card" style="line-height:2">${esc(t[a] ?? '')}</div>`);
 }
 
@@ -250,7 +250,7 @@ async function openIndex(m, names, tab = 0) {
   const render = (t, q = '') => {
     if (t === 0) {
       return names.filter((s) => !q || s[1].includes(q) || String(s[0]) === q).map((s) =>
-        `<a href="#/mushaf/${surahPage(s[0])}" data-go="${surahPage(s[0])}"><span class="num">${ar(s[0])}</span><span class="grow"><b>سورة ${esc(s[1])}</b><br><small class="muted">${s[3] ? 'مكية' : 'مدنية'} • ${ar(s[2])} آية</small></span><small class="muted">${ar(surahPage(s[0]))}</small></a>`).join('');
+        `<a href="#/mushaf/${surahPage(s[0])}" data-go="${surahPage(s[0])}"><span class="num">${ar(s[0])}</span><span class="grow"><b>سورة ${esc(s[1])}</b><br><small class="muted">${s[3] ? 'مكية' : 'مدنية'}، ${ar(s[2])} آية</small></span><small class="muted">${ar(surahPage(s[0]))}</small></a>`).join('');
     }
     if (t === 1) {
       return juzStarts.map(([j, p]) => `<a href="#/mushaf/${p}" data-go="${p}"><span class="num">${ar(j)}</span><span class="grow"><b>الجزء ${JUZ[j - 1]}</b></span><small class="muted">صفحة ${ar(p)}</small></a>`).join('');

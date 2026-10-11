@@ -25,7 +25,7 @@ export async function show(view, args) {
       <div class="row" style="margin-top:12px"><span class="grow">تكرار كل آية</span><button class="chip" data-d="each,-1">−</button><b id="each" style="min-width:40px;text-align:center"></b><button class="chip" data-d="each,1">+</button></div>
       <div class="row" style="margin-top:10px"><span class="grow">تكرار المقطع</span><button class="chip" data-d="times,-1">−</button><b id="times" style="min-width:40px;text-align:center"></b><button class="chip" data-d="times,1">+</button></div>
       <label class="small muted" style="display:block;margin-top:12px">القارئ</label>
-      <select class="field" id="r">${reciters.map((r) => `<option value="${r.id}"${r.id === rec.id ? ' selected' : ''}>${esc(r.name)}${r.style ? ' • ' + esc(r.style) : ''}</option>`).join('')}</select>
+      <select class="field" id="r">${reciters.map((r) => `<option value="${r.id}"${r.id === rec.id ? ' selected' : ''}>${esc(r.name)}${r.style ? '، ' + esc(r.style) : ''}</option>`).join('')}</select>
       <button class="btn block" id="go" style="margin-top:14px">${icon('play')} ابدأ التكرار</button>
     </div>
     <div class="card" id="now" hidden style="margin-top:12px"><p class="small muted center" id="lbl" style="margin:0"></p><div class="verse" id="txt"></div></div>
@@ -54,7 +54,7 @@ export async function show(view, args) {
   $('#go', view).onclick = async () => {
     const r = reciters.find((x) => x.id === $('#r', view).value) || reciters[0];
     const g = await globalAyah(st.s, st.f);
-    player.play(ayahItems(g, g + st.t - st.f, { id: r.id, bitrate: r.bitrate }, (x) => `سورة ${names[st.s - 1][1]} • ${ar(m.ayah[x - 1])}`),
+    player.play(ayahItems(g, g + st.t - st.f, { id: r.id, bitrate: r.bitrate }, (x) => `سورة ${names[st.s - 1][1]}، ${ar(m.ayah[x - 1])}`),
       `حفظ سورة ${names[st.s - 1][1]}`, { each: st.each, times: st.times });
   };
   const paint = async (it) => {

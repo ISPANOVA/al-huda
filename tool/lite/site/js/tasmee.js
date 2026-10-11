@@ -81,7 +81,7 @@ async function draw() {
   const inner = $('#inner', view);
   await drawPage(inner, page);
   const g = m.page.indexOf(page) + 1;
-  $('#pg', view).textContent = `${ar(page)} • ${JUZ[m.juz[g - 1] - 1]}`;
+  $('#pg', view).textContent = `${ar(page)}، ${JUZ[m.juz[g - 1] - 1]}`;
   paint();
 }
 
@@ -128,7 +128,7 @@ function swipe(el) {
     if (!w || !api || +w.dataset.k < 0) return;
     // Tap a word: start the recitation from its ayah.
     startAt(+w.dataset.a);
-    toast(`ابدأ من سورة ${names[m.surah[+w.dataset.a - 1] - 1][1]} • الآية ${ar(m.ayah[+w.dataset.a - 1])}`);
+    toast(`ابدأ من سورة ${names[m.surah[+w.dataset.a - 1] - 1][1]}، الآية ${ar(m.ayah[+w.dataset.a - 1])}`);
   });
 }
 
@@ -142,7 +142,7 @@ function startAt(g) {
 // --------------------------------------------------------- recognition ---
 function toggle() {
   if (!api) return;
-  if (active) { stop(); status('متوقف مؤقتًا • اضغط للمتابعة'); return; }
+  if (active) { stop(); status('متوقف مؤقتًا، اضغط للمتابعة'); return; }
   if (!SR) { help(); return; }
   active = true;
   errors = 0;
@@ -209,7 +209,7 @@ function feed(text, isFinal) {
     const w = r.expected;
     const p = ps.findIndex((s, i) => i < 604 && w >= s && w < ps[i + 1]) + 1;
     const g = m.page.indexOf(p) + 1;
-    status(`سورة ${names[m.surah[g - 1] - 1][1]} • الصفحة ${ar(p)}`, 3000);
+    status(`سورة ${names[m.surah[g - 1] - 1][1]}، الصفحة ${ar(p)}`, 3000);
   }
   if (r.located && r.expected < ps[604]) {
     const p = pageOfWord(r.expected);
@@ -303,7 +303,7 @@ function summary(finished) {
   const list = JSON.parse(api.tasmeeMistakes());
   sheet(`<h3>${finished ? 'أتممت التسميع، بارك الله فيك' : 'نتيجة التسميع'}</h3>
     <div class="card center ${list.length ? 'wash t-rose' : 'wash t-emerald'}"><div style="font-size:34px;font-weight:900">${ar(list.length)}</div><small class="muted">${list.length === 1 ? 'خطأ' : 'أخطاء'}</small></div>
-    <div class="list" style="margin-top:10px">${list.map(([s, a, w, h]) => `<div><span class="grow"><b style="font-family:Hafs,serif;font-size:20px">${esc(w)}</b><br><small class="muted">سورة ${esc(names[s - 1][1])} • الآية ${ar(a)}${h ? ` • سُمع: ${esc(h)}` : ''}</small></span></div>`).join('') || '<p class="muted center">لا أخطاء، ما شاء الله</p>'}</div>
+    <div class="list" style="margin-top:10px">${list.map(([s, a, w, h]) => `<div><span class="grow"><b style="font-family:Hafs,serif;font-size:20px">${esc(w)}</b><br><small class="muted">سورة ${esc(names[s - 1][1])}، الآية ${ar(a)}${h ? `، سُمع: ${esc(h)}` : ''}</small></span></div>`).join('') || '<p class="muted center">لا أخطاء، ما شاء الله</p>'}</div>
     <p class="muted small center" style="margin-top:12px">التصحيح الآلي قد يخطئ، ولا يغني عن القراءة على شيخ متقن. تطبيق أندرويد يتعرّف على التلاوة بدقة أعلى ودون إنترنت.</p>
     <button class="btn block" id="ok">حسنًا</button>`, (body, close) => { $('#ok', body).onclick = () => close(); });
 }
