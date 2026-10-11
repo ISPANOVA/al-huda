@@ -435,3 +435,7 @@ body.in-mushaf .player { bottom: calc(var(--safe-b) + 8px); }
 .dedication { text-align: center; color: var(--muted); font-size: 13px; margin: 26px 0 0; }
 @media (min-width: 600px) { .tools { grid-template-columns: repeat(8, 1fr); } .sky { margin: 0; border-radius: 34px; height: 360px; } }
 @media (min-width: 1000px) { .sky { height: 400px; } .nextp { max-width: 520px; left: auto; right: 20px; bottom: 20px; } }
+
+/* Long lists: rows out of view are not laid out or painted until needed. */
+.list > *, .thikr, .rgrid > .rcard { content-visibility: auto; contain-intrinsic-size: auto 64px; }
+.thikr { contain-intrinsic-size: auto 220px; }

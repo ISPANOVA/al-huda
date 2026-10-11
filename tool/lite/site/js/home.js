@@ -100,7 +100,9 @@ export async function show(view) {
   paintSky();
   addEventListener('resize', onSkyResize);
   tickPrayer();
-  ayahOfDay(m, names);
+  // Below the fold: after the first paint, so it never delays the top.
+  if (window.requestIdleCallback) requestIdleCallback(() => ayahOfDay(m, names), { timeout: 1200 });
+  else setTimeout(() => ayahOfDay(m, names), 300);
 }
 
 let skyTimes = null;
@@ -129,6 +131,7 @@ async function tickPrayer() {
   let drawn = '';
   const paint = async () => {
     if (!el.isConnected) return clearInterval(timer);
+    if (document.hidden) return; // no work while the tab is in the background
     const now = new Date();
     if (np[1] <= now) { np = await nextPrayer(); skyTimes = null; }
     $('#nname').textContent = NAMES[np[0]];

@@ -14,7 +14,7 @@ const tone = (key) => TONES[[...key].reduce((a, c) => a + c.charCodeAt(0), 0) % 
 const family = (name) => name.replace(/\s*[•(].*$/, '').trim().split(/\s+/).slice(-1)[0];
 const avatar = (r, size = '') => {
   const k = (r.key || '').replace('_mj', '');
-  if (PHOTOS.has(k)) return `<img class="ava photo ${size}" src="img/reciters/${k}.jpg" alt="${esc(r.name)}" loading="lazy" decoding="async">`;
+  if (PHOTOS.has(k)) return `<img class="ava photo ${size}" src="img/reciters/${k}.jpg" alt="${esc(r.name)}" width="104" height="104" loading="lazy" decoding="async">`;
   return `<span class="ava ${size} t-${tone(r.key || r.name)}">${size ? `<em>${esc(family(r.name))}</em>` : icon('head')}</span>`;
 };
 const eq = '<span class="eq"><i></i><i></i><i></i></span>';
