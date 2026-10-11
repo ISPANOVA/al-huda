@@ -3,7 +3,7 @@
 const VERSION = '__BUILD__';
 const CACHE = 'alhuda-' + VERSION;
 const JS = ['app', 'home', 'player', 'prayerlib', 'page', 'mushaf', 'tasmee', 'search', 'athkar', 'prayer', 'qibla', 'tasbeeh',
-  'media', 'calendar', 'content', 'khatmah', 'hifz', 'settings', 'more', 'core', 'reciters'].map((n) => `js/${n}.js`);
+  'media', 'calendar', 'content', 'khatmah', 'hifz', 'settings', 'more', 'core', 'reciters', 'sky'].map((n) => `js/${n}.js`);
 const DATA = ['meta', 'surahs', 'athkar', 'duas', 'virtues', 'media', 'reciters', 'calendar'].map((n) => `data/${n}.json`);
 const FONTS = ['Tajawal-Regular', 'Tajawal-Bold', 'Tajawal-ExtraBold', 'ReemKufi-Bold', 'UthmanicHafs18'].map((n) => `fonts/${n}.woff2`);
 const SHELL = ['./', 'index.html', 'css/app.css', 'manifest.json', ...JS, ...DATA, ...FONTS];
