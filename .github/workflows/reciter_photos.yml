@@ -25,6 +25,10 @@ jobs:
           "$RUNNER_TEMP/venv/bin/python" tool/reciters/fetch_photos.py "$RUNNER_TEMP/out" 2>&1 | tee "$RUNNER_TEMP/log.txt"
           "$RUNNER_TEMP/venv/bin/pip" install --quiet "rembg[cpu]" 2>&1 | tail -2
           "$RUNNER_TEMP/venv/bin/python" tool/reciters/compose.py "$RUNNER_TEMP/out" assets/icon/logo_mark.png 2>&1 | tee -a "$RUNNER_TEMP/log.txt"
+      - name: Wider search for more photos (candidates for review)
+        if: always()
+        run: |
+          "$RUNNER_TEMP/venv/bin/python" tool/reciters/search_more.py "$RUNNER_TEMP/out/more" 2>&1 | tee -a "$RUNNER_TEMP/log.txt"
       - name: Ali Jaber studio recording complete?
         if: always()
         run: |
