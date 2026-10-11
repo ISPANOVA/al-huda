@@ -80,7 +80,8 @@ class MediaCatalog {
   MediaReciter('mansor', 'منصور السالمي', 'مرتل', 'https://server14.mp3quran.net/mansor/', MediaRegion.gulf),
   MediaReciter('aloosi', 'عبد الرحمن العوسي', 'مرتل', 'https://server6.mp3quran.net/aloosi/', MediaRegion.gulf),
   MediaReciter('nabil', 'نبيل الرفاعي', 'مرتل', 'https://server9.mp3quran.net/nabil/', MediaRegion.gulf),
-  MediaReciter('ajbr', 'علي جابر', 'مرتل', 'https://server11.mp3quran.net/a_jbr/', MediaRegion.gulf),
+  // The studio recording (QuranicAudio): clearer than the mp3quran one.
+  MediaReciter('ajbr', 'علي جابر', 'مرتل', 'https://download.quranicaudio.com/quran/abdullaah_alee_jaabir_studio/', MediaRegion.gulf),
   MediaReciter('mtrod', 'عبد الله المطرود', 'مرتل', 'https://server8.mp3quran.net/mtrod/', MediaRegion.gulf),
   MediaReciter('dosri', 'إبراهيم الدوسري', 'مرتل', 'https://server10.mp3quran.net/ibrahim_dosri/Rewayat-Hafs-A-n-Assem/', MediaRegion.gulf),
   MediaReciter('mrifai', 'محمود الرفاعي', 'مرتل', 'https://server11.mp3quran.net/mrifai/', MediaRegion.gulf),

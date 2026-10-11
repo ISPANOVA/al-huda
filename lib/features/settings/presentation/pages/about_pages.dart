@@ -170,7 +170,7 @@ class SourcesPage extends StatelessWidget {
               tone: Tone.gold),
           GlassSectionTitle('الصوتيات والبث', tone: Tone.gold),
           _Block(Icons.headphones_rounded, 'التلاوات',
-              'تلاوة الآيات في المصحف من Islamic Network CDN، وتلاوات السور كاملة والإذاعات من موقع mp3quran.net.',
+              'تلاوة الآيات في المصحف من Islamic Network CDN، وتلاوات السور كاملة والإذاعات من موقع mp3quran.net، وتلاوة الشيخ علي جابر (تسجيل الاستوديو) من QuranicAudio.',
               tone: Tone.amethyst),
           _Block(Icons.live_tv_rounded, 'البث المباشر',
               'قناتا القرآن الكريم والسنة النبوية من هيئة الإذاعة والتلفزيون السعودية، وإذاعة القرآن الكريم من القاهرة والسعودية عبر روابط البث العامة الرسمية.',
