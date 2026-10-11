@@ -1,7 +1,8 @@
 // الرئيسية: next prayer, continue reading, the daily wird, quick actions and
 // the ayah of the day.
 import { $, ar, esc, icon, store, meta, surahs, today, toast } from './app.js';
-import { NAMES, location, nextPrayer, hm, countdown, hijriToday, HMONTHS } from './prayerlib.js';
+import { NAMES, location, nextPrayer, timesFor, hm, countdown, hijriToday, HMONTHS } from './prayerlib.js';
+import { skyState, drawSky, GREETING } from './sky.js';
 import { ayahText } from './page.js';
 import { player, ayahItems } from './player.js';
 
@@ -23,14 +24,14 @@ export function streak() {
 }
 
 const TOOLS = [
-  ['#/tasmee', 'التسميع', 'mic'],
-  ['#/athkar', 'الأذكار', 'heart'],
-  ['#/qibla', 'القبلة', 'compass'],
-  ['#/tasbeeh', 'المسبحة', 'beads'],
-  ['#/duas', 'الأدعية', 'hands'],
-  ['#/calendar', 'التقويم', 'cal'],
-  ['#/hifz', 'الحفظ', 'repeat'],
-  ['#/search', 'البحث', 'search'],
+  ['#/tasmee', 'التسميع', 'mic', 'emerald'],
+  ['#/qibla', 'القبلة', 'compass', 'amber'],
+  ['#/tasbeeh', 'المسبحة', 'beads', 'teal'],
+  ['#/duas', 'الأدعية', 'hands', 'rose'],
+  ['#/calendar', 'التقويم', 'cal', 'sky'],
+  ['#/hifz', 'الحفظ', 'repeat', 'amethyst'],
+  ['#/search', 'البحث', 'search', 'sapphire'],
+  ['#/virtues', 'الفضائل', 'star', 'gold'],
 ];
 
 export async function show(view) {
@@ -46,64 +47,76 @@ export async function show(view) {
   const st = streak();
   const friday = new Date().getDay() === 5;
 
+  const greg = new Date().toLocaleDateString('ar-EG', { weekday: 'long', day: 'numeric', month: 'long' });
   view.innerHTML = `
-    <header class="masthead">
-      <div class="grow"><h1 class="brand">الهُدى</h1><p class="muted small" id="hdate"></p></div>
-      <a class="iconbtn" href="#/settings" aria-label="الإعدادات">${icon('gear')}</a>
-    </header>
+    <section class="sky" id="sky">
+      <canvas id="skyc" aria-hidden="true"></canvas>
+      <div class="sky-top">
+        <div class="grow"><small id="greet"></small><h1>الهدى</h1><b id="hdate"></b><small>${esc(greg)}</small></div>
+        <a class="skybtn" href="#/qibla" aria-label="القبلة">${icon('compass')}</a>
+        <a class="skybtn" href="#/settings" aria-label="الإعدادات">${icon('gear')}</a>
+      </div>
+      <a class="nextp" href="#/prayer" id="next">
+        <span class="grow"><small id="nlabel">الصلاة القادمة</small>
+          <span class="nrow"><b id="nname">مواقيت الصلاة</b><em id="ntime">اضغط لتحديد موقعك</em></span>
+          <small id="ncity"></small></span>
+        <span class="nring" id="nring" hidden><svg viewBox="0 0 72 72"><circle cx="36" cy="36" r="32"/><circle cx="36" cy="36" r="32" id="narc"/></svg>
+          <span><b id="ncount"></b><small>متبقٍ</small></span></span>
+      </a>
+    </section>
 
-    <div class="home-top">
-    <a class="day" href="#/prayer" id="next">
-      <svg class="star" viewBox="0 0 100 100" aria-hidden="true"><rect x="21" y="21" width="58" height="58"/><rect x="21" y="21" width="58" height="58" transform="rotate(45 50 50)"/><circle cx="50" cy="50" r="17"/></svg>
-      <span class="day-label" id="nlabel">الصلاة القادمة</span>
-      <span class="day-name" id="nname">مواقيت الصلاة</span>
-      <span class="day-meta"><b id="ncount"></b><span id="ntime">اضغط لتحديد موقعك</span></span>
-      <span class="line" id="line"></span>
-    </a>
+    <div class="today" id="today"></div>
 
-    <a class="resume" href="#/mushaf${last ? '/' + last : ''}">
+    ${friday ? '<a class="card banner-fri" href="#/mushaf/293"><b>جمعة مباركة</b><small>اقرأ سورة الكهف، وأكثر من الصلاة على النبي ﷺ</small></a>' : ''}
+
+    <a class="card resume" href="#/mushaf${last ? '/' + last : ''}">
+      <span class="ticon t-emerald">${icon('book')}</span>
       <span class="grow">
-        <span class="muted small">${last ? 'تابع القراءة' : 'ابدأ القراءة'}</span>
-        <span class="resume-surah">سورة ${esc(s[1])}</span>
-        <span class="muted small">الصفحة ${ar(last || 1)} من ٦٠٤</span>
+        <small class="muted">${last ? 'تابع القراءة' : 'ابدأ القراءة'}</small>
+        <b class="resume-surah">سورة ${esc(s[1])}</b>
+        <small class="muted">الصفحة ${ar(last || 1)} من ٦٠٤</small>
       </span>
-      <span class="resume-go">${icon('book')}</span>
+      <span class="pbtn">${icon('play')}</span>
       <span class="resume-bar"><i style="width:${((last || 0) / 604) * 100}%"></i></span>
     </a>
 
-    <div class="stats">
-      <a href="#/khatmah"><b>${goal ? `${ar(Math.min(doneToday, goal))} من ${ar(goal)}` : 'حدّد وردك'}</b><span>الورد اليومي</span></a>
-      <a href="#/khatmah"><b>${k ? ar(Math.round((k.pages.length / 604) * 100)) + '٪' : 'لم تبدأ'}</b><span>الختمة</span></a>
-      <a href="#/stats"><b>${ar(st)} ${st === 1 ? 'يوم' : st > 2 && st < 11 ? 'أيام' : 'يومًا'}</b><span>المداومة</span></a>
+    <div class="goals">
+      <a class="card" href="#/khatmah"><span class="ticon t-teal">${icon('book')}</span><b>${goal ? `${ar(Math.min(doneToday, goal))} / ${ar(goal)}` : 'حدّد هدفك'}</b><small>وردي</small></a>
+      <a class="card" href="#/khatmah"><span class="ticon t-amethyst">${icon('flag')}</span><b>${k ? ar(Math.round((k.pages.length / 604) * 100)) + '٪' : 'ابدأ'}</b><small>الختمة</small></a>
+      <a class="card" href="#/stats"><span class="ticon t-amber">${icon('star')}</span><b>${ar(st)} ${st === 1 ? 'يوم' : st > 2 && st < 11 ? 'أيام' : 'يومًا'}</b><small>المداومة</small></a>
     </div>
 
-    <a class="athkar-now" href="#/athkar/${athkar[0]}">${icon(hour >= 3 && hour < 14 ? 'sun' : 'moon')}<span class="grow">${athkar[1]}</span>${icon('back')}</a>
-    </div>
+    <a class="card athkar-now" href="#/athkar/${athkar[0]}"><span class="ticon t-rose">${icon(hour >= 3 && hour < 14 ? 'sun' : 'moon')}</span><span class="grow"><b>${athkar[1]}</b><small class="muted">حصّن يومك</small></span>${icon('back', 'muted')}</a>
 
-    ${friday ? '<p class="note">يوم الجمعة: سورة الكهف، والإكثار من الصلاة على النبي ﷺ.</p>' : ''}
-    <h2 class="h2">الأدوات</h2>
-    <nav class="tools">${TOOLS.map(([h, t, ic]) => `<a href="${h}">${icon(ic)}<span>${t}</span></a>`).join('')}</nav>
+    <div class="section">الوصول السريع</div>
+    <div class="tools">${TOOLS.map(([h, t, ic, tone]) => `<a href="${h}"><span class="ticon t-${tone}">${icon(ic)}</span><span>${t}</span></a>`).join('')}</div>
 
-    <h2 class="h2">آية اليوم</h2>
-    <figure class="ayah-day" id="aotd"><p class="muted center">…</p></figure>
+    <div class="section">آية اليوم</div>
+    <figure class="card ayah-day" id="aotd"><p class="muted center">…</p></figure>
 
     <p class="dedication">صدقة جارية عن روح سمير حجازي، وعن سعد صالح، وعن جميع المسلمين</p>`;
 
-  hijriToday().then((h) => {
-    const city = location()?.city;
-    $('#hdate').textContent = `${ar(h.d)} ${HMONTHS[h.m - 1]} ${ar(h.y)} هـ${city ? '، ' + city : ''}`;
-  }).catch(() => {});
+  hijriToday().then((h) => { $('#hdate').textContent = `${ar(h.d)} ${HMONTHS[h.m - 1]} ${ar(h.y)} هـ`; }).catch(() => {});
+  paintSky();
+  addEventListener('resize', onSkyResize);
   tickPrayer();
   ayahOfDay(m, names);
 }
 
-/// The day's six times on one line: what has passed, the next, and now.
-function dayLine(times, next) {
-  const t0 = times[0].getTime(), t1 = times[5].getTime();
-  const pos = (t) => Math.min(100, Math.max(0, ((t - t0) / (t1 - t0)) * 100));
-  const now = Date.now();
-  return `<i class="track"></i><i class="done" style="width:${pos(now)}%"></i>` +
-    times.map((t, i) => `<i class="dot${t.getTime() <= now ? ' past' : ''}${i === next ? ' next' : ''}" style="right:${pos(t.getTime())}%"><em>${NAMES[i]}</em></i>`).join('');
+let skyTimes = null;
+async function paintSky() {
+  const cv = $('#skyc');
+  if (!cv) return;
+  if (location() && !skyTimes) skyTimes = await timesFor(new Date()).catch(() => null);
+  const st = skyState(new Date(), skyTimes);
+  $('#greet').textContent = GREETING[st.phase];
+  drawSky(cv, st);
+}
+
+/// Today's six times in a row, the next one lit.
+function todayRow(times, next) {
+  const now = new Date();
+  return times.map((t, i) => `<a href="#/prayer" class="${i === next ? 'next' : t < now ? 'past' : ''}"><small>${NAMES[i]}</small><b>${hm(t).replace(/\s?[صم]$/, '')}</b></a>`).join('');
 }
 
 async function tickPrayer() {
@@ -111,17 +124,27 @@ async function tickPrayer() {
   if (!location()) return;
   let np = await nextPrayer().catch(() => null);
   if (!np || !el.isConnected) return;
-  let drawn = -1;
+  $('#nring').hidden = false;
+  $('#ncity').textContent = location().city || '';
+  let drawn = '';
   const paint = async () => {
     if (!el.isConnected) return clearInterval(timer);
-    if (np[1] <= new Date()) np = await nextPrayer();
+    const now = new Date();
+    if (np[1] <= now) { np = await nextPrayer(); skyTimes = null; }
     $('#nname').textContent = NAMES[np[0]];
     $('#nlabel').textContent = np[0] === 1 ? 'الشروق' : 'الصلاة القادمة';
     $('#ntime').textContent = hm(np[1]);
-    $('#ncount').textContent = `بعد ${countdown(np[1])}`;
-    const sameDay = np[1].toDateString() === new Date().toDateString();
-    const key = np[0] * 10 + (sameDay ? 1 : 0) + Math.floor(Date.now() / 60000) * 100;
-    if (key !== drawn) { drawn = key; $('#line').innerHTML = dayLine(np[2], sameDay ? np[0] : -1); }
+    $('#ncount').textContent = countdown(np[1]);
+    // The ring fills from the last time to the next one.
+    const times = np[2];
+    let prev = null;
+    for (const t of times) if (t <= now && (!prev || t > prev)) prev = t;
+    if (!prev) prev = new Date(times[5].getTime() - 864e5);
+    const f = Math.min(1, Math.max(0, (now - prev) / (np[1] - prev)));
+    $('#narc').style.strokeDashoffset = String(201 * (1 - f));
+    const sameDay = np[1].toDateString() === now.toDateString();
+    const key = `${np[0]}${sameDay}${now.getMinutes()}`;
+    if (key !== drawn) { drawn = key; $('#today').innerHTML = todayRow(times, sameDay ? np[0] : -1); paintSky(); }
   };
   paint();
   clearInterval(timer);
@@ -154,4 +177,5 @@ async function ayahOfDay(m, names) {
   }
 }
 
-export function leave() { clearInterval(timer); }
+export function leave() { clearInterval(timer); removeEventListener('resize', onSkyResize); }
+function onSkyResize() { paintSky(); }

@@ -141,7 +141,7 @@ export function top(title, sub = '', tone = 'gold', ic = 'book', back = true) {
 export function applyTheme() {
   const t = store.get('theme', 'dark');
   document.documentElement.dataset.theme = t;
-  document.querySelector('meta[name=theme-color]').content = t === 'light' ? '#fbf9f3' : '#0f221d';
+  document.querySelector('meta[name=theme-color]').content = t === 'light' ? '#fcfaf5' : '#000000';
   document.documentElement.style.fontSize = '';
 }
 applyTheme();
