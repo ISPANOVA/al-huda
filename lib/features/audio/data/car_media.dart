@@ -6,6 +6,7 @@ import '../../../core/services/storage_service.dart';
 import '../../../core/utils/arabic_utils.dart';
 import '../../media/media_catalog.dart';
 import '../../media/media_downloads.dart';
+import '../../quran/presentation/mushaf/mushaf_page.dart' show juzName;
 import '../domain/reciter.dart';
 import 'playlist_builder.dart';
 import 'quran_audio_handler.dart';
@@ -17,6 +18,10 @@ import 'quran_audio_handler.dart';
 /// * الإذاعات — the Quran radios (official, reciters, themes).
 ///
 /// It works without the app's screens, so it uses the data layer directly.
+///
+/// The look: every surah has its own tile (tool/car/make_car_art.py), the
+/// reciters are a grid of their photos, and the long lists are split under
+/// headings (the juz, the region, the kind of radio).
 class CarMedia {
   final QuranAudioHandler _handler;
   final PlaylistBuilder _builder;
@@ -31,10 +36,33 @@ class CarMedia {
   // Plain PNG drawables: Android Auto cannot draw the adaptive launcher icon
   // (it showed white squares).
   static Uri _icon(String name) => Uri.parse('android.resource://com.alhuda.islamic.app/drawable/car_$name');
-  static final _reciterArt = _icon('reciter');
   static final _radioArt = _icon('radio');
-  static final _surahArt = _icon('surah');
-  static final _art = _surahArt;
+  static final _art = _icon('surah');
+  static Uri _surahArt(int surah) => _icon('s_$surah');
+  // Every catalog reciter has a tile: his photo, or his name in gold.
+  static Uri _reciterArt(String key) => _icon('r_${key.replaceAll('_mj', '')}');
+
+  // Android Auto's content-style extras (androidx.media.utils.MediaConstants).
+  static const _browsableHint = 'android.media.browse.CONTENT_STYLE_BROWSABLE_HINT';
+  static const _playableHint = 'android.media.browse.CONTENT_STYLE_PLAYABLE_HINT';
+  static const _groupTitle = 'android.media.browse.CONTENT_STYLE_GROUP_TITLE_HINT';
+  static const _list = 1;
+  static const _grid = 2;
+
+  /// The juz each surah starts in: the surah lists are grouped by it.
+  static const _startJuz = [
+    1, 1, 3, 4, 6, 7, 8, 9, 10, 11, 11, 12, 13, 13, 14, 14, 15, 15, 16, 16, //
+    17, 17, 18, 18, 18, 19, 19, 20, 20, 21, 21, 21, 21, 22, 22, 22, 23, 23, 23, 24, //
+    24, 25, 25, 25, 25, 26, 26, 26, 26, 26, 26, 27, 27, 27, 27, 27, 27, 28, 28, 28, //
+    28, 28, 28, 28, 28, 28, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29,
+  ];
+  static int _juz(int surah) => surah <= _startJuz.length ? _startJuz[surah - 1] : 30;
+
+  static const _regions = {
+    MediaRegion.eg: 'قراء مصر',
+    MediaRegion.gulf: 'قراء الحرمين والخليج',
+    MediaRegion.other: 'قراء آخرون',
+  };
 
   static List<MediaRadio> get _allRadios => [...kOfficialRadios, ...kReciterRadios, ...kThemeRadios];
 
@@ -47,28 +75,38 @@ class CarMedia {
 
   double get _speed => (_settings['playbackSpeed'] as num?)?.toDouble() ?? 1.0;
 
-  MediaItem _folder(String id, String title, {String? subtitle, Uri? art}) =>
-      MediaItem(id: id, title: title, displaySubtitle: subtitle, artUri: art ?? _art, playable: false);
+  MediaItem _folder(String id, String title, {String? subtitle, Uri? art, Map<String, dynamic>? extras}) =>
+      MediaItem(id: id, title: title, displaySubtitle: subtitle, artUri: art ?? _art, playable: false, extras: extras);
 
-  MediaItem _surahItem(String id, int surah, String reciter) {
+  MediaItem _surahItem(String id, int surah, String reciter, {bool grouped = false}) {
     final info = SurahMetadata.surah(surah);
     return MediaItem(
       id: id,
-      title: '${ArabicUtils.toArabicDigits(surah)}. سورة ${info.name}',
+      title: 'سورة ${info.name}',
       artist: reciter,
-      displaySubtitle: '$reciter • ${info.revelationAr} • ${ArabicUtils.toArabicDigits(info.ayahCount)} آية',
-      artUri: _art,
+      displaySubtitle: '${info.revelationAr} • ${_ayahs(info.ayahCount)} • $reciter',
+      artUri: _surahArt(surah),
       playable: true,
+      extras: grouped ? {_groupTitle: juzName(_juz(surah))} : null,
     );
+  }
+
+  static String _ayahs(int n) {
+    final d = ArabicUtils.toArabicDigits(n);
+    if (n == 1) return 'آية';
+    if (n == 2) return 'آيتان';
+    return n % 100 >= 3 && n % 100 <= 10 ? '$d آيات' : '$d آية';
   }
 
   List<MediaItem> children(String parent) {
     if (parent == AudioService.browsableRootId) {
       return [
         // Root tabs: Android Auto tints these, so they must be white vectors.
-        _folder(_quran, 'القرآن الكريم', subtitle: _appReciter.nameAr, art: _icon('tab_quran')),
-        _folder(_reciters, 'المشايخ', subtitle: 'المصحف كاملًا بأصوات كبار القراء', art: _icon('tab_reciter')),
-        _folder(_radios, 'الإذاعات', subtitle: 'بث مباشر على مدار الساعة', art: _icon('tab_radio')),
+        _folder(_quran, 'القرآن الكريم', subtitle: _appReciter.nameAr, art: _icon('tab_quran'), extras: {_playableHint: _list}),
+        // The reciters as a grid of their photos.
+        _folder(_reciters, 'المشايخ',
+            subtitle: 'المصحف كاملًا بأصوات كبار القراء', art: _icon('tab_reciter'), extras: {_browsableHint: _grid}),
+        _folder(_radios, 'الإذاعات', subtitle: 'بث مباشر على مدار الساعة', art: _icon('tab_radio'), extras: {_playableHint: _list}),
       ];
     }
     if (parent == AudioService.recentRootId) {
@@ -77,36 +115,48 @@ class CarMedia {
     }
     if (parent == _quran) {
       final r = _appReciter;
-      return [for (var s = 1; s <= 114; s++) _surahItem('surah:$s', s, r.nameAr)];
+      return [for (var s = 1; s <= 114; s++) _surahItem('surah:$s', s, r.nameAr, grouped: true)];
     }
     if (parent == _reciters) {
       return [
-        for (final r in MediaCatalog.reciters)
-          // Same reciter, two recitations: name the style so they differ.
-          _folder('reciter:${r.key}', r.mujawwad ? '${r.name} • ${r.style}' : r.name,
-              subtitle: r.style, art: _reciterArt),
+        // Grouped by region, the same order as the app's reciters page.
+        for (final region in MediaRegion.values)
+          for (final r in MediaCatalog.reciters.where((r) => r.region == region))
+            // Same reciter, two recitations: name the style so they differ.
+            _folder('reciter:${r.key}', r.mujawwad ? '${r.name} • ${r.style}' : r.name,
+                subtitle: r.style,
+                art: _reciterArt(r.key),
+                extras: {_groupTitle: _regions[region]!, _playableHint: _list}),
       ];
     }
     if (parent.startsWith('reciter:')) {
       final r = MediaCatalog.byId(parent.substring(8));
       if (r == null) return const [];
-      return [for (var s = 1; s <= 114; s++) _surahItem('msurah:${r.key}:$s', s, r.name)];
+      return [for (var s = 1; s <= 114; s++) _surahItem('msurah:${r.key}:$s', s, r.name, grouped: true)];
     }
     if (parent == _radios) {
-      final all = _allRadios;
+      final groups = [
+        ('الإذاعات الرسمية', kOfficialRadios),
+        ('إذاعات القراء', kReciterRadios),
+        ('إذاعات متنوعة', kThemeRadios),
+      ];
+      var i = 0;
       return [
-        for (var i = 0; i < all.length; i++)
-          MediaItem(
-            id: 'radio:$i',
-            title: all[i].name,
-            displaySubtitle: all[i].subtitle ?? 'بث مباشر',
-            artUri: _radioArt,
-            playable: true,
-          ),
+        for (final (title, radios) in groups)
+          for (final radio in radios) _radioItem(i++, radio, title),
       ];
     }
     return const [];
   }
+
+  MediaItem _radioItem(int i, MediaRadio radio, [String? group]) => MediaItem(
+        id: 'radio:$i',
+        title: radio.name,
+        displaySubtitle: radio.subtitle ?? (radio.reciterKey != null ? 'تلاوات على مدار الساعة' : 'بث مباشر'),
+        artUri: radio.reciterKey != null ? _reciterArt(radio.reciterKey!) : _radioArt,
+        playable: true,
+        extras: group == null ? null : {_groupTitle: group},
+      );
 
   MediaItem? item(String id) {
     for (final parent in [_quran, _radios]) {
@@ -171,7 +221,7 @@ class CarMedia {
     final radios = _allRadios;
     for (var i = 0; i < radios.length; i++) {
       if (ArabicUtils.normalize(radios[i].name).contains(q)) {
-        out.add(MediaItem(id: 'radio:$i', title: radios[i].name, artUri: _radioArt, playable: true));
+        out.add(_radioItem(i, radios[i]));
       }
     }
     return out;
@@ -239,6 +289,7 @@ class CarMedia {
           url: url,
           title: radio.name,
           artist: radio.subtitle ?? 'بث مباشر',
+          reciter: radio.reciterKey,
         );
         return;
       } catch (_) {
