@@ -65,6 +65,17 @@ PEOPLE = {
     "mrifai": ("محمود الرفاعي", "Mahmoud ar-Rifai"),
     "alzain": ("الزين محمد أحمد", "Alzain Mohammed Ahmed"),
 }
+# Photos picked by eye from the wider Commons search (search_more.py): used
+# instead of what Wikidata gives, either because Wikidata has none or because
+# this one is clearer. Each file's page names the reciter.
+FILES = {
+    "ajm": "Ahmad bin Ali Al-Ajmi.png",
+    "bud": "Salah Ibn Mohammed Al Budair.jpg",
+    "mansor": "Mansurahsalme.jpg",
+    "alzain": "الزين محمد أحمد.png",
+    "mustafa": "Mustafa Ismail (1).jpg",
+    "hthfi": "Ali al-Hudhayfi.jpg",
+}
 WORDS = re.compile(r"قارئ|مقرئ|قرآن|القرآن|إمام|reciter|qari|quran|qur'an|imam", re.I)
 
 
@@ -113,7 +124,7 @@ def image_of(qid):
 
 # Photos the detector gets wrong, checked by eye: "top" = the top-centre
 # square; (cx, cy, side) = a square inside it, as fractions of its side.
-CROPS = {"ajbr": "top", "mustafa": (0.6, 0.34, 0.7)}
+CROPS = {"ajbr": "top"}
 
 
 def portrait(img, key=""):
@@ -167,9 +178,9 @@ def main():
     os.makedirs(OUT, exist_ok=True)
     credits, report = {}, []
     for key, (ar, en) in PEOPLE.items():
-        found = None
+        found = (None, FILES[key], "picked by eye", ar) if key in FILES else None
         seen = set()
-        for name, lang in ((ar, "ar"), (en, "en")):
+        for name, lang in ((ar, "ar"), (en, "en")) if not found else ():
             for c in candidates(name, lang):
                 qid = c["id"]
                 if qid in seen:
