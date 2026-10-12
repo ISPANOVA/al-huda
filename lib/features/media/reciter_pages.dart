@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -16,6 +16,7 @@ import '../audio/presentation/cubit/audio_state.dart';
 import 'media_catalog.dart';
 import 'media_downloads.dart';
 import 'media_widgets.dart';
+import '../../core/i18n/text.dart';
 
 void playMediaSurah(BuildContext context, MediaReciter r, int surah) {
   HapticFeedback.selectionClick();
@@ -145,9 +146,9 @@ class _AllRecitersPageState extends State<AllRecitersPage> {
             padding: const EdgeInsets.fromLTRB(16, 4, 16, 10),
             child: TextField(
               onChanged: (v) => setState(() => _query = v.trim()),
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 isDense: true,
-                hintText: 'ابحث عن قارئ',
+                hintText: tr('ابحث عن قارئ'),
                 prefixIcon: Icon(Icons.search_rounded),
               ),
             ),
@@ -325,9 +326,9 @@ class _ReciterSurahsPageState extends State<ReciterSurahsPage> {
                   padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
                   child: TextField(
                     onChanged: (v) => setState(() => _query = v.trim()),
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       isDense: true,
-                      hintText: 'ابحث عن سورة',
+                      hintText: tr('ابحث عن سورة'),
                       prefixIcon: Icon(Icons.search_rounded),
                     ),
                   ),
@@ -496,7 +497,7 @@ class _SurahTile extends StatelessWidget {
       download = const SizedBox(width: 8);
     } else if (progress != null) {
       download = IconButton(
-        tooltip: 'إلغاء التنزيل',
+        tooltip: tr('إلغاء التنزيل'),
         onPressed: () => dl.cancel(reciter, surah),
         icon: Stack(
           alignment: Alignment.center,
@@ -517,7 +518,7 @@ class _SurahTile extends StatelessWidget {
       );
     } else if (downloaded) {
       download = IconButton(
-        tooltip: 'محفوظة على الجهاز',
+        tooltip: tr('محفوظة على الجهاز'),
         onPressed: () => showGlassSnack(context, 'سورة $name محفوظة — تُسمع بدون إنترنت'),
         icon: Icon(Icons.offline_pin_rounded, color: Tone.teal.ink(dark)),
       );

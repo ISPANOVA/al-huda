@@ -1,8 +1,9 @@
 import 'dart:math' as math;
 
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
 
 import '../widgets/noor_ui.dart';
+import '../i18n/text.dart';
 
 /// The app's colour family: black and gold stay the identity, and each part
 /// of the app has its own jewel tone so screens are colourful and easy to
@@ -61,7 +62,7 @@ class Tone {
         'prayer' || 'calendar' || 'imsakiya' => sapphire,
         'athkar' || 'virtues' => rose,
         'media' || 'player' || 'downloads' => amethyst,
-        'tasbeeh' || 'more' => teal,
+        'tasbeeh' || 'more' || 'group' => teal,
         'qibla' || 'stats' => amber,
         'hifz' || 'review' || 'tasmee' => coral,
         'ruqyah' || 'duas' => sky,

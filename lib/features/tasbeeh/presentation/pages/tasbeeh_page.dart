@@ -1,6 +1,6 @@
 import 'dart:math' as math;
 
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -13,6 +13,7 @@ import '../../../../core/widgets/noor_ui.dart';
 import '../../../../core/widgets/state_views.dart';
 import '../../../settings/presentation/cubit/settings_cubit.dart';
 import '../cubit/tasbeeh_cubit.dart';
+import '../../../../core/i18n/text.dart';
 
 /// Glassy electronic Subha.
 class TasbeehPage extends StatefulWidget {
@@ -81,7 +82,7 @@ class _TasbeehPageState extends State<TasbeehPage> with SingleTickerProviderStat
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('إضافة ذكر'),
-        content: TextField(controller: controller, autofocus: true, decoration: const InputDecoration(hintText: 'اكتب الذكر')),
+        content: TextField(controller: controller, autofocus: true, decoration: InputDecoration(hintText: tr('اكتب الذكر'))),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('إلغاء')),
           FilledButton(onPressed: () => Navigator.pop(ctx, controller.text), child: const Text('إضافة')),
@@ -103,9 +104,9 @@ class _TasbeehPageState extends State<TasbeehPage> with SingleTickerProviderStat
       icon: Icons.blur_circular_rounded,
       tone: tone,
       actions: [
-        IconButton(tooltip: 'إضافة ذكر', icon: const Icon(Icons.add_rounded), onPressed: _addPhrase),
+        IconButton(tooltip: tr('إضافة ذكر'), icon: const Icon(Icons.add_rounded), onPressed: _addPhrase),
         IconButton(
-          tooltip: 'تصفير',
+          tooltip: tr('تصفير'),
           icon: const Icon(Icons.restart_alt_rounded),
           onPressed: () => context.read<TasbeehCubit>().reset(),
         ),

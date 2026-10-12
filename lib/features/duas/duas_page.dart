@@ -1,6 +1,5 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
 import 'package:flutter/services.dart';
-import 'package:share_plus/share_plus.dart';
 
 import '../../core/theme/app_themes.dart';
 import '../../core/theme/tones.dart';
@@ -9,6 +8,8 @@ import '../../core/widgets/glass_container.dart';
 import '../../core/widgets/gradient_background.dart';
 import '../../core/widgets/state_views.dart';
 import 'duas_data.dart';
+import '../../core/widgets/share_card.dart';
+import '../../core/i18n/text.dart';
 
 const _tones = <Tone>[
   Tone.sapphire,
@@ -132,7 +133,7 @@ class _CategoryTile extends StatelessWidget {
             children: [
               _TonePill('${ArabicUtils.toArabicDigits(category.items.length)} أدعية', tone: tone),
               const Spacer(),
-              Icon(Icons.chevron_left_rounded, size: 20, color: tone.ink(dark)),
+              Icon(kGoChevron, size: 20, color: tone.ink(dark)),
             ],
           ),
         ],
@@ -257,7 +258,7 @@ class _DuaCard extends StatelessWidget {
                       _RoundToneButton(
                         icon: Icons.copy_rounded,
                         tone: tone,
-                        tooltip: 'نسخ',
+                        tooltip: tr('نسخ'),
                         onTap: () async {
                           await Clipboard.setData(ClipboardData(text: '${d.text}\n[${d.source}]'));
                           if (context.mounted) showGlassSnack(context, 'تم نسخ الدعاء');
@@ -267,9 +268,9 @@ class _DuaCard extends StatelessWidget {
                       _RoundToneButton(
                         icon: Icons.share_rounded,
                         tone: tone,
-                        tooltip: 'مشاركة',
-                        onTap: () =>
-                            SharePlus.instance.share(ShareParams(text: '${d.text}\n[${d.source}]\n\n— تطبيق الهدى')),
+                        tooltip: tr('مشاركة'),
+                        onTap: () => showShareChoice(context,
+                            card: ShareCard(title: 'دعاء', body: d.text, source: d.source), text: '${d.text}\n[${d.source}]'),
                       ),
                     ],
                   ),

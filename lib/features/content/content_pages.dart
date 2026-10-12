@@ -1,9 +1,7 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:share_plus/share_plus.dart';
 
-import '../../core/constants/app_constants.dart';
 import '../../core/services/storage_service.dart';
 import '../../core/theme/app_themes.dart';
 import '../../core/theme/tones.dart';
@@ -14,6 +12,8 @@ import '../../core/widgets/noor_ui.dart';
 import '../../core/widgets/state_views.dart';
 import 'asma_data.dart';
 import 'nawawi_data.dart';
+import '../../core/widgets/share_card.dart';
+import '../../core/i18n/text.dart';
 
 // ------------------------------------------------------- أسماء الله الحسنى ---
 
@@ -58,7 +58,8 @@ class _AsmaPageState extends State<AsmaPage> {
                   ),
                 const SizedBox(width: 12),
                 FilledButton.tonalIcon(
-                  onPressed: () => SharePlus.instance.share(ShareParams(text: '$name: $meaning\n\n— تطبيق الهدى ${AppConstants.shareUrl}')),
+                  onPressed: () => showShareChoice(ctx,
+                      card: ShareCard(title: 'من أسماء الله الحسنى', big: name, body: meaning), text: '$name: $meaning'),
                   icon: const Icon(Icons.share_rounded),
                   label: const Text('مشاركة'),
                 ),
@@ -69,7 +70,7 @@ class _AsmaPageState extends State<AsmaPage> {
                       Navigator.of(ctx).pop();
                       _open(i + 1);
                     },
-                    icon: const Icon(Icons.chevron_left_rounded),
+                    icon: const Icon(kGoChevron),
                   ),
               ],
             ),
@@ -108,7 +109,7 @@ class _AsmaPageState extends State<AsmaPage> {
           const SizedBox(height: 12),
           TextField(
             decoration: InputDecoration(
-              hintText: 'ابحث عن اسم',
+              hintText: tr('ابحث عن اسم'),
               prefixIcon: const Icon(Icons.search_rounded),
               filled: true,
               fillColor: glass.onGlass.withValues(alpha: 0.06),
@@ -249,12 +250,12 @@ class _HadithPageState extends State<_HadithPage> {
       tone: tone,
       actions: [
         IconButton(
-          tooltip: 'تصغير الخط',
+          tooltip: tr('تصغير الخط'),
           icon: const Icon(Icons.text_decrease_rounded),
           onPressed: () => setState(() => _size = (_size - 2).clamp(15, 34)),
         ),
         IconButton(
-          tooltip: 'تكبير الخط',
+          tooltip: tr('تكبير الخط'),
           icon: const Icon(Icons.text_increase_rounded),
           onPressed: () => setState(() => _size = (_size + 2).clamp(15, 34)),
         ),
@@ -294,8 +295,10 @@ class _HadithPageState extends State<_HadithPage> {
               Expanded(
                 child: FilledButton.icon(
                   style: FilledButton.styleFrom(backgroundColor: tone.deep),
-                  onPressed: () => SharePlus.instance.share(
-                      ShareParams(text: '$text\n\n(الأربعون النووية، الحديث $n)\n— تطبيق الهدى ${AppConstants.shareUrl}')),
+                  onPressed: () => showShareChoice(context,
+                      card: ShareCard(
+                          title: 'الأربعون النووية • ${ArabicUtils.toArabicDigits(n)}', body: text, source: title),
+                      text: '$text\n\n(الأربعون النووية، الحديث $n)'),
                   icon: const Icon(Icons.share_rounded),
                   label: const Text('مشاركة'),
                 ),
@@ -315,7 +318,7 @@ class _HadithPageState extends State<_HadithPage> {
               if (_i < kNawawi.length - 1)
                 TextButton.icon(
                   onPressed: () => _go(_i + 1),
-                  icon: const Icon(Icons.chevron_left_rounded),
+                  icon: const Icon(kGoChevron),
                   label: Text('الحديث ${ArabicUtils.toArabicDigits(kNawawi[_i + 1].$1)}'),
                 ),
             ],

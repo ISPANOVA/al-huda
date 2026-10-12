@@ -1,9 +1,11 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 
+import '../prayer/presentation/prayer_share.dart';
+import '../../core/constants/app_constants.dart';
 import '../../core/theme/app_themes.dart';
 import '../../core/theme/tones.dart';
 import '../../core/utils/arabic_utils.dart';
@@ -17,6 +19,7 @@ import '../prayer/presentation/prayer_log_page.dart';
 import '../settings/presentation/cubit/settings_cubit.dart';
 import 'islamic_calendar.dart';
 import '../../core/services/notification_service.dart';
+import '../../core/i18n/text.dart';
 
 /// التقويم الهجري: month grid, occasions, reminders, and the imsakiya.
 class CalendarPage extends StatefulWidget {
@@ -64,7 +67,7 @@ class _CalendarPageState extends State<CalendarPage> {
     final lead = (first.weekday % 7 + 1) % 7; // Sat=0 … Fri=6
     final upcoming = IslamicCalendar.upcoming(days: 90);
     final reminders = context.select((SettingsCubit c) => c.state.occasionReminders);
-    final greg = DateFormat('MMMM y', 'ar');
+    final greg = DateFormat('MMMM y', I18n.dateLocale);
     final lastGreg = IslamicCalendar.gregorianOf(_year, _month, days);
     return GlassScaffold(
       title: 'التقويم الهجري',
@@ -121,7 +124,7 @@ class _CalendarPageState extends State<CalendarPage> {
                                   Text(
                                     first.month == lastGreg.month
                                         ? greg.format(first)
-                                        : '${DateFormat('MMMM', 'ar').format(first)} – ${greg.format(lastGreg)}',
+                                        : '${DateFormat('MMMM', I18n.dateLocale).format(first)} – ${greg.format(lastGreg)}',
                                     textAlign: TextAlign.center,
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
@@ -130,7 +133,7 @@ class _CalendarPageState extends State<CalendarPage> {
                                 ],
                               ),
                             ),
-                            _MonthNavButton(icon: Icons.chevron_left_rounded, onTap: () => _shift(1)),
+                            _MonthNavButton(icon: kGoChevron, onTap: () => _shift(1)),
                           ],
                         ),
                       ),
@@ -258,7 +261,8 @@ class _CalendarPageState extends State<CalendarPage> {
               onTap: () {
                 final v = !reminders;
                 context.read<SettingsCubit>().setOccasionReminders(v);
-                IslamicCalendar.scheduleReminders(context.read<NotificationService>(), enabled: v);
+                IslamicCalendar.scheduleReminders(context.read<NotificationService>(),
+                    enabled: v, friday: context.read<SettingsCubit>().state.fridayReminders);
               },
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(14, 12, 12, 12),
@@ -272,7 +276,7 @@ class _CalendarPageState extends State<CalendarPage> {
                         children: [
                           Text('تذكيري بالمناسبات والصيام',
                               style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: glass.onGlass)),
-                          Text('مساء اليوم السابق، والاثنين والخميس، والكهف يوم الجمعة',
+                          Text('مساء اليوم السابق، وصيام الاثنين والخميس',
                               style: TextStyle(fontSize: 12, height: 1.4, color: glass.onGlassMuted)),
                         ],
                       ),
@@ -282,7 +286,8 @@ class _CalendarPageState extends State<CalendarPage> {
                       value: reminders,
                       onChanged: (v) {
                         context.read<SettingsCubit>().setOccasionReminders(v);
-                        IslamicCalendar.scheduleReminders(context.read<NotificationService>(), enabled: v);
+                        IslamicCalendar.scheduleReminders(context.read<NotificationService>(),
+                    enabled: v, friday: context.read<SettingsCubit>().state.fridayReminders);
                       },
                     ),
                   ],
@@ -458,7 +463,7 @@ class _OccasionCard extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(occasion.note, style: TextStyle(fontSize: 12.5, color: glass.onGlassMuted, height: 1.5)),
                 const SizedBox(height: 2),
-                Text(DateFormat('EEEE d MMMM', 'ar').format(date),
+                Text(DateFormat('EEEE d MMMM', I18n.dateLocale).format(date),
                     style: TextStyle(fontSize: 11, color: glass.onGlassMuted.withValues(alpha: 0.85))),
               ],
             ),
@@ -513,7 +518,7 @@ class _RamadanCard extends StatelessWidget {
               ],
             ),
           ),
-          const Icon(Icons.chevron_left_rounded, color: Colors.white),
+          const Icon(kGoChevron, color: Colors.white),
         ],
       ),
     );
@@ -566,6 +571,14 @@ class _ImsakiyaPageState extends State<ImsakiyaPage> {
       subtitle: 'السحور والإفطار لمدينتك',
       icon: Icons.brightness_3_rounded,
       tone: Tone.amber,
+      actions: [
+        if (rows.first.$3 != null)
+          IconButton(
+            tooltip: tr('شارك الإمساكية كصورة'),
+            icon: const Icon(Icons.ios_share_rounded),
+            onPressed: () => _share(rows, year, now),
+          ),
+      ],
       body: rows.first.$3 == null
           ? const MessageView(
               icon: Icons.location_off_rounded,
@@ -606,12 +619,60 @@ class _ImsakiyaPageState extends State<ImsakiyaPage> {
                     ],
                   ),
                 ),
+                const SizedBox(height: 12),
+                FilledButton.icon(
+                  style: FilledButton.styleFrom(
+                    backgroundColor: Tone.amber.deep,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                  ),
+                  onPressed: _sharing ? null : () => _share(rows, year, now),
+                  icon: const Icon(Icons.ios_share_rounded, color: Colors.white),
+                  label: const Text('شارك الإمساكية كصورة', style: TextStyle(fontWeight: FontWeight.w800, color: Colors.white)),
+                ),
                 const SizedBox(height: 10),
                 Text('الإمساك قبل الفجر بعشر دقائق احتياطًا، والعبرة بأذان الفجر.',
                     textAlign: TextAlign.center, style: TextStyle(fontSize: 11.5, color: glass.onGlassMuted)),
               ],
             ),
     );
+  }
+
+  bool _sharing = false;
+
+  /// The month's timetable as a picture for WhatsApp or a story.
+  Future<void> _share(List<(int, DateTime, PrayerDay?)> rows, int year, DateTime now) async {
+    if (_sharing) return;
+    setState(() => _sharing = true);
+    String t(DateTime d) => ArabicUtils.formatTime(d).replaceAll(RegExp(r'\s?[صم]$'), '');
+    final city = context.read<PrayerCubit>().state.location?.city;
+    final title = 'إمساكية رمضان ${ArabicUtils.toArabicDigits(year)} هـ';
+    final painter = TimetableCardPainter(
+      title: title,
+      subtitle: (city == null || city.trim().isEmpty) ? 'حسب موقعي' : city.trim(),
+      header: const ['اليوم', 'الإمساك', 'الفجر', 'الظهر', 'العصر', 'المغرب', 'العشاء'],
+      rows: [
+        for (final r in rows)
+          if (r.$3 != null)
+            [
+              '${ArabicUtils.toArabicDigits(r.$1)} • ${ArabicUtils.toArabicDigits(DateFormat('d/M').format(r.$2))}',
+              t(r.$3![PrayerName.fajr].subtract(const Duration(minutes: 10))),
+              t(r.$3![PrayerName.fajr]),
+              t(r.$3![PrayerName.dhuhr]),
+              t(r.$3![PrayerName.asr]),
+              t(r.$3![PrayerName.maghrib]),
+              t(r.$3![PrayerName.isha]),
+            ],
+      ],
+      highlight: rows.indexWhere((r) => DateUtils.isSameDay(r.$2, now)),
+      logo: await loadShareLogo(),
+    );
+    final ok = await shareImage(await painter.png(), 'imsakiya_$year.png',
+        '$title${city == null ? '' : ' • $city'}\nمن تطبيق الهدى: ${AppConstants.shareUrl}');
+    painter.logo?.dispose();
+    if (!mounted) return;
+    setState(() => _sharing = false);
+    if (!ok) showGlassSnack(context, 'تعذر تجهيز صورة الإمساكية');
   }
 
   Widget _countdown(PrayerDay p, DateTime now) {

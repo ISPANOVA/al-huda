@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
+import 'package:flutter/widgets.dart' as w show Text;
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/platform/web_env.dart';
@@ -22,9 +23,78 @@ import 'about_pages.dart';
 import '../../../../core/services/backup_service.dart';
 import '../../../../core/services/storage_service.dart';
 import 'package:flutter/services.dart';
+import '../../../../core/i18n/text.dart';
 
 /// الإعدادات — the look first, then each group of settings as a coloured
 /// card that opens its own page (nothing piled up on one long screen).
+/// عربي / English: the interface language (the Quran and athkar stay Arabic).
+class _LanguageCard extends StatelessWidget {
+  final String language;
+
+  const _LanguageCard({required this.language});
+
+  Future<void> _set(BuildContext context, String lang) async {
+    if (lang == language) return;
+    final cubit = context.read<SettingsCubit>();
+    await I18n.load(lang);
+    await cubit.setLanguage(lang);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final glass = GlassTheme.of(context);
+    Widget option(String lang, String label) {
+      final on = language == lang;
+      return Expanded(
+        child: Material(
+          color: on ? glass.accent.withValues(alpha: 0.18) : glass.onGlass.withValues(alpha: 0.05),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+            side: BorderSide(color: on ? glass.accent : Colors.transparent, width: 1.5),
+          ),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(14),
+            onTap: () => _set(context, lang),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              child: Center(
+                // The language names are shown as they are, never translated.
+                child: w.Text(label, style: TextStyle(fontWeight: FontWeight.w800, color: on ? glass.accent : glass.onGlass)),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    return NoorCard(
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const ToneIcon(Icons.translate_rounded, tone: Tone.sky, size: 40),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('لغة الواجهة', style: TextStyle(fontWeight: FontWeight.w800)),
+                    Text('القرآن والأذكار تبقى بالعربية', style: TextStyle(fontSize: 12, color: glass.onGlassMuted)),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(children: [option('ar', 'العربية'), const SizedBox(width: 10), option('en', 'English')]),
+        ],
+      ),
+    );
+  }
+}
+
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
 
@@ -91,6 +161,8 @@ class SettingsPage extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(16, 4, 16, 32),
             children: [
               _AppearanceEntry(settings: s),
+              const SizedBox(height: 12),
+              _LanguageCard(language: s.language),
               const GlassSectionTitle('الإعدادات', tone: Tone.slate),
               LayoutBuilder(builder: (context, box) {
                 final columns = box.maxWidth >= 640 ? 3 : 2;
@@ -240,7 +312,7 @@ class _SettingRow extends StatelessWidget {
             if (toggle)
               Switch(value: value!, onChanged: onChanged)
             else
-              Icon(Icons.chevron_left_rounded, color: glass.onGlassMuted),
+              Icon(kGoChevron, color: glass.onGlassMuted),
           ],
         ),
       ),
@@ -564,7 +636,7 @@ class _AppearanceEntry extends StatelessWidget {
                   ],
                 ),
               ),
-              Icon(Icons.chevron_left_rounded, color: glass.onGlassMuted),
+              Icon(kGoChevron, color: glass.onGlassMuted),
             ],
           ),
         ),

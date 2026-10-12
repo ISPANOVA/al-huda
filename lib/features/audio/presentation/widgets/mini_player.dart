@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/theme/app_themes.dart';
@@ -10,6 +10,7 @@ import '../../domain/reciter.dart';
 import '../cubit/audio_cubit.dart';
 import '../cubit/audio_state.dart';
 import '../pages/player_page.dart';
+import '../../../../core/i18n/text.dart';
 
 /// Persistent compact player shown above the navigation bar.
 class MiniPlayer extends StatelessWidget {

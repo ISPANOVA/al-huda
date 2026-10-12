@@ -1,6 +1,7 @@
 // الإعدادات وعن التطبيق.
 import { $, ar, esc, icon, store, data, top, applyTheme, sheet, toast } from './app.js';
 import { CREDITS } from './reciters.js';
+import { language, setLanguage } from './i18n.js';
 
 const RATES = [0.75, 1, 1.25, 1.5];
 
@@ -16,6 +17,9 @@ export async function show(view, args, name) {
     <div class="card list">
       <button id="theme">${icon(theme === 'light' ? 'sun' : 'moon', 'gold')}<span class="grow"><b>الوضع ${theme === 'light' ? 'الفاتح' : 'الداكن'}</b><br><small class="muted">اضغط للتبديل</small></span><span class="switch${theme === 'light' ? '' : ' on'}"></span></button>
     </div>
+    <div class="section">لغة الواجهة</div>
+    <div class="card"><div class="row" style="gap:10px"><button class="chip grow${language() === 'ar' ? ' on' : ''}" data-lang="ar" data-ar style="justify-content:center">العربية</button><button class="chip grow${language() === 'en' ? ' on' : ''}" data-lang="en" style="justify-content:center">English</button></div>
+      <small class="muted" style="display:block;margin-top:8px">القرآن والأذكار تبقى بالعربية</small></div>
     <div class="section">التلاوة</div>
     <div class="card list">
       <button id="rec">${icon('head', 'gold')}<span class="grow"><b>قارئ المصحف</b><br><small class="muted">${esc(cur.name)}</small></span>${icon('back', 'muted')}</button>
@@ -39,6 +43,8 @@ export async function show(view, args, name) {
   $('#rec', view).onclick = () => sheet(`<h3>قارئ المصحف</h3><div class="list">${reciters.map((r) => `<button data-id="${r.id}">${icon(r.id === rec.id ? 'check' : 'head', r.id === rec.id ? 'gold' : 'muted')}<span class="grow">${esc(r.name)}<br><small class="muted">${esc(r.style || '')}</small></span></button>`).join('')}</div>`,
     (body, close) => { body.onclick = (e) => { const b = e.target.closest('[data-id]'); if (!b) return; const r = reciters.find((x) => x.id === b.dataset.id); store.set('reciter', { id: r.id, bitrate: r.bitrate }); close(); show(view, args, name); }; });
   view.onclick = (e) => {
+    const l = e.target.closest('[data-lang]');
+    if (l) { if (l.dataset.lang !== language()) setLanguage(l.dataset.lang); return; }
     const b = e.target.closest('[data-rate]');
     if (b) { store.set('rate', +b.dataset.rate); show(view, args, name); }
   };
@@ -106,10 +112,11 @@ const block = (ic, t, b) => `<div class="card row" style="align-items:flex-start
 function about(view, which) {
   if (which === 'privacy') {
     view.innerHTML = top('سياسة الخصوصية', 'بياناتك تبقى على جهازك', 'sky', 'eye') +
-      block('check', 'باختصار', 'الهدى لا يطلب حسابًا ولا يجمع أي بيانات شخصية، ولا يحتوي على إعلانات أو أدوات تتبّع. كل بياناتك تبقى على جهازك.') +
+      block('check', 'باختصار', 'الهدى لا يطلب حسابًا ولا يجمع أي بيانات شخصية، ولا يحتوي على إعلانات أو أدوات تتبّع. كل بياناتك تبقى على جهازك، إلا ما تكتبه بنفسك في الختمة الجماعية إن استخدمتها.') +
       block('compass', 'الموقع', 'يُستخدم موقعك لحساب مواقيت الصلاة واتجاه القبلة، والحساب نفسه يتم على جهازك. لمعرفة اسم مدينتك فقط تُرسل الإحداثيات التقريبية إلى خدمة BigDataCloud، ولا تُحفظ عندنا ولا تُربط بك.') +
       block('mic', 'الميكروفون (التسميع)', 'يُستخدم الميكروفون فقط أثناء التسميع وأنت تضغط زر التسجيل. في تطبيق أندرويد يتم التعرّف على الهاتف نفسه فلا يخرج صوتك منه. في نسخة الويب يتم التعرّف بخدمة المتصفح نفسه: في متصفح Chrome تقوم بها Google، وفي متصفح Safari تقوم بها Apple. لا نحفظ تسجيلات صوتك ولا نرسلها لأي جهة.') +
       block('download', 'الإنترنت', 'يتصل الموقع بالإنترنت لتحميل التلاوات وتشغيل الإذاعات والبث المباشر من مصادرها، دون إرسال أي معلومات عنك سوى ما يلزم تقنيًا.') +
+      block('flag', 'الختمة الجماعية', 'إذا أنشأت ختمة جماعية أو انضممت إليها، يُحفظ على خادم الموقع (Cloudflare) اسم الختمة والاسم الذي تكتبه بنفسك والأجزاء التي حجزتها أو أتممتها، مع رمز عشوائي يميّز جهازك دون أي معلومات أخرى عنك، ويراها كل من معه رابط الختمة. لا تستخدم الختمة الجماعية إن لم ترغب في ذلك.') +
       block('bookmark', 'بياناتك', 'العلامات والختمة والورد والإحصائيات والإعدادات محفوظة في متصفحك فقط، وتُحذف بمسح بيانات الموقع من المتصفح.');
     return;
   }

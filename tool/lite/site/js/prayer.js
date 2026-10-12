@@ -1,7 +1,7 @@
 // مواقيت الصلاة: today's times for the saved location, the next prayer, the
 // calculation settings and a monthly timetable (إمساكية).
-import { $, ar, esc, icon, store, top, toast, sheet } from './app.js';
-import { NAMES, METHODS, location, locate, timesFor, nextPrayer, hm, countdown, hijriToday, HMONTHS } from './prayerlib.js';
+import { $, ar, arabic, esc, icon, store, top, toast, sheet } from './app.js';
+import { NAMES, METHODS, location, locate, timesFor, nextPrayer, hm, countdown, hijriToday, HMONTHS, ramadanDays } from './prayerlib.js';
 import { ticks, togglePrayed, prayedOn } from './tools.js';
 
 let timer;
@@ -89,15 +89,15 @@ async function sharePrayerImage(loc, t, h, np) {
   const c = cv.getContext('2d');
   const now = new Date();
   const city = loc.city || `${loc.lat.toFixed(2)}، ${loc.lng.toFixed(2)}`;
-  const hijri = h ? `${ar(h.d)} ${HMONTHS[h.m - 1]} ${ar(h.y)} هـ` : '';
+  const hijri = h ? `${arabic(h.d)} ${HMONTHS[h.m - 1]} ${arabic(h.y)} هـ` : '';
   const greg = now.toLocaleDateString('ar-EG', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
   const next = np && np[1].toDateString() === now.toDateString() ? np[0] : -1;
-  drawPrayerCard(c, { city, hijri, greg, times: t.map((x) => hm(x)), next, logo });
+  drawPrayerCard(c, { city, hijri, greg, times: t.map((x) => arabic(hm(x))), next, logo });
   const blob = await new Promise((ok) => cv.toBlob(ok, 'image/png'));
   const text = `مواقيت الصلاة في ${city} • ${greg}${hijri ? ' • ' + hijri : ''}\n`
     + NAMES.map((n, i) => `${n}: ${hm(t[i])}`).join('\n') + '\nمن تطبيق الهدى: https://al-huda.xyz';
-  const { deliver } = await import('./video.js');
-  await deliver(blob, `mawaqit_${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}.png`, text);
+  const { deliverImage } = await import('./cards.js');
+  await deliverImage(blob, `mawaqit_${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}.png`, text);
 }
 
 function drawPrayerCard(c, { city, hijri, greg, times, next, logo }) {
@@ -164,22 +164,55 @@ function adjust(view) {
   }).then(() => show(view, []));
 }
 
-async function month(view) {
+async function month(view, mode) {
+  const ram = await ramadanDays().catch(() => null);
+  const now = new Date();
+  const inRamadan = ram && ram.days.some((d) => d.toDateString() === now.toDateString());
+  const soon = ram && !inRamadan && (ram.days[0] - now) / 864e5 <= 30;
+  if (!mode) mode = ram && (inRamadan || soon) ? 'ramadan' : 'month';
   view.innerHTML = top('الإمساكية', 'مواقيت الشهر لمدينتك', 'sky', 'cal') + '<div id="body"></div>';
   const body = $('#body', view);
   if (!location()) { body.innerHTML = '<div class="card center">حدّد موقعك أولًا من صفحة المواقيت.</div>'; return; }
-  const now = new Date();
+  const hm2 = (d) => hm(d).replace(/\s?[صم]$/, '');
+  const days = mode === 'ramadan' && ram ? ram.days
+    : Array.from({ length: 30 }, (_, d) => new Date(now.getFullYear(), now.getMonth(), now.getDate() + d));
+  const head = mode === 'ramadan' ? ['اليوم', 'الإمساك', 'الفجر', 'الظهر', 'العصر', 'المغرب', 'العشاء'] : ['اليوم', ...NAMES];
   const rows = [];
-  for (let d = 0; d < 30; d++) {
-    const day = new Date(now.getFullYear(), now.getMonth(), now.getDate() + d);
+  let today = -1;
+  for (let d = 0; d < days.length; d++) {
+    const day = days[d];
     const t = await timesFor(day);
-    rows.push(`<tr${d === 0 ? ' style="color:var(--gold)"' : ''}><td>${ar(day.getDate())}/${ar(day.getMonth() + 1)}</td>${[0, 1, 2, 3, 4, 5].map((i) => `<td>${hm(t[i]).replace(/\s?[صم]$/, '')}</td>`).join('')}</tr>`);
+    if (day.toDateString() === now.toDateString()) today = d;
+    const label = mode === 'ramadan' ? `${ar(d + 1)} • ${ar(day.getDate())}/${ar(day.getMonth() + 1)}` : `${ar(day.getDate())}/${ar(day.getMonth() + 1)}`;
+    const cells = mode === 'ramadan' ? [new Date(t[0] - 600000), t[0], t[2], t[3], t[4], t[5]] : t;
+    rows.push([label, ...cells.map(hm2)]);
   }
-  body.innerHTML = `<div class="card" style="padding:8px;overflow-x:auto"><table style="width:100%;border-collapse:collapse;text-align:center;font-size:13px;font-variant-numeric:tabular-nums">
-    <thead><tr class="gold"><th>اليوم</th>${NAMES.map((n) => `<th>${n}</th>`).join('')}</tr></thead>
-    <tbody>${rows.join('')}</tbody></table></div>
+  const title = mode === 'ramadan' ? `إمساكية رمضان ${ar(ram.year)} هـ` : 'مواقيت الثلاثين يومًا القادمة';
+  body.innerHTML = `${ram ? `<div class="chips" style="justify-content:center;margin-bottom:10px">
+      <button class="chip${mode === 'ramadan' ? ' on' : ''}" data-m="ramadan">رمضان ${ar(ram.year)}</button>
+      <button class="chip${mode === 'month' ? ' on' : ''}" data-m="month">الثلاثون يومًا القادمة</button></div>` : ''}
+    <h3 class="center gold" style="font-family:ReemKufi,Tajawal;margin:4px 0 10px">${esc(title)}</h3>
+    <div class="card" style="padding:8px;overflow-x:auto"><table style="width:100%;border-collapse:collapse;text-align:center;font-size:13px;font-variant-numeric:tabular-nums">
+    <thead><tr class="gold">${head.map((n) => `<th>${n}</th>`).join('')}</tr></thead>
+    <tbody>${rows.map((r, j) => `<tr${j === today ? ' style="color:var(--gold);font-weight:800"' : ''}>${r.map((c) => `<td>${c}</td>`).join('')}</tr>`).join('')}</tbody></table></div>
+    <button class="btn block" id="shm" style="margin-top:12px">${icon('share')} ${mode === 'ramadan' ? 'شارك الإمساكية كصورة' : 'شارك الجدول كصورة'}</button>
     <p class="muted small center">الإمساك قبل الفجر بنحو عشر دقائق، والإفطار عند المغرب.</p>`;
   for (const td of body.querySelectorAll('td,th')) td.style.padding = '8px 2px';
+  body.onclick = async (e) => {
+    const m = e.target.closest('[data-m]');
+    if (m) { month(view, m.dataset.m); return; }
+    if (!e.target.closest('#shm')) return;
+    const b = $('#shm', body);
+    b.disabled = true;
+    try {
+      const { drawTable, deliverImage } = await import('./cards.js');
+      const city = location().city || 'حسب موقعي';
+      const blob = await drawTable({ title: arabic(title), subtitle: city, header: head, rows: rows.map((r) => r.map(arabic)), highlight: today,
+        note: mode === 'ramadan' ? 'الإمساك قبل الفجر بعشر دقائق احتياطًا' : '' });
+      await deliverImage(blob, mode === 'ramadan' ? `imsakiya_${ram.year}.png` : 'mawaqit_30.png', `${title} • ${city}\nمن تطبيق الهدى: https://al-huda.xyz`);
+    } catch (err) { console.error(err); toast('تعذر تجهيز الصورة'); }
+    b.disabled = false;
+  };
 }
 
 export function leave() { clearInterval(timer); }

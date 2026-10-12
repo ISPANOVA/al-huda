@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:just_audio/just_audio.dart';
 
@@ -13,12 +13,14 @@ import '../../../../core/utils/arabic_utils.dart';
 import '../../../../core/widgets/glass_container.dart';
 import '../../../../core/widgets/noor_ui.dart';
 import '../../../../core/widgets/state_views.dart';
+import '../../../calendar/islamic_calendar.dart';
 import '../../../settings/presentation/cubit/settings_cubit.dart';
 import '../../../settings/presentation/cubit/settings_state.dart';
 import '../../domain/adhan_voices.dart';
 import '../../domain/prayer_entities.dart';
 import '../prayer_tones.dart';
 import 'exact_alarm_prompt.dart';
+import '../../../../core/i18n/text.dart';
 
 /// Plays adhan samples from the bundled raw resources (one at a time).
 class AdhanPreview {
@@ -98,7 +100,10 @@ class _AdhanSettingsCardState extends State<AdhanSettingsCard> {
           p.postPrayerMinutes != c.postPrayerMinutes ||
           p.adhanAlwaysPlay != c.adhanAlwaysPlay ||
           p.iqamaReminder != c.iqamaReminder ||
-          p.sunriseAlert != c.sunriseAlert,
+          p.sunriseAlert != c.sunriseAlert ||
+          p.fridayReminders != c.fridayReminders ||
+          p.ramadanSuhoor != c.ramadanSuhoor ||
+          p.suhoorMinutes != c.suhoorMinutes,
       builder: (context, s) {
         final cubit = context.read<SettingsCubit>();
         final glass = GlassTheme.of(context);
@@ -334,6 +339,39 @@ class _AdhanSettingsCardState extends State<AdhanSettingsCard> {
                             selected: s.preAdhanMinutes,
                             onSelected: cubit.setPreAdhanMinutes,
                           ),
+                        divider,
+                        _SettingRow(
+                          icon: Icons.mosque_rounded,
+                          tone: Tone.emerald,
+                          title: 'تنبيهات الجمعة',
+                          subtitle: s.fridayReminders
+                              ? 'سورة الكهف صباحًا، وساعة الإجابة قبل المغرب'
+                              : 'غير مفعّل',
+                          value: s.fridayReminders,
+                          onChanged: (v) async {
+                            await cubit.setFridayReminders(v);
+                            if (!context.mounted) return;
+                            await IslamicCalendar.scheduleReminders(context.read<NotificationService>(),
+                                enabled: cubit.state.occasionReminders, friday: v);
+                          },
+                        ),
+                        divider,
+                        _SettingRow(
+                          icon: Icons.nightlight_round,
+                          tone: Tone.amethyst,
+                          title: 'رمضان: السحور والإفطار',
+                          subtitle: s.ramadanSuhoor
+                              ? 'في رمضان: تنبيه السحور قبل الفجر بـ ${ArabicUtils.minutes(s.suhoorMinutes, afterPreposition: true)}، ودعاء الإفطار عند المغرب'
+                              : 'غير مفعّل',
+                          value: s.ramadanSuhoor,
+                          onChanged: cubit.setRamadanSuhoor,
+                        ),
+                        if (s.ramadanSuhoor)
+                          _MinuteChips(
+                            values: const [20, 30, 45, 60, 90],
+                            selected: s.suhoorMinutes,
+                            onSelected: cubit.setSuhoorMinutes,
+                          ),
                       ],
                     ),
                   ),
@@ -525,7 +563,7 @@ class _SettingRow extends StatelessWidget {
             if (toggle)
               Switch(value: value!, onChanged: onChanged)
             else
-              Icon(Icons.chevron_left_rounded, color: glass.onGlassMuted),
+              Icon(kGoChevron, color: glass.onGlassMuted),
           ],
         ),
       ),

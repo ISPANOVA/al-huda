@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
+import '../i18n/text.dart';
 
 /// Hooks shared by the app's frame: the Mushaf asks for the full width while
 /// it is visible ([wide]) and the top route is watched ([observer]). Wide

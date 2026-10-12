@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/services/notification_service.dart';
@@ -7,6 +7,7 @@ import '../../../../core/theme/app_themes.dart';
 import '../../../../core/theme/tones.dart';
 import '../../../settings/presentation/cubit/settings_cubit.dart';
 import '../cubit/prayer_cubit.dart';
+import '../../../../core/i18n/text.dart';
 
 /// Explains why the adhan needs «المنبّهات والتذكيرات» and then opens the
 /// system screen to allow it. Does nothing when it is already allowed.
@@ -75,7 +76,7 @@ class ExactAlarmBanner extends StatelessWidget {
                     ],
                   ),
                 ),
-                Icon(Icons.chevron_left_rounded, color: glass.onGlassMuted),
+                Icon(kGoChevron, color: glass.onGlassMuted),
               ],
             ),
           ),

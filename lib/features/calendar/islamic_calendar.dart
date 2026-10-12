@@ -1,7 +1,8 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
 import 'package:hijri/hijri_calendar.dart';
 
 import '../../core/services/notification_service.dart';
+import '../../core/i18n/text.dart';
 
 /// A day in the Islamic year worth remembering.
 class Occasion {
@@ -87,6 +88,17 @@ class IslamicCalendar {
 
   static bool get isRamadan => hijriOf(DateTime.now()).hMonth == 9;
 
+  /// Days until 1 Ramadan when it is at most [max] days away, else 0.
+  static int daysToRamadan({int max = 10}) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    for (var i = 1; i <= max; i++) {
+      final h = hijriOf(today.add(Duration(days: i)));
+      if (h.hMonth == 9 && h.hDay == 1) return i;
+    }
+    return 0;
+  }
+
   /// Tomorrow's fast-worthy occasion (for the home banner), if any.
   static Occasion? tomorrowFast() {
     final now = DateTime.now();
@@ -96,11 +108,13 @@ class IslamicCalendar {
 
   static const _baseId = 500;
 
-  /// Evening-before reminders for the next weeks, plus Friday (Al-Kahf).
-  static Future<void> scheduleReminders(NotificationService n, {required bool enabled}) async {
+  /// Evening-before reminders for the next weeks ([enabled]), plus Friday
+  /// morning: Surat Al-Kahf ([friday]).
+  static Future<void> scheduleReminders(NotificationService n, {required bool enabled, bool friday = true}) async {
     for (var i = 0; i < 80; i++) {
       await n.cancel(_baseId + i);
     }
+    await _scheduleFridays(n, friday);
     if (!enabled) return;
     var id = _baseId;
     final now = DateTime.now();
@@ -134,7 +148,12 @@ class IslamicCalendar {
         when: eve,
       );
     }
-    // The next four Fridays: Surat Al-Kahf and salawat.
+  }
+
+  /// The next four Friday mornings: Surat Al-Kahf (a tap opens it) and salawat.
+  static Future<void> _scheduleFridays(NotificationService n, bool on) async {
+    if (!on) return;
+    final now = DateTime.now();
     var fri = DateTime(now.year, now.month, now.day);
     while (fri.weekday != DateTime.friday) {
       fri = fri.add(const Duration(days: 1));
@@ -144,9 +163,10 @@ class IslamicCalendar {
       if (!when.isAfter(now)) continue;
       await n.scheduleReminderAt(
         id: _baseId + 70 + k,
-        title: 'جمعة مباركة 🌿',
-        body: 'لا تنسَ قراءة سورة الكهف والإكثار من الصلاة على النبي ﷺ',
+        title: 'جمعة مباركة 🌿 سورة الكهف',
+        body: 'اضغط لقراءة سورة الكهف، وأكثِر من الصلاة على النبي ﷺ',
         when: when,
+        payload: 'surah:18',
       );
     }
   }

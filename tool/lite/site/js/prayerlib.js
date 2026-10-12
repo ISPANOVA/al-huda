@@ -63,3 +63,20 @@ export async function hijriToday() {
   return { y, m, d: dd };
 }
 export const HMONTHS = ['محرّم', 'صفر', 'ربيع الأول', 'ربيع الآخر', 'جمادى الأولى', 'جمادى الآخرة', 'رجب', 'شعبان', 'رمضان', 'شوّال', 'ذو القعدة', 'ذو الحجة'];
+
+/// This Ramadan (or the next): its hijri year and its days (Gregorian dates).
+export async function ramadanDays() {
+  const api = await core();
+  const now = new Date();
+  const base = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const at = (i) => new Date(base.getFullYear(), base.getMonth(), base.getDate() + i);
+  const h = (d) => api.hijri(d.getFullYear(), d.getMonth() + 1, d.getDate());
+  let start = -1;
+  const [, m0, d0] = h(base);
+  if (m0 === 9) start = 1 - d0;
+  else for (let i = 1; i < 400; i++) { const [, m, d] = h(at(i)); if (m === 9 && d === 1) { start = i; break; } }
+  if (start === -1 && m0 !== 9) return null;
+  const days = [];
+  for (let i = start; days.length < 30; i++) { const [, m] = h(at(i)); if (m !== 9) break; days.push(at(i)); }
+  return { year: h(days[0])[0], days };
+}

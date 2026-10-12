@@ -1,7 +1,8 @@
 import 'package:equatable/equatable.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
 
 import '../../../../core/theme/app_themes.dart';
+import '../../../../core/i18n/text.dart';
 
 class SettingsState extends Equatable {
   final AppThemeType themeType;
@@ -76,6 +77,18 @@ class SettingsState extends Equatable {
   /// The Mushaf in tajweed colours.
   final bool tajweed;
 
+  /// Friday: Al-Kahf in the morning, salawat before maghrib.
+  final bool fridayReminders;
+
+  /// Ramadan: a suhoor reminder before fajr, and the iftar dua at maghrib.
+  final bool ramadanSuhoor;
+
+  /// Minutes before fajr for the suhoor reminder.
+  final int suhoorMinutes;
+
+  /// Interface language: 'ar' or 'en' (the Quran and athkar stay Arabic).
+  final String language;
+
   const SettingsState({
     this.themeType = AppThemeType.noirGold,
     this.themeMode = ThemeMode.dark,
@@ -114,6 +127,10 @@ class SettingsState extends Equatable {
     this.mushafPages = 'auto',
     this.tasmeeStrict = false,
     this.tajweed = false,
+    this.fridayReminders = true,
+    this.ramadanSuhoor = true,
+    this.suhoorMinutes = 45,
+    this.language = 'ar',
   });
 
   SettingsState copyWith({
@@ -154,6 +171,10 @@ class SettingsState extends Equatable {
     String? mushafPages,
     bool? tasmeeStrict,
     bool? tajweed,
+    bool? fridayReminders,
+    bool? ramadanSuhoor,
+    int? suhoorMinutes,
+    String? language,
   }) {
     return SettingsState(
       themeType: themeType ?? this.themeType,
@@ -193,6 +214,10 @@ class SettingsState extends Equatable {
       mushafPages: mushafPages ?? this.mushafPages,
       tasmeeStrict: tasmeeStrict ?? this.tasmeeStrict,
       tajweed: tajweed ?? this.tajweed,
+      fridayReminders: fridayReminders ?? this.fridayReminders,
+      ramadanSuhoor: ramadanSuhoor ?? this.ramadanSuhoor,
+      suhoorMinutes: suhoorMinutes ?? this.suhoorMinutes,
+      language: language ?? this.language,
     );
   }
 
@@ -234,6 +259,10 @@ class SettingsState extends Equatable {
         'mushafPages': mushafPages,
         'tasmeeStrict': tasmeeStrict,
         'tajweed': tajweed,
+        'fridayReminders': fridayReminders,
+        'ramadanSuhoor': ramadanSuhoor,
+        'suhoorMinutes': suhoorMinutes,
+        'language': language,
       };
 
   factory SettingsState.fromMap(Map<String, dynamic> m) {
@@ -282,6 +311,10 @@ class SettingsState extends Equatable {
       mushafPages: m['mushafPages'] as String? ?? d.mushafPages,
       tasmeeStrict: m['tasmeeStrict'] as bool? ?? d.tasmeeStrict,
       tajweed: m['tajweed'] as bool? ?? d.tajweed,
+      fridayReminders: m['fridayReminders'] as bool? ?? d.fridayReminders,
+      ramadanSuhoor: m['ramadanSuhoor'] as bool? ?? d.ramadanSuhoor,
+      suhoorMinutes: (m['suhoorMinutes'] as num?)?.toInt() ?? d.suhoorMinutes,
+      language: m['language'] == 'en' ? 'en' : 'ar',
     );
   }
 
@@ -324,5 +357,9 @@ class SettingsState extends Equatable {
         mushafPages,
         tasmeeStrict,
         tajweed,
+        fridayReminders,
+        ramadanSuhoor,
+        suhoorMinutes,
+        language,
       ];
 }

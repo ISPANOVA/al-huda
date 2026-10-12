@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../core/data/surah_metadata.dart';
@@ -15,6 +15,7 @@ import 'media_catalog.dart';
 import 'media_downloads.dart';
 import 'media_widgets.dart';
 import 'reciter_pages.dart';
+import '../../core/i18n/text.dart';
 
 /// Offline library: every downloaded surah grouped by reciter.
 class MediaDownloadsPage extends StatefulWidget {
@@ -221,7 +222,7 @@ class _MediaDownloadsPageState extends State<MediaDownloadsPage> {
                         ],
                       ),
                     ),
-                    Icon(Icons.chevron_left_rounded, color: glass.onGlassMuted),
+                    Icon(kGoChevron, color: glass.onGlassMuted),
                   ],
                 ),
               ),
@@ -339,7 +340,7 @@ class _ReciterGroup extends StatelessWidget {
                               style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15)),
                           onTap: () => playMediaSurah(context, reciter, s),
                           trailing: IconButton(
-                            tooltip: 'حذف',
+                            tooltip: tr('حذف'),
                             icon: Icon(Icons.delete_outline_rounded, color: glass.onGlassMuted),
                             onPressed: () => onDelete(s),
                           ),

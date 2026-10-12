@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/data/surah_metadata.dart';
@@ -14,6 +14,7 @@ import '../../domain/reciter.dart';
 import '../cubit/audio_cubit.dart';
 import '../cubit/audio_state.dart';
 import '../widgets/mini_player.dart';
+import '../../../../core/i18n/text.dart';
 
 /// Memorization (Tahfeez) mode: custom range + per-ayah and range repetition.
 class MemorizationPage extends StatefulWidget {
@@ -239,7 +240,7 @@ class _MemorizationPageState extends State<MemorizationPage> {
                       Text('تغيير',
                           style: TextStyle(
                               fontSize: 12.5, fontWeight: FontWeight.w800, color: Tone.amethyst.ink(dark))),
-                      Icon(Icons.chevron_left_rounded, size: 20, color: Tone.amethyst.ink(dark)),
+                      Icon(kGoChevron, size: 20, color: Tone.amethyst.ink(dark)),
                     ],
                   ),
                 ),

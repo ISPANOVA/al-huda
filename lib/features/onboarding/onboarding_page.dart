@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
+import 'package:flutter/widgets.dart' as w show Text;
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:geolocator/geolocator.dart';
@@ -13,6 +14,8 @@ import '../../core/widgets/glass_container.dart';
 import '../../core/widgets/gradient_background.dart';
 import '../../core/widgets/noor_ui.dart';
 import '../prayer/presentation/cubit/prayer_cubit.dart';
+import '../../core/i18n/text.dart';
+import '../settings/presentation/cubit/settings_cubit.dart';
 
 /// First-launch walkthrough: a few feature slides then a permissions slide.
 /// Shown once; completion is stored under settings['onboarded'].
@@ -124,9 +127,22 @@ class _OnboardingPageState extends State<OnboardingPage> {
               maxWidth: 560,
               child: Column(
               children: [
-                Align(
-                  alignment: AlignmentDirectional.centerEnd,
-                  child: AnimatedOpacity(
+                Row(
+                  children: [
+                    // عربي / English from the very first screen.
+                    TextButton.icon(
+                      onPressed: () async {
+                        final lang = I18n.en ? 'ar' : 'en';
+                        final cubit = context.read<SettingsCubit>();
+                        await I18n.load(lang);
+                        await cubit.setLanguage(lang);
+                      },
+                      icon: Icon(Icons.translate_rounded, size: 18, color: glass.onGlassMuted),
+                      label: w.Text(I18n.en ? 'العربية' : 'English',
+                          style: TextStyle(color: glass.onGlassMuted, fontWeight: FontWeight.w700)),
+                    ),
+                    const Spacer(),
+                    AnimatedOpacity(
                     opacity: last ? 0 : 1,
                     duration: const Duration(milliseconds: 200),
                     child: TextButton(
@@ -135,6 +151,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
                       child: Text('تخطي', style: TextStyle(color: glass.onGlassMuted, fontWeight: FontWeight.w700)),
                     ),
                   ),
+                  ],
                 ),
                 Expanded(
                   child: PageView.builder(

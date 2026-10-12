@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -11,6 +11,7 @@ import '../../../audio/presentation/cubit/audio_cubit.dart';
 import '../../../audio/presentation/widgets/mini_player.dart';
 import '../../../settings/presentation/cubit/settings_cubit.dart';
 import '../../domain/entities/ayah.dart';
+import '../../../../core/i18n/text.dart';
 
 /// "استماع" choices: this ayah only, to the end of the surah, or a custom
 /// passage with reciter and repetition (memorization).
@@ -324,7 +325,7 @@ class _Option extends StatelessWidget {
                     ],
                   ),
                 ),
-                Icon(selected ? Icons.expand_less_rounded : Icons.chevron_left_rounded, color: glass.onGlassMuted),
+                Icon(selected ? Icons.expand_less_rounded : kGoChevron, color: glass.onGlassMuted),
               ],
             ),
           ),
@@ -446,7 +447,7 @@ class _ReciterTile extends StatelessWidget {
                 ),
               ),
               Text('تغيير', style: TextStyle(color: glass.accent, fontWeight: FontWeight.w800)),
-              Icon(Icons.chevron_left_rounded, color: glass.accent),
+              Icon(kGoChevron, color: glass.accent),
             ],
           ),
         ),

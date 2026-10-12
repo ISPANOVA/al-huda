@@ -1,10 +1,11 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
 import '../../../media/reciter_photos.dart';
 
 import '../../../../core/theme/app_themes.dart';
 import '../../../../core/theme/tones.dart';
 import '../../../../core/widgets/glass_container.dart';
 import '../../../../core/widgets/gradient_background.dart';
+import '../../../../core/i18n/text.dart';
 
 /// One titled paragraph: a coloured icon, the title and the text, on a card
 /// washed with the same colour.
@@ -114,7 +115,7 @@ class PrivacyPage extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
         children: const [
           _Hero(Icons.verified_user_rounded, 'باختصار',
-              'تطبيق الهدى لا يطلب حسابًا ولا يجمع أي بيانات شخصية، ولا يحتوي على إعلانات أو أدوات تتبّع. كل بياناتك تبقى على هاتفك.',
+              'تطبيق الهدى لا يطلب حسابًا ولا يجمع أي بيانات شخصية، ولا يحتوي على إعلانات أو أدوات تتبّع. كل بياناتك تبقى على هاتفك، إلا ما تكتبه بنفسك في الختمة الجماعية إن استخدمتها.',
               tone: Tone.sky),
           GlassSectionTitle('ما يستخدمه التطبيق', tone: Tone.sky),
           _Block(Icons.place_rounded, 'الموقع',
@@ -129,6 +130,9 @@ class PrivacyPage extends StatelessWidget {
           _Block(Icons.wifi_rounded, 'الإنترنت',
               'يتصل التطبيق بالإنترنت لتحميل التلاوات والتفاسير الإضافية وتشغيل الإذاعات والبث المباشر من مصادرها، ولقراءة رسائل التطبيق (مثل التنبيه بوجود تحديث). لا تُرسل أي معلومات عنك في هذه الطلبات سوى ما يلزم تقنيًا لتحميل الملف.',
               tone: Tone.sapphire),
+          _Block(Icons.groups_rounded, 'الختمة الجماعية',
+              'إذا أنشأت ختمة جماعية أو انضممت إليها، يُحفظ على خادم الموقع (Cloudflare) اسم الختمة والاسم الذي تكتبه بنفسك والأجزاء التي حجزتها أو أتممتها، مع رمز عشوائي يميّز جهازك دون أي معلومات أخرى عنك، ويراها كل من معه رابط الختمة. لا تستخدم الختمة الجماعية إن لم ترغب في ذلك.',
+              tone: Tone.teal),
           GlassSectionTitle('بياناتك وحقوقك', tone: Tone.sky),
           _Block(Icons.save_rounded, 'بياناتك',
               'العلامات والختمة والورد والإحصائيات والإعدادات محفوظة على هاتفك فقط. النسخة الاحتياطية ملف تنشئه أنت وتحتفظ به حيث تشاء، ويمكنك حذف كل البيانات بحذف التطبيق.',

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/theme/app_themes.dart';
@@ -11,6 +11,7 @@ import '../../../settings/presentation/cubit/settings_cubit.dart';
 import '../../../settings/presentation/cubit/settings_state.dart';
 import '../../domain/prayer_entities.dart';
 import '../prayer_tones.dart';
+import '../../../../core/i18n/text.dart';
 
 /// Calculation method, madhab and manual minute adjustments, under its own
 /// «طريقة الحساب» heading (shown on the adhan & times settings page).
@@ -252,7 +253,7 @@ class _CalcRow extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 8),
-            Icon(Icons.chevron_left_rounded, color: glass.onGlassMuted),
+            Icon(kGoChevron, color: glass.onGlassMuted),
           ],
         ),
       ),

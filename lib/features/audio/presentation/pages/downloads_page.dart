@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/data/surah_metadata.dart';
@@ -13,6 +13,7 @@ import '../../data/audio_download_service.dart';
 import '../../domain/reciter.dart';
 import '../cubit/downloads_cubit.dart';
 import '../widgets/mini_player.dart';
+import '../../../../core/i18n/text.dart';
 
 class DownloadsPage extends StatelessWidget {
   const DownloadsPage({super.key});
@@ -229,7 +230,7 @@ class _SurahRow extends StatelessWidget {
     Widget trailing;
     if (progress != null) {
       trailing = IconButton(
-        tooltip: 'إلغاء',
+        tooltip: tr('إلغاء'),
         icon: Icon(Icons.cancel_outlined, color: Tone.rose.ink(dark)),
         onPressed: onCancel,
       );
@@ -239,7 +240,7 @@ class _SurahRow extends StatelessWidget {
         children: [
           Icon(Icons.offline_pin_rounded, color: tone.ink(dark)),
           IconButton(
-            tooltip: 'حذف',
+            tooltip: tr('حذف'),
             icon: Icon(Icons.delete_outline_rounded, color: glass.onGlassMuted),
             onPressed: onDelete,
           ),
@@ -247,7 +248,7 @@ class _SurahRow extends StatelessWidget {
       );
     } else {
       trailing = IconButton(
-        tooltip: 'تحميل',
+        tooltip: tr('تحميل'),
         style: IconButton.styleFrom(
           backgroundColor: tone.mid.withValues(alpha: dark ? 0.18 : 0.12),
           foregroundColor: tone.ink(dark),

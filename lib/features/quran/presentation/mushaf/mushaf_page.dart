@@ -2,13 +2,14 @@ import 'dart:collection';
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
 import 'package:flutter/scheduler.dart';
 
 import '../../../../core/data/surah_metadata.dart';
 import '../../../../core/theme/app_themes.dart';
 import '../../domain/entities/mushaf_line.dart';
 import 'tajweed.dart';
+import '../../../../core/i18n/text.dart';
 
 /// KFGQPC Uthmanic Hafs (the King Fahd Complex Mushaf font).
 const String kMushafFont = 'UthmanicHafs';

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/constants/app_constants.dart';
@@ -9,6 +9,7 @@ import '../../../../core/theme/app_themes.dart';
 import '../../../../core/theme/theme_transition.dart';
 import '../../../../core/widgets/background_patterns.dart';
 import 'settings_state.dart';
+import '../../../../core/i18n/text.dart';
 
 class SettingsCubit extends Cubit<SettingsState> {
   static const _key = 'app_settings';
@@ -72,6 +73,10 @@ class SettingsCubit extends Cubit<SettingsState> {
   Future<void> setOccasionReminders(bool v) => _save(state.copyWith(occasionReminders: v));
 
   Future<void> setSunriseAlert(bool v) => _save(state.copyWith(sunriseAlert: v));
+  Future<void> setFridayReminders(bool v) => _save(state.copyWith(fridayReminders: v));
+  Future<void> setRamadanSuhoor(bool v) => _save(state.copyWith(ramadanSuhoor: v));
+  Future<void> setSuhoorMinutes(int v) => _save(state.copyWith(suhoorMinutes: v.clamp(10, 120)));
+  Future<void> setLanguage(String v) => _save(state.copyWith(language: v == 'en' ? 'en' : 'ar'));
 
   Future<void> setBackgroundPattern(BgPattern pattern) async {
     final next = state.copyWith(bgPattern: pattern.index);

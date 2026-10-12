@@ -3,7 +3,7 @@ import 'dart:ui' as ui;
 
 import 'package:dio/dio.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:video_player/video_player.dart';
 
@@ -23,6 +23,7 @@ import '../quran/domain/repositories/quran_repository.dart';
 import '../settings/presentation/cubit/settings_cubit.dart';
 import 'ayah_video_service.dart';
 import 'video_frames.dart';
+import '../../core/i18n/text.dart';
 
 /// «فيديو بصوت القارئ»: an ayah or a passage as a story video, the reciter's
 /// voice with the words on screen, ready for WhatsApp, Instagram and Facebook.

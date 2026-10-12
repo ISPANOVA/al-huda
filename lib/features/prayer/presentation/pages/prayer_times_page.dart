@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hijri/hijri_calendar.dart';
 import 'package:intl/intl.dart';
@@ -23,6 +23,7 @@ import '../widgets/adhan_settings.dart';
 import '../widgets/prayer_calc_settings.dart';
 import '../widgets/battery_hint.dart';
 import '../widgets/exact_alarm_prompt.dart';
+import '../../../../core/i18n/text.dart';
 
 /// الصلاة — the sun's path through today's prayers, a timeline of the
 /// times, and a single entry to the adhan & calculation settings.
@@ -31,9 +32,9 @@ class PrayerTimesPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    HijriCalendar.setLocal('ar');
+    HijriCalendar.setLocal(I18n.dateLocale);
     final hijri = HijriCalendar.now();
-    final gregorian = DateFormat('EEEE d MMMM', 'ar').format(DateTime.now());
+    final gregorian = DateFormat('EEEE d MMMM', I18n.dateLocale).format(DateTime.now());
     return BlocBuilder<PrayerCubit, PrayerState>(
       buildWhen: (p, c) =>
           p.today != c.today || p.next != c.next || p.loading != c.loading || p.error != c.error || p.location != c.location,
@@ -53,17 +54,17 @@ class PrayerTimesPage extends StatelessWidget {
                   if (state.ready)
                     NoorIconButton(
                       icon: Icons.ios_share_rounded,
-                      tooltip: 'شارك المواقيت',
+                      tooltip: tr('شارك المواقيت'),
                       onTap: () => _shareTimes(context, state),
                     ),
                   NoorIconButton(
                     icon: Icons.explore_rounded,
-                    tooltip: 'القبلة',
+                    tooltip: tr('القبلة'),
                     onTap: () => Navigator.of(context).push(QiblaPage.route()),
                   ),
                   NoorIconButton(
                     icon: Icons.tune_rounded,
-                    tooltip: 'إعدادات الأذان',
+                    tooltip: tr('إعدادات الأذان'),
                     onTap: () => Navigator.of(context).push(PrayerSettingsPage.route()),
                   ),
                 ],
@@ -145,7 +146,7 @@ class _ShareTimesButton extends StatelessWidget {
               ],
             ),
           ),
-          Icon(Icons.chevron_left_rounded, color: glass.onGlassMuted),
+          Icon(kGoChevron, color: glass.onGlassMuted),
         ],
       ),
     );
@@ -549,7 +550,7 @@ class _SettingsEntry extends StatelessWidget {
               ],
             ),
           ),
-          Icon(Icons.chevron_left_rounded, color: glass.onGlassMuted),
+          Icon(kGoChevron, color: glass.onGlassMuted),
         ],
       ),
     );

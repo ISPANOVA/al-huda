@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/services/storage_service.dart';
@@ -20,6 +20,7 @@ import '../../virtues/virtues_pages.dart';
 import '../../calendar/calendar_page.dart';
 import '../../duas/duas_page.dart';
 import '../../hifz/hifz_review_page.dart';
+import '../../../core/i18n/text.dart';
 
 /// One shortcut the user can pin to the home screen.
 class QuickActionDef {

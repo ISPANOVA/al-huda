@@ -7,6 +7,8 @@ import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:timezone/data/latest_all.dart' as tzdata;
 import 'package:timezone/timezone.dart' as tz;
 
+import '../i18n/i18n.dart';
+
 /// Local notifications: prayer alerts, Khatmah and Athkar daily reminders.
 class NotificationService {
   final FlutterLocalNotificationsPlugin _plugin = FlutterLocalNotificationsPlugin();
@@ -120,8 +122,8 @@ class NotificationService {
     try {
       await _plugin.zonedSchedule(
         id: id,
-        title: title,
-        body: body,
+        title: tr(title),
+        body: tr(body),
         scheduledDate: date,
         notificationDetails: details,
         androidScheduleMode: exact ? AndroidScheduleMode.exactAllowWhileIdle : AndroidScheduleMode.inexactAllowWhileIdle,
@@ -131,8 +133,8 @@ class NotificationService {
       debugPrint('Exact schedule failed, falling back to inexact: $e');
       await _plugin.zonedSchedule(
         id: id,
-        title: title,
-        body: body,
+        title: tr(title),
+        body: tr(body),
         scheduledDate: date,
         notificationDetails: details,
         androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
@@ -282,30 +284,33 @@ class NotificationService {
     if (when.isBefore(DateTime.now())) return;
     await _plugin.zonedSchedule(
       id: id,
-      title: title,
-      body: body,
+      title: tr(title),
+      body: tr(body),
       scheduledDate: tz.TZDateTime.from(when, tz.local),
       notificationDetails: NotificationDetails(android: _prayerChannel, iOS: _darwin),
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
     );
   }
 
-  /// One-shot gentle reminder (occasions, fasting, Friday).
+  /// One-shot gentle reminder (occasions, fasting, Friday). [payload] is the
+  /// screen a tap opens (see HomeShell), e.g. `surah:18`.
   Future<void> scheduleReminderAt({
     required int id,
     required String title,
     required String body,
     required DateTime when,
+    String? payload,
   }) async {
     if (kIsWeb) return; // no local notifications on the web
     if (when.isBefore(DateTime.now())) return;
     await _plugin.zonedSchedule(
       id: id,
-      title: title,
-      body: body,
+      title: tr(title),
+      body: tr(body),
       scheduledDate: tz.TZDateTime.from(when, tz.local),
       notificationDetails: NotificationDetails(android: _reminderChannel, iOS: _darwin),
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+      payload: payload,
     );
   }
 
@@ -323,8 +328,8 @@ class NotificationService {
     if (!next.isAfter(now)) next = next.add(const Duration(days: 1));
     await _plugin.zonedSchedule(
       id: id,
-      title: title,
-      body: body,
+      title: tr(title),
+      body: tr(body),
       scheduledDate: next,
       notificationDetails: NotificationDetails(android: _reminderChannel, iOS: _darwin),
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,

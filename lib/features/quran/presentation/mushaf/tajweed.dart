@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
 import 'package:flutter/services.dart';
+import '../../../../core/i18n/text.dart';
 
 /// Tajweed colours for the Mushaf (assets/quran/tajweed.txt, made by
 /// tool/quran/tajweed.py from Quran.com's word data, matched letter by letter

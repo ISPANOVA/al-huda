@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
+import '../i18n/text.dart';
 
 /// Every screen slides in from the reading side (RTL: from the left) while
 /// the page underneath drifts a little. Pure translations: no opacity layer

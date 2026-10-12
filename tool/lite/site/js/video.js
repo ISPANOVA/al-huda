@@ -2,7 +2,7 @@
 // reciter's voice with the words on screen, encoded in the browser
 // (WebCodecs + mp4-muxer) and shared to WhatsApp, Instagram, Facebook…
 // Also the ayah as a picture (the same frame), for the ayah menu.
-import { $, $$, ar, esc, icon, store, data, meta, surahs, top, toast } from './app.js';
+import { $, $$, ar, arabic, esc, icon, store, data, meta, surahs, top, toast } from './app.js';
 import { ayahText } from './page.js';
 import { PHOTOS } from './reciters.js';
 import { CDN } from './player.js';
@@ -228,7 +228,7 @@ export function drawFrame(c, f, bg, assets) {
   c.beginPath(); c.moveTo(W / 2 - 220, 456); c.lineTo(W / 2 - 34, 456); c.moveTo(W / 2 + 34, 456); c.lineTo(W / 2 + 220, 456); c.stroke();
   c.fillStyle = accent; star(c, W / 2, 456, 16, 10); c.fill();
   // The ayah, as large as fits; its number in the accent colour.
-  const marker = f.num ? ` ${ar(f.num)}` : '';
+  const marker = f.num ? ` ${arabic(f.num)}` : '';
   const words = (f.text + marker).split(/\s+/).filter(Boolean);
   let size = 96, ls;
   while (size > 30 && !(ls = fit(c, words, size))) size -= 2;
@@ -313,7 +313,7 @@ export async function shareAyahImage(g) {
   const assets = await assetsFor(r.id, null);
   const t = await ayahText(g);
   drawFrame(cv.getContext('2d'), { text: t, num: m.ayah[g - 1], surah: `سورة ${names[m.surah[g - 1] - 1][1]}`, reciter: r.name,
-    caption: `الآية ${ar(m.ayah[g - 1])}` }, bg, assets);
+    caption: `الآية ${arabic(m.ayah[g - 1])}` }, bg, assets);
   const blob = await new Promise((ok) => cv.toBlob(ok, 'image/png'));
   const name = `alhuda_${m.surah[g - 1]}_${m.ayah[g - 1]}.png`;
   await deliver(blob, name, `﴿${t}﴾ [${names[m.surah[g - 1] - 1][1]}: ${ar(m.ayah[g - 1])}]\nمن تطبيق الهدى: https://${LINK}`);
@@ -388,7 +388,7 @@ export async function show(view, args) {
     const g = m.surah.indexOf(s) + f;
     const txt = await ayahText(g);
     if (!pv.isConnected) return;
-    const fr = { text: txt, num: f, surah: `سورة ${names[s - 1][1]}`, reciter: r.name, caption: `الآية ${ar(f)}` };
+    const fr = { text: txt, num: f, surah: `سورة ${names[s - 1][1]}`, reciter: r.name, caption: `الآية ${arabic(f)}` };
     const token = ++loop;
     if (bgId !== 'clip' || !clip) {
       clip?.pause();
@@ -546,7 +546,7 @@ async function render({ s, f, t, r, m, names, bg, photo, clip, prog }) {
     let st = tsec;
     for (let k = 0; k < pages.length; k++) {
       drawFrame(ctx, { text: pages[k], num: !isBas && k === pages.length - 1 ? m.ayah[g - 1] : null, surah: surahName, reciter: r.name,
-        caption: isBas ? 'البسملة' : `الآية ${ar(m.ayah[g - 1])}` }, bg, assets);
+        caption: isBas ? 'البسملة' : `الآية ${arabic(m.ayah[g - 1])}` }, bg, assets);
       const end = k === pages.length - 1 ? tsec + dur : st + (dur * pages[k].length) / sum;
       shots.push({ bmp: await createImageBitmap(cv), start: st, end });
       st = end;

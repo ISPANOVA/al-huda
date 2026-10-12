@@ -1,7 +1,8 @@
 import 'dart:ui' as ui;
 
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
 import 'package:flutter/rendering.dart';
+import '../i18n/text.dart';
 
 /// Smooth theme switching: instead of interpolating the whole ThemeData every
 /// frame (which rebuilds the entire app ~30 times and stutters), we take one

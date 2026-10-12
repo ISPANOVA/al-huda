@@ -8,6 +8,7 @@ import '../../../../core/services/adhan_native.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/services/notification_service.dart';
 import '../../../../core/utils/arabic_utils.dart';
+import '../../../calendar/islamic_calendar.dart';
 import '../../../settings/presentation/cubit/settings_cubit.dart';
 import '../../../settings/presentation/cubit/settings_state.dart';
 import '../../../../core/services/home_widgets.dart';
@@ -106,7 +107,8 @@ class PrayerCubit extends Cubit<PrayerState> {
   String _settingsKey(SettingsState s) =>
       '${s.calcMethod}|${s.madhab}|${s.prayerNotifications}|${s.prayerAdjustments.join(',')}|'
       '${s.adhanVoice}|${s.adhanFull}|${s.preAdhanEnabled}|${s.preAdhanMinutes}|${s.prayerAlerts.join(',')}|'
-      '${s.postPrayerAthkar}|${s.postPrayerMinutes}|${s.adhanAlwaysPlay}|${s.sunriseAlert}|${s.iqamaReminder}';
+      '${s.postPrayerAthkar}|${s.postPrayerMinutes}|${s.adhanAlwaysPlay}|${s.sunriseAlert}|${s.iqamaReminder}|'
+      '${s.fridayReminders}|${s.ramadanSuhoor}|${s.suhoorMinutes}';
 
   /// Usual time between adhan and iqama in mosques (Egypt's common practice).
   static const iqamaMinutes = {
@@ -252,6 +254,31 @@ class PrayerCubit extends Cubit<PrayerState> {
           title: 'أشرقت الشمس ☀️',
           body: 'حان وقت الشروق ${ArabicUtils.formatTime(day[PrayerName.sunrise])} • تبدأ صلاة الضحى بعد ارتفاع الشمس بربع ساعة',
           when: day[PrayerName.sunrise],
+        );
+      }
+      // Ramadan: suhoor before fajr, the iftar dua at maghrib.
+      if (s.ramadanSuhoor && IslamicCalendar.hijriOf(day.date).hMonth == 9) {
+        await _notifications.scheduleReminderAt(
+          id: base + 85 + dayIndex,
+          title: 'السحور 🌙',
+          body: 'باقٍ ${ArabicUtils.minutes(s.suhoorMinutes)} على الفجر (${ArabicUtils.formatTime(day[PrayerName.fajr])}). '
+              'تسحّروا فإن في السحور بركة',
+          when: day[PrayerName.fajr].subtract(Duration(minutes: s.suhoorMinutes)),
+        );
+        await _notifications.scheduleReminderAt(
+          id: base + 88 + dayIndex,
+          title: 'تقبّل الله صيامكم 🤲',
+          body: 'دعاء الإفطار: ذهب الظمأ، وابتلت العروق، وثبت الأجر إن شاء الله',
+          when: day[PrayerName.maghrib].add(const Duration(minutes: 1)),
+        );
+      }
+      // Friday: the salawat in the last hour before maghrib.
+      if (s.fridayReminders && day.date.weekday == DateTime.friday) {
+        await _notifications.scheduleReminderAt(
+          id: base + 91 + dayIndex,
+          title: 'ساعة الإجابة يوم الجمعة 🤲',
+          body: 'آخر ساعة قبل المغرب: أكثِر من الدعاء والصلاة على النبي ﷺ',
+          when: day[PrayerName.maghrib].subtract(const Duration(hours: 1)),
         );
       }
       dayIndex++;

@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
+import '../../core/i18n/text.dart';
 
 /// Full-surah recitations (one MP3 per surah) served by mp3quran.net.
 /// URLs were verified from the mp3quran v3 API (Hafs, all 114 surahs).

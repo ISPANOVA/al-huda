@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../core/theme/app_themes.dart';
@@ -9,6 +9,7 @@ import '../quran/presentation/cubit/bookmarks_cubit.dart';
 import '../quran/presentation/mushaf/mushaf_reader_page.dart';
 import '../settings/presentation/cubit/settings_cubit.dart';
 import 'wird_tracker.dart';
+import '../../core/i18n/text.dart';
 
 /// Dashboard card for the smart daily wird.
 class WirdCard extends StatelessWidget {
@@ -38,7 +39,7 @@ class WirdCard extends StatelessWidget {
                 ],
               ),
             ),
-            const Icon(Icons.chevron_left_rounded),
+            const Icon(kGoChevron),
           ],
         ),
       );
@@ -116,7 +117,7 @@ class WirdCard extends StatelessWidget {
                 ),
               ),
               IconButton(
-                tooltip: 'تعديل الورد',
+                tooltip: tr('تعديل الورد'),
                 icon: Icon(Icons.tune_rounded, color: glass.onGlassMuted),
                 onPressed: () => showWirdSetup(context),
               ),

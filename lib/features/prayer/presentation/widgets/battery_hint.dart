@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -8,6 +8,7 @@ import '../../../../core/theme/app_themes.dart';
 import '../../../../core/theme/tones.dart';
 import '../../../../core/widgets/state_views.dart';
 import '../../../settings/presentation/cubit/settings_cubit.dart';
+import '../../../../core/i18n/text.dart';
 
 /// Battery saving on Samsung, Xiaomi, Huawei… can put the app to sleep and
 /// hold the adhan back. This finds out whether the app is exempt and shows
@@ -185,7 +186,7 @@ class BatteryBanner extends StatelessWidget {
                     ],
                   ),
                 ),
-                Icon(Icons.chevron_left_rounded, color: glass.onGlassMuted),
+                Icon(kGoChevron, color: glass.onGlassMuted),
               ],
             ),
           ),

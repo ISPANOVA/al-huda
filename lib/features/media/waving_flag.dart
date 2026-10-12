@@ -2,9 +2,10 @@ import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
 
 import '../../core/theme/app_themes.dart';
+import '../../core/i18n/text.dart';
 
 enum FlagKind { egypt, saudi }
 

@@ -80,6 +80,8 @@ def main():
         src = os.path.join(ROOT, "assets/quran", name)
         if os.path.exists(src):
             shutil.copy(src, os.path.join(OUT, "data", name))
+    # The English interface: the same dictionary as the app.
+    shutil.copy(os.path.join(ROOT, "assets/i18n/en.json"), os.path.join(OUT, "data", "en.json"))
 
     fonts = os.path.join(OUT, "fonts")
     os.makedirs(fonts, exist_ok=True)

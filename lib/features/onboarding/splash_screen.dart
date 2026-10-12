@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
+import '../../core/i18n/text.dart';
 
 /// Golden launch screen shown while the app initialises (every launch):
 /// the Al-Huda emblem scales in over a slowly turning gold Islamic lattice,

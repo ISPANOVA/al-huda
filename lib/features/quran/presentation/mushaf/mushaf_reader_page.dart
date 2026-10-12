@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -27,6 +27,7 @@ import '../widgets/ayah_sheets.dart';
 import '../../../wird/wird_tracker.dart';
 import 'mushaf_page.dart';
 import 'tajweed.dart';
+import '../../../../core/i18n/text.dart';
 
 /// The Mushaf: 604 swipeable pages in the app's theme.
 ///
@@ -272,8 +273,13 @@ class _MushafReaderPageState extends State<MushafReaderPage> {
     });
   }
 
+  // The Mushaf turns right to left whatever the interface language.
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => I18n.en
+      ? Directionality(textDirection: TextDirection.rtl, child: Builder(builder: _build))
+      : _build(context);
+
+  Widget _build(BuildContext context) {
     _syncWideFrame();
     final tajweed = context.select<SettingsCubit, bool>((c) => c.state.tajweed);
     if (tajweed && !Tajweed.ready) Tajweed.load().then((_) => mounted ? setState(() {}) : null);
@@ -498,10 +504,10 @@ class _Header extends StatelessWidget {
               ],
             ),
           ),
-          MushafToolIcon(icon: Icons.search_rounded, color: style.accent, onTap: onSearch, tooltip: 'بحث'),
+          MushafToolIcon(icon: Icons.search_rounded, color: style.accent, onTap: onSearch, tooltip: tr('بحث')),
           const Spacer(),
-          fade(MushafToolIcon(icon: Icons.mic_rounded, color: style.accent, onTap: onTasmee, tooltip: 'التسميع')),
-          fade(MushafToolIcon(icon: Icons.grid_view_rounded, color: style.accent, onTap: onIndex, tooltip: 'الفهرس')),
+          fade(MushafToolIcon(icon: Icons.mic_rounded, color: style.accent, onTap: onTasmee, tooltip: tr('التسميع'))),
+          fade(MushafToolIcon(icon: Icons.grid_view_rounded, color: style.accent, onTap: onIndex, tooltip: tr('الفهرس'))),
           const Spacer(),
           MushafChip(
             style: style,
@@ -514,7 +520,7 @@ class _Header extends StatelessWidget {
           MushafToolIcon(
             icon: bookmarked ? Icons.bookmark_rounded : Icons.bookmark_border_rounded,
             color: style.accent,
-            tooltip: 'حفظ موضع القراءة',
+            tooltip: tr('حفظ موضع القراءة'),
             onTap: () => context.read<BookmarksCubit>().toggleBookmark(first.surah, first.numberInSurah, text: first.text),
           ),
         ],
@@ -572,7 +578,7 @@ class _Footer extends StatelessWidget {
           fade(Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              MushafToolIcon(icon: Icons.tune_rounded, color: style.accent, onTap: onSettings, tooltip: 'إعدادات القراءة'),
+              MushafToolIcon(icon: Icons.tune_rounded, color: style.accent, onTap: onSettings, tooltip: tr('إعدادات القراءة')),
               const SizedBox(width: 4),
               Material(
                 color: style.primary,
@@ -589,7 +595,7 @@ class _Footer extends StatelessWidget {
               ),
               if (onClose != null) ...[
                 const SizedBox(width: 4),
-                MushafToolIcon(icon: Icons.close_rounded, color: style.accent, onTap: onClose!, tooltip: 'إغلاق'),
+                MushafToolIcon(icon: Icons.close_rounded, color: style.accent, onTap: onClose!, tooltip: tr('إغلاق')),
               ],
             ],
           )),

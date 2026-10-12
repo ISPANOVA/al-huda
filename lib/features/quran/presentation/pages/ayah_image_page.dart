@@ -3,7 +3,7 @@ import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
 import 'package:flutter/rendering.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
@@ -17,6 +17,7 @@ import '../../../../core/widgets/gradient_background.dart';
 import '../../../../core/widgets/noor_ui.dart';
 import '../../../../core/widgets/state_views.dart';
 import '../../domain/entities/ayah.dart';
+import '../../../../core/i18n/text.dart';
 
 class _CardStyle {
   final String name;

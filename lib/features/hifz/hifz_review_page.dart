@@ -1,6 +1,6 @@
 import 'dart:math' as math;
 
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -14,6 +14,7 @@ import '../../core/widgets/noor_ui.dart';
 import '../quran/domain/entities/ayah.dart';
 import '../quran/domain/repositories/quran_repository.dart';
 import '../settings/presentation/cubit/settings_cubit.dart';
+import '../../core/i18n/text.dart';
 
 const _scoresKey = 'hifz_scores';
 
@@ -103,7 +104,7 @@ class _HifzReviewPageState extends State<HifzReviewPage> {
               onChanged: (v) => setState(() => _query = v.trim()),
               decoration: InputDecoration(
                 isDense: true,
-                hintText: 'ابحث عن سورة',
+                hintText: tr('ابحث عن سورة'),
                 filled: true,
                 fillColor: noorSurface(context),
                 prefixIcon: Icon(Icons.search_rounded, color: Tone.coral.ink(dark)),
@@ -196,7 +197,7 @@ class _HifzReviewPageState extends State<HifzReviewPage> {
                                         fontSize: 11, fontWeight: FontWeight.w900, color: scoreTone.ink(dark))),
                               )
                             else
-                              Icon(Icons.chevron_left_rounded, color: glass.onGlassMuted),
+                              Icon(kGoChevron, color: glass.onGlassMuted),
                           ],
                         ),
                       ),

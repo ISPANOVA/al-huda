@@ -1,7 +1,6 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:share_plus/share_plus.dart';
 
 import '../../core/data/surah_metadata.dart';
 import '../../core/theme/app_themes.dart';
@@ -14,6 +13,8 @@ import '../../core/widgets/state_views.dart';
 import '../quran/domain/entities/ayah.dart';
 import '../quran/domain/repositories/quran_repository.dart';
 import 'virtues_data.dart';
+import '../../core/widgets/share_card.dart';
+import '../../core/i18n/text.dart';
 
 /// Each chapter of virtues has its own jewel tone (by its place in the list).
 const _tones = <Tone>[
@@ -120,7 +121,7 @@ class _CategoryTile extends StatelessWidget {
           const SizedBox(width: 8),
           _TonePill(ArabicUtils.toArabicDigits(category.items.length), tone: tone),
           const SizedBox(width: 2),
-          Icon(Icons.chevron_left_rounded, color: tone.ink(dark)),
+          Icon(kGoChevron, color: tone.ink(dark)),
         ],
       ),
     );
@@ -245,7 +246,7 @@ class _TextCard extends StatelessWidget {
                       _RoundToneButton(
                         icon: Icons.copy_rounded,
                         tone: tone,
-                        tooltip: 'نسخ',
+                        tooltip: tr('نسخ'),
                         onTap: () {
                           Clipboard.setData(ClipboardData(text: '$text\n[$source]'));
                           showGlassSnack(context, 'تم النسخ');
@@ -255,8 +256,10 @@ class _TextCard extends StatelessWidget {
                       _RoundToneButton(
                         icon: Icons.share_rounded,
                         tone: tone,
-                        tooltip: 'مشاركة',
-                        onTap: () => SharePlus.instance.share(ShareParams(text: '$text\n[$source]\n\n— تطبيق الهدى')),
+                        tooltip: tr('مشاركة'),
+                        onTap: () => showShareChoice(context,
+                            card: ShareCard(title: quran ? 'من كتاب الله' : 'من السنة', body: text, source: source, quran: quran),
+                            text: '$text\n[$source]'),
                       ),
                     ],
                   ),

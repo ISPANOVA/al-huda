@@ -1,11 +1,12 @@
 import 'package:dio/dio.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 
 import '../../../../core/services/storage_service.dart';
 import '../../../../core/theme/app_themes.dart';
 import '../../domain/entities/ayah.dart';
+import '../../../../core/i18n/text.dart';
 
 /// Tafsir books the reader can switch between. Al-Muyassar ships with the
 /// app; the others are fetched once per ayah and then kept offline.

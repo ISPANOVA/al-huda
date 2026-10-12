@@ -1,8 +1,9 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
 
 import '../theme/app_themes.dart';
 import '../theme/tones.dart';
 import 'noor_ui.dart';
+import '../i18n/text.dart';
 
 /// Frosted glass surface: backdrop blur + translucent gradient fill +
 /// double border (outer hairline & inner highlight).

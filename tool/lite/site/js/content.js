@@ -2,6 +2,7 @@
 import { $, $$, ar, esc, icon, data, top, toast } from './app.js';
 import { player, ayahItems } from './player.js';
 import { globalAyah, ayahText } from './page.js';
+import { shareChoice } from './cards.js';
 
 const RUQYAH_VERSES = [
   ['سورة الفاتحة', 1, 1, 7], ['أول سورة البقرة', 2, 1, 5], ['آية الكرسي', 2, 255, 255], ['خواتيم سورة البقرة', 2, 285, 286],
@@ -19,13 +20,8 @@ const RUQYAH_DUAS = [
   ['بِسْمِ اللَّهِ الَّذِي لَا يَضُرُّ مَعَ اسْمِهِ شَيْءٌ فِي الْأَرْضِ وَلَا فِي السَّمَاءِ وَهُوَ السَّمِيعُ الْعَلِيمُ.', 'رواه أبو داود والترمذي', '٣ مرات'],
 ];
 
-const share = (t) => {
-  if (navigator.share) navigator.share({ text: t }).catch(() => {});
-  else navigator.clipboard?.writeText(t).then(() => toast('نُسخ النص'));
-};
-
 function item(text, source, extra = '', quran = false) {
-  return `<div class="card" data-share>
+  return `<div class="card" data-share data-src="${esc(source || '')}"${quran ? ' data-q' : ''}>
     <div class="${quran ? 'quran' : 'thikr'}" style="${quran ? '' : 'font-size:18px;line-height:2'}">${esc(text)}</div>
     <div class="row" style="margin-top:8px"><small class="grow muted">${esc(source || '')}${extra}</small>
     <button class="ibtn" data-sh aria-label="مشاركة">${icon('share')}</button></div></div>`;
@@ -51,8 +47,15 @@ export async function show(view, args, name) {
     const b = e.target.closest('[data-c]');
     if (b) { c = +b.dataset.c; $$('[data-c]', view).forEach((x) => x.classList.toggle('on', x === b)); render(); scrollTo(0, 0); return; }
     const s = e.target.closest('[data-sh]');
-    if (s) share(s.closest('[data-share]').querySelector('.quran,.thikr').textContent);
+    if (s) shareCard(s.closest('[data-share]'), virtues ? (s.closest('[data-share]').hasAttribute('data-q') ? 'من كتاب الله' : 'من السنة') : 'دعاء');
   };
+}
+
+/// A card of the list ([el]) shared as a picture or text.
+function shareCard(el, title) {
+  const body = el.querySelector('.quran,.thikr').textContent;
+  const source = el.dataset.src || '';
+  shareChoice({ title, body, source, quran: !!el.querySelector('.quran') }, source ? `${body}\n[${source}]` : body);
 }
 
 async function ruqyah(view, args) {
@@ -87,7 +90,7 @@ async function ruqyah(view, args) {
       return;
     }
     const s = e.target.closest('[data-sh]');
-    if (s) share(s.closest('[data-share]').querySelector('.quran,.thikr').textContent);
+    if (s) { const el = s.closest('[data-share]'); shareCard(el, el.querySelector('b.gold')?.textContent || 'الرقية الشرعية'); }
   };
 }
 
