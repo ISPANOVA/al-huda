@@ -17,7 +17,7 @@ class I18n {
   static bool en = false;
   static final Map<String, String> _map = {};
   static final List<(String, String)> _vocab = [];
-  static final List<(RegExp, String, bool)> _patterns = [];
+  static final List<_Pattern> _patterns = [];
   static final Map<String, String> _cache = {};
 
   static w.TextDirection get direction => en ? w.TextDirection.ltr : w.TextDirection.rtl;
@@ -48,20 +48,22 @@ class I18n {
       ..clear()
       ..addAll(vocab.entries.map((e) => (e.key, e.value)))
       ..sort((a, b) => b.$1.length.compareTo(a.$1.length));
+    _inner.clear();
     _patterns
       ..clear()
       ..addAll([
         for (final e in map.entries)
           if (e.key.contains('{}') && _letters.hasMatch(e.key.replaceAll('{}', '')))
-            (
-              RegExp('^${e.key.split('{}').map(RegExp.escape).join('(.+?)')}\$'),
+            _Pattern(
+              RegExp('^${e.key.split('{}').map(RegExp.escape).join('(.+?)')}\$', dotAll: true),
               e.value,
-              // Enough words around the gap to be sure a name may fill it.
-              _letters.allMatches(e.key.replaceAll('{}', '')).length >= 5,
+              // Enough words around the gaps to be sure a name may fill one.
+              _letters.allMatches(e.key.replaceAll('{}', '')).length >= 4,
+              e.key.split('{}').map((x) => x.trim()).where((x) => x.isNotEmpty).toList(),
             ),
       ])
-      // The most specific (longest literal text) first.
-      ..sort((a, b) => b.$1.pattern.length.compareTo(a.$1.pattern.length));
+      // The most specific (longest) first.
+      ..sort((a, b) => b.re.pattern.length.compareTo(a.re.pattern.length));
   }
 
   static final _letters = RegExp('[ء-ي]');
@@ -97,6 +99,14 @@ class I18n {
     return template.replaceAllMapped('{}', (_) => i < parts.length ? parts[i++] : '');
   }
 
+  static final Map<String, String?> _inner = {};
+
+  static String? _gap(String g, int depth) {
+    if (_inner.containsKey(g)) return _inner[g];
+    if (_inner.length > 6000) _inner.clear();
+    return _inner[g] = _translate(g, depth);
+  }
+
   static String? _translate(String s, int depth) {
     if (!_letters.hasMatch(s)) return latinDigits(s);
     final t = s.trim();
@@ -106,7 +116,6 @@ class I18n {
     }
     final exact = _map[t];
     if (exact != null) return exact;
-    if (depth > 3) return null;
 
     // «الآية ٣» → «الآية {}»
     final numbers = <String>[];
@@ -120,32 +129,36 @@ class I18n {
     }
 
     // «سورة {}», «باقٍ {} على الفجر ({})»: each gap translated in turn; a
-    // short name with no entry (a city) is kept as it is.
-    for (final (re, english, lenient) in _patterns) {
-      final m = re.firstMatch(t);
-      if (m == null) continue;
-      final parts = <String>[];
-      var ok = true;
-      for (var i = 1; i <= m.groupCount; i++) {
-        final g = m[i]!;
-        final r = _translate(g, depth + 1) ?? (lenient && g.split(' ').length <= 3 ? g : null);
-        if (r == null) {
-          ok = false;
-          break;
+    // short name with no entry (a city) may stay as it is. Short interface
+    // strings only, and one level of gaps inside gaps (long texts are content).
+    if (depth < 2 && t.length <= 160) {
+      for (final p in _patterns) {
+        if (!p.words.every(t.contains)) continue;
+        final m = p.re.firstMatch(t);
+        if (m == null) continue;
+        final parts = <String>[];
+        var ok = true;
+        for (var i = 1; i <= m.groupCount; i++) {
+          final g = m[i]!;
+          final r = _gap(g, depth + 1) ?? (p.lenient && g.split(' ').length <= 3 ? g : null);
+          if (r == null) {
+            ok = false;
+            break;
+          }
+          parts.add(r);
         }
-        parts.add(r);
+        if (ok) return _fill(p.en, parts);
       }
-      if (ok) return _fill(english, parts);
     }
 
     // «الفجر • ٤:٣٠ ص»: every piece must translate.
-    final pieces = t.split(_separators);
+    final pieces = depth < 2 && t.length <= 400 ? t.split(_separators) : [t];
     if (pieces.length > 1) {
       final seps = _separators.allMatches(t).map((m) => m[0]!).toList();
       final out = StringBuffer();
       for (var i = 0; i < pieces.length; i++) {
         final p = pieces[i];
-        final r = p.isEmpty ? '' : _translate(p, depth + 1);
+        final r = p.isEmpty ? '' : _gap(p, depth + 1);
         if (r == null) return _words(t);
         out.write(r);
         if (i < seps.length) out.write(seps[i] == '، ' ? ', ' : seps[i]);
@@ -166,6 +179,15 @@ class I18n {
     if (_letters.hasMatch(v)) return null;
     return latinDigits(v);
   }
+}
+
+class _Pattern {
+  final RegExp re;
+  final String en;
+  final bool lenient;
+  final List<String> words; // its fixed words: a string without all of them cannot match
+
+  const _Pattern(this.re, this.en, this.lenient, this.words);
 }
 
 /// The current interface language's text for [s] (Arabic as it is).

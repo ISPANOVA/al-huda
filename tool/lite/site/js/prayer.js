@@ -1,6 +1,6 @@
 // مواقيت الصلاة: today's times for the saved location, the next prayer, the
 // calculation settings and a monthly timetable (إمساكية).
-import { $, ar, esc, icon, store, top, toast, sheet } from './app.js';
+import { $, ar, arabic, esc, icon, store, top, toast, sheet } from './app.js';
 import { NAMES, METHODS, location, locate, timesFor, nextPrayer, hm, countdown, hijriToday, HMONTHS, ramadanDays } from './prayerlib.js';
 import { ticks, togglePrayed, prayedOn } from './tools.js';
 
@@ -89,10 +89,10 @@ async function sharePrayerImage(loc, t, h, np) {
   const c = cv.getContext('2d');
   const now = new Date();
   const city = loc.city || `${loc.lat.toFixed(2)}، ${loc.lng.toFixed(2)}`;
-  const hijri = h ? `${ar(h.d)} ${HMONTHS[h.m - 1]} ${ar(h.y)} هـ` : '';
+  const hijri = h ? `${arabic(h.d)} ${HMONTHS[h.m - 1]} ${arabic(h.y)} هـ` : '';
   const greg = now.toLocaleDateString('ar-EG', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
   const next = np && np[1].toDateString() === now.toDateString() ? np[0] : -1;
-  drawPrayerCard(c, { city, hijri, greg, times: t.map((x) => hm(x)), next, logo });
+  drawPrayerCard(c, { city, hijri, greg, times: t.map((x) => arabic(hm(x))), next, logo });
   const blob = await new Promise((ok) => cv.toBlob(ok, 'image/png'));
   const text = `مواقيت الصلاة في ${city} • ${greg}${hijri ? ' • ' + hijri : ''}\n`
     + NAMES.map((n, i) => `${n}: ${hm(t[i])}`).join('\n') + '\nمن تطبيق الهدى: https://al-huda.xyz';
@@ -207,7 +207,7 @@ async function month(view, mode) {
     try {
       const { drawTable, deliverImage } = await import('./cards.js');
       const city = location().city || 'حسب موقعي';
-      const blob = await drawTable({ title, subtitle: city, header: head, rows, highlight: today,
+      const blob = await drawTable({ title: arabic(title), subtitle: city, header: head, rows: rows.map((r) => r.map(arabic)), highlight: today,
         note: mode === 'ramadan' ? 'الإمساك قبل الفجر بعشر دقائق احتياطًا' : '' });
       await deliverImage(blob, mode === 'ramadan' ? `imsakiya_${ram.year}.png` : 'mawaqit_30.png', `${title} • ${city}\nمن تطبيق الهدى: https://al-huda.xyz`);
     } catch (err) { console.error(err); toast('تعذر تجهيز الصورة'); }

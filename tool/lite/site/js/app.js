@@ -4,8 +4,13 @@
 export const $ = (s, el = document) => el.querySelector(s);
 export const $$ = (s, el = document) => [...el.querySelectorAll(s)];
 
+import { startI18n, isEnglish } from './i18n.js';
+
 const AR = '٠١٢٣٤٥٦٧٨٩';
-export const ar = (n) => String(n).replace(/[0-9]/g, (d) => AR[d]);
+/// Numbers in Arabic digits (Latin ones in the English interface).
+export const ar = (n) => (isEnglish() ? String(n) : String(n).replace(/[0-9]/g, (d) => AR[d]));
+/// Always Arabic digits: the pictures and videos to share stay Arabic.
+export const arabic = (n) => String(n).replace(/[0-9]/g, (d) => AR[d]);
 export const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
 
 // ---------------------------------------------------------------- icons ---
@@ -57,7 +62,9 @@ const P = {
   image: 'M4 4h16v16H4zm2 2v9l3.5-3.5 3 3 2.5-2.5L18 15V6zm9 1.5a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3z',
   phone: 'M7 1h10a2 2 0 0 1 2 2v18a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2zm0 3v15h10V4z',
 };
-export const icon = (name, cls = '') => `<svg class="${cls}" viewBox="0 0 24 24" aria-hidden="true"><path d="${P[name] || ''}"/></svg>`;
+/// In the English interface the arrows point the other way (left to right).
+const MIRROR = { back: 'fwd', fwd: 'back' };
+export const icon = (name, cls = '') => `<svg class="${cls}" viewBox="0 0 24 24" aria-hidden="true"><path d="${P[isEnglish() ? MIRROR[name] || name : name] || ''}"/></svg>`;
 
 // -------------------------------------------------------------- storage ---
 export const store = {
@@ -239,7 +246,7 @@ async function warm() {
   setTimeout(() => idle(() => core().catch(() => {})), 1500);
 }
 
-route().then(() => {
+startI18n().catch(() => {}).then(route).then(() => {
   const s = $('#splash');
   setTimeout(() => { s.classList.add('out'); setTimeout(() => s.remove(), 400); }, 350);
   // Other pages are fetched once the first one has everything it needs.

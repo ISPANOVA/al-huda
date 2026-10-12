@@ -117,7 +117,7 @@ a:active, button:active { transform: scale(.97); }
 .qa .ticon { width: 48px; height: 48px; }
 .row { display: flex; align-items: center; gap: 12px; }
 .row .grow { flex: 1; min-width: 0; }
-.list > * { display: flex; align-items: center; gap: 12px; padding: 12px 4px; border-bottom: 1px solid rgba(255,255,255,.06); width: 100%; text-align: right; }
+.list > * { display: flex; align-items: center; gap: 12px; padding: 12px 4px; border-bottom: 1px solid rgba(255,255,255,.06); width: 100%; text-align: start; }
 .list > * > .grow { flex: 1; min-width: 0; }
 [data-theme="light"] .list > * { border-bottom-color: rgba(0,0,0,.06); }
 .list > *:last-child { border-bottom: 0; }
@@ -328,10 +328,10 @@ body.playing .mushaf .mbar.botb { opacity: 0; pointer-events: none; }
 .rgrid { display: grid; grid-template-columns: 1fr; gap: 10px; }
 @media (min-width: 600px) { .rgrid { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); } }
 .card + .card.rcard, .rgrid > .card { margin-top: 0; }
-.rcard { display: flex; align-items: center; gap: 12px; padding: 12px 14px; text-align: right; width: 100%; }
+.rcard { display: flex; align-items: center; gap: 12px; padding: 12px 14px; text-align: start; width: 100%; }
 .rcard b { display: block; font-size: 15px; } .rcard small { display: block; font-size: 12px; }
 .rcard.playing, .radio-hero.playing { border-color: var(--gold); box-shadow: 0 0 0 1px var(--gold) inset; }
-.radio-hero { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; text-align: right; min-height: 140px; width: 100%; }
+.radio-hero { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; text-align: start; min-height: 140px; width: 100%; }
 .radio-hero b { font-size: 17px; } .radio-hero .pbtn { background: rgba(255,255,255,.95); }
 .eq { display: inline-flex; align-items: flex-end; gap: 3px; height: 20px; flex: none; }
 .eq i { width: 4px; background: var(--gold); border-radius: 2px; animation: eq 0.9s ease-in-out infinite; }
@@ -441,7 +441,7 @@ body.in-mushaf .player { bottom: calc(var(--safe-b) + 8px); }
 .tick.on svg { background: linear-gradient(135deg, var(--sapphire-t), var(--sapphire-d)); border-color: transparent; color: #fff; }
 .tick small { font-weight: 700; }
 .plog { width: 100%; border-collapse: collapse; text-align: center; } .plog td, .plog th { padding: 4px 2px; }
-.plog td:first-child { text-align: right; white-space: nowrap; }
+.plog td:first-child { text-align: start; white-space: nowrap; }
 .dot { width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--line); display: inline-grid; place-items: center; }
 .dot.on { background: var(--emerald-d); border-color: transparent; color: #fff; } .dot svg { width: 16px; height: 16px; }
 .ramadan { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; }
@@ -503,7 +503,7 @@ i[class^=tj] { font-style: normal; }
 .hside > .cont { order: 4; } .hside > .goals { order: 5; } .hside > .athkar-now { order: 6; } .hside > .hsec { order: 7; } .hmain > .hayah { order: 8; }
 #banners:empty { display: none; }
 .cont { display: grid; gap: 10px; margin-top: 12px; }
-.ccard { position: relative; display: flex; align-items: center; gap: 12px; margin: 0 !important; overflow: hidden; width: 100%; font: inherit; color: inherit; text-align: right; cursor: pointer; }
+.ccard { position: relative; display: flex; align-items: center; gap: 12px; margin: 0 !important; overflow: hidden; width: 100%; font: inherit; color: inherit; text-align: start; cursor: pointer; }
 .ccard .grow { display: flex; flex-direction: column; min-width: 0; }
 .ccard .ticon { width: 48px; height: 48px; }
 .ctitle { font-family: ReemKufi, Tajawal; font-size: 21px; line-height: 1.35; } .ctitle.sm { font-size: 17px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -521,7 +521,7 @@ i[class^=tj] { font-style: normal; }
 @media (min-width: 600px) {
   .sky { margin: 0; border-radius: 28px; }
   .cont.two { grid-template-columns: 1fr 1fr; }
-  .goals .card { flex-direction: row; justify-content: center; gap: 10px; text-align: right; padding: 14px 10px; }
+  .goals .card { flex-direction: row; justify-content: center; gap: 10px; text-align: start; padding: 14px 10px; }
 }
 /* Computers and tablets in landscape: the sky, today and the ayah on one side,
    reading, goals and tools on the other. */
@@ -546,7 +546,7 @@ i[class^=tj] { font-style: normal; }
 .agrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px 6px; margin-top: 14px; }
 .agrid button { display: flex; flex-direction: column; align-items: center; gap: 7px; font-size: 12.5px; font-weight: 800; }
 .agrid .ticon { width: 52px; height: 52px; border-radius: 17px; }
-.asim { display: flex; align-items: center; gap: 12px; width: 100%; margin-top: 14px; text-align: right; }
+.asim { display: flex; align-items: center; gap: 12px; width: 100%; margin-top: 14px; text-align: start; }
 .asim .grow { display: flex; flex-direction: column; }
 
 /* ---- the home's sky: the scene with the title on top, the next prayer
@@ -586,3 +586,16 @@ i[class^=tj] { font-style: normal; }
 .juz.done { background: linear-gradient(135deg, #0E6B4E, #14916A); border-color: transparent; }
 .juz.done b, .juz.done small { color: #fff; }
 .juz.mine { box-shadow: 0 0 0 2px var(--gold) inset; }
+
+/* English interface (left to right): mirrored arrows and switches, and Arabic
+   content (ayahs, athkar, duas) still read right to left. */
+html.en .switch::after { right: auto; left: 3px; }
+html.en .switch.on::after { transform: translateX(20px); }
+html.en .seg > i { right: auto; left: 4px; transform: translateX(calc(var(--i) * 100%)); }
+html.en .search svg { right: auto; left: 14px; }
+html.en .search .field { padding-right: 14px; padding-left: 46px; }
+html.en .sky-date { right: auto; left: 18px; }
+html.en .live::before { margin-left: 0; margin-right: 4px; }
+html.en .quran, html.en .verse, html.en .thikr .txt { direction: rtl; }
+html.en p, html.en small, html.en .thikr, html.en .card > div { unicode-bidi: plaintext; }
+html.en .section { font-family: Tajawal, sans-serif; font-weight: 800; font-size: 18px; }

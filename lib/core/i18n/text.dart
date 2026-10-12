@@ -4,6 +4,8 @@ import 'package:flutter/widgets.dart' show BuildContext, Color, InlineSpan, Loca
 
 import 'i18n.dart';
 
+export 'i18n.dart' show tr, I18n;
+
 /// The app's [Text]: Flutter's own, with the string passed through [tr] so
 /// the interface follows the chosen language. Files import it in place of
 /// Flutter's (`hide Text`). Quran text (its own fonts) is never touched.
@@ -106,4 +108,3 @@ class Text extends StatelessWidget {
     );
   }
 }
-export 'i18n.dart' show tr, I18n;

@@ -1,5 +1,6 @@
 // الختمة والورد اليومي، وإحصائياتي: built on the pages read in the Mushaf.
 import { $, ar, icon, store, top, today, toast } from './app.js';
+import { isEnglish } from './i18n.js';
 import { streak } from './home.js';
 
 const PLANS = [7, 10, 15, 20, 30, 60];
@@ -33,7 +34,7 @@ export function show(view, args, name) {
     <div class="card">
       <div class="row"><span class="grow"><b>${goal ? `قرأت اليوم ${ar(Math.min(done, goal))} من ${ar(goal)} صفحات` : 'حدّد عدد الصفحات يوميًا'}</b></span>${goal && done >= goal ? `<span class="gold">${icon('check')}</span>` : ''}</div>
       ${goal ? `<div class="bar" style="margin-top:8px"><i style="width:${Math.min(1, done / goal) * 100}%"></i></div>` : ''}
-      <div class="chips" style="margin-top:12px">${GOALS.map((g) => `<button class="chip${g === goal ? ' on' : ''}" data-g="${g}">${g ? ar(g) + ' ص' : 'بدون'}</button>`).join('')}</div>
+      <div class="chips" style="margin-top:12px">${GOALS.map((g) => `<button class="chip${g === goal ? ' on' : ''}" data-g="${g}">${g ? (isEnglish() ? `${g} p.` : ar(g) + ' ص') : 'بدون'}</button>`).join('')}</div>
     </div>
     <div class="section">الختمة</div>
     ${plan || `<div class="card"><p style="margin-top:0">اختر مدة الختمة، ونحسب لك ما تقرؤه كل يوم. تُحتسب كل صفحة تفتحها في المصحف.</p>
