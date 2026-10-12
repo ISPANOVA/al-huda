@@ -84,7 +84,7 @@ export async function show(view, args) {
 function invite(k) {
   const text = `انضم إلى «${k.name}» واختر جزءًا تقرؤه، نختم القرآن معًا 🤍\n${linkOf(k.id)}`;
   if (navigator.share) navigator.share({ text }).catch(() => {});
-  else navigator.clipboard?.writeText(text).then(() => toast('نُسخ رابط الدعوة'));
+  else navigator.clipboard?.writeText(text).then(() => toast('نُسخ رابط الدعوة')).catch(() => toast(linkOf(k.id)));
 }
 
 async function group(view, id) {
