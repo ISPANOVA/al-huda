@@ -7,6 +7,8 @@ import 'package:al_huda/core/data/surah_metadata.dart';
 import 'package:al_huda/features/athkar/data/athkar_data.dart';
 import 'package:al_huda/features/audio/domain/reciter.dart';
 import 'package:al_huda/features/calendar/islamic_calendar.dart';
+import 'package:al_huda/features/content/asma_data.dart';
+import 'package:al_huda/features/content/nawawi_data.dart';
 import 'package:al_huda/features/duas/duas_data.dart';
 import 'package:al_huda/features/media/media_catalog.dart';
 import 'package:al_huda/features/virtues/virtues_data.dart';
@@ -41,6 +43,8 @@ void main() {
           ],
         },
     ]);
+    write('asma', [for (final (n, m) in kAsmaUlHusna) [n, m]]);
+    write('nawawi', [for (final (n, t, x) in kNawawi) [n, t, x]]);
     write('duas', [
       for (final c in kDuaCategories)
         {

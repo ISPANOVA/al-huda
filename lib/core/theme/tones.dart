@@ -65,6 +65,11 @@ class Tone {
         'qibla' || 'stats' => amber,
         'hifz' || 'review' || 'tasmee' => coral,
         'ruqyah' || 'duas' => sky,
+        'video' => rose,
+        'asma' || 'zakat' => gold,
+        'nawawi' => emerald,
+        'prayerlog' => sapphire,
+        'similar' => coral,
         'appearance' => amethyst,
         'settings' => slate,
         _ => gold,
@@ -136,6 +141,9 @@ class ToneCard extends StatelessWidget {
     Widget body = Padding(padding: padding, child: child);
     if (ornament) {
       body = Stack(
+        // The card's width reaches its content: a loose Stack let a centred
+        // Column shrink to its widest child and sit at the start edge.
+        fit: StackFit.passthrough,
         children: [
           PositionedDirectional(
             top: -34,

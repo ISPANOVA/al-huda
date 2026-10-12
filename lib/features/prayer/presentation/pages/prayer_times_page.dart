@@ -16,6 +16,7 @@ import '../../../settings/presentation/cubit/settings_cubit.dart';
 import '../../domain/adhan_voices.dart';
 import '../../domain/prayer_entities.dart';
 import '../cubit/prayer_cubit.dart';
+import '../prayer_log_page.dart';
 import '../prayer_tones.dart';
 import '../widgets/adhan_settings.dart';
 import '../widgets/prayer_calc_settings.dart';
@@ -82,6 +83,8 @@ class PrayerTimesPage extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 14),
                   child: _Timeline(state: state),
                 ),
+                const SizedBox(height: 12),
+                const Padding(padding: EdgeInsets.symmetric(horizontal: 14), child: PrayerLogCard()),
                 const SizedBox(height: 12),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 14),

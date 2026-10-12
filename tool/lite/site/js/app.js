@@ -53,6 +53,8 @@ const P = {
   rotate: 'M16.5 2.5 15 4l2.5 2.5H13A6 6 0 0 0 7 12.5h2a4 4 0 0 1 4-4h4.5L15 11l1.5 1.5 5-5zM3 13h10v8H3zm2 2v4h6v-4z',
   expand: 'M4 4h6v2H6v4H4zm10 0h6v6h-2V6h-4zM4 14h2v4h4v2H4zm14 0h2v6h-6v-2h4z',
   shrink: 'M8 4h2v6H4V8h4zm6 0h2v4h4v2h-6zM4 14h6v6H8v-4H4zm10 0h6v2h-4v4h-2z',
+  palette: 'M12 3a9 9 0 0 0 0 18c1 0 1.6-.8 1.6-1.6 0-.4-.2-.8-.4-1.1-.3-.3-.4-.7-.4-1.1 0-.9.7-1.6 1.6-1.6h1.9a4.8 4.8 0 0 0 4.7-4.8C21 6.5 17 3 12 3zM6.5 12a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm3-4a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm3 4a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z',
+  image: 'M4 4h16v16H4zm2 2v9l3.5-3.5 3 3 2.5-2.5L18 15V6zm9 1.5a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3z',
   phone: 'M7 1h10a2 2 0 0 1 2 2v18a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2zm0 3v15h10V4z',
 };
 export const icon = (name, cls = '') => `<svg class="${cls}" viewBox="0 0 24 24" aria-hidden="true"><path d="${P[name] || ''}"/></svg>`;
@@ -167,10 +169,16 @@ const routes = {
   settings: () => import('./settings.js'),
   about: () => import('./settings.js'),
   more: () => import('./more.js'),
+  asma: () => import('./tools.js'),
+  nawawi: () => import('./tools.js'),
+  zakat: () => import('./tools.js'),
+  prayerlog: () => import('./tools.js'),
+  similar: () => import('./tools.js'),
+  video: () => import('./video.js'),
 };
 const TABS = { '': 'home', mushaf: 'mushaf', tasmee: 'mushaf', search: 'mushaf', media: 'media', prayer: 'prayer', qibla: 'prayer',
   calendar: 'prayer', athkar: 'athkar', tasbeeh: 'more', duas: 'athkar', ruqyah: 'athkar', virtues: 'athkar', khatmah: 'more', stats: 'more', hifz: 'media',
-  settings: 'more', about: 'more', more: 'more' };
+  settings: 'more', about: 'more', more: 'more', asma: 'athkar', nawawi: 'athkar', zakat: 'more', prayerlog: 'prayer', similar: 'mushaf', video: 'media' };
 const TONES = { home: 'gold', mushaf: 'emerald', media: 'amethyst', prayer: 'sapphire', athkar: 'rose', more: 'teal' };
 
 let current = null;
@@ -233,6 +241,10 @@ route().then(() => {
   // Other pages are fetched once the first one has everything it needs.
   setTimeout(() => idle(warm), 2500);
 });
+
+// The browser offers to install the site as an app (Chrome, Edge, Samsung):
+// kept for the button in the settings.
+addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); window.installPrompt = e; });
 
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));

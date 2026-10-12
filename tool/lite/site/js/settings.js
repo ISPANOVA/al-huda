@@ -21,6 +21,12 @@ export async function show(view, args, name) {
       <button id="rec">${icon('head', 'gold')}<span class="grow"><b>قارئ المصحف</b><br><small class="muted">${esc(cur.name)}</small></span>${icon('back', 'muted')}</button>
       <div style="flex-wrap:wrap">${icon('play', 'gold')}<span class="grow"><b>سرعة التلاوة</b></span><span class="chips" style="width:100%">${RATES.map((r) => `<button class="chip${r === rate ? ' on' : ''}" data-rate="${r}">${ar(r)}×</button>`).join('')}</span></div>
     </div>
+    <div class="section">بياناتي</div>
+    <div class="card list">
+      <button id="bk">${icon('download')}<span class="grow"><b>نسخة احتياطية</b><br><small class="muted">احفظ تقدمك في ملف، ويقرأه تطبيق الهدى أيضًا</small></span></button>
+      <label style="display:flex;align-items:center;gap:12px;padding:12px 14px;cursor:pointer">${icon('repeat', 'gold')}<span class="grow"><b>استعادة نسخة</b><br><small class="muted">من ملف الموقع أو تطبيق الهدى</small></span><input type="file" accept="application/json,.json" id="rs" hidden></label>
+    </div>
+    ${window.installPrompt ? `<div class="section">التثبيت</div><div class="card list"><button id="inst">${icon('phone', 'gold')}<span class="grow"><b>ثبّت الهدى على جهازك</b><br><small class="muted">يفتح كتطبيق من الشاشة الرئيسية ويعمل دون إنترنت</small></span></button></div>` : ''}
     <div class="section">التطبيق</div>
     <div class="card list">
       <a href="#/about">${icon('info', 'gold')}<span class="grow"><b>عن الهدى</b></span>${icon('back', 'muted')}</a>
@@ -36,11 +42,64 @@ export async function show(view, args, name) {
     const b = e.target.closest('[data-rate]');
     if (b) { store.set('rate', +b.dataset.rate); show(view, args, name); }
   };
+  $('#bk', view).onclick = () => backup();
+  $('#rs', view).onchange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try { await restore(JSON.parse(await file.text())); toast('تمت الاستعادة'); setTimeout(() => location.reload(), 800); }
+    catch { toast('هذا الملف ليس نسخة من الهدى'); }
+  };
+  $('#inst', view)?.addEventListener('click', async () => {
+    window.installPrompt.prompt();
+    await window.installPrompt.userChoice.catch(() => {});
+    window.installPrompt = null;
+    show(view, args, name);
+  });
   $('#share', view).onclick = () => {
     const t = 'الهدى: المصحف والتسميع ومواقيت الصلاة والأذكار، مجاني بلا إعلانات. ' + location.origin;
     if (navigator.share) navigator.share({ text: t }).catch(() => {}); else navigator.clipboard?.writeText(t).then(() => toast('نُسخ الرابط'));
   };
 }
+
+// ---------------------------------------------------------------- backup ---
+// One file for the site and the app: what both keep (prayers, Ramadan, zakat,
+// the Forty Hadith read, the last page) in the app's own format, plus the
+// site's other settings. The app merges it without clearing anything.
+const SHARED = [
+  ['plog', 'stats', 'prayer_log'], ['qada', 'stats', 'prayer_qada'], ['fasts', 'stats', 'ramadan_fasts'],
+  ['taraweeh', 'stats', 'ramadan_taraweeh'], ['zakat', 'settings', 'zakat'], ['nawawiRead', 'settings', 'nawawi_read'],
+  ['lastPage', 'bookmarks', 'last_page'],
+];
+function backup() {
+  const boxes = {};
+  for (const [k, box, key] of SHARED) {
+    const v = store.get(k, null);
+    if (v == null) continue;
+    (boxes[box] ??= []).push({ k: key, i: false, v });
+  }
+  const web = {};
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (k?.startsWith('h_') && k !== 'h_resume') web[k.slice(2)] = store.get(k.slice(2));
+  }
+  const d = new Date();
+  const name = `alhuda_backup_${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}.json`;
+  const blob = new Blob([JSON.stringify({ app: 'al_huda', version: 1, partial: true, created: d.toISOString(), boxes, web }, null, 1)], { type: 'application/json' });
+  const file = new File([blob], name, { type: 'application/json' });
+  if (navigator.canShare?.({ files: [file] })) { navigator.share({ files: [file], text: 'نسخة احتياطية من الهدى' }).catch(() => {}); return; }
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = name; a.click();
+  toast('تم حفظ النسخة');
+}
+async function restore(d) {
+  if (d?.app !== 'al_huda' || typeof d.boxes !== 'object') throw new Error('bad');
+  if (d.web) for (const [k, v] of Object.entries(d.web)) store.set(k, v);
+  for (const [k, box, key] of SHARED) {
+    const e = (d.boxes[box] || []).find((x) => x.k === key);
+    if (e) store.set(k, e.v);
+  }
+}
+
 
 const block = (ic, t, b) => `<div class="card row" style="align-items:flex-start">${icon(ic, 'gold')}<span class="grow"><b>${t}</b><p class="muted small" style="margin:4px 0 0;line-height:1.8">${b}</p></span></div>`;
 
@@ -57,8 +116,11 @@ function about(view, which) {
   if (which === 'sources') {
     view.innerHTML = top('المصادر والحقوق', 'مصدر كل محتوى', 'gold', 'book') +
       block('book', 'نص المصحف وخطه', 'خط حفص العثماني من مجمع الملك فهد لطباعة المصحف الشريف (KFGQPC)، وترتيب صفحات مصحف المدينة من مشروعي mushaf-layout و quran-data-kfgqpc مفتوحي المصدر.') +
-      block('lines', 'التفسير', 'التفسير الميسر (مجمع الملك فهد) عبر alquran.cloud.') +
-      block('head', 'التلاوات', 'تلاوة الآيات من Islamic Network CDN، وتلاوات السور كاملة والإذاعات من موقع mp3quran.net، وتلاوة الشيخ علي جابر (تسجيل الاستوديو) من QuranicAudio.') +
+      block('lines', 'التفسير', 'التفسير الميسر (مجمع الملك فهد) عبر alquran.cloud، والسعدي وابن كثير والوسيط والبغوي والقرطبي والطبري من مستودع tafsir_api المفتوح وواجهة Quran.com.') +
+      block('lines', 'معاني الكلمات', 'من «التبيان في تفسير غريب القرآن» لابن الهائم و«تذكرة الأريب» لابن الجوزي، عبر الموسوعة القرآنية quranpedia.net.') +
+      block('star', 'التجويد والمتشابهات', 'أحكام التجويد من بيانات Quran.com مطابقةً لخط المصحف، والمتشابهات اللفظية محسوبة من نص المصحف نفسه. مساعدة على التعلم، والعبرة بالتلقي من شيخ متقن.') +
+      block('book', 'الأربعون النووية والأسماء الحسنى', 'نص الأربعين النووية من مجموعة hadith-api المفتوحة، والأسماء الحسنى في رواية الترمذي مع معانٍ مختصرة.') +
+      block('head', 'التلاوات', 'تلاوة الآيات من Islamic Network CDN وEveryAyah، وتلاوات السور كاملة والإذاعات من موقع mp3quran.net، وتلاوة الشيخ علي جابر (تسجيل الاستوديو) من QuranicAudio.') +
       block('head', 'صور القراء', 'من ويكيميديا كومنز برخص حرة: ' + Object.values(CREDITS).map((c) => `<a href="${esc(c.source)}" target="_blank" rel="noopener" class="gold">${esc(c.name)}</a> (${esc(c.license)})`).join('، ') + '. باقي القراء يظهر لهم رسم بدل الصورة.') +
       block('tv', 'البث المباشر', 'قناتا القرآن الكريم والسنة النبوية من هيئة الإذاعة والتلفزيون السعودية عبر روابط البث العامة الرسمية.') +
       block('mic', 'التسميع', 'في نسخة الويب يتعرّف المتصفح على التلاوة، ويقارنها الهدى بالمصحف كلمةً كلمة. التصحيح الآلي قد يخطئ، ولا يغني عن القراءة على شيخ متقن.') +

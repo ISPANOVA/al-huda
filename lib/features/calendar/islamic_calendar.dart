@@ -87,6 +87,13 @@ class IslamicCalendar {
 
   static bool get isRamadan => hijriOf(DateTime.now()).hMonth == 9;
 
+  /// Tomorrow's fast-worthy occasion (for the home banner), if any.
+  static Occasion? tomorrowFast() {
+    final now = DateTime.now();
+    final h = hijriOf(DateTime(now.year, now.month, now.day).add(const Duration(days: 1)));
+    return on(h.hMonth, h.hDay).where((o) => o.fast).firstOrNull;
+  }
+
   static const _baseId = 500;
 
   /// Evening-before reminders for the next weeks, plus Friday (Al-Kahf).
@@ -110,6 +117,22 @@ class IslamicCalendar {
           when: eve,
         );
       }
+    }
+    // Monday and Thursday: the Sunnah fast (the evening before), the next two weeks.
+    var k2 = 0;
+    for (var i = 1; i <= 14 && k2 < 8; i++) {
+      final day = DateTime(now.year, now.month, now.day).add(Duration(days: i));
+      if (day.weekday != DateTime.monday && day.weekday != DateTime.thursday) continue;
+      final h = hijriOf(day);
+      if (on(h.hMonth, h.hDay).any((o) => o.fast) || h.hMonth == 9) continue;
+      final eve = day.subtract(const Duration(days: 1)).add(const Duration(hours: 21));
+      if (!eve.isAfter(now)) continue;
+      await n.scheduleReminderAt(
+        id: _baseId + 60 + k2++,
+        title: 'غدًا ${day.weekday == DateTime.monday ? 'الاثنين' : 'الخميس'} 🌙',
+        body: 'كان النبي ﷺ يتحرّى صيام الاثنين والخميس. انوِ الصيام من الليل.',
+        when: eve,
+      );
     }
     // The next four Fridays: Surat Al-Kahf and salawat.
     var fri = DateTime(now.year, now.month, now.day);

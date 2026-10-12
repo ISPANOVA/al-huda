@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -12,16 +13,27 @@ import '../../../settings/presentation/cubit/settings_cubit.dart';
 import '../../../settings/presentation/cubit/settings_state.dart';
 import '../../domain/entities/ayah.dart';
 import '../cubit/bookmarks_cubit.dart';
+import '../../../share_video/ayah_video_page.dart';
 import '../pages/ayah_image_page.dart';
+import '../mushaf/tajweed.dart';
 import 'listen_sheet.dart';
+import 'similar_ayahs.dart';
 import 'tafsir_panel.dart';
+import 'word_meanings.dart';
 import '../../../tasmee/tasmee_page.dart';
 
 String _reference(Ayah a) =>
     'سورة ${SurahMetadata.surah(a.surah).name} • الآية ${ArabicUtils.toArabicDigits(a.numberInSurah)}';
 
 /// Ayah sheet: the verse, its Tafseer Al-Muyassar, and quick actions.
-Future<void> showAyahActions(BuildContext context, Ayah ayah) {
+Future<void> showAyahActions(BuildContext context, Ayah ayah) async {
+  // The similar-ayahs index decides whether «متشابهات» is offered.
+  if (Mutashabihat.loaded == null) {
+    try {
+      await Mutashabihat.load();
+    } catch (_) {}
+    if (!context.mounted) return;
+  }
   return showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
@@ -96,6 +108,7 @@ class _AyahSheet extends StatelessWidget {
                     ),
                     const SizedBox(height: 16),
                     TafsirPanel(ayah: ayah),
+                    WordMeaningsPanel(ayah: ayah),
                   ],
                 ),
               ),
@@ -142,10 +155,20 @@ class _ActionBar extends StatelessWidget {
         close();
         Navigator.of(hostContext).push(TasmeePage.route(page: ayah.page, ayah: ayah.number));
       }),
+      if ((Mutashabihat.loaded?[ayah.number] ?? const []).isNotEmpty)
+        _ActionData(Icons.compare_arrows_rounded, 'متشابهات', false, () {
+          close();
+          showSimilarAyahs(hostContext, ayah);
+        }),
       _ActionData(Icons.image_outlined, 'صورة', false, () {
         close();
         Navigator.of(hostContext).push(AyahImagePage.route(ayah));
       }),
+      if (!kIsWeb)
+        _ActionData(Icons.movie_creation_rounded, 'فيديو', false, () {
+          close();
+          Navigator.of(hostContext).push(AyahVideoPage.route(surah: ayah.surah, from: ayah.numberInSurah));
+        }),
       _ActionData(Icons.share_rounded, 'مشاركة', false, () {
         close();
         SharePlus.instance.share(ShareParams(
@@ -240,6 +263,25 @@ Future<void> showReaderSettingsSheet(BuildContext context) {
                 value: s.autoFollowAudio,
                 onChanged: cubit.setAutoFollowAudio,
               ),
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                title: const Text('مصحف التجويد الملوّن'),
+                subtitle: const Text('تلوين أحكام التجويد على الحروف'),
+                value: s.tajweed,
+                onChanged: (v) {
+                  if (v) Tajweed.load();
+                  cubit.setTajweed(v);
+                },
+              ),
+              if (s.tajweed)
+                Align(
+                  alignment: AlignmentDirectional.centerStart,
+                  child: TextButton.icon(
+                    onPressed: () => showTajweedLegend(ctx),
+                    icon: const Icon(Icons.palette_rounded),
+                    label: const Text('دليل ألوان التجويد'),
+                  ),
+                ),
               const SizedBox(height: 10),
               Text('عرض الصفحات (للتابلت والكمبيوتر والهواتف القابلة للطي)',
                   style: TextStyle(fontWeight: FontWeight.w700, color: glass.onGlass)),

@@ -11,6 +11,7 @@ import '../../../core/theme/tones.dart';
 import '../../../core/utils/arabic_utils.dart';
 import '../../../core/widgets/adaptive.dart';
 import '../../../core/widgets/noor_ui.dart';
+import '../../audio/data/reciter_art.dart';
 import '../../audio/presentation/cubit/audio_cubit.dart';
 import '../../khatmah/presentation/cubit/khatmah_cubit.dart';
 import '../../khatmah/presentation/pages/khatmah_page.dart';
@@ -75,6 +76,7 @@ class DashboardPage extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       const _Rise(1, child: _ContinueReading()),
+                      const _ContinueListening(padding: EdgeInsets.only(top: 12)),
                       const SizedBox(height: 14),
                       const _Rise(2, child: _GoalsRow()),
                       const SizedBox(height: 14),
@@ -111,6 +113,7 @@ class DashboardPage extends StatelessWidget {
           const SizedBox(height: 16),
           const _SeasonalCards(),
           const _Rise(2, child: Padding(padding: EdgeInsets.symmetric(horizontal: 14), child: _ContinueReading())),
+          const _ContinueListening(padding: EdgeInsets.fromLTRB(14, 12, 14, 0)),
           const SizedBox(height: 12),
           const _Rise(3, child: Padding(padding: EdgeInsets.symmetric(horizontal: 14), child: _GoalsRow())),
           Padding(
@@ -494,9 +497,21 @@ class _SeasonalCards extends StatelessWidget {
     final now = DateTime.now();
     final friday = now.weekday == DateTime.friday;
     final ramadan = IslamicCalendar.isRamadan;
-    if (!friday && !ramadan) return const SizedBox.shrink();
+    final fast = now.hour >= 12 ? IslamicCalendar.tomorrowFast() : null;
+    if (!friday && !ramadan && fast == null) return const SizedBox.shrink();
     return Column(
       children: [
+        if (fast != null)
+          Padding(
+            padding: padding,
+            child: _BannerCard(
+              colors: const [Color(0xFF1B1440), Color(0xFF3B2A6E), Color(0xFFB98A3A)],
+              icon: fast.icon,
+              title: 'غدًا ${fast.title}',
+              subtitle: '${fast.note}، انوِ الصيام من الليل',
+              onTap: () => Navigator.of(context).push(CalendarPage.route()),
+            ),
+          ),
         if (ramadan)
           Padding(
             padding: padding,
@@ -512,7 +527,9 @@ class _SeasonalCards extends StatelessWidget {
                   title: 'رمضان كريم',
                   subtitle: fasting
                       ? 'باقي على الإفطار ${ArabicUtils.formatDuration(maghrib.difference(now), withSeconds: false)}'
-                      : 'الإمساكية ومواعيد السحور والإفطار',
+                      : fajr != null && now.isBefore(fajr)
+                          ? 'باقي على الإمساك ${ArabicUtils.formatDuration(fajr.subtract(const Duration(minutes: 10)).difference(now), withSeconds: false)}'
+                          : 'الإمساكية ومتابعة الصيام والتراويح',
                   onTap: () => Navigator.of(context).push(ImsakiyaPage.route()),
                 );
               },
@@ -669,6 +686,58 @@ class _ContinueReading extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// «تابع الاستماع»: the last recitation, while nothing plays.
+class _ContinueListening extends StatelessWidget {
+  final EdgeInsetsGeometry padding;
+
+  const _ContinueListening({required this.padding});
+
+  @override
+  Widget build(BuildContext context) {
+    final idle = context.select<AudioCubit, bool>((c) => !c.state.hasQueue);
+    final p = idle ? context.read<AudioCubit>().resumePoint : null;
+    if (p == null) return const SizedBox.shrink();
+    final glass = GlassTheme.of(context);
+    const tone = Tone.amethyst;
+    final key = ReciterArt.keyFor(p['reciter'] as String?);
+    return Padding(
+      padding: padding,
+      child: ToneCard(
+        tone: tone,
+        padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+        onTap: () => context.read<AudioCubit>().resume(),
+        child: Row(
+          children: [
+            CircleAvatar(
+              radius: 24,
+              backgroundColor: tone.mid.withValues(alpha: 0.3),
+              backgroundImage: key == null ? null : AssetImage('assets/reciters/$key.jpg'),
+              child: key == null ? const Icon(Icons.headphones_rounded, color: Colors.white) : null,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('تابع الاستماع', style: TextStyle(color: glass.onGlassMuted, fontSize: 12.5)),
+                  Text('${p['title']}',
+                      maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900)),
+                  Text('${p['artist']}',
+                      maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12, color: glass.onGlassMuted)),
+                ],
+              ),
+            ),
+            DecoratedBox(
+              decoration: BoxDecoration(shape: BoxShape.circle, gradient: tone.gradient()),
+              child: const SizedBox.square(dimension: 44, child: Icon(Icons.play_arrow_rounded, color: Colors.white, size: 28)),
+            ),
+          ],
+        ),
       ),
     );
   }

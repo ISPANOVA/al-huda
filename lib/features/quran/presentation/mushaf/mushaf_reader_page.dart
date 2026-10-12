@@ -26,6 +26,7 @@ import '../../../tasmee/tasmee_page.dart';
 import '../widgets/ayah_sheets.dart';
 import '../../../wird/wird_tracker.dart';
 import 'mushaf_page.dart';
+import 'tajweed.dart';
 
 /// The Mushaf: 604 swipeable pages in the app's theme.
 ///
@@ -274,7 +275,9 @@ class _MushafReaderPageState extends State<MushafReaderPage> {
   @override
   Widget build(BuildContext context) {
     _syncWideFrame();
-    final style = MushafStyle.of(context);
+    final tajweed = context.select<SettingsCubit, bool>((c) => c.state.tajweed);
+    if (tajweed && !Tajweed.ready) Tajweed.load().then((_) => mounted ? setState(() {}) : null);
+    final style = MushafStyle.of(context, tajweed: tajweed);
     const headerH = 50.0;
     const footerH = 48.0;
     final sysBottom = MediaQuery.viewPaddingOf(context).bottom;
