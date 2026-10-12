@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<meta name="description" content="الهدى: المصحف الشريف والتسميع ومواقيت الصلاة والقبلة والأذكار والمسبحة. مجاني بلا إعلانات.">
+<meta property="og:title" content="الهدى">
+<meta property="og:description" content="المصحف والتسميع ومواقيت الصلاة والقبلة والأذكار. مجاني بلا إعلانات، صدقة جارية.">
+<meta property="og:image" content="https://al-huda.xyz/og.jpg">
+<meta property="og:url" content="https://al-huda.xyz/">
+<link rel="canonical" href="https://al-huda.xyz/">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="الهدى">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="manifest" href="manifest.json">
+<link rel="preload" href="fonts/Tajawal-Regular.woff2" as="font" crossorigin>
+<link rel="preload" href="fonts/Tajawal-Bold.woff2" as="font" crossorigin>
+<link rel="preload" href="fonts/ReemKufi-Bold.woff2" as="font" crossorigin>
+<link rel="preload" href="fonts/HafsSplash.woff2" as="font" crossorigin>
+<link rel="stylesheet" href="css/app.css">
+<!-- The home page's whole chain at once (instead of one file after another). -->
+<link rel="modulepreload" href="js/app.js">
+<link rel="modulepreload" href="js/home.js">
+<link rel="modulepreload" href="js/prayerlib.js">
+<link rel="modulepreload" href="js/sky.js">
+<link rel="modulepreload" href="js/page.js">
+<link rel="modulepreload" href="js/player.js">
+<link rel="preload" href="data/meta.json" as="fetch" crossorigin>
+<link rel="preload" href="data/surahs.json" as="fetch" crossorigin>
+<link rel="preload" href="js/core.js" as="script">
+<link rel="dns-prefetch" href="https://cdn.islamic.network">
+<link rel="dns-prefetch" href="https://server8.mp3quran.net">
+<title>الهدى</title>
+</head>
+<body>
+<div id="splash" class="splash">
+  <div class="splash-mark">الهُدَىٰ</div>
+  <div class="splash-note">صدقة جارية عن روح والدي سمير حجازي، وعن سعد صالح،<br>وعن جميع المسلمين الأحياء منهم والأموات</div>
+  <div class="splash-by">SMRH</div>
+</div>
+<main id="view" class="view"></main>
+<div id="player" class="player" hidden></div>
+<nav id="nav" class="nav">
+  <a href="#/" data-tab="home"><svg viewBox="0 0 24 24"><path d="M12 3 3 10v10a1 1 0 0 0 1 1h5v-6h6v6h5a1 1 0 0 0 1-1V10z"/></svg><span>الرئيسية</span></a>
+  <a href="#/mushaf" data-tab="mushaf"><svg viewBox="0 0 24 24"><path d="M3 5.5C5 4.6 8 4.3 11 5.6v14c-3-1.3-6-1-8-.1zM13 5.6c3-1.3 6-1 8-.1v14c-2-.9-5-1.2-8 .1z"/></svg><span>المصحف</span></a>
+  <a href="#/media" data-tab="media"><svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 0 0-9 9v6a3 3 0 0 0 3 3h2v-8H5v-1a7 7 0 0 1 14 0v1h-3v8h2a3 3 0 0 0 3-3v-6a9 9 0 0 0-9-9z"/></svg><span>الصوتيات</span></a>
+  <a href="#/prayer" data-tab="prayer"><svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm1 10.6 3.4 2-1 1.7L11 13V6h2z"/></svg><span>المواقيت</span></a>
+  <a href="#/athkar" data-tab="athkar"><svg viewBox="0 0 24 24"><path d="M12 21s-7.5-4.6-9.5-9.3C1 8 3.3 4.5 6.9 4.5c2 0 3.6 1.1 5.1 3 1.5-1.9 3.1-3 5.1-3 3.6 0 5.9 3.5 4.4 7.2C19.5 16.4 12 21 12 21z"/></svg><span>الأذكار</span></a>
+  <a href="#/more" data-tab="more"><svg viewBox="0 0 24 24"><path d="M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z"/></svg><span>المزيد</span></a>
+</nav>
+<div id="sheet" class="sheet" hidden><div class="sheet-card"><div class="sheet-handle"></div><div class="sheet-body"></div></div></div>
+<div id="toast" class="toast" hidden></div>
+<script type="module" src="js/app.js"></script>
+<noscript>يحتاج الهدى إلى تفعيل JavaScript.</noscript>
+</body>
+</html>
