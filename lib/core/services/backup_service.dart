@@ -81,11 +81,14 @@ class BackupService {
       throw const FormatException('not an al_huda backup');
     }
     final boxes = data['boxes'] as Map;
+    // A backup from the website carries only what both share (prayers,
+    // Ramadan, zakat, the last page…): merged in, nothing else is cleared.
+    final partial = data['partial'] == true;
     for (final name in _boxes) {
       final entries = boxes[name];
       if (entries is! List) continue;
       final box = _storage.box(name);
-      await box.clear();
+      if (!partial) await box.clear();
       for (final e in entries) {
         if (e is! Map) continue;
         final key = e['i'] == true ? (e['k'] as num).toInt() : e['k'].toString();

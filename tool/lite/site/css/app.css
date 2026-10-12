@@ -468,3 +468,45 @@ body.in-mushaf .player { bottom: calc(var(--safe-b) + 8px); }
 .sim { display: block; padding: 10px 6px; border-top: 1px solid var(--line); } .sim.me { border: 0; }
 .sim .hl { color: var(--coral-t); } [data-theme="light"] .sim .hl { color: var(--coral-d); }
 .sim-row { display: flex; align-items: center; gap: 10px; width: 100%; margin: 0 0 10px; }
+.vprev { display: flex; justify-content: center; margin-bottom: 12px; }
+.vprev canvas, .vprev video { width: min(100%, 300px); aspect-ratio: 9 / 16; height: auto; border-radius: 20px; background: #000; box-shadow: 0 10px 40px rgba(0,0,0,.4); }
+.pbar { height: 8px; border-radius: 8px; background: var(--card); overflow: hidden; margin-bottom: 12px; } .pbar i { display: block; height: 100%; width: 0; background: var(--gold); transition: width .2s; }
+
+/* ---- tajweed colours (same as the app) ---- */
+.tjdot { width: 16px; height: 16px; border-radius: 50%; flex: none; background: currentColor; }
+i[class^=tj] { font-style: normal; }
+.tj0 { color: #8C8C8C; }
+.tj1 { color: #8C8C8C; }
+.tj2 { color: #8C8C8C; }
+.tj3 { color: #E2C275; }
+.tj4 { color: #FF9A3C; }
+.tj5 { color: #FF5C63; }
+.tj6 { color: #FF7AA8; }
+.tj7 { color: #6FB2FF; }
+.tj8 { color: #D99BFF; }
+.tj9 { color: #D08CF0; }
+.tj10 { color: #69DB7C; }
+.tj11 { color: #3BC9DB; }
+.tj12 { color: #38D9A9; }
+.tj13 { color: #9DBB9D; }
+.tj14 { color: #ADB5BD; }
+.tj15 { color: #ADB5BD; }
+.tj16 { color: #8CE99A; }
+[data-theme="light"] .tj0 { color: #9A9A9A; }
+[data-theme="light"] .tj1 { color: #9A9A9A; }
+[data-theme="light"] .tj2 { color: #9A9A9A; }
+[data-theme="light"] .tj3 { color: #B8860B; }
+[data-theme="light"] .tj4 { color: #E8590C; }
+[data-theme="light"] .tj5 { color: #B5121B; }
+[data-theme="light"] .tj6 { color: #D6336C; }
+[data-theme="light"] .tj7 { color: #1C6FD1; }
+[data-theme="light"] .tj8 { color: #AE3EC9; }
+[data-theme="light"] .tj9 { color: #9C36B5; }
+[data-theme="light"] .tj10 { color: #2B8A3E; }
+[data-theme="light"] .tj11 { color: #1098AD; }
+[data-theme="light"] .tj12 { color: #087F5B; }
+[data-theme="light"] .tj13 { color: #5C7A5C; }
+[data-theme="light"] .tj14 { color: #868E96; }
+[data-theme="light"] .tj15 { color: #868E96; }
+[data-theme="light"] .tj16 { color: #2F9E44; }
+.ibtn.on { color: var(--gold); background: rgba(226,194,117,.16); }
