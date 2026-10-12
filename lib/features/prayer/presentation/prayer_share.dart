@@ -5,7 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hijri/hijri_calendar.dart';
-import 'package:intl/intl.dart';
+import 'package:intl/intl.dart' show DateFormat;
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -69,7 +69,7 @@ class PrayerCardPainter {
   void paint(Canvas canvas, Size size) {
     canvas.save();
     canvas.scale(size.width / w, size.height / h);
-    const r = Offset.zero & Size(w, h);
+    final r = Offset.zero & const Size(w, h);
     canvas.drawRect(
         r,
         Paint()
