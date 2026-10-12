@@ -13,6 +13,7 @@ import '../../core/widgets/noor_ui.dart';
 import '../../core/widgets/state_views.dart';
 import '../prayer/domain/prayer_entities.dart';
 import '../prayer/presentation/cubit/prayer_cubit.dart';
+import '../prayer/presentation/prayer_log_page.dart';
 import '../settings/presentation/cubit/settings_cubit.dart';
 import 'islamic_calendar.dart';
 import '../../core/services/notification_service.dart';
@@ -271,7 +272,7 @@ class _CalendarPageState extends State<CalendarPage> {
                         children: [
                           Text('تذكيري بالمناسبات والصيام',
                               style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: glass.onGlass)),
-                          Text('مساء اليوم السابق، وتذكير الكهف يوم الجمعة',
+                          Text('مساء اليوم السابق، والاثنين والخميس، والكهف يوم الجمعة',
                               style: TextStyle(fontSize: 12, height: 1.4, color: glass.onGlassMuted)),
                         ],
                       ),
@@ -577,6 +578,8 @@ class _ImsakiyaPageState extends State<ImsakiyaPage> {
                   _countdown(todayRow.$3!, now),
                   const SizedBox(height: 4),
                 ],
+                const GlassSectionTitle('صيامي وقيامي', tone: Tone.amber),
+                RamadanTracker(year: year, today: today.hMonth == 9 && today.hYear == year ? today.hDay : null),
                 const GlassSectionTitle('جدول الشهر', tone: Tone.amber),
                 NoorCard(
                   padding: EdgeInsets.zero,

@@ -497,9 +497,21 @@ class _SeasonalCards extends StatelessWidget {
     final now = DateTime.now();
     final friday = now.weekday == DateTime.friday;
     final ramadan = IslamicCalendar.isRamadan;
-    if (!friday && !ramadan) return const SizedBox.shrink();
+    final fast = now.hour >= 12 ? IslamicCalendar.tomorrowFast() : null;
+    if (!friday && !ramadan && fast == null) return const SizedBox.shrink();
     return Column(
       children: [
+        if (fast != null)
+          Padding(
+            padding: padding,
+            child: _BannerCard(
+              colors: const [Color(0xFF1B1440), Color(0xFF3B2A6E), Color(0xFFB98A3A)],
+              icon: fast.icon,
+              title: 'غدًا ${fast.title}',
+              subtitle: '${fast.note}، انوِ الصيام من الليل',
+              onTap: () => Navigator.of(context).push(CalendarPage.route()),
+            ),
+          ),
         if (ramadan)
           Padding(
             padding: padding,
@@ -515,7 +527,9 @@ class _SeasonalCards extends StatelessWidget {
                   title: 'رمضان كريم',
                   subtitle: fasting
                       ? 'باقي على الإفطار ${ArabicUtils.formatDuration(maghrib.difference(now), withSeconds: false)}'
-                      : 'الإمساكية ومواعيد السحور والإفطار',
+                      : fajr != null && now.isBefore(fajr)
+                          ? 'باقي على الإمساك ${ArabicUtils.formatDuration(fajr.subtract(const Duration(minutes: 10)).difference(now), withSeconds: false)}'
+                          : 'الإمساكية ومتابعة الصيام والتراويح',
                   onTap: () => Navigator.of(context).push(ImsakiyaPage.route()),
                 );
               },
