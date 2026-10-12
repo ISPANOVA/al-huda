@@ -1,0 +1,141 @@
+Resolving dependencies...
+Downloading packages...
+  archive 4.3.0 (4.5.1 available)
+  cli_util 0.4.2 (0.6.0 available)
+  code_assets 1.2.1 (2.1.0 available)
+  cross_file 0.3.5+5 (0.4.0 available)
+  dbus 0.7.15 (0.8.0 available)
+  equatable 2.1.0 (3.0.0 available)
++ file_picker 10.3.10 (13.1.0 available)
+  flutter_local_notifications 22.3.1 (22.3.2 available)
+  flutter_local_notifications_linux 8.0.1 (8.0.2 available)
++ flutter_plugin_android_lifecycle 2.0.35
+  flutter_timezone 5.1.0 (5.1.1 available)
++ flutter_tts 4.2.5
+  geocoding 4.0.0 (5.0.0 available)
+  geocoding_android 4.0.1 (5.1.0 available)
+  geocoding_platform_interface 3.2.0 (5.0.0 available)
+< geolocator 14.0.2 (was 14.1.1) (14.1.1 available)
+  geolocator_android 5.1.1 (5.1.1+1 available)
+< geolocator_linux 0.2.4 (was 0.2.6) (0.2.6 available)
+  google_fonts 6.3.3 (9.0.0 available)
+  gsettings 0.2.8 (0.2.9 available)
++ hive_ce 2.20.2
+  hooks 2.0.2 (2.2.0 available)
+  image 4.10.1 (4.12.0 available)
++ isolate_channel 0.6.1
+  jni 1.0.3 (1.1.0 available)
+  jni_flutter 1.0.3 (1.0.4+1 available)
+  material_color_utilities 0.13.0 (0.13.1 available)
+  meta 1.18.3 (1.19.0 available)
+  objective_c 9.5.0 (9.6.2 available)
+< package_info_plus 9.0.1 (was 10.2.1) (10.2.2 available)
+< package_info_plus_platform_interface 3.2.1 (was 4.1.0) (4.1.0 available)
+  petitparser 7.0.2 (7.1.0 available)
++ record 7.1.2
++ record_android 2.2.0
++ record_ios 2.1.1
++ record_linux 2.1.3
++ record_macos 2.1.1
++ record_platform_interface 2.1.0
+  record_use 0.6.0 (1.1.1 available)
++ record_web 2.1.3
++ record_windows 2.3.0
+  sensors_plus 7.1.0 (7.1.1 available)
+< share_plus 12.0.2 (was 13.3.0) (13.3.1 available)
+< share_plus_platform_interface 6.1.0 (was 7.2.0) (7.2.0 available)
++ sherpa_onnx 1.13.8
++ sherpa_onnx_android_arm64 1.13.8
++ sherpa_onnx_android_armeabi 1.13.8
++ sherpa_onnx_android_x86 1.13.8
++ sherpa_onnx_android_x86_64 1.13.8
++ sherpa_onnx_ios 1.13.8
++ sherpa_onnx_linux 1.13.8
++ sherpa_onnx_macos 1.13.8
++ sherpa_onnx_web 1.13.8
++ sherpa_onnx_windows 1.13.8
++ speech_to_text 7.5.0
++ speech_to_text_platform_interface 2.5.0
++ speech_to_text_windows 1.0.1
+  sqflite 2.4.4 (2.4.4+1 available)
+  sqflite_common 2.5.13 (2.5.13+1 available)
+  test_api 0.7.12 (0.7.15 available)
+  timezone 0.11.1 (0.11.2 available)
+  vector_math 2.4.0 (2.4.3 available)
+  video_player 2.14.0 (2.14.1 available)
+  video_player_avfoundation 2.12.0 (2.12.1 available)
+  web 1.1.1 (from transitive dependency to direct dependency)
+< win32 5.15.0 (was 6.4.0) (6.4.0 available)
+  xml 7.0.1 (7.1.0 available)
+These packages are no longer being depended on:
+- ffi_leak_tracker 0.1.2
+Changed 35 dependencies!
+41 packages have newer versions incompatible with dependency constraints.
+Try `flutter pub outdated` for more information.
+Analyzing lib...                                                
+
+warning • Unused import: '../i18n/text.dart'. Try removing the import directive • lib/core/theme/app_themes.dart:6:8 • unused_import
+warning • Unused import: '../i18n/text.dart'. Try removing the import directive • lib/core/theme/page_transitions.dart:3:8 • unused_import
+warning • Unused import: '../i18n/text.dart'. Try removing the import directive • lib/core/theme/theme_transition.dart:5:8 • unused_import
+warning • Unused import: '../i18n/text.dart'. Try removing the import directive • lib/core/theme/tones.dart:6:8 • unused_import
+warning • Unused import: '../i18n/text.dart'. Try removing the import directive • lib/core/widgets/adaptive.dart:2:8 • unused_import
+warning • Unused import: '../i18n/text.dart'. Try removing the import directive • lib/core/widgets/background_patterns.dart:4:8 • unused_import
+   info • The import of 'dart:typed_data' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/services.dart'. Try removing the import directive • lib/core/widgets/share_card.dart:1:8 • unnecessary_import
+warning • Unused import: 'glass_container.dart'. Try removing the import directive • lib/core/widgets/share_card.dart:11:8 • unused_import
+   info • Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation • lib/core/widgets/share_card.dart:42:27 • prefer_const_constructors
+warning • The '!' will have no effect because the receiver can't be null. Try removing the '!' operator • lib/core/widgets/share_card.dart:70:85 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null. Try removing the '!' operator • lib/core/widgets/share_card.dart:114:73 • unnecessary_non_null_assertion
+warning • Unused import: '../i18n/text.dart'. Try removing the import directive • lib/core/widgets/web_frame.dart:2:8 • unused_import
+warning • Unused import: '../../core/i18n/text.dart'. Try removing the import directive • lib/features/calendar/islamic_calendar.dart:5:8 • unused_import
+warning • Unused import: '../../core/i18n/text.dart'. Try removing the import directive • lib/features/duas/duas_data.dart:2:8 • unused_import
+   info • 'onReorder' is deprecated and shouldn't be used. Use the onReorderItem callback instead. The onReorderItem callback adjusts the newIndex parameter for a removed item at the oldIndex. This feature was deprecated after v3.41.0-0.0.pre. Try replacing the use of the deprecated member with the replacement • lib/features/home/presentation/quick_actions.dart:240:15 • deprecated_member_use
+   info • Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation • lib/features/khatmah/group/group_khatmah.dart:243:11 • prefer_const_constructors
+warning • Unused import: '../../core/i18n/text.dart'. Try removing the import directive • lib/features/media/media_catalog.dart:2:8 • unused_import
+   info • Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation • lib/features/media/reciter_pages.dart:152:29 • prefer_const_constructors
+   info • Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation • lib/features/media/reciter_pages.dart:332:35 • prefer_const_constructors
+   info • Angle brackets will be interpreted as HTML. Try using backticks around the content with angle brackets, or try replacing `<` with `&lt;` and `>` with `&gt;` • lib/features/media/reciter_photos.dart:5:49 • unintended_html_in_doc_comment
+warning • Unused import: '../../core/i18n/text.dart'. Try removing the import directive • lib/features/media/waving_flag.dart:8:8 • unused_import
+   info • Angle brackets will be interpreted as HTML. Try using backticks around the content with angle brackets, or try replacing `<` with `&lt;` and `>` with `&gt;` • lib/features/prayer/domain/adhan_voices.dart:1:58 • unintended_html_in_doc_comment
+   info • Angle brackets will be interpreted as HTML. Try using backticks around the content with angle brackets, or try replacing `<` with `&lt;` and `>` with `&gt;` • lib/features/prayer/domain/adhan_voices.dart:2:25 • unintended_html_in_doc_comment
+warning • Unused import: '../../../core/i18n/text.dart'. Try removing the import directive • lib/features/prayer/presentation/prayer_share.dart:16:8 • unused_import
+warning • Returning a 'Future' without 'await' inside a try block. Try adding an 'await' • lib/features/prayer/presentation/prayer_share.dart:325:5 • unawaited_return_in_try_block
+   info • Angle brackets will be interpreted as HTML. Try using backticks around the content with angle brackets, or try replacing `<` with `&lt;` and `>` with `&gt;` • lib/features/prayer/presentation/widgets/adhan_settings.dart:32:8 • unintended_html_in_doc_comment
+   info • Angle brackets will be interpreted as HTML. Try using backticks around the content with angle brackets, or try replacing `<` with `&lt;` and `>` with `&gt;` • lib/features/prayer/presentation/widgets/adhan_settings.dart:32:16 • unintended_html_in_doc_comment
+   info • Unnecessary use of multiple underscores. Try using '_' • lib/features/prayer/presentation/widgets/adhan_settings.dart:432:53 • unnecessary_underscores
+   info • 'of' is deprecated and shouldn't be used. Use TickerMode.valuesOf to get both enabled and forceFrames. This feature was deprecated after v3.35.0-0.0.pre. Try replacing the use of the deprecated member with the replacement • lib/features/quran/presentation/mushaf/mushaf_reader_page.dart:166:42 • deprecated_member_use
+   info • 'of' is deprecated and shouldn't be used. Use TickerMode.valuesOf to get both enabled and forceFrames. This feature was deprecated after v3.35.0-0.0.pre. Try replacing the use of the deprecated member with the replacement • lib/features/quran/presentation/mushaf/mushaf_reader_page.dart:268:32 • deprecated_member_use
+   info • Local variables should be final. Try making the variable final • lib/features/quran/presentation/mushaf/mushaf_reader_page.dart:310:5 • prefer_final_locals
+   info • Constructors for public widgets should have a named 'key' parameter. Try adding a named parameter to the constructor • lib/features/quran/presentation/mushaf/mushaf_reader_page.dart:618:9 • use_key_in_widget_constructors
+   info • Constructors for public widgets should have a named 'key' parameter. Try adding a named parameter to the constructor • lib/features/quran/presentation/mushaf/mushaf_reader_page.dart:645:9 • use_key_in_widget_constructors
+   info • Constructors for public widgets should have a named 'key' parameter. Try adding a named parameter to the constructor • lib/features/quran/presentation/mushaf/mushaf_reader_page.dart:815:9 • use_key_in_widget_constructors
+   info • Unnecessary use of multiple underscores. Try using '_' • lib/features/quran/presentation/mushaf/reader_guide.dart:29:24 • unnecessary_underscores
+   info • Unnecessary use of multiple underscores. Try using '_' • lib/features/quran/presentation/mushaf/reader_guide.dart:29:28 • unnecessary_underscores
+   info • Unnecessary use of multiple underscores. Try using '_' • lib/features/quran/presentation/mushaf/reader_guide.dart:30:33 • unnecessary_underscores
+   info • Unnecessary use of multiple underscores. Try using '_' • lib/features/quran/presentation/pages/ayah_image_page.dart:121:37 • unnecessary_underscores
+   info • Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation • lib/features/quran/presentation/pages/ayah_image_page.dart:317:7 • prefer_const_constructors
+   info • Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check. Guard a 'State.context' use with a 'mounted' check on the State, and other BuildContext use with a 'mounted' check on the BuildContext • lib/features/quran/presentation/widgets/listen_sheet.dart:55:11 • use_build_context_synchronously
+warning • Unused import: '../../../../core/i18n/text.dart'. Try removing the import directive • lib/features/settings/presentation/cubit/settings_cubit.dart:12:8 • unused_import
+warning • Unused import: '../../../../core/i18n/text.dart'. Try removing the import directive • lib/features/settings/presentation/cubit/settings_state.dart:5:8 • unused_import
+   info • Unnecessary use of multiple underscores. Try using '_' • lib/features/share_video/ayah_video_page.dart:452:37 • unnecessary_underscores
+   info • Use the null-aware marker '?' rather than a null check via an 'if'. Try using '?' • lib/features/share_video/ayah_video_service.dart:204:9 • use_null_aware_elements
+warning • Unused import: '../../core/i18n/text.dart'. Try removing the import directive • lib/features/share_video/video_frames.dart:9:8 • unused_import
+   info • Local variables should be final. Try making the variable final • lib/features/tasmee/phonetic/phonetic_tracker.dart:391:5 • prefer_final_locals
+   info • Dangling library doc comment. Add a 'library' directive after the library comment • lib/features/tasmee/phonetic/quran_listener.dart:1:1 • dangling_library_doc_comments
+   info • Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation • lib/features/tasmee/phonetic/quran_listener_io.dart:253:15 • prefer_const_constructors
+   info • Statements in an if should be enclosed in a block. Try wrapping the statement in a block • lib/features/tasmee/tasmee_engine.dart:111:28 • curly_braces_in_flow_control_structures
+   info • Statements in an if should be enclosed in a block. Try wrapping the statement in a block • lib/features/tasmee/tasmee_engine.dart:112:14 • curly_braces_in_flow_control_structures
+   info • Unnecessary braces in a string interpolation. Try removing the braces • lib/features/tasmee/tasmee_engine.dart:144:47 • unnecessary_brace_in_string_interps
+   info • Use interpolation to compose strings and values. Try using string interpolation to build the composite string • lib/features/tasmee/tasmee_engine.dart:257:27 • prefer_interpolation_to_compose_strings
+   info • Use interpolation to compose strings and values. Try using string interpolation to build the composite string • lib/features/tasmee/tasmee_engine.dart:257:43 • prefer_interpolation_to_compose_strings
+   info • Local variables should be final. Try making the variable final • lib/features/tasmee/tasmee_locator.dart:131:5 • prefer_final_locals
+   info • 'localeId' is deprecated and shouldn't be used. Use SpeechListenOptions.localeId instead. Try replacing the use of the deprecated member with the replacement • lib/features/tasmee/tasmee_page.dart:451:9 • deprecated_member_use
+   info • 'listenFor' is deprecated and shouldn't be used. Use SpeechListenOptions.listenFor instead. Try replacing the use of the deprecated member with the replacement • lib/features/tasmee/tasmee_page.dart:452:9 • deprecated_member_use
+   info • 'pauseFor' is deprecated and shouldn't be used. Use SpeechListenOptions.pauseFor instead. Try replacing the use of the deprecated member with the replacement • lib/features/tasmee/tasmee_page.dart:453:9 • deprecated_member_use
+   info • Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation • lib/features/tasmee/tasmee_page.dart:549:11 • prefer_const_constructors
+   info • Unnecessary use of string interpolation. Try replacing the string literal with the variable name • lib/features/tasmee/tasmee_page.dart:802:30 • unnecessary_string_interpolations
+   info • Unnecessary use of string interpolation. Try replacing the string literal with the variable name • lib/features/tasmee/tasmee_page.dart:804:30 • unnecessary_string_interpolations
+   info • Unnecessary use of string interpolation. Try replacing the string literal with the variable name • lib/features/tasmee/tasmee_page.dart:807:32 • unnecessary_string_interpolations
+warning • Unused import: '../../core/i18n/text.dart'. Try removing the import directive • lib/features/virtues/virtues_data.dart:2:8 • unused_import
+   info • Use the null-aware marker '?' rather than a null check via an 'if'. Try using '?' • lib/features/virtues/virtues_pages.dart:562:31 • use_null_aware_elements
+
+63 issues found. (ran in 17.9s)
