@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:share_plus/share_plus.dart';
@@ -21,6 +21,7 @@ import 'similar_ayahs.dart';
 import 'tafsir_panel.dart';
 import 'word_meanings.dart';
 import '../../../tasmee/tasmee_page.dart';
+import '../../../../core/i18n/text.dart';
 
 String _reference(Ayah a) =>
     'سورة ${SurahMetadata.surah(a.surah).name} • الآية ${ArabicUtils.toArabicDigits(a.numberInSurah)}';

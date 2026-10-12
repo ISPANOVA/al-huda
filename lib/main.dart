@@ -1,13 +1,15 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
 import 'package:flutter/services.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
 import 'app.dart';
 import 'core/di/app_dependencies.dart';
+import 'core/services/storage_service.dart';
 import 'core/utils/app_orientation.dart';
 import 'features/onboarding/splash_screen.dart';
 import 'features/tasmee/web_speech.dart';
+import 'core/i18n/text.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -17,7 +19,7 @@ Future<void> main() async {
   // (or a headset button) starts the app there is no Activity, the calls
   // below have nobody to answer them, and the audio service must still
   // come up to answer the car.
-  final deps = initializeDateFormatting('ar').then((_) => AppDependencies.init());
+  final deps = initializeDateFormatting('ar').then((_) => initializeDateFormatting('en')).then((_) => AppDependencies.init());
   // Portrait on phones; tablets and unfolded foldables may turn.
   _ui(AppOrientation.apply);
   _ui(() async => SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
@@ -72,6 +74,9 @@ class _BootstrapState extends State<_Bootstrap> with WidgetsBindingObserver {
   Future<void> _start() async {
     final minSplash = Future<void>.delayed(const Duration(milliseconds: 1700));
     final deps = await widget.deps;
+    // The interface language before the first screen.
+    final saved = StorageService.asMap(deps.storage.settings.get('app_settings'));
+    await I18n.load(saved['language'] == 'en' ? 'en' : 'ar');
     await minSplash;
     if (mounted) setState(() => _deps = deps);
   }

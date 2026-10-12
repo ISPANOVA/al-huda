@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -18,6 +18,7 @@ import 'media_downloads_page.dart';
 import 'media_widgets.dart';
 import 'waving_flag.dart';
 import 'reciter_pages.dart';
+import '../../core/i18n/text.dart';
 
 class _Live {
   final String title;

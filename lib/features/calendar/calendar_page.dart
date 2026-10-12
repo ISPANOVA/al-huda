@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 
@@ -19,6 +19,7 @@ import '../prayer/presentation/prayer_log_page.dart';
 import '../settings/presentation/cubit/settings_cubit.dart';
 import 'islamic_calendar.dart';
 import '../../core/services/notification_service.dart';
+import '../../core/i18n/text.dart';
 
 /// التقويم الهجري: month grid, occasions, reminders, and the imsakiya.
 class CalendarPage extends StatefulWidget {
@@ -66,7 +67,7 @@ class _CalendarPageState extends State<CalendarPage> {
     final lead = (first.weekday % 7 + 1) % 7; // Sat=0 … Fri=6
     final upcoming = IslamicCalendar.upcoming(days: 90);
     final reminders = context.select((SettingsCubit c) => c.state.occasionReminders);
-    final greg = DateFormat('MMMM y', 'ar');
+    final greg = DateFormat('MMMM y', I18n.dateLocale);
     final lastGreg = IslamicCalendar.gregorianOf(_year, _month, days);
     return GlassScaffold(
       title: 'التقويم الهجري',
@@ -123,7 +124,7 @@ class _CalendarPageState extends State<CalendarPage> {
                                   Text(
                                     first.month == lastGreg.month
                                         ? greg.format(first)
-                                        : '${DateFormat('MMMM', 'ar').format(first)} – ${greg.format(lastGreg)}',
+                                        : '${DateFormat('MMMM', I18n.dateLocale).format(first)} – ${greg.format(lastGreg)}',
                                     textAlign: TextAlign.center,
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
@@ -462,7 +463,7 @@ class _OccasionCard extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(occasion.note, style: TextStyle(fontSize: 12.5, color: glass.onGlassMuted, height: 1.5)),
                 const SizedBox(height: 2),
-                Text(DateFormat('EEEE d MMMM', 'ar').format(date),
+                Text(DateFormat('EEEE d MMMM', I18n.dateLocale).format(date),
                     style: TextStyle(fontSize: 11, color: glass.onGlassMuted.withValues(alpha: 0.85))),
               ],
             ),
@@ -573,7 +574,7 @@ class _ImsakiyaPageState extends State<ImsakiyaPage> {
       actions: [
         if (rows.first.$3 != null)
           IconButton(
-            tooltip: 'شارك الإمساكية كصورة',
+            tooltip: tr('شارك الإمساكية كصورة'),
             icon: const Icon(Icons.ios_share_rounded),
             onPressed: () => _share(rows, year, now),
           ),

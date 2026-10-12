@@ -1,7 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
@@ -31,6 +31,7 @@ import 'features/settings/presentation/cubit/settings_state.dart';
 import 'features/stats/data/stats_repository.dart';
 import 'features/stats/presentation/stats_page.dart';
 import 'features/tasbeeh/presentation/cubit/tasbeeh_cubit.dart';
+import 'core/i18n/text.dart';
 
 class AlHudaApp extends StatefulWidget {
   final AppDependencies deps;
@@ -93,16 +94,19 @@ class _AlHudaAppState extends State<AlHudaApp> {
               p.themeMode != c.themeMode ||
               p.customPrimary != c.customPrimary ||
               p.customAccent != c.customAccent ||
-              p.customBackground != c.customBackground,
+              p.customBackground != c.customBackground ||
+              p.language != c.language,
           builder: (context, settings) {
             return MaterialApp(
+              // A new language rebuilds every screen from the start.
+              key: ValueKey('lang-${settings.language}'),
               title: AppConstants.appName,
               debugShowCheckedModeBanner: false,
               theme: AppThemes.build(settings.themeType, Brightness.light),
               darkTheme: AppThemes.build(settings.themeType, Brightness.dark),
               themeMode: settings.themeMode,
               themeAnimationDuration: Duration.zero,
-              locale: const Locale('ar'),
+              locale: Locale(I18n.en ? 'en' : 'ar'),
               supportedLocales: const [Locale('ar'), Locale('en')],
               localizationsDelegates: const [
                 GlobalMaterialLocalizations.delegate,
@@ -114,7 +118,7 @@ class _AlHudaAppState extends State<AlHudaApp> {
               scrollBehavior: kIsWeb ? _webScroll : null,
               navigatorObservers: [WebFrame.observer],
               builder: (context, child) => Directionality(
-                textDirection: TextDirection.rtl,
+                textDirection: I18n.direction,
                 child: ThemeTransition(
                   child: WebFrame(child: AnnouncementGate(service: _announcements, child: child!)),
                 ),

@@ -1,6 +1,6 @@
 import 'dart:math' as math;
 
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/theme/app_themes.dart';
@@ -8,6 +8,7 @@ import '../../../../core/utils/arabic_utils.dart';
 import '../../../../core/widgets/glass_container.dart';
 import '../../domain/prayer_entities.dart';
 import '../cubit/prayer_cubit.dart';
+import '../../../../core/i18n/text.dart';
 
 /// Glass card with a live countdown ring to the next prayer.
 class NextPrayerCard extends StatelessWidget {

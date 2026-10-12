@@ -1,12 +1,13 @@
 import 'dart:math' as math;
 
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
 
 import '../../core/theme/web_lite.dart';
 import '../../core/theme/app_themes.dart';
 import '../../core/theme/tones.dart';
 import '../../core/utils/arabic_utils.dart';
 import 'reciter_photos.dart';
+import '../../core/i18n/text.dart';
 
 /// Shared visual pieces of the media section (الوسائط).
 

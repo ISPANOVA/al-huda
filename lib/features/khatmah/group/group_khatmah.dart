@@ -1,7 +1,7 @@
 import 'dart:math';
 
 import 'package:dio/dio.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:share_plus/share_plus.dart';
@@ -17,6 +17,7 @@ import '../../../core/widgets/gradient_background.dart';
 import '../../../core/widgets/noor_ui.dart';
 import '../../../core/widgets/state_views.dart';
 import '../../quran/presentation/mushaf/mushaf_reader_page.dart';
+import '../../../core/i18n/text.dart';
 
 /// One juz of a shared khatmah.
 class GroupPart {
@@ -260,7 +261,7 @@ class _GroupKhatmahListPageState extends State<GroupKhatmahListPage> {
                 Expanded(child: TextField(controller: _link, decoration: field('الصق رابط الختمة أو رمزها'))),
                 const SizedBox(width: 8),
                 IconButton.filledTonal(
-                  tooltip: 'لصق',
+                  tooltip: tr('لصق'),
                   icon: const Icon(Icons.content_paste_rounded),
                   onPressed: () async {
                     final t = (await Clipboard.getData(Clipboard.kTextPlain))?.text;
@@ -473,7 +474,7 @@ class _GroupKhatmahPageState extends State<GroupKhatmahPage> {
       icon: Icons.groups_rounded,
       tone: _tone,
       actions: [
-        if (k != null) IconButton(tooltip: 'ادعُ غيرك', icon: const Icon(Icons.person_add_alt_1_rounded), onPressed: _invite),
+        if (k != null) IconButton(tooltip: tr('ادعُ غيرك'), icon: const Icon(Icons.person_add_alt_1_rounded), onPressed: _invite),
       ],
       body: _error != null
           ? MessageView(

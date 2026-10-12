@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:just_audio/just_audio.dart';
 
@@ -20,6 +20,7 @@ import '../../domain/adhan_voices.dart';
 import '../../domain/prayer_entities.dart';
 import '../prayer_tones.dart';
 import 'exact_alarm_prompt.dart';
+import '../../../../core/i18n/text.dart';
 
 /// Plays adhan samples from the bundled raw resources (one at a time).
 class AdhanPreview {

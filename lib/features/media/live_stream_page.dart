@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:video_player/video_player.dart';
@@ -8,6 +8,7 @@ import '../../core/utils/app_orientation.dart';
 import '../../core/widgets/state_views.dart';
 import '../audio/presentation/cubit/audio_cubit.dart';
 import 'media_widgets.dart';
+import '../../core/i18n/text.dart';
 
 /// Full-screen-capable HLS player for the live Haram channels.
 class LiveStreamPage extends StatefulWidget {

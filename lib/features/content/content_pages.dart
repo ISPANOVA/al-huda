@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -13,6 +13,7 @@ import '../../core/widgets/state_views.dart';
 import 'asma_data.dart';
 import 'nawawi_data.dart';
 import '../../core/widgets/share_card.dart';
+import '../../core/i18n/text.dart';
 
 // ------------------------------------------------------- أسماء الله الحسنى ---
 
@@ -108,7 +109,7 @@ class _AsmaPageState extends State<AsmaPage> {
           const SizedBox(height: 12),
           TextField(
             decoration: InputDecoration(
-              hintText: 'ابحث عن اسم',
+              hintText: tr('ابحث عن اسم'),
               prefixIcon: const Icon(Icons.search_rounded),
               filled: true,
               fillColor: glass.onGlass.withValues(alpha: 0.06),
@@ -249,12 +250,12 @@ class _HadithPageState extends State<_HadithPage> {
       tone: tone,
       actions: [
         IconButton(
-          tooltip: 'تصغير الخط',
+          tooltip: tr('تصغير الخط'),
           icon: const Icon(Icons.text_decrease_rounded),
           onPressed: () => setState(() => _size = (_size - 2).clamp(15, 34)),
         ),
         IconButton(
-          tooltip: 'تكبير الخط',
+          tooltip: tr('تكبير الخط'),
           icon: const Icon(Icons.text_increase_rounded),
           onPressed: () => setState(() => _size = (_size + 2).clamp(15, 34)),
         ),

@@ -2,7 +2,7 @@ import 'dart:io';
 import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
 import 'package:flutter/services.dart';
 import 'package:hijri/hijri_calendar.dart';
 import 'package:intl/intl.dart' show DateFormat;
@@ -13,6 +13,7 @@ import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_themes.dart';
 import '../../../core/utils/arabic_utils.dart';
 import '../domain/prayer_entities.dart';
+import '../../../core/i18n/text.dart';
 
 /// What the picture of today's times shows.
 class PrayerCardData {

@@ -1,12 +1,13 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
 import 'package:flutter/services.dart';
 
 import '../services/announcement_service.dart';
 import '../theme/app_themes.dart';
 import 'gradient_background.dart';
 import 'noor_ui.dart';
+import '../i18n/text.dart';
 
 /// Shows the owner's message over the app when it opens: a card the user can
 /// close, or (a required update) a screen that can't be passed.
@@ -184,7 +185,7 @@ class _Card extends StatelessWidget {
                     Align(
                       alignment: AlignmentDirectional.centerEnd,
                       child: IconButton(
-                        tooltip: 'إغلاق',
+                        tooltip: tr('إغلاق'),
                         onPressed: onClose,
                         icon: Icon(Icons.close_rounded, color: glass.onGlassMuted),
                       ),

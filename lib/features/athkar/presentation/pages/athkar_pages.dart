@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -18,6 +18,7 @@ import '../../../settings/presentation/cubit/settings_cubit.dart';
 import '../../data/athkar_data.dart';
 import '../cubit/athkar_cubit.dart';
 import '../../../../core/widgets/share_card.dart';
+import '../../../../core/i18n/text.dart';
 
 /// Look of each category: sky gradient and icon.
 ({List<Color> colors, IconData icon}) athkarLook(String id) => switch (id) {
@@ -279,7 +280,7 @@ class AthkarListPage extends StatelessWidget {
       icon: athkarLook(category.id).icon,
       actions: [
         IconButton(
-          tooltip: 'إعادة البدء',
+          tooltip: tr('إعادة البدء'),
           icon: const Icon(Icons.restart_alt_rounded),
           onPressed: () => context.read<AthkarCubit>().resetCategory(category),
         ),
@@ -388,7 +389,7 @@ class _ThikrCard extends StatelessWidget {
                   child: Text(thikr.source, style: TextStyle(fontSize: 12, color: glass.onGlassMuted)),
                 ),
                 IconButton(
-                  tooltip: 'مشاركة',
+                  tooltip: tr('مشاركة'),
                   icon: Icon(Icons.share_rounded, color: ink),
                   onPressed: () => showShareChoice(context,
                       card: ShareCard(title: category.title, body: thikr.text, source: thikr.source, quran: thikr.quran != null),
@@ -396,7 +397,7 @@ class _ThikrCard extends StatelessWidget {
                 ),
                 if (thikr.quran != null)
                   IconButton(
-                    tooltip: 'استماع',
+                    tooltip: tr('استماع'),
                     icon: Icon(Icons.volume_up_rounded, color: ink),
                     onPressed: () {
                       final q = thikr.quran!;

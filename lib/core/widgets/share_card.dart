@@ -1,7 +1,7 @@
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
 import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -10,6 +10,7 @@ import '../constants/app_constants.dart';
 import '../theme/app_themes.dart';
 import 'glass_container.dart';
 import 'state_views.dart';
+import '../i18n/text.dart';
 
 /// A thikr, dua, name of Allah or hadith as a picture: black and gold as in
 /// the app, as tall as the text needs (1350 at least, the shape chats show whole).

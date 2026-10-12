@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
 import 'package:flutter/services.dart';
 
 import '../../core/theme/app_themes.dart';
@@ -9,6 +9,7 @@ import '../../core/widgets/gradient_background.dart';
 import '../../core/widgets/state_views.dart';
 import 'duas_data.dart';
 import '../../core/widgets/share_card.dart';
+import '../../core/i18n/text.dart';
 
 const _tones = <Tone>[
   Tone.sapphire,
@@ -257,7 +258,7 @@ class _DuaCard extends StatelessWidget {
                       _RoundToneButton(
                         icon: Icons.copy_rounded,
                         tone: tone,
-                        tooltip: 'نسخ',
+                        tooltip: tr('نسخ'),
                         onTap: () async {
                           await Clipboard.setData(ClipboardData(text: '${d.text}\n[${d.source}]'));
                           if (context.mounted) showGlassSnack(context, 'تم نسخ الدعاء');
@@ -267,7 +268,7 @@ class _DuaCard extends StatelessWidget {
                       _RoundToneButton(
                         icon: Icons.share_rounded,
                         tone: tone,
-                        tooltip: 'مشاركة',
+                        tooltip: tr('مشاركة'),
                         onTap: () => showShareChoice(context,
                             card: ShareCard(title: 'دعاء', body: d.text, source: d.source), text: '${d.text}\n[${d.source}]'),
                       ),

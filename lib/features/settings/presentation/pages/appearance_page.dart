@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/theme/app_themes.dart';
@@ -12,6 +12,7 @@ import '../../../../core/widgets/noor_ui.dart';
 import '../cubit/settings_cubit.dart';
 import '../cubit/settings_state.dart';
 import 'settings_page.dart' show showCustomColorsSheet;
+import '../../../../core/i18n/text.dart';
 
 /// المظهر: colours (theme + light/dark + custom) and the background ornament.
 class AppearancePage extends StatelessWidget {

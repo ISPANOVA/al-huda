@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
+import '../../core/i18n/text.dart';
 
 /// Virtues (الفضائل): authentic Quranic verses and hadiths with their sources.
 class VirtueItem {

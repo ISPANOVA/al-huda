@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hijri/hijri_calendar.dart';
 import 'package:intl/intl.dart';
@@ -35,6 +35,7 @@ import '../../wird/wird_tracker.dart';
 import 'quick_actions.dart';
 import '../../calendar/calendar_page.dart';
 import '../../calendar/islamic_calendar.dart';
+import '../../../core/i18n/text.dart';
 
 /// الرئيسية — a living sky that follows the prayer day, then the user's
 /// reading, daily goals, shortcuts and the ayah of the day.
@@ -283,9 +284,9 @@ class HomeSkyHero extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    HijriCalendar.setLocal('ar');
+    HijriCalendar.setLocal(I18n.dateLocale);
     final hijri = HijriCalendar.now();
-    final greg = DateFormat('EEEE d MMMM', 'ar').format(DateTime.now());
+    final greg = DateFormat('EEEE d MMMM', I18n.dateLocale).format(DateTime.now());
     return BlocBuilder<PrayerCubit, PrayerState>(
       // The sky moves by the minute; only the countdown ring ticks each second.
       buildWhen: (p, c) =>
@@ -355,7 +356,7 @@ class HomeSkyHero extends StatelessWidget {
                       ),
                       NoorIconButton(
                         icon: Icons.explore_rounded,
-                        tooltip: 'القبلة',
+                        tooltip: tr('القبلة'),
                         onDark: true,
                         onTap: () => Navigator.of(context).push(QiblaPage.route()),
                       ),

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -14,6 +14,7 @@ import '../quran/domain/entities/ayah.dart';
 import '../quran/domain/repositories/quran_repository.dart';
 import 'virtues_data.dart';
 import '../../core/widgets/share_card.dart';
+import '../../core/i18n/text.dart';
 
 /// Each chapter of virtues has its own jewel tone (by its place in the list).
 const _tones = <Tone>[
@@ -245,7 +246,7 @@ class _TextCard extends StatelessWidget {
                       _RoundToneButton(
                         icon: Icons.copy_rounded,
                         tone: tone,
-                        tooltip: 'نسخ',
+                        tooltip: tr('نسخ'),
                         onTap: () {
                           Clipboard.setData(ClipboardData(text: '$text\n[$source]'));
                           showGlassSnack(context, 'تم النسخ');
@@ -255,7 +256,7 @@ class _TextCard extends StatelessWidget {
                       _RoundToneButton(
                         icon: Icons.share_rounded,
                         tone: tone,
-                        tooltip: 'مشاركة',
+                        tooltip: tr('مشاركة'),
                         onTap: () => showShareChoice(context,
                             card: ShareCard(title: quran ? 'من كتاب الله' : 'من السنة', body: text, source: source, quran: quran),
                             text: '$text\n[$source]'),

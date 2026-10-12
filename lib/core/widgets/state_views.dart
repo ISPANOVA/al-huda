@@ -1,7 +1,8 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
 
 import '../theme/app_themes.dart';
 import 'glass_container.dart';
+import '../i18n/text.dart';
 
 class LoadingView extends StatelessWidget {
   final String? message;

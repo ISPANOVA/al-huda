@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
+import '../i18n/i18n.dart';
+
 /// Android-only bridge to the native adhan player (AdhanAlarm.kt). It plays on
 /// the alarm stream, so the adhan is heard even in silent / vibrate mode.
 class AdhanNative {
@@ -22,7 +24,7 @@ class AdhanNative {
       await _ch.invokeMethod('schedule', {
         'items': [
           for (final i in items)
-            {'id': i.id, 'at': i.at.millisecondsSinceEpoch, 'sound': i.sound, 'title': i.title, 'body': i.body},
+            {'id': i.id, 'at': i.at.millisecondsSinceEpoch, 'sound': i.sound, 'title': tr(i.title), 'body': tr(i.body)},
         ],
       });
       return true;
@@ -45,8 +47,8 @@ class AdhanNative {
       await _ch.invokeMethod('test', {
         'seconds': seconds,
         'sound': sound,
-        'title': 'تجربة الأذان 🕌',
-        'body': 'هكذا سيُرفع الأذان حتى لو كان الهاتف صامتًا',
+        'title': tr('تجربة الأذان 🕌'),
+        'body': tr('هكذا سيُرفع الأذان حتى لو كان الهاتف صامتًا'),
       });
       return true;
     } catch (_) {

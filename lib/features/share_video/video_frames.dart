@@ -1,11 +1,12 @@
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
 
 import '../../core/constants/app_constants.dart';
 import '../../core/theme/app_themes.dart';
 import '../../core/utils/arabic_utils.dart';
+import '../../core/i18n/text.dart';
 
 /// One look for the video: what is painted behind the ayah and its colours.
 class VideoBackground {

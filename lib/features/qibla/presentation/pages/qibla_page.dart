@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_compass/flutter_compass.dart';
@@ -18,6 +18,7 @@ import '../../../prayer/data/prayer_repository.dart';
 import '../../web_compass.dart';
 import '../../../prayer/presentation/cubit/prayer_cubit.dart';
 import '../../../settings/presentation/cubit/settings_cubit.dart';
+import '../../../../core/i18n/text.dart';
 
 /// Sensor-driven Qibla compass with a 3D tilt effect.
 class QiblaPage extends StatefulWidget {

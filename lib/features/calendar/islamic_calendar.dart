@@ -1,7 +1,8 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
 import 'package:hijri/hijri_calendar.dart';
 
 import '../../core/services/notification_service.dart';
+import '../../core/i18n/text.dart';
 
 /// A day in the Islamic year worth remembering.
 class Occasion {

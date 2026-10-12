@@ -1,13 +1,14 @@
 import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
 import 'package:flutter/services.dart';
 
 import '../theme/app_themes.dart';
 import 'adaptive.dart';
 import '../theme/tones.dart';
 import 'background_patterns.dart';
+import '../i18n/text.dart';
 
 /// Vibrant multi-stop gradient with soft light orbs behind the glass layers.
 class GradientBackground extends StatelessWidget {

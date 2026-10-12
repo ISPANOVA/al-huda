@@ -1,11 +1,12 @@
 import 'dart:math' as math;
 
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/services/storage_service.dart';
 import '../../../../core/theme/app_themes.dart';
 import '../../../../core/widgets/state_views.dart';
+import '../../../../core/i18n/text.dart';
 
 /// A short tour of the Mushaf, shown once the first time it is opened.
 class ReaderGuide {

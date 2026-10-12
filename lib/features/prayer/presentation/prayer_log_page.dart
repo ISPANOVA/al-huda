@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hijri/hijri_calendar.dart';
 
@@ -13,6 +13,7 @@ import '../data/prayer_log.dart';
 import '../domain/prayer_entities.dart';
 import 'cubit/prayer_cubit.dart';
 import 'prayer_tones.dart';
+import '../../../core/i18n/text.dart';
 
 const _tone = Tone.sapphire;
 const _days = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];

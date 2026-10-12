@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
 
 import '../../../core/theme/web_lite.dart';
 import '../../../core/theme/app_themes.dart';
@@ -24,6 +24,7 @@ import '../../prayer/presentation/prayer_log_page.dart';
 import '../../quran/presentation/widgets/similar_ayahs.dart';
 import '../../share_video/ayah_video_page.dart';
 import '../../virtues/virtues_pages.dart';
+import '../../../core/i18n/text.dart';
 
 typedef _Item = ({String id, IconData icon, String title, String subtitle, Route<void> Function() route});
 

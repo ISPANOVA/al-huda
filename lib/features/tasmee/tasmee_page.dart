@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:just_audio/just_audio.dart';
@@ -30,6 +30,7 @@ import 'tasmee_engine.dart';
 import 'tasmee_follower.dart';
 import 'tasmee_locator.dart';
 import 'web_speech.dart';
+import '../../core/i18n/text.dart';
 
 /// التسميع: the Mushaf's words are hidden; recite from memory from anywhere
 /// (the surah and ayah are found from what you say) and each word appears as
@@ -945,7 +946,7 @@ class _TasmeePageState extends State<TasmeePage> {
                   MushafToolIcon(
                     icon: Icons.arrow_forward_rounded,
                     color: style.accent,
-                    tooltip: 'رجوع',
+                    tooltip: tr('رجوع'),
                     onTap: () => Navigator.of(context).maybePop(),
                   ),
                   MushafChip(
@@ -979,7 +980,7 @@ class _TasmeePageState extends State<TasmeePage> {
                   MushafToolIcon(
                     icon: Icons.search_rounded,
                     color: style.accent,
-                    tooltip: 'انتقل إلى سورة أو آية',
+                    tooltip: tr('انتقل إلى سورة أو آية'),
                     onTap: _openSearch,
                   ),
                   MushafToolIcon(
@@ -989,7 +990,7 @@ class _TasmeePageState extends State<TasmeePage> {
                     onTap: () => setState(() => _hide = !_hide),
                   ),
                   IconButton(
-                    tooltip: 'النتيجة',
+                    tooltip: tr('النتيجة'),
                     visualDensity: VisualDensity.compact,
                     onPressed: () => _showSummary(),
                     icon: Badge(
@@ -1268,7 +1269,7 @@ class _GoToSheetState extends State<_GoToSheet> {
                 autofocus: true,
                 onChanged: (v) => setState(() => _q = v),
                 decoration: InputDecoration(
-                  hintText: 'اسم السورة أو رقمها',
+                  hintText: tr('اسم السورة أو رقمها'),
                   prefixIcon: const Icon(Icons.search_rounded),
                   filled: true,
                   fillColor: glass.onGlass.withValues(alpha: 0.05),
@@ -1310,7 +1311,7 @@ class _GoToSheetState extends State<_GoToSheet> {
                 onSubmitted: (_) => _go(),
                 style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
                 decoration: InputDecoration(
-                  hintText: 'رقم الآية (١ – ${ArabicUtils.toArabicDigits(_surah!.ayahCount)})',
+                  hintText: tr('رقم الآية (١ – ${ArabicUtils.toArabicDigits(_surah!.ayahCount)})'),
                   filled: true,
                   fillColor: glass.onGlass.withValues(alpha: 0.05),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
@@ -1417,7 +1418,7 @@ class _ScopeSheetState extends State<_ScopeSheet> {
             TextField(
               onChanged: (v) => setState(() => _q = v),
               decoration: InputDecoration(
-                hintText: 'أو اختر سورة: اسمها أو رقمها',
+                hintText: tr('أو اختر سورة: اسمها أو رقمها'),
                 prefixIcon: const Icon(Icons.search_rounded),
                 filled: true,
                 fillColor: glass.onGlass.withValues(alpha: 0.05),

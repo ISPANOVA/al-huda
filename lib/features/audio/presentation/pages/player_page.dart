@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/data/surah_metadata.dart';
@@ -22,6 +22,7 @@ import '../../../share_video/ayah_video_page.dart';
 import '../widgets/mini_player.dart';
 import 'downloads_page.dart';
 import 'memorization_page.dart';
+import '../../../../core/i18n/text.dart';
 
 class PlayerPage extends StatelessWidget {
   const PlayerPage({super.key});
@@ -44,13 +45,13 @@ class PlayerPage extends StatelessWidget {
       actions: [
         if (!kIsWeb) // no offline files in the browser
         IconButton(
-          tooltip: 'التحميلات',
+          tooltip: tr('التحميلات'),
           icon: const Icon(Icons.download_for_offline_outlined),
           onPressed: () => Navigator.of(context).push(DownloadsPage.route()),
         ),
         if (!kIsWeb)
           IconButton(
-            tooltip: 'فيديو بصوت القارئ',
+            tooltip: tr('فيديو بصوت القارئ'),
             icon: const Icon(Icons.movie_creation_outlined),
             onPressed: () {
               final st = context.read<AudioCubit>().state;
@@ -60,7 +61,7 @@ class PlayerPage extends StatelessWidget {
             },
           ),
         IconButton(
-          tooltip: 'وضع الحفظ',
+          tooltip: tr('وضع الحفظ'),
           icon: const Icon(Icons.repeat_on_rounded),
           onPressed: () => Navigator.of(context).push(MemorizationPage.route()),
         ),
@@ -186,7 +187,7 @@ class PlayerPage extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   _RoundControl(
-                      icon: Icons.skip_next_rounded, size: 58, tone: _tone, onTap: cubit.previous, tooltip: 'السابقة'),
+                      icon: Icons.skip_next_rounded, size: 58, tone: _tone, onTap: cubit.previous, tooltip: tr('السابقة')),
                   const SizedBox(width: 22),
                   _RoundControl(
                     icon: state.buffering
@@ -199,7 +200,7 @@ class PlayerPage extends StatelessWidget {
                   ),
                   const SizedBox(width: 22),
                   _RoundControl(
-                      icon: Icons.skip_previous_rounded, size: 58, tone: _tone, onTap: cubit.next, tooltip: 'التالية'),
+                      icon: Icons.skip_previous_rounded, size: 58, tone: _tone, onTap: cubit.next, tooltip: tr('التالية')),
                 ],
               ),
 

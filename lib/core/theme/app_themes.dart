@@ -1,8 +1,9 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'page_transitions.dart';
+import '../i18n/text.dart';
 
 /// Bundled typefaces.
 class AppFonts {

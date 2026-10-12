@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:geolocator/geolocator.dart';
@@ -13,6 +13,7 @@ import '../../core/widgets/glass_container.dart';
 import '../../core/widgets/gradient_background.dart';
 import '../../core/widgets/noor_ui.dart';
 import '../prayer/presentation/cubit/prayer_cubit.dart';
+import '../../core/i18n/text.dart';
 
 /// First-launch walkthrough: a few feature slides then a permissions slide.
 /// Shown once; completion is stored under settings['onboarded'].

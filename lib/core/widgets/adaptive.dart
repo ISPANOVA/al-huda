@@ -1,4 +1,5 @@
-import 'package:flutter/widgets.dart';
+import 'package:flutter/widgets.dart' hide Text;
+import '../i18n/text.dart';
 
 /// Screen classes: a phone keeps its layout; a tablet, an unfolded phone or
 /// a computer gets the side navigation and wider, multi-column pages.

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -31,6 +31,7 @@ import '../../quran/presentation/mushaf/reader_guide.dart';
 import '../../stats/presentation/stats_page.dart';
 import 'dashboard_page.dart';
 import 'more_page.dart';
+import '../../../core/i18n/text.dart';
 
 /// Root scaffold: gradient background, tab pages, mini player and the
 /// bottom navigation bar (attached to the screen edge, part of the page).

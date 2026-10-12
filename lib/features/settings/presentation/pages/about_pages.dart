@@ -1,10 +1,11 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
 import '../../../media/reciter_photos.dart';
 
 import '../../../../core/theme/app_themes.dart';
 import '../../../../core/theme/tones.dart';
 import '../../../../core/widgets/glass_container.dart';
 import '../../../../core/widgets/gradient_background.dart';
+import '../../../../core/i18n/text.dart';
 
 /// One titled paragraph: a coloured icon, the title and the text, on a card
 /// washed with the same colour.

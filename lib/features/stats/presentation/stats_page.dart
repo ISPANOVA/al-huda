@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/theme/app_themes.dart';
@@ -11,6 +11,7 @@ import '../../../core/widgets/gradient_background.dart';
 import '../../../core/widgets/noor_ui.dart';
 import '../data/stats_repository.dart';
 import '../domain/stats_entities.dart';
+import '../../../core/i18n/text.dart';
 
 class StatsCubit extends Cubit<StatsSummary> {
   final StatsRepository _repo;

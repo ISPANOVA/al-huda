@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/theme/app_themes.dart';
@@ -10,6 +10,7 @@ import '../../../../core/widgets/state_views.dart';
 import '../../domain/repositories/quran_repository.dart';
 import '../cubit/quran_search_cubit.dart';
 import '../mushaf/mushaf_reader_page.dart';
+import '../../../../core/i18n/text.dart';
 
 class QuranSearchPage extends StatelessWidget {
   const QuranSearchPage({super.key});
@@ -83,7 +84,7 @@ class _SearchViewState extends State<_SearchView> {
               textInputAction: TextInputAction.search,
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: glass.onGlass),
               decoration: InputDecoration(
-                hintText: 'اكتب كلمة أو جزءًا من آية (دون تشكيل)',
+                hintText: tr('اكتب كلمة أو جزءًا من آية (دون تشكيل)'),
                 hintStyle: TextStyle(fontSize: 14, color: glass.onGlassMuted),
                 filled: true,
                 fillColor: noorSurface(context),

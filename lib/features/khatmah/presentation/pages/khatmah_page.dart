@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/data/surah_metadata.dart';
@@ -15,6 +15,7 @@ import '../../../quran/presentation/mushaf/mushaf_reader_page.dart';
 import '../../domain/khatmah_plan.dart';
 import '../cubit/khatmah_cubit.dart';
 import '../../group/group_khatmah.dart';
+import '../../../../core/i18n/text.dart';
 
 String describeGlobal(int global) {
   final r = SurahMetadata.fromGlobal(global);
@@ -35,7 +36,7 @@ class KhatmahPage extends StatelessWidget {
       tone: Tone.gold,
       actions: [
         IconButton(
-          tooltip: 'الختمة الجماعية',
+          tooltip: tr('الختمة الجماعية'),
           icon: const Icon(Icons.groups_rounded),
           onPressed: () => Navigator.of(context).push(GroupKhatmahListPage.route()),
         ),
@@ -681,7 +682,7 @@ class _PlanView extends StatelessWidget {
             DropdownButtonFormField<int>(
               initialValue: surah,
               isExpanded: true,
-              decoration: const InputDecoration(labelText: 'السورة'),
+              decoration: InputDecoration(labelText: tr('السورة')),
               items: [
                 for (final s in SurahMetadata.all) DropdownMenuItem(value: s.number, child: Text(s.name)),
               ],
@@ -696,7 +697,7 @@ class _PlanView extends StatelessWidget {
               initialValue: ayah.clamp(1, count),
               isExpanded: true,
               menuMaxHeight: 320,
-              decoration: const InputDecoration(labelText: 'الآية'),
+              decoration: InputDecoration(labelText: tr('الآية')),
               items: [for (var a = 1; a <= count; a++) DropdownMenuItem(value: a, child: Text(ArabicUtils.toArabicDigits(a)))],
               onChanged: (v) => setState(() => ayah = v ?? ayah),
             ),

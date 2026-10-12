@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -15,6 +15,7 @@ import '../../../../core/widgets/state_views.dart';
 import '../../domain/entities/ayah.dart';
 import '../../domain/repositories/quran_repository.dart';
 import '../mushaf/mushaf_reader_page.dart';
+import '../../../../core/i18n/text.dart';
 
 /// المتشابهات اللفظية: ayahs that share a run of words, computed from the
 /// Mushaf text by tool/quran/mutashabihat.py (assets/quran/mutashabihat.json).

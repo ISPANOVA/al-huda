@@ -1,10 +1,11 @@
 import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
 
 import '../theme/app_themes.dart';
 import '../theme/tones.dart';
+import '../i18n/text.dart';
 
 /// "Noor" design kit: mihrab arches, living sky, solid cards with a gold
 /// hairline. Shared by the Home, Prayer, Athkar and More tabs.

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/constants/app_constants.dart';
@@ -9,6 +9,7 @@ import '../../../../core/theme/app_themes.dart';
 import '../../../../core/theme/theme_transition.dart';
 import '../../../../core/widgets/background_patterns.dart';
 import 'settings_state.dart';
+import '../../../../core/i18n/text.dart';
 
 class SettingsCubit extends Cubit<SettingsState> {
   static const _key = 'app_settings';
