@@ -5,7 +5,7 @@ class AppConstants {
   static const String appNameEn = 'Al-Huda';
 
   /// Where people get the app (the shared videos and images point here).
-  static const String shareUrl = 'https://al-huda-brf.pages.dev';
+  static const String shareUrl = 'https://al-huda.xyz';
 
   // alquran.cloud public API (text + Tafseer Al-Muyassar)
   static const String quranApiBase = 'https://api.alquran.cloud/v1';

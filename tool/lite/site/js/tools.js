@@ -8,7 +8,7 @@ const share = (t) => {
   if (navigator.share) navigator.share({ text: t }).catch(() => {});
   else navigator.clipboard?.writeText(t).then(() => toast('نُسخ النص'));
 };
-const LINK = location.origin;
+const LINK = 'https://al-huda.xyz';
 
 export async function show(view, args, name) {
   if (name === 'asma') return asma(view);
