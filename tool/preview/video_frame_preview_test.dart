@@ -61,6 +61,26 @@ void main() {
       await save('video_short', (c, s) => gold.paintFrame(c, s,
           const FrameContent(text: 'الٓمٓ', ayahNumber: 1, surahName: 'سورة البقرة', reciterName: 'مشاري راشد العفاسي', caption: 'الآية ١')));
       await save('video_outro', (c, s) => gold.paintOutro(c, s));
+
+      // A video background: the see-through frame the encoder lays over the
+      // clip, here laid over a still in its place.
+      if (photo != null) {
+        final clip = VideoFramePainter(bg: VideoBackground.byId(VideoBackground.clip), logo: logo, reciterPhoto: photo, overlayOnly: true);
+        void under(Canvas c, Size s) {
+          final scale = s.height / photo.height;
+          c.drawImageRect(photo, Offset.zero & Size(photo.width.toDouble(), photo.height.toDouble()),
+              Rect.fromCenter(center: Offset(s.width / 2, s.height / 2), width: photo.width * scale, height: s.height), Paint());
+        }
+
+        await save('video_clip', (c, s) {
+          under(c, s);
+          clip.paintFrame(c, s, const FrameContent(text: short, ayahNumber: 2, surahName: 'سورة الفاتحة', reciterName: 'مشاري راشد العفاسي', caption: 'الآية ٢'));
+        });
+        await save('video_clip_outro', (c, s) {
+          under(c, s);
+          clip.paintOutro(c, s);
+        });
+      }
     });
   });
 }

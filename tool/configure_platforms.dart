@@ -407,6 +407,7 @@ class MainActivity : AudioServiceActivity() {
                     val w = call.argument<Int>("width") ?: 1080
                     val h = call.argument<Int>("height") ?: 1920
                     val fps = call.argument<Int>("fps") ?: 24
+                    val background = call.argument<String>("background")
                     val main = android.os.Handler(mainLooper)
                     Thread {
                         try {
@@ -414,7 +415,7 @@ class MainActivity : AudioServiceActivity() {
                             val ms = AyahVideo { p ->
                                 val pct = (p * 100).toInt()
                                 if (pct != last) { last = pct; main.post { video.invokeMethod("progress", p) } }
-                            }.render(segments, w, h, fps, out)
+                            }.render(segments, w, h, fps, out, background)
                             main.post { result.success(ms) }
                         } catch (e: Throwable) {
                             main.post { result.error("video", e.toString(), null) }
@@ -424,6 +425,12 @@ class MainActivity : AudioServiceActivity() {
                 "share" -> result.success(AyahVideo.shareTo(this, call.argument<String>("path") ?: "",
                     call.argument<String>("package"), call.argument<String>("text") ?: ""))
                 "save" -> result.success(AyahVideo.saveToGallery(this, call.argument<String>("path") ?: ""))
+                "thumb" -> {
+                    val path = call.argument<String>("path") ?: ""
+                    val out = call.argument<String>("out") ?: ""
+                    val main = android.os.Handler(mainLooper)
+                    Thread { val ok = AyahVideo.thumbnail(path, out); main.post { result.success(ok) } }.start()
+                }
                 else -> result.notImplemented()
             }
         }
