@@ -1,0 +1,14 @@
+
+ ⛅️ wrangler 4.149.0
+────────────────────
+✨ Compiled Worker successfully
+Uploading... (1384/1397)
+Uploading... (1388/1397)
+Uploading... (1393/1397)
+Uploading... (1397/1397)
+✨ Success! Uploaded 13 files (1384 already uploaded) (3.02 sec)
+
+✨ Uploading _headers
+✨ Uploading Functions bundle
+🌎 Deploying...
+✨ Deployment complete! Take a peek over at https://10335d0a.al-huda-brf.pages.dev
