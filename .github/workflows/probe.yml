@@ -22,14 +22,14 @@ jobs:
           done
           curl -sL -A "$UA" --max-time 120 "https://quranpedia.net/dumps/meanings.json.gz" -o meanings.json.gz
           gunzip -c meanings.json.gz > meanings.json
-          # Only the classical books: Ibn al-Jawzi (d. 597 AH), then Ibn al-Haim (d. 815 AH) for ayahs he alone covers.
+          # Only the classical books: Ibn al-Haim (d. 815 AH, the cleaner text), then Ibn al-Jawzi (d. 597 AH) where he alone covers.
           python3 -c "
           import json, re
           d=json.load(open('meanings.json'))
           out={}
           for e in d['data']:
             got={m['book_info']['id']: m for m in e['meanings']}
-            for bid, tag in ((208, 'j'), (327, 'h')):
+            for bid, tag in ((327, 'h'), (208, 'j')):
               m=got.get(bid)
               if not m: continue
               words=[[w['text'].strip(), re.sub(r'\s+', ' ', w['meaning']).strip()] for w in m['words'] if w.get('meaning')]
