@@ -18,6 +18,7 @@ import '../../qibla/presentation/pages/qibla_page.dart';
 import '../../settings/presentation/pages/settings_page.dart';
 import '../../stats/presentation/stats_page.dart';
 import '../../tasbeeh/presentation/pages/tasbeeh_page.dart';
+import '../../share_video/ayah_video_page.dart';
 import '../../virtues/virtues_pages.dart';
 
 typedef _Item = ({String id, IconData icon, String title, String subtitle, Route<void> Function() route});
@@ -56,6 +57,8 @@ class MorePage extends StatelessWidget {
         'الاستماع',
         [
           (id: 'player', icon: Icons.headphones_rounded, title: 'المشغل', subtitle: 'التلاوة الحالية', route: PlayerPage.route),
+          if (!kIsWeb)
+          (id: 'video', icon: Icons.movie_creation_rounded, title: 'فيديو بصوت القارئ', subtitle: 'آية أو سورة ستوري لواتساب وانستجرام', route: AyahVideoPage.route),
           if (!kIsWeb)
           (id: 'downloads', icon: Icons.download_for_offline_rounded, title: 'تنزيلات المصحف', subtitle: 'استماع دون إنترنت', route: DownloadsPage.route),
         ]

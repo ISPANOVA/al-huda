@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -49,6 +50,7 @@ class _AlHudaAppState extends State<AlHudaApp> {
     return MultiRepositoryProvider(
       providers: [
         RepositoryProvider<QuranRepository>.value(value: deps.quranRepository),
+        RepositoryProvider<Dio>.value(value: deps.dio),
         RepositoryProvider<StatsRepository>.value(value: deps.statsRepository),
         RepositoryProvider<AudioDownloadService>.value(value: deps.downloadService),
         RepositoryProvider<StorageService>.value(value: deps.storage),

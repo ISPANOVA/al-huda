@@ -17,6 +17,7 @@ import '../../../settings/presentation/cubit/settings_cubit.dart';
 import '../../domain/reciter.dart';
 import '../cubit/audio_cubit.dart';
 import '../cubit/audio_state.dart';
+import '../../../share_video/ayah_video_page.dart';
 import '../widgets/mini_player.dart';
 import 'downloads_page.dart';
 import 'memorization_page.dart';
@@ -46,6 +47,17 @@ class PlayerPage extends StatelessWidget {
           icon: const Icon(Icons.download_for_offline_outlined),
           onPressed: () => Navigator.of(context).push(DownloadsPage.route()),
         ),
+        if (!kIsWeb)
+          IconButton(
+            tooltip: 'فيديو بصوت القارئ',
+            icon: const Icon(Icons.movie_creation_outlined),
+            onPressed: () {
+              final st = context.read<AudioCubit>().state;
+              final s = st.surah ?? 1;
+              final a = (st.ayah ?? 1).clamp(1, SurahMetadata.surah(s).ayahCount);
+              Navigator.of(context).push(AyahVideoPage.route(surah: s, from: a));
+            },
+          ),
         IconButton(
           tooltip: 'وضع الحفظ',
           icon: const Icon(Icons.repeat_on_rounded),
@@ -148,7 +160,9 @@ class PlayerPage extends StatelessWidget {
                               child: Text(
                                 state.infiniteLoop
                                     ? 'وضع الحفظ • تكرار مستمر'
-                                    : 'وضع الحفظ • التكرارات المتبقية للنطاق: ${ArabicUtils.toArabicDigits(state.loopsRemaining)}',
+                                    : state.loopsRemaining == 0
+                                        ? 'وضع الحفظ • المرة الأخيرة'
+                                        : 'وضع الحفظ • متبقٍ ${ArabicUtils.toArabicDigits(state.loopsRemaining)} من التكرار',
                                 textAlign: TextAlign.center,
                                 style: TextStyle(color: Tone.coral.ink(dark), fontWeight: FontWeight.w700, fontSize: 12.5),
                               ),

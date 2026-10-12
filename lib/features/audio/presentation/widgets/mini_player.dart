@@ -5,6 +5,7 @@ import '../../../../core/theme/app_themes.dart';
 import '../../../../core/utils/arabic_utils.dart';
 import '../../../../core/widgets/glass_container.dart';
 import '../../../../core/widgets/state_views.dart';
+import '../../data/reciter_art.dart';
 import '../../domain/reciter.dart';
 import '../cubit/audio_cubit.dart';
 import '../cubit/audio_state.dart';
@@ -132,7 +133,10 @@ Future<String?> showReciterPicker(BuildContext context, String currentId) {
                   tileColor: selected ? glass.accent.withValues(alpha: 0.14) : null,
                   leading: CircleAvatar(
                     backgroundColor: glass.accent.withValues(alpha: 0.22),
-                    child: Text(r.nameAr.characters.first, style: TextStyle(color: glass.onGlass)),
+                    backgroundImage: ReciterArt.keyFor(r.id) == null ? null : AssetImage('assets/reciters/${ReciterArt.keyFor(r.id)}.jpg'),
+                    child: ReciterArt.keyFor(r.id) == null
+                        ? Text(r.nameAr.characters.first, style: TextStyle(color: glass.onGlass))
+                        : null,
                   ),
                   title: Text(r.nameAr, style: const TextStyle(fontWeight: FontWeight.w700)),
                   subtitle: Text('${r.style} • ${ArabicUtils.toArabicDigits(r.bitrate)} kbps'),

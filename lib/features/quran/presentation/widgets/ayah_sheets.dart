@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -12,6 +13,7 @@ import '../../../settings/presentation/cubit/settings_cubit.dart';
 import '../../../settings/presentation/cubit/settings_state.dart';
 import '../../domain/entities/ayah.dart';
 import '../cubit/bookmarks_cubit.dart';
+import '../../../share_video/ayah_video_page.dart';
 import '../pages/ayah_image_page.dart';
 import 'listen_sheet.dart';
 import 'tafsir_panel.dart';
@@ -146,6 +148,11 @@ class _ActionBar extends StatelessWidget {
         close();
         Navigator.of(hostContext).push(AyahImagePage.route(ayah));
       }),
+      if (!kIsWeb)
+        _ActionData(Icons.movie_creation_rounded, 'فيديو', false, () {
+          close();
+          Navigator.of(hostContext).push(AyahVideoPage.route(surah: ayah.surah, from: ayah.numberInSurah));
+        }),
       _ActionData(Icons.share_rounded, 'مشاركة', false, () {
         close();
         SharePlus.instance.share(ShareParams(
