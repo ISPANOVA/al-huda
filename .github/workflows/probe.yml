@@ -22,19 +22,22 @@ jobs:
           done
           curl -sL -A "$UA" --max-time 120 "https://quranpedia.net/dumps/meanings.json.gz" -o meanings.json.gz
           gunzip -c meanings.json.gz > meanings.json
-          # Only the classical book (Ibn al-Haim, d. 815 AH): {"surah:ayah": [[words, meaning], ...]}
+          # Only the classical books: Ibn al-Jawzi (d. 597 AH), then Ibn al-Haim (d. 815 AH) for ayahs he alone covers.
           python3 -c "
-          import json, collections
+          import json, re
           d=json.load(open('meanings.json'))
-          books=collections.Counter(); out={}
+          out={}
           for e in d['data']:
-            for m in e['meanings']:
-              books[(m['book_info']['id'], m['book_info']['name'], m['book_info']['author'])]+=1
-              if m['book_info']['id']==327:
-                out['%d:%d'%(e['surah'],e['ayah'])]=[[w['text'],w['meaning']] for w in m['words'] if w.get('meaning')]
-          print(books.most_common())
-          json.dump({'source':'التبيان في تفسير غريب القرآن، لابن الهائم (ت ٨١٥هـ)، عبر الموسوعة القرآنية quranpedia.net، نسخة '+d['license'].get('version',''),'ayahs':out}, open('gharib.json','w'), ensure_ascii=False, separators=(',',':'))
-          print(len(out), sum(len(v) for v in out.values()))
+            got={m['book_info']['id']: m for m in e['meanings']}
+            for bid, tag in ((208, 'j'), (327, 'h')):
+              m=got.get(bid)
+              if not m: continue
+              words=[[w['text'].strip(), re.sub(r'\s+', ' ', w['meaning']).strip()] for w in m['words'] if w.get('meaning')]
+              if words:
+                out['%d:%d'%(e['surah'],e['ayah'])]=[tag]+words
+                break
+          json.dump({'source': {'j': 'تذكرة الأريب في تفسير الغريب، لابن الجوزي (ت ٥٩٧هـ)', 'h': 'التبيان في تفسير غريب القرآن، لابن الهائم (ت ٨١٥هـ)', 'via': 'الموسوعة القرآنية quranpedia.net، نسخة '+d['license'].get('version','')}, 'ayahs': out}, open('gharib.json','w'), ensure_ascii=False, separators=(',',':'))
+          print(len(out), sum(len(v)-1 for v in out.values()))
           " > gharib_report.txt 2>&1
           ls -la gharib.json; cat everyayah.txt gharib_report.txt
           rm -f meanings.json meanings.json.gz
