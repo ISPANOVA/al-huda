@@ -18,6 +18,8 @@ import '../../qibla/presentation/pages/qibla_page.dart';
 import '../../settings/presentation/pages/settings_page.dart';
 import '../../stats/presentation/stats_page.dart';
 import '../../tasbeeh/presentation/pages/tasbeeh_page.dart';
+import '../../content/content_pages.dart';
+import '../../prayer/presentation/prayer_log_page.dart';
 import '../../share_video/ayah_video_page.dart';
 import '../../virtues/virtues_pages.dart';
 
@@ -43,6 +45,8 @@ class MorePage extends StatelessWidget {
           (id: 'virtues', icon: Icons.auto_awesome_rounded, title: 'الفضائل', subtitle: 'فضل الذكر والصلاة على النبي ﷺ', route: VirtuesPage.route),
           (id: 'ruqyah', icon: Icons.healing_rounded, title: 'الرقية الشرعية', subtitle: 'من القرآن والسنة', route: RuqyahPage.route),
           (id: 'duas', icon: Icons.back_hand_rounded, title: 'الأدعية', subtitle: 'للكرب والسفر والمرض والاستخارة', route: DuasPage.route),
+          (id: 'asma', icon: Icons.auto_awesome_rounded, title: 'أسماء الله الحسنى', subtitle: 'تسعة وتسعون اسمًا ومعانيها', route: AsmaPage.route),
+          (id: 'nawawi', icon: Icons.menu_book_rounded, title: 'الأربعون النووية', subtitle: 'جوامع الكلم من هدي النبي ﷺ', route: NawawiPage.route),
         ]
       ),
       (
@@ -50,7 +54,14 @@ class MorePage extends StatelessWidget {
         [
           (id: 'review', icon: Icons.psychology_rounded, title: 'مراجعة الحفظ', subtitle: 'اختبر حفظك بإخفاء الكلمات', route: HifzReviewPage.route),
           (id: 'calendar', icon: Icons.calendar_month_rounded, title: 'التقويم الهجري', subtitle: 'المناسبات وتذكير الصيام', route: CalendarPage.route),
-          (id: 'imsakiya', icon: Icons.brightness_3_rounded, title: 'إمساكية رمضان', subtitle: 'السحور والإفطار لمدينتك', route: ImsakiyaPage.route),
+          (id: 'imsakiya', icon: Icons.brightness_3_rounded, title: 'إمساكية رمضان', subtitle: 'السحور والإفطار ومتابعة الصيام', route: ImsakiyaPage.route),
+        ]
+      ),
+      (
+        'العبادات',
+        [
+          (id: 'prayerlog', icon: Icons.task_alt_rounded, title: 'متابعة الصلوات', subtitle: 'صلواتك اليومية والقضاء', route: PrayerLogPage.route),
+          (id: 'zakat', icon: Icons.calculate_rounded, title: 'حاسبة الزكاة', subtitle: 'المال والذهب والفضة والتجارة', route: ZakatPage.route),
         ]
       ),
       (
