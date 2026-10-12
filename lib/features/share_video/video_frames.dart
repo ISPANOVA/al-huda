@@ -122,9 +122,12 @@ class VideoFramePainter {
     final shadow = _layout(
         ayahSpan(c.text, c.ayahNumber, fs, Colors.black.withValues(alpha: bg.id == 'ivory' ? 0 : 0.45), Colors.transparent),
         textBox.width);
+    // Centred in the box whatever the width the painter settles on (a short
+    // ayah, «الٓمٓ», is narrower than the box).
     final top = textBox.center.dy - tp.height / 2;
-    shadow.paint(canvas, Offset(textBox.left, top + 3));
-    tp.paint(canvas, Offset(textBox.left, top));
+    final left = textBox.center.dx - tp.width / 2;
+    shadow.paint(canvas, Offset(textBox.center.dx - shadow.width / 2, top + 3));
+    tp.paint(canvas, Offset(left, top));
     tp.dispose();
     shadow.dispose();
 

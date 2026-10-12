@@ -195,7 +195,8 @@ class _AyahVideoPageState extends State<AyahVideoPage> {
         _length = length;
         _player = player;
       });
-      player.play();
+      // Watch it first, full screen; save or share from there or from below.
+      await _watch();
     } catch (e) {
       if (mounted) {
         showGlassSnack(context, e is DioException ? 'تعذر تحميل التلاوة، تحقق من الاتصال' : 'تعذر إنشاء الفيديو على هذا الجهاز');
@@ -203,6 +204,19 @@ class _AyahVideoPageState extends State<AyahVideoPage> {
     } finally {
       if (mounted) setState(() => _progress = null);
     }
+  }
+
+  /// The finished video full screen, before it is saved or shared.
+  Future<void> _watch() async {
+    final path = _video;
+    if (path == null) return;
+    await _player?.pause();
+    if (!mounted) return;
+    await Navigator.of(context).push(MaterialPageRoute(
+      fullscreenDialog: true,
+      builder: (_) => _VideoPreviewPage(path: path, onSave: _save, onShare: _share),
+    ));
+    if (mounted) setState(() {});
   }
 
   Future<void> _share(String? target) async {
@@ -287,6 +301,17 @@ class _AyahVideoPageState extends State<AyahVideoPage> {
             ),
           ],
           if (_video != null) ...[
+            const SizedBox(height: 14),
+            FilledButton.icon(
+              style: FilledButton.styleFrom(
+                backgroundColor: _tone.deep,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+              ),
+              onPressed: _watch,
+              icon: const Icon(Icons.fullscreen_rounded, color: Colors.white),
+              label: const Text('شاهد الفيديو بملء الشاشة', style: TextStyle(fontWeight: FontWeight.w800, color: Colors.white)),
+            ),
             const GlassSectionTitle('شارك الفيديو', tone: _tone),
             if (_length > const Duration(seconds: 60))
               Padding(
@@ -560,4 +585,155 @@ class _ShareTile extends StatelessWidget {
       ),
     );
   }
+}
+
+/// The video full screen: play, pause, scrub, then save or share.
+class _VideoPreviewPage extends StatefulWidget {
+  final String path;
+  final Future<void> Function() onSave;
+  final Future<void> Function(String? target) onShare;
+
+  const _VideoPreviewPage({required this.path, required this.onSave, required this.onShare});
+
+  @override
+  State<_VideoPreviewPage> createState() => _VideoPreviewPageState();
+}
+
+class _VideoPreviewPageState extends State<_VideoPreviewPage> {
+  late final VideoPlayerController _c = VideoPlayerController.file(File(widget.path));
+
+  @override
+  void initState() {
+    super.initState();
+    _c.initialize().then((_) {
+      if (!mounted) return;
+      _c.addListener(_tick);
+      _c.play();
+      setState(() {});
+    });
+  }
+
+  void _tick() {
+    if (mounted) setState(() {});
+  }
+
+  @override
+  void dispose() {
+    _c.removeListener(_tick);
+    _c.dispose();
+    super.dispose();
+  }
+
+  String _t(Duration d) => ArabicUtils.toArabicDigits(
+      '${d.inMinutes}:${d.inSeconds.remainder(60).toString().padLeft(2, '0')}');
+
+  @override
+  Widget build(BuildContext context) {
+    final v = _c.value;
+    final done = v.isInitialized && !v.isPlaying && v.position >= v.duration - const Duration(milliseconds: 300);
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        backgroundColor: Colors.black,
+        foregroundColor: Colors.white,
+        title: const Text('معاينة الفيديو', style: TextStyle(fontWeight: FontWeight.w800)),
+      ),
+      body: SafeArea(
+        child: Column(
+          children: [
+            Expanded(
+              child: Center(
+                child: !v.isInitialized
+                    ? const CircularProgressIndicator()
+                    : GestureDetector(
+                        onTap: () {
+                          if (done) {
+                            _c.seekTo(Duration.zero);
+                            _c.play();
+                          } else {
+                            v.isPlaying ? _c.pause() : _c.play();
+                          }
+                        },
+                        child: AspectRatio(
+                          aspectRatio: v.aspectRatio,
+                          child: Stack(fit: StackFit.expand, children: [
+                            ClipRRect(borderRadius: BorderRadius.circular(16), child: VideoPlayer(_c)),
+                            if (!v.isPlaying)
+                              Center(
+                                child: Icon(done ? Icons.replay_circle_filled_rounded : Icons.play_circle_fill_rounded,
+                                    size: 84, color: Colors.white.withValues(alpha: 0.85)),
+                              ),
+                          ]),
+                        ),
+                      ),
+              ),
+            ),
+            if (v.isInitialized)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
+                child: Row(
+                  children: [
+                    Text(_t(v.position), style: const TextStyle(color: Colors.white70, fontSize: 12)),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Directionality(
+                        textDirection: TextDirection.ltr,
+                        child: VideoProgressIndicator(
+                          _c,
+                          allowScrubbing: true,
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          colors: const VideoProgressColors(
+                              playedColor: Color(0xFFE2C074), bufferedColor: Colors.white24, backgroundColor: Colors.white12),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Text(_t(v.duration), style: const TextStyle(color: Colors.white70, fontSize: 12)),
+                  ],
+                ),
+              ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+              child: Row(
+                children: [
+                  _PreviewAction(Icons.chat_rounded, 'واتساب', const Color(0xFF25D366), () => widget.onShare('whatsapp')),
+                  _PreviewAction(Icons.camera_alt_rounded, 'انستجرام', const Color(0xFFE1306C), () => widget.onShare('instagram')),
+                  _PreviewAction(Icons.facebook_rounded, 'فيسبوك', const Color(0xFF1877F2), () => widget.onShare('facebook')),
+                  _PreviewAction(Icons.ios_share_rounded, 'مشاركة', const Color(0xFF64748B), () => widget.onShare(null)),
+                  _PreviewAction(Icons.download_rounded, 'حفظ', const Color(0xFF0E9F6E), widget.onSave),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _PreviewAction extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _PreviewAction(this.icon, this.label, this.color, this.onTap);
+
+  @override
+  Widget build(BuildContext context) => Expanded(
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: Column(
+              children: [
+                CircleAvatar(radius: 22, backgroundColor: color, child: Icon(icon, color: Colors.white)),
+                const SizedBox(height: 6),
+                Text(label, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 12)),
+              ],
+            ),
+          ),
+        ),
+      );
 }

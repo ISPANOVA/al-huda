@@ -58,6 +58,8 @@ void main() {
         await save('video_kursi_$i', (c, s) => gold.paintFrame(c, s,
             FrameContent(text: pages[i], ayahNumber: i == pages.length - 1 ? 255 : null, surahName: 'سورة البقرة', reciterName: 'محمود خليل الحصري', caption: 'الآية ٢٥٥')));
       }
+      await save('video_short', (c, s) => gold.paintFrame(c, s,
+          const FrameContent(text: 'الٓمٓ', ayahNumber: 1, surahName: 'سورة البقرة', reciterName: 'مشاري راشد العفاسي', caption: 'الآية ١')));
       await save('video_outro', (c, s) => gold.paintOutro(c, s));
     });
   });
