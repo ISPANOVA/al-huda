@@ -13,6 +13,7 @@ let live = false;
 let repeatEach = 1, played = 0;
 let rangeRepeat = 1, rangePlayed = 0;
 const listeners = new Set();
+let sleepAt = 0, sleepEnd = false, sleepTick = 0, metaCache = null;
 
 export const CDN = 'https://cdn.islamic.network/quran/audio';
 
@@ -42,9 +43,54 @@ export const player = {
     if (audio.currentTime > 3 && !live) { audio.currentTime = 0; return; }
     if (index > 0) { index--; played = 0; load(); }
   },
-  stop() { audio.pause(); queue = []; document.body.classList.remove('playing'); render(); emit(); },
+  stop() { remember(); audio.pause(); queue = []; cancelSleep(); document.body.classList.remove('playing'); render(); emit(); },
   open: () => openPlayer(),
+
+  /// «تابع الاستماع»: the last recitation, from where it stopped.
+  get resumePoint() { return store.get('resume', null); },
+  resume() {
+    const r = store.get('resume', null);
+    if (!r?.items?.length) return false;
+    this.play(r.items, r.title, { start: Math.min(r.index, r.items.length - 1) });
+    if (r.time > 3) audio.addEventListener('loadedmetadata', () => { audio.currentTime = r.time; }, { once: true });
+    return true;
+  },
+
+  /// The sleep timer: minutes, or 'surah' for the end of the surah, or 0 to cancel.
+  sleep(v) {
+    cancelSleep();
+    if (v === 'surah') { sleepEnd = true; meta().then((m) => { metaCache = m; }); }
+    else if (v > 0) {
+      sleepAt = Date.now() + v * 60000;
+      sleepTick = setInterval(() => {
+        const left = sleepAt - Date.now();
+        if (left <= 0) { audio.pause(); cancelSleep(); }
+        else if (left < 10000) audio.volume = left / 10000;
+        paintSleep();
+      }, 1000);
+    }
+    paintSleep();
+  },
+  get sleepState() { return sleepEnd ? 'surah' : sleepAt ? sleepAt - Date.now() : 0; },
 };
+
+function cancelSleep() {
+  clearInterval(sleepTick);
+  sleepAt = 0; sleepEnd = false; sleepTick = 0;
+  audio.volume = 1;
+  paintSleep();
+}
+
+const surahOf = (it) => it?.surah ?? (it?.ayah && metaCache ? metaCache.surah[it.ayah - 1] : null);
+
+/// Saved after each item and on pause: the queue (from a little before the
+/// current item), where, and the title. Radio is not saved.
+function remember() {
+  if (live || !queue.length) return;
+  const from = Math.max(0, index - 2);
+  store.set('resume', { items: queue.slice(from, from + 320), index: index - from, title, time: audio.currentTime || 0,
+    label: queue[index]?.label || title });
+}
 
 function load() {
   const it = queue[index];
@@ -69,13 +115,18 @@ audio.addEventListener('ended', () => {
   played++;
   if (played < repeatEach) { audio.currentTime = 0; audio.play(); return; }
   played = 0;
+  // «End of the surah»: the next item is another surah (or this one was a whole surah).
+  if (sleepEnd) {
+    const cur = queue[index], nxt = queue[index + 1];
+    if (!nxt || cur?.surah || surahOf(nxt) !== surahOf(cur)) { cancelSleep(); index = Math.min(index + 1, queue.length - 1); remember(); player.stop(); return; }
+  }
   if (index + 1 < queue.length) { index++; load(); return; }
   rangePlayed++;
   if (rangeRepeat === 0 || rangePlayed < rangeRepeat) { index = 0; load(); return; }
   player.stop();
 });
-audio.addEventListener('play', () => { render(); emit(); });
-audio.addEventListener('pause', () => { render(); emit(); });
+audio.addEventListener('play', () => { render(); emit(); remember(); });
+audio.addEventListener('pause', () => { render(); emit(); remember(); });
 audio.addEventListener('timeupdate', progress);
 audio.addEventListener('error', () => {
   const it = queue[index];
@@ -148,6 +199,10 @@ function openPlayer() {
       </div>
       <p class="gold small center" id="fpR"></p>
       ${live ? '' : `<div class="chips" style="justify-content:center">${[0.75, 1, 1.25, 1.5].map((r) => `<button class="chip${r === rate ? ' on' : ''}" data-rate="${r}">${ar(r)}×</button>`).join('')}</div>`}
+      <div class="section" style="margin-top:14px">مؤقت النوم</div>
+      <div class="chips" id="fpSl" style="justify-content:center">${[[0, 'بدون'], [10, '١٠ د'], [15, '١٥ د'], [30, '٣٠ د'], [45, '٤٥ د'], [60, '٦٠ د'], ...(live ? [] : [['surah', 'نهاية السورة']])].map(([v, t]) =>
+        `<button class="chip" data-sleep="${v}">${t}</button>`).join('')}</div>
+      <p class="small center gold" id="fpSlS"></p>
       <button class="btn ghost block" id="fpX" style="margin-top:14px">${icon('stop')} إيقاف التشغيل</button>
     </div>`, (body, close) => {
     paintBig();
@@ -157,7 +212,10 @@ function openPlayer() {
     $('#fpX', body).onclick = () => { player.stop(); close(); };
     const seek = $('#fpSeek', body);
     if (seek) seek.oninput = () => { if (audio.duration) audio.currentTime = (seek.value / 100) * audio.duration; };
+    paintSleep();
     body.onclick = (e) => {
+      const sl = e.target.closest('[data-sleep]');
+      if (sl) { const v = sl.dataset.sleep; player.sleep(v === 'surah' ? 'surah' : +v); return; }
       const b = e.target.closest('[data-rate]');
       if (!b) return;
       store.set('rate', +b.dataset.rate);
@@ -169,6 +227,17 @@ function openPlayer() {
     const mo = new MutationObserver(() => { if (!body.contains(art)) { off(); mo.disconnect(); } });
     mo.observe(body, { childList: true });
   });
+}
+
+function paintSleep() {
+  const st = $('#fpSlS');
+  if (!st) return;
+  const s = player.sleepState;
+  for (const c of document.querySelectorAll('[data-sleep]')) {
+    const v = c.dataset.sleep;
+    c.classList.toggle('on', s === 'surah' ? v === 'surah' : (!s && v === '0'));
+  }
+  st.textContent = s === 'surah' ? 'تتوقف التلاوة عند نهاية السورة' : s > 0 ? `تتوقف بعد ${fmt(s / 1000)}` : '';
 }
 
 /// Ayah recitation: global ayah numbers from [from] to [to].

@@ -167,10 +167,16 @@ const routes = {
   settings: () => import('./settings.js'),
   about: () => import('./settings.js'),
   more: () => import('./more.js'),
+  asma: () => import('./tools.js'),
+  nawawi: () => import('./tools.js'),
+  zakat: () => import('./tools.js'),
+  prayerlog: () => import('./tools.js'),
+  similar: () => import('./tools.js'),
+  video: () => import('./video.js'),
 };
 const TABS = { '': 'home', mushaf: 'mushaf', tasmee: 'mushaf', search: 'mushaf', media: 'media', prayer: 'prayer', qibla: 'prayer',
   calendar: 'prayer', athkar: 'athkar', tasbeeh: 'more', duas: 'athkar', ruqyah: 'athkar', virtues: 'athkar', khatmah: 'more', stats: 'more', hifz: 'media',
-  settings: 'more', about: 'more', more: 'more' };
+  settings: 'more', about: 'more', more: 'more', asma: 'athkar', nawawi: 'athkar', zakat: 'more', prayerlog: 'prayer', similar: 'mushaf', video: 'media' };
 const TONES = { home: 'gold', mushaf: 'emerald', media: 'amethyst', prayer: 'sapphire', athkar: 'rose', more: 'teal' };
 
 let current = null;

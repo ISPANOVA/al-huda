@@ -15,6 +15,7 @@ import '../../domain/entities/ayah.dart';
 import '../cubit/bookmarks_cubit.dart';
 import '../../../share_video/ayah_video_page.dart';
 import '../pages/ayah_image_page.dart';
+import '../mushaf/tajweed.dart';
 import 'listen_sheet.dart';
 import 'similar_ayahs.dart';
 import 'tafsir_panel.dart';
@@ -260,6 +261,25 @@ Future<void> showReaderSettingsSheet(BuildContext context) {
                 value: s.autoFollowAudio,
                 onChanged: cubit.setAutoFollowAudio,
               ),
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                title: const Text('مصحف التجويد الملوّن'),
+                subtitle: const Text('تلوين أحكام التجويد على الحروف'),
+                value: s.tajweed,
+                onChanged: (v) {
+                  if (v) Tajweed.load();
+                  cubit.setTajweed(v);
+                },
+              ),
+              if (s.tajweed)
+                Align(
+                  alignment: AlignmentDirectional.centerStart,
+                  child: TextButton.icon(
+                    onPressed: () => showTajweedLegend(ctx),
+                    icon: const Icon(Icons.palette_rounded),
+                    label: const Text('دليل ألوان التجويد'),
+                  ),
+                ),
               const SizedBox(height: 10),
               Text('عرض الصفحات (للتابلت والكمبيوتر والهواتف القابلة للطي)',
                   style: TextStyle(fontWeight: FontWeight.w700, color: glass.onGlass)),

@@ -80,6 +80,12 @@ export async function show(view) {
       <span class="resume-bar"><i style="width:${((last || 0) / 604) * 100}%"></i></span>
     </a>
 
+    ${!player.current && player.resumePoint ? `<button class="card resume listen" id="lis">
+      <span class="ticon t-amethyst">${icon('head')}</span>
+      <span class="grow" style="text-align:right"><small class="muted">تابع الاستماع</small>
+        <b>${esc(player.resumePoint.label)}</b><small class="muted">${esc(player.resumePoint.title)}</small></span>
+      <span class="pbtn">${icon('play')}</span></button>` : ''}
+
     <div class="goals">
       <a class="card" href="#/khatmah"><span class="ticon t-teal">${icon('book')}</span><b>${goal ? `${ar(Math.min(doneToday, goal))} / ${ar(goal)}` : 'حدّد هدفك'}</b><small>وردي</small></a>
       <a class="card" href="#/khatmah"><span class="ticon t-amethyst">${icon('flag')}</span><b>${k ? ar(Math.round((k.pages.length / 604) * 100)) + '٪' : 'ابدأ'}</b><small>الختمة</small></a>
@@ -96,6 +102,7 @@ export async function show(view) {
 
     <p class="dedication">صدقة جارية عن روح سمير حجازي، وعن سعد صالح، وعن جميع المسلمين</p>`;
 
+  $('#lis')?.addEventListener('click', () => player.resume());
   hijriToday().then((h) => { $('#hdate').textContent = `${ar(h.d)} ${HMONTHS[h.m - 1]} ${ar(h.y)} هـ`; }).catch(() => {});
   paintSky();
   addEventListener('resize', onSkyResize);

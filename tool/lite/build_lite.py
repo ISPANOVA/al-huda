@@ -75,6 +75,12 @@ def main():
     # The Tasmee's words (all of the Mushaf, in page order).
     dump("data/words.json", {"words": words, "pageStart": page_start})
 
+    # Similar ayahs and tajweed colours, as the app has them.
+    for name in ["mutashabihat.json", "tajweed.txt"]:
+        src = os.path.join(ROOT, "assets/quran", name)
+        if os.path.exists(src):
+            shutil.copy(src, os.path.join(OUT, "data", name))
+
     fonts = os.path.join(OUT, "fonts")
     os.makedirs(fonts, exist_ok=True)
     for f in ["UthmanicHafs18.ttf", "Tajawal-Regular.ttf", "Tajawal-Bold.ttf", "Tajawal-ExtraBold.ttf", "ReemKufi-Bold.ttf"]:

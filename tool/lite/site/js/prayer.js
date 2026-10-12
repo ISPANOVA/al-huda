@@ -2,6 +2,7 @@
 // calculation settings and a monthly timetable (إمساكية).
 import { $, ar, esc, icon, store, top, toast, sheet } from './app.js';
 import { NAMES, METHODS, location, locate, timesFor, nextPrayer, hm, countdown, hijriToday, HMONTHS } from './prayerlib.js';
+import { ticks, togglePrayed, prayedOn } from './tools.js';
 
 let timer;
 
@@ -29,6 +30,7 @@ export async function show(view, args) {
       <small id="nt"></small>
     </div>
     <div class="ptimes" style="margin-top:14px">${NAMES.map((n, i) => `<div data-i="${i}"><span>${n}</span><span class="t">${hm(t[i])}</span></div>`).join('')}</div>
+    <a class="card" href="#/prayerlog" id="plc" style="display:block;margin-top:12px"><div class="row"><b class="grow">صلواتي اليوم</b><span class="gold" id="plN">${ar(prayedOn(now).size)} / ٥</span>${icon('back', 'muted')}</div>${ticks(now)}</a>
     <div class="grid3" style="margin-top:6px">
       <a class="card qa" href="#/qibla"><div class="ticon t-amber">${icon('compass')}</div>القبلة</a>
       <a class="card qa" href="#/prayer/month"><div class="ticon t-sky">${icon('cal')}</div>الإمساكية</a>
@@ -52,6 +54,15 @@ export async function show(view, args) {
   clearInterval(timer);
   timer = setInterval(paint, 1000);
 
+  $('#plc', body).onclick = (e) => {
+    const t = e.target.closest('[data-tick]');
+    if (!t) return;
+    e.preventDefault();
+    togglePrayed(new Date(), +t.dataset.tick);
+    const card = $('#plc', body);
+    card.querySelector('.ticks').outerHTML = ticks(new Date());
+    $('#plN', body).textContent = `${ar(prayedOn(new Date()).size)} / ٥`;
+  };
   $('#m', body).onclick = () => pick('طريقة الحساب', Object.entries(METHODS), store.get('method', 'egyptian'), (v) => { store.set('method', v); show(view, []); });
   $('#md', body).onclick = () => pick('حساب العصر', [['shafi', 'الجمهور (الشافعي والمالكي والحنبلي)'], ['hanafi', 'الحنفي']], store.get('madhab', 'shafi'), (v) => { store.set('madhab', v); show(view, []); });
   $('#adj', body).onclick = () => adjust(view);
