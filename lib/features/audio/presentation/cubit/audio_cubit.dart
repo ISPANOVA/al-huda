@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:audio_service/audio_service.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/data/surah_metadata.dart';
@@ -210,6 +211,16 @@ class AudioCubit extends Cubit<AudioState> {
       unawaited(_handler.play());
     }
   }
+
+  /// «تابع الاستماع»: the last recitation, from where it stopped.
+  Map<String, dynamic>? get resumePoint => _handler.car?.resumePoint;
+  Future<bool> resume() async => await _handler.car?.resume() ?? false;
+
+  /// The sleep timer (shared with the notification and Android Auto).
+  ValueNotifier<SleepTimer?> get sleepTimer => _handler.sleep;
+  void setSleepTimer(Duration d) => _handler.setSleepTimer(d);
+  void sleepAtEndOfSurah() => _handler.sleepAtEndOfSurah();
+  void cancelSleepTimer() => _handler.cancelSleepTimer();
 
   Future<void> next() => _handler.skipToNext();
   Future<void> previous() => _handler.skipToPrevious();
