@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:share_plus/share_plus.dart';
 
 import '../../core/data/surah_metadata.dart';
 import '../../core/theme/app_themes.dart';
@@ -14,6 +13,7 @@ import '../../core/widgets/state_views.dart';
 import '../quran/domain/entities/ayah.dart';
 import '../quran/domain/repositories/quran_repository.dart';
 import 'virtues_data.dart';
+import '../../core/widgets/share_card.dart';
 
 /// Each chapter of virtues has its own jewel tone (by its place in the list).
 const _tones = <Tone>[
@@ -256,7 +256,9 @@ class _TextCard extends StatelessWidget {
                         icon: Icons.share_rounded,
                         tone: tone,
                         tooltip: 'مشاركة',
-                        onTap: () => SharePlus.instance.share(ShareParams(text: '$text\n[$source]\n\n— تطبيق الهدى')),
+                        onTap: () => showShareChoice(context,
+                            card: ShareCard(title: quran ? 'من كتاب الله' : 'من السنة', body: text, source: source, quran: quran),
+                            text: '$text\n[$source]'),
                       ),
                     ],
                   ),

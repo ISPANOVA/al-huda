@@ -17,6 +17,7 @@ import '../../../audio/presentation/widgets/mini_player.dart';
 import '../../../settings/presentation/cubit/settings_cubit.dart';
 import '../../data/athkar_data.dart';
 import '../cubit/athkar_cubit.dart';
+import '../../../../core/widgets/share_card.dart';
 
 /// Look of each category: sky gradient and icon.
 ({List<Color> colors, IconData icon}) athkarLook(String id) => switch (id) {
@@ -385,6 +386,13 @@ class _ThikrCard extends StatelessWidget {
               children: [
                 Expanded(
                   child: Text(thikr.source, style: TextStyle(fontSize: 12, color: glass.onGlassMuted)),
+                ),
+                IconButton(
+                  tooltip: 'مشاركة',
+                  icon: Icon(Icons.share_rounded, color: ink),
+                  onPressed: () => showShareChoice(context,
+                      card: ShareCard(title: category.title, body: thikr.text, source: thikr.source, quran: thikr.quran != null),
+                      text: '${thikr.text}\n[${thikr.source}]'),
                 ),
                 if (thikr.quran != null)
                   IconButton(

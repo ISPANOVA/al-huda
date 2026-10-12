@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:share_plus/share_plus.dart';
 
 import '../../core/theme/app_themes.dart';
 import '../../core/theme/tones.dart';
@@ -9,6 +8,7 @@ import '../../core/widgets/glass_container.dart';
 import '../../core/widgets/gradient_background.dart';
 import '../../core/widgets/state_views.dart';
 import 'duas_data.dart';
+import '../../core/widgets/share_card.dart';
 
 const _tones = <Tone>[
   Tone.sapphire,
@@ -268,8 +268,8 @@ class _DuaCard extends StatelessWidget {
                         icon: Icons.share_rounded,
                         tone: tone,
                         tooltip: 'مشاركة',
-                        onTap: () =>
-                            SharePlus.instance.share(ShareParams(text: '${d.text}\n[${d.source}]\n\n— تطبيق الهدى')),
+                        onTap: () => showShareChoice(context,
+                            card: ShareCard(title: 'دعاء', body: d.text, source: d.source), text: '${d.text}\n[${d.source}]'),
                       ),
                     ],
                   ),

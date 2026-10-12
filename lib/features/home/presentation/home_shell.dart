@@ -77,6 +77,7 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
         IslamicCalendar.scheduleReminders(
           context.read<NotificationService>(),
           enabled: context.read<SettingsCubit>().state.occasionReminders,
+          friday: context.read<SettingsCubit>().state.fridayReminders,
         );
       }
     });
@@ -153,6 +154,9 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
     NotificationService.openRequest.value = null;
     if (payload.startsWith('athkar:')) {
       Navigator.of(context).push(AthkarListPage.route(payload.substring(7)));
+    } else if (payload.startsWith('surah:')) {
+      final surah = int.tryParse(payload.substring(6));
+      if (surah != null) Navigator.of(context).push(MushafReaderPage.route(surah: surah));
     }
   }
 

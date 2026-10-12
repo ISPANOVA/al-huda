@@ -23,6 +23,7 @@ import '../../quran/domain/entities/ayah.dart';
 import '../../quran/domain/entities/ayah_ref.dart';
 import '../../quran/domain/repositories/quran_repository.dart';
 import '../../quran/presentation/cubit/bookmarks_cubit.dart';
+import '../../quran/presentation/mushaf/mushaf_page.dart' show juzName;
 import '../../quran/presentation/mushaf/mushaf_reader_page.dart';
 import '../../quran/presentation/pages/ayah_image_page.dart';
 import '../../settings/presentation/cubit/settings_cubit.dart';
@@ -498,7 +499,8 @@ class _SeasonalCards extends StatelessWidget {
     final friday = now.weekday == DateTime.friday;
     final ramadan = IslamicCalendar.isRamadan;
     final fast = now.hour >= 12 ? IslamicCalendar.tomorrowFast() : null;
-    if (!friday && !ramadan && fast == null) return const SizedBox.shrink();
+    final soon = IslamicCalendar.daysToRamadan(max: 10);
+    if (!friday && !ramadan && fast == null && soon == 0) return const SizedBox.shrink();
     return Column(
       children: [
         if (fast != null)
@@ -512,27 +514,18 @@ class _SeasonalCards extends StatelessWidget {
               onTap: () => Navigator.of(context).push(CalendarPage.route()),
             ),
           ),
-        if (ramadan)
+        if (ramadan) Padding(padding: padding, child: const RamadanHomeCard()),
+        if (soon > 0)
           Padding(
             padding: padding,
-            child: BlocBuilder<PrayerCubit, PrayerState>(
-              buildWhen: (p, c) => p.countdown.inMinutes != c.countdown.inMinutes || p.today != c.today,
-              builder: (context, s) {
-                final maghrib = s.today?[PrayerName.maghrib];
-                final fajr = s.today?[PrayerName.fajr];
-                final fasting = maghrib != null && fajr != null && now.isAfter(fajr) && now.isBefore(maghrib);
-                return _BannerCard(
-                  colors: skyColors(SkyPhase.sunset),
-                  icon: Icons.brightness_3_rounded,
-                  title: 'رمضان كريم',
-                  subtitle: fasting
-                      ? 'باقي على الإفطار ${ArabicUtils.formatDuration(maghrib.difference(now), withSeconds: false)}'
-                      : fajr != null && now.isBefore(fajr)
-                          ? 'باقي على الإمساك ${ArabicUtils.formatDuration(fajr.subtract(const Duration(minutes: 10)).difference(now), withSeconds: false)}'
-                          : 'الإمساكية ومتابعة الصيام والتراويح',
-                  onTap: () => Navigator.of(context).push(ImsakiyaPage.route()),
-                );
-              },
+            child: _BannerCard(
+              colors: skyColors(SkyPhase.sunset),
+              icon: Icons.brightness_3_rounded,
+              title: 'اقترب رمضان',
+              subtitle: soon == 1
+                  ? 'رمضان غدًا بإذن الله • جهّز الإمساكية وخطة الختمة'
+                  : 'باقٍ ${ArabicUtils.toArabicDigits(soon)} ${soon <= 10 ? 'أيام' : 'يومًا'} • الإمساكية جاهزة لمدينتك',
+              onTap: () => Navigator.of(context).push(ImsakiyaPage.route()),
             ),
           ),
         if (friday)
@@ -547,6 +540,124 @@ class _SeasonalCards extends StatelessWidget {
             ),
           ),
       ],
+    );
+  }
+}
+
+/// رمضان on the home: the day, the countdown to iftar or imsak, today's
+/// imsak and iftar, the juz of the day (a khatmah in the month) and the imsakiya.
+class RamadanHomeCard extends StatelessWidget {
+  const RamadanHomeCard({super.key});
+
+  /// The first page of each juz in the Madani Mushaf.
+  static const juzPages = [
+    1, 22, 42, 62, 82, 102, 121, 142, 162, 182, 201, 222, 242, 262, 282,
+    302, 322, 342, 362, 382, 402, 422, 442, 462, 482, 502, 522, 542, 562, 582,
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final day = IslamicCalendar.hijriOf(DateTime.now()).hDay.clamp(1, 30);
+    return BlocBuilder<PrayerCubit, PrayerState>(
+      buildWhen: (p, c) => p.countdown.inMinutes != c.countdown.inMinutes || p.today != c.today,
+      builder: (context, s) {
+        final now = DateTime.now();
+        final fajr = s.today?[PrayerName.fajr];
+        final maghrib = s.today?[PrayerName.maghrib];
+        final nextFajr = fajr == null ? null : (now.isBefore(fajr) ? fajr : (s.tomorrow?[PrayerName.fajr] ?? fajr.add(const Duration(days: 1))));
+        final fasting = fajr != null && maghrib != null && now.isAfter(fajr) && now.isBefore(maghrib);
+        final imsak = nextFajr?.subtract(const Duration(minutes: 10));
+        String line;
+        if (maghrib == null || imsak == null) {
+          line = 'حدّد موقعك لعدّاد الإفطار والسحور';
+        } else if (fasting) {
+          line = 'باقٍ على الإفطار ${ArabicUtils.formatDuration(maghrib.difference(now), withSeconds: false)}';
+        } else if (now.isBefore(imsak)) {
+          line = 'باقٍ على الإمساك ${ArabicUtils.formatDuration(imsak.difference(now), withSeconds: false)}';
+        } else {
+          line = 'حان الإمساك • الفجر ${ArabicUtils.formatTime(nextFajr!)}';
+        }
+        const ink = Color(0xFFFFE3A3);
+        Widget chip(String t) => Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(14),
+                color: Colors.white.withValues(alpha: 0.14),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+              ),
+              child: Text(t, style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w800)),
+            );
+        Widget action(IconData icon, String label, VoidCallback onTap) => Expanded(
+              child: Material(
+                color: Colors.white.withValues(alpha: 0.16),
+                borderRadius: BorderRadius.circular(16),
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(16),
+                  onTap: onTap,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(icon, color: ink, size: 18),
+                        const SizedBox(width: 6),
+                        Flexible(
+                          child: Text(label,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(color: Colors.white, fontSize: 12.5, fontWeight: FontWeight.w800)),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            );
+        return Container(
+          padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(24),
+            gradient: LinearGradient(begin: Alignment.topRight, end: Alignment.bottomLeft, colors: skyColors(SkyPhase.sunset)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.brightness_3_rounded, color: ink, size: 30),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('رمضان كريم • اليوم ${ArabicUtils.toArabicDigits(day)}',
+                            style: const TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w900)),
+                        Text(line, style: TextStyle(color: Colors.white.withValues(alpha: 0.88), fontSize: 13, fontWeight: FontWeight.w700)),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              if (imsak != null && maghrib != null) ...[
+                const SizedBox(height: 10),
+                Wrap(spacing: 8, runSpacing: 6, children: [
+                  chip('الإمساك ${ArabicUtils.formatTime(imsak)}'),
+                  chip('الإفطار ${ArabicUtils.formatTime(maghrib)}'),
+                ]),
+              ],
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  action(Icons.menu_book_rounded, 'ورد اليوم: ${juzName(day)}',
+                      () => MushafReaderPage.open(context, page: juzPages[day - 1])),
+                  const SizedBox(width: 8),
+                  action(Icons.calendar_month_rounded, 'الإمساكية', () => Navigator.of(context).push(ImsakiyaPage.route())),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

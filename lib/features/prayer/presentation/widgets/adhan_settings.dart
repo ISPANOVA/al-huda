@@ -13,6 +13,7 @@ import '../../../../core/utils/arabic_utils.dart';
 import '../../../../core/widgets/glass_container.dart';
 import '../../../../core/widgets/noor_ui.dart';
 import '../../../../core/widgets/state_views.dart';
+import '../../../calendar/islamic_calendar.dart';
 import '../../../settings/presentation/cubit/settings_cubit.dart';
 import '../../../settings/presentation/cubit/settings_state.dart';
 import '../../domain/adhan_voices.dart';
@@ -98,7 +99,10 @@ class _AdhanSettingsCardState extends State<AdhanSettingsCard> {
           p.postPrayerMinutes != c.postPrayerMinutes ||
           p.adhanAlwaysPlay != c.adhanAlwaysPlay ||
           p.iqamaReminder != c.iqamaReminder ||
-          p.sunriseAlert != c.sunriseAlert,
+          p.sunriseAlert != c.sunriseAlert ||
+          p.fridayReminders != c.fridayReminders ||
+          p.ramadanSuhoor != c.ramadanSuhoor ||
+          p.suhoorMinutes != c.suhoorMinutes,
       builder: (context, s) {
         final cubit = context.read<SettingsCubit>();
         final glass = GlassTheme.of(context);
@@ -333,6 +337,39 @@ class _AdhanSettingsCardState extends State<AdhanSettingsCard> {
                             values: _minutes,
                             selected: s.preAdhanMinutes,
                             onSelected: cubit.setPreAdhanMinutes,
+                          ),
+                        divider,
+                        _SettingRow(
+                          icon: Icons.mosque_rounded,
+                          tone: Tone.emerald,
+                          title: 'تنبيهات الجمعة',
+                          subtitle: s.fridayReminders
+                              ? 'سورة الكهف صباحًا، وساعة الإجابة قبل المغرب'
+                              : 'غير مفعّل',
+                          value: s.fridayReminders,
+                          onChanged: (v) async {
+                            await cubit.setFridayReminders(v);
+                            if (!context.mounted) return;
+                            await IslamicCalendar.scheduleReminders(context.read<NotificationService>(),
+                                enabled: cubit.state.occasionReminders, friday: v);
+                          },
+                        ),
+                        divider,
+                        _SettingRow(
+                          icon: Icons.nightlight_round,
+                          tone: Tone.amethyst,
+                          title: 'رمضان: السحور والإفطار',
+                          subtitle: s.ramadanSuhoor
+                              ? 'في رمضان: تنبيه السحور قبل الفجر بـ ${ArabicUtils.minutes(s.suhoorMinutes, afterPreposition: true)}، ودعاء الإفطار عند المغرب'
+                              : 'غير مفعّل',
+                          value: s.ramadanSuhoor,
+                          onChanged: cubit.setRamadanSuhoor,
+                        ),
+                        if (s.ramadanSuhoor)
+                          _MinuteChips(
+                            values: const [20, 30, 45, 60, 90],
+                            selected: s.suhoorMinutes,
+                            onSelected: cubit.setSuhoorMinutes,
                           ),
                       ],
                     ),

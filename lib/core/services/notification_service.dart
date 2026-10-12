@@ -290,12 +290,14 @@ class NotificationService {
     );
   }
 
-  /// One-shot gentle reminder (occasions, fasting, Friday).
+  /// One-shot gentle reminder (occasions, fasting, Friday). [payload] is the
+  /// screen a tap opens (see HomeShell), e.g. `surah:18`.
   Future<void> scheduleReminderAt({
     required int id,
     required String title,
     required String body,
     required DateTime when,
+    String? payload,
   }) async {
     if (kIsWeb) return; // no local notifications on the web
     if (when.isBefore(DateTime.now())) return;
@@ -306,6 +308,7 @@ class NotificationService {
       scheduledDate: tz.TZDateTime.from(when, tz.local),
       notificationDetails: NotificationDetails(android: _reminderChannel, iOS: _darwin),
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+      payload: payload,
     );
   }
 
