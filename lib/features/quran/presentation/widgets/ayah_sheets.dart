@@ -16,6 +16,7 @@ import '../cubit/bookmarks_cubit.dart';
 import '../../../share_video/ayah_video_page.dart';
 import '../pages/ayah_image_page.dart';
 import 'listen_sheet.dart';
+import 'similar_ayahs.dart';
 import 'tafsir_panel.dart';
 import '../../../tasmee/tasmee_page.dart';
 
@@ -23,7 +24,14 @@ String _reference(Ayah a) =>
     'سورة ${SurahMetadata.surah(a.surah).name} • الآية ${ArabicUtils.toArabicDigits(a.numberInSurah)}';
 
 /// Ayah sheet: the verse, its Tafseer Al-Muyassar, and quick actions.
-Future<void> showAyahActions(BuildContext context, Ayah ayah) {
+Future<void> showAyahActions(BuildContext context, Ayah ayah) async {
+  // The similar-ayahs index decides whether «متشابهات» is offered.
+  if (Mutashabihat.loaded == null) {
+    try {
+      await Mutashabihat.load();
+    } catch (_) {}
+    if (!context.mounted) return;
+  }
   return showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
@@ -144,6 +152,11 @@ class _ActionBar extends StatelessWidget {
         close();
         Navigator.of(hostContext).push(TasmeePage.route(page: ayah.page, ayah: ayah.number));
       }),
+      if ((Mutashabihat.loaded?[ayah.number] ?? const []).isNotEmpty)
+        _ActionData(Icons.compare_arrows_rounded, 'متشابهات', false, () {
+          close();
+          showSimilarAyahs(hostContext, ayah);
+        }),
       _ActionData(Icons.image_outlined, 'صورة', false, () {
         close();
         Navigator.of(hostContext).push(AyahImagePage.route(ayah));

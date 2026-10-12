@@ -20,6 +20,7 @@ import '../../stats/presentation/stats_page.dart';
 import '../../tasbeeh/presentation/pages/tasbeeh_page.dart';
 import '../../content/content_pages.dart';
 import '../../prayer/presentation/prayer_log_page.dart';
+import '../../quran/presentation/widgets/similar_ayahs.dart';
 import '../../share_video/ayah_video_page.dart';
 import '../../virtues/virtues_pages.dart';
 
@@ -53,6 +54,7 @@ class MorePage extends StatelessWidget {
         'القرآن والتقويم',
         [
           (id: 'review', icon: Icons.psychology_rounded, title: 'مراجعة الحفظ', subtitle: 'اختبر حفظك بإخفاء الكلمات', route: HifzReviewPage.route),
+          (id: 'similar', icon: Icons.compare_arrows_rounded, title: 'المتشابهات اللفظية', subtitle: 'آيات تتشابه ألفاظها لتثبيت الحفظ', route: SimilarAyahsPage.route),
           (id: 'calendar', icon: Icons.calendar_month_rounded, title: 'التقويم الهجري', subtitle: 'المناسبات وتذكير الصيام', route: CalendarPage.route),
           (id: 'imsakiya', icon: Icons.brightness_3_rounded, title: 'إمساكية رمضان', subtitle: 'السحور والإفطار ومتابعة الصيام', route: ImsakiyaPage.route),
         ]

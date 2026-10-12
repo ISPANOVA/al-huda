@@ -69,6 +69,7 @@ class Tone {
         'asma' || 'zakat' => gold,
         'nawawi' => emerald,
         'prayerlog' => sapphire,
+        'similar' => coral,
         'appearance' => amethyst,
         'settings' => slate,
         _ => gold,
