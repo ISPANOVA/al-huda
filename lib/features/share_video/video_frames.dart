@@ -65,7 +65,7 @@ class VideoFramePainter {
   static const h = 1920.0;
   static const textBox = Rect.fromLTRB(96, 560, 984, 1360);
   static const minFont = 46.0;
-  static const maxFont = 84.0;
+  static const maxFont = 96.0;
 
   static String get link => AppConstants.shareUrl.replaceFirst('https://', '');
 
@@ -130,7 +130,7 @@ class VideoFramePainter {
 
     if (c.caption != null) {
       _text(canvas, c.caption!, Offset(w / 2, textBox.bottom + 54),
-          TextStyle(fontFamily: AppFonts.display, fontSize: 34, color: bg.accent.withValues(alpha: 0.9)));
+          TextStyle(fontFamily: AppFonts.display, fontSize: 42, color: bg.accent));
     }
     _reciter(canvas, c.reciterName);
     _footer(canvas);
@@ -181,7 +181,7 @@ class VideoFramePainter {
     switch (bg.id) {
       case 'night':
         _stars(canvas, 1);
-        _crescent(canvas, const Offset(820, 330), 54);
+        _crescent(canvas, const Offset(880, 190), 50);
         _skyline(canvas, const Color(0xFF02030A));
       case 'dawn':
         _stars(canvas, 0.35);
@@ -275,24 +275,24 @@ class VideoFramePainter {
   }
 
   void _skyline(Canvas canvas, Color color) {
-    const horizon = 1720.0;
+    const horizon = 1820.0;
     final p = Paint()..color = color;
     canvas.drawRect(const Rect.fromLTRB(0, horizon, w, h), p);
     // A mosque: the prayer hall, a great dome, two small domes, two minarets.
     const x = 250.0;
-    canvas.drawRect(const Rect.fromLTRB(x, horizon - 70, x + 380, horizon), p);
-    canvas.drawArc(Rect.fromCircle(center: const Offset(x + 190, horizon - 70), radius: 120), math.pi, math.pi, true, p);
-    canvas.drawCircle(const Offset(x + 190, horizon - 205), 12, p);
+    canvas.drawRect(const Rect.fromLTRB(x, horizon - 50, x + 380, horizon), p);
+    canvas.drawArc(Rect.fromCircle(center: const Offset(x + 190, horizon - 50), radius: 95), math.pi, math.pi, true, p);
+    canvas.drawCircle(const Offset(x + 190, horizon - 158), 10, p);
     for (final dx in [60.0, 320.0]) {
-      canvas.drawArc(Rect.fromCircle(center: Offset(x + dx, horizon - 70), radius: 48), math.pi, math.pi, true, p);
+      canvas.drawArc(Rect.fromCircle(center: Offset(x + dx, horizon - 50), radius: 40), math.pi, math.pi, true, p);
     }
     for (final mx in [x - 30, x + 410]) {
       canvas.drawRRect(
-          RRect.fromRectAndCorners(Rect.fromLTRB(mx - 16, horizon - 330, mx + 16, horizon),
+          RRect.fromRectAndCorners(Rect.fromLTRB(mx - 14, horizon - 230, mx + 14, horizon),
               topLeft: const Radius.circular(16), topRight: const Radius.circular(16)),
           p);
-      canvas.drawRect(Rect.fromLTRB(mx - 28, horizon - 240, mx + 28, horizon - 226), p);
-      canvas.drawCircle(Offset(mx, horizon - 352), 10, p);
+      canvas.drawRect(Rect.fromLTRB(mx - 24, horizon - 170, mx + 24, horizon - 158), p);
+      canvas.drawCircle(Offset(mx, horizon - 248), 9, p);
     }
     // A palm on the other side.
     final palm = Paint()
@@ -301,12 +301,12 @@ class VideoFramePainter {
       ..strokeCap = StrokeCap.round
       ..style = PaintingStyle.stroke;
     const px = 900.0;
-    canvas.drawLine(const Offset(px, horizon), const Offset(px - 14, horizon - 190), palm);
+    canvas.drawLine(const Offset(px, horizon), const Offset(px - 12, horizon - 150), palm);
     palm.strokeWidth = 9;
     for (var i = 0; i < 6; i++) {
       final a = -math.pi / 2 + (i - 2.5) * 0.55;
-      canvas.drawLine(const Offset(px - 14, horizon - 190),
-          Offset(px - 14 + 90 * math.cos(a), horizon - 190 + 60 * math.sin(a) + 34), palm);
+      canvas.drawLine(const Offset(px - 12, horizon - 150),
+          Offset(px - 12 + 75 * math.cos(a), horizon - 150 + 50 * math.sin(a) + 28), palm);
     }
   }
 
