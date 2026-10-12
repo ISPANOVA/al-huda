@@ -8,6 +8,7 @@ import 'package:flutter/scheduler.dart';
 import '../../../../core/data/surah_metadata.dart';
 import '../../../../core/theme/app_themes.dart';
 import '../../domain/entities/mushaf_line.dart';
+import 'tajweed.dart';
 
 /// KFGQPC Uthmanic Hafs (the King Fahd Complex Mushaf font).
 const String kMushafFont = 'UthmanicHafs';
@@ -34,6 +35,9 @@ class MushafStyle {
   final Color highlight;
   final Color selection;
 
+  /// Words in tajweed colours (the data must be loaded: [Tajweed.load]).
+  final bool tajweed;
+
   const MushafStyle({
     required this.ink,
     required this.muted,
@@ -41,9 +45,10 @@ class MushafStyle {
     required this.primary,
     required this.highlight,
     required this.selection,
+    this.tajweed = false,
   });
 
-  factory MushafStyle.of(BuildContext context) {
+  factory MushafStyle.of(BuildContext context, {bool tajweed = false}) {
     final glass = GlassTheme.of(context);
     final scheme = Theme.of(context).colorScheme;
     return MushafStyle(
@@ -53,15 +58,16 @@ class MushafStyle {
       primary: scheme.primary,
       highlight: glass.accent.withValues(alpha: 0.24),
       selection: scheme.primary.withValues(alpha: 0.30),
+      tajweed: tajweed && Tajweed.ready,
     );
   }
 
   @override
   bool operator ==(Object other) =>
-      other is MushafStyle && other.ink == ink && other.accent == accent && other.primary == primary;
+      other is MushafStyle && other.ink == ink && other.accent == accent && other.primary == primary && other.tajweed == tajweed;
 
   @override
-  int get hashCode => Object.hash(ink, accent, primary);
+  int get hashCode => Object.hash(ink, accent, primary, tajweed);
 }
 
 final RegExp _ayahNumber = RegExp(' ([٠-٩]+)\$');
@@ -198,9 +204,10 @@ class MushafPageView extends StatelessWidget {
   }
 
   static String _key(int page, double w, double h, MushafStyle s) =>
-      '$page|${w.toStringAsFixed(1)}|${h.toStringAsFixed(1)}|${s.ink.toARGB32()}|${s.accent.toARGB32()}';
+      '$page|${w.toStringAsFixed(1)}|${h.toStringAsFixed(1)}|${s.ink.toARGB32()}|${s.accent.toARGB32()}|${s.tajweed}';
 
-  static ui.Paragraph _paragraph(String text, double fs, MushafStyle s, {bool allAccent = false}) {
+  static ui.Paragraph _paragraph(String text, double fs, MushafStyle s,
+      {bool allAccent = false, List<(int, int, int)> runs = const []}) {
     final b = ui.ParagraphBuilder(ui.ParagraphStyle(
       textDirection: TextDirection.rtl,
       fontFamily: kMushafFont,
@@ -210,10 +217,25 @@ class MushafPageView extends StatelessWidget {
     ));
     final m = allAccent ? null : _ayahNumber.firstMatch(text);
     b.pushStyle(ui.TextStyle(color: allAccent ? s.accent : s.ink, fontFamily: kMushafFont, fontSize: fs, fontWeight: FontWeight.w700));
-    if (m == null) {
-      b.addText(text);
+    final body = m == null ? text : text.substring(0, m.start);
+    if (runs.isEmpty) {
+      b.addText(body);
     } else {
-      b.addText(text.substring(0, m.start));
+      // Tajweed: each rule's letters in its colour.
+      final darkPage = s.ink.computeLuminance() > 0.5;
+      var at = 0;
+      for (final (start, end, rule) in runs) {
+        if (start < at || end > body.length || start >= end || rule >= Tajweed.rules.length) continue;
+        if (start > at) b.addText(body.substring(at, start));
+        final r = Tajweed.rules[rule];
+        b.pushStyle(ui.TextStyle(color: darkPage ? r.dark : r.light));
+        b.addText(body.substring(start, end));
+        b.pop();
+        at = end;
+      }
+      if (at < body.length) b.addText(body.substring(at));
+    }
+    if (m != null) {
       b.pushStyle(ui.TextStyle(color: s.accent));
       b.addText(text.substring(m.start));
       b.pop();
@@ -254,6 +276,7 @@ class MushafPageView extends StatelessWidget {
     }
 
     final words = <_Word>[];
+    var wordIndex = 0; // the page's words in reading order (tajweed data)
     final lineInfo = <_Line>[];
     final headers = <({int surah, double top, double height})>[];
     for (var li = 0; li < lines.length; li++) {
@@ -270,7 +293,10 @@ class MushafPageView extends StatelessWidget {
           lineInfo.add(_Line(1));
         case MushafLineType.text:
         case MushafLineType.centered:
-          final ps = [for (final w in line.words) _paragraph(w.text, fs, s)];
+          final ps = [
+            for (final w in line.words)
+              _paragraph(w.text, fs, s, runs: s.tajweed ? Tajweed.runs(page, wordIndex++) : const []),
+          ];
           final ws = [for (final p in ps) p.width];
           final total = ws.fold<double>(0, (a, b) => a + b);
           final n = ps.length;

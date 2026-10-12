@@ -60,6 +60,23 @@ class ArabicUtils {
     return clean;
   }
 
+  /// Arabic-Indic (and Persian) digits and the Arabic decimal comma to ASCII.
+  static String toLatinDigits(String input) {
+    final b = StringBuffer();
+    for (final c in input.runes) {
+      if (c >= 0x0660 && c <= 0x0669) {
+        b.writeCharCode(0x30 + c - 0x0660);
+      } else if (c >= 0x06F0 && c <= 0x06F9) {
+        b.writeCharCode(0x30 + c - 0x06F0);
+      } else if (c == 0x066B) {
+        b.write('.');
+      } else {
+        b.writeCharCode(c);
+      }
+    }
+    return b.toString();
+  }
+
   /// Ornate ayah end marker: ﴿١٢﴾
   static String ayahMarker(int number) => '﴿${toArabicDigits(number)}﴾';
 

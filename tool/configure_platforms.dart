@@ -396,6 +396,37 @@ class MainActivity : AudioServiceActivity() {
                 else -> result.notImplemented()
             }
         }
+        // The ayah video: encoded on the phone, then shared or saved.
+        val video = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "alhuda/video")
+        video.setMethodCallHandler { call, result ->
+            when (call.method) {
+                "size" -> result.success(AyahVideo.supportedSize().toList())
+                "render" -> {
+                    val segments = AyahVideo.parse(call.argument<List<Map<String, Any?>>>("segments") ?: emptyList())
+                    val out = call.argument<String>("out") ?: ""
+                    val w = call.argument<Int>("width") ?: 1080
+                    val h = call.argument<Int>("height") ?: 1920
+                    val fps = call.argument<Int>("fps") ?: 24
+                    val main = android.os.Handler(mainLooper)
+                    Thread {
+                        try {
+                            var last = -1
+                            val ms = AyahVideo { p ->
+                                val pct = (p * 100).toInt()
+                                if (pct != last) { last = pct; main.post { video.invokeMethod("progress", p) } }
+                            }.render(segments, w, h, fps, out)
+                            main.post { result.success(ms) }
+                        } catch (e: Throwable) {
+                            main.post { result.error("video", e.toString(), null) }
+                        }
+                    }.start()
+                }
+                "share" -> result.success(AyahVideo.shareTo(this, call.argument<String>("path") ?: "",
+                    call.argument<String>("package"), call.argument<String>("text") ?: ""))
+                "save" -> result.success(AyahVideo.saveToGallery(this, call.argument<String>("path") ?: ""))
+                else -> result.notImplemented()
+            }
+        }
         // Adhan on the alarm stream (plays even when the phone is silent).
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "alhuda/adhan").setMethodCallHandler { call, result ->
             try {
@@ -487,6 +518,17 @@ void _configureManifest() {
   // Some live Haram streams are plain http.
   if (!s.contains('usesCleartextTraffic')) {
     s = s.replaceFirst('<application', '<application\n        android:usesCleartextTraffic="true"');
+  }
+
+  // The ayah videos, handed to WhatsApp, Instagram and Facebook.
+  if (!s.contains('.VideoProvider')) {
+    final idx = s.lastIndexOf('</application>');
+    s = s.replaceRange(idx, idx, '''        <provider
+            android:name=".VideoProvider"
+            android:authorities="$appId.videos"
+            android:exported="false"
+            android:grantUriPermissions="true"/>
+    ''');
   }
 
   // Android Auto: the app appears as a media source (Quran, reciters, radios).

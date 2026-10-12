@@ -35,6 +35,13 @@ class QuranAudioHandler extends BaseAudioHandler with SeekHandler {
   int _loopsRemaining = 0;
   bool _infiniteLoop = false;
 
+  /// The sleep timer: playback stops by itself at a time or at the end of
+  /// the surah, the sound fading out over the last seconds.
+  final sleep = ValueNotifier<SleepTimer?>(null);
+  Timer? _sleepTick;
+
+  Duration get position => _player.position;
+
   QuranAudioHandler() {
     _init();
   }
@@ -112,7 +119,15 @@ class QuranAudioHandler extends BaseAudioHandler with SeekHandler {
 
     _player.currentIndexStream.listen((index) {
       final q = queue.value;
-      if (index != null && index < q.length) mediaItem.add(q[index]);
+      if (index != null && index < q.length) {
+        final s = sleep.value;
+        // «End of the surah»: the next item belongs to another surah.
+        if (s != null && s.endOfSurah && s.surah != null && q[index].extras?['surah'] != s.surah) {
+          _player.pause();
+          cancelSleepTimer();
+        }
+        mediaItem.add(q[index]);
+      }
     });
 
     _player.durationStream.listen((duration) {
@@ -130,6 +145,41 @@ class QuranAudioHandler extends BaseAudioHandler with SeekHandler {
     // Advertise the actions (play from the car's library, voice search)
     // before anything plays.
     _broadcastState(_player.playbackEvent);
+  }
+
+  // ------------------------------------------------------------ sleep ---
+
+  void setSleepTimer(Duration d) {
+    _startSleep(SleepTimer(at: DateTime.now().add(d)));
+  }
+
+  void sleepAtEndOfSurah() {
+    final surah = (mediaItem.value?.extras?['surah'] as num?)?.toInt();
+    _startSleep(SleepTimer(endOfSurah: true, surah: surah));
+  }
+
+  void cancelSleepTimer() {
+    _sleepTick?.cancel();
+    _sleepTick = null;
+    sleep.value = null;
+    _player.setVolume(1);
+  }
+
+  void _startSleep(SleepTimer t) {
+    cancelSleepTimer();
+    sleep.value = t;
+    _sleepTick = Timer.periodic(const Duration(seconds: 1), (_) {
+      final at = sleep.value?.at;
+      if (at == null) return;
+      final left = at.difference(DateTime.now());
+      if (left <= Duration.zero) {
+        _player.pause();
+        cancelSleepTimer();
+      } else if (left < const Duration(seconds: 10)) {
+        _player.setVolume(left.inMilliseconds / 10000);
+      }
+      sleep.value = SleepTimer(at: at); // a tick for the countdown
+    });
   }
 
   int get loopsRemaining => _loopsRemaining;
@@ -155,6 +205,11 @@ class QuranAudioHandler extends BaseAudioHandler with SeekHandler {
     if (_art == null) await _prepareArtwork();
     final photo = await _photoArt(items[start].extras?['reciter'] as String?);
     items = [for (final i in items) _withArt(i, photo)];
+    final sl = sleep.value;
+    if (sl != null && sl.endOfSurah) {
+      // A new choice: the timer now waits for the end of this surah.
+      sleep.value = SleepTimer(endOfSurah: true, surah: (items[start].extras?['surah'] as num?)?.toInt());
+    }
     queue.add(items);
     mediaItem.add(items[start]);
     _broadcastState(_player.playbackEvent); // «loading» with the new item
@@ -270,6 +325,7 @@ class QuranAudioHandler extends BaseAudioHandler with SeekHandler {
   @override
   Future<void> stop() async {
     _active = false;
+    cancelSleepTimer();
     await _player.stop();
     queue.add(const []);
     mediaItem.add(null);
@@ -340,4 +396,15 @@ class QuranAudioHandler extends BaseAudioHandler with SeekHandler {
       queueIndex: event.currentIndex,
     ));
   }
+}
+
+class SleepTimer {
+  /// When playback stops (a fixed time), or null for the end of the surah.
+  final DateTime? at;
+  final bool endOfSurah;
+  final int? surah;
+
+  const SleepTimer({this.at, this.endOfSurah = false, this.surah});
+
+  Duration get left => at == null ? Duration.zero : at!.difference(DateTime.now());
 }

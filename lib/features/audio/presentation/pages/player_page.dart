@@ -14,9 +14,11 @@ import '../../../quran/domain/entities/ayah.dart';
 import '../../../quran/domain/repositories/quran_repository.dart';
 import '../../../quran/presentation/mushaf/mushaf_reader_page.dart';
 import '../../../settings/presentation/cubit/settings_cubit.dart';
+import '../../data/quran_audio_handler.dart' show SleepTimer;
 import '../../domain/reciter.dart';
 import '../cubit/audio_cubit.dart';
 import '../cubit/audio_state.dart';
+import '../../../share_video/ayah_video_page.dart';
 import '../widgets/mini_player.dart';
 import 'downloads_page.dart';
 import 'memorization_page.dart';
@@ -46,6 +48,17 @@ class PlayerPage extends StatelessWidget {
           icon: const Icon(Icons.download_for_offline_outlined),
           onPressed: () => Navigator.of(context).push(DownloadsPage.route()),
         ),
+        if (!kIsWeb)
+          IconButton(
+            tooltip: 'فيديو بصوت القارئ',
+            icon: const Icon(Icons.movie_creation_outlined),
+            onPressed: () {
+              final st = context.read<AudioCubit>().state;
+              final s = st.surah ?? 1;
+              final a = (st.ayah ?? 1).clamp(1, SurahMetadata.surah(s).ayahCount);
+              Navigator.of(context).push(AyahVideoPage.route(surah: s, from: a));
+            },
+          ),
         IconButton(
           tooltip: 'وضع الحفظ',
           icon: const Icon(Icons.repeat_on_rounded),
@@ -148,7 +161,9 @@ class PlayerPage extends StatelessWidget {
                               child: Text(
                                 state.infiniteLoop
                                     ? 'وضع الحفظ • تكرار مستمر'
-                                    : 'وضع الحفظ • التكرارات المتبقية للنطاق: ${ArabicUtils.toArabicDigits(state.loopsRemaining)}',
+                                    : state.loopsRemaining == 0
+                                        ? 'وضع الحفظ • المرة الأخيرة'
+                                        : 'وضع الحفظ • متبقٍ ${ArabicUtils.toArabicDigits(state.loopsRemaining)} من التكرار',
                                 textAlign: TextAlign.center,
                                 style: TextStyle(color: Tone.coral.ink(dark), fontWeight: FontWeight.w700, fontSize: 12.5),
                               ),
@@ -203,6 +218,10 @@ class PlayerPage extends StatelessWidget {
                     ),
                 ],
               ),
+
+              // ------------------------------------------------- sleep ---
+              const GlassSectionTitle('مؤقت النوم', tone: _tone),
+              _SleepTimer(cubit: cubit, live: surahInfo == null),
               const SizedBox(height: 22),
 
               // ----------------------------------------------- actions ---
@@ -248,6 +267,78 @@ class PlayerPage extends StatelessWidget {
 }
 
 /// Nothing is playing: a large, inviting card with a glowing icon.
+/// Stop by itself after some minutes or at the end of the surah.
+class _SleepTimer extends StatelessWidget {
+  final AudioCubit cubit;
+  final bool live;
+
+  const _SleepTimer({required this.cubit, required this.live});
+
+  static const _minutes = [10, 15, 30, 45, 60];
+
+  @override
+  Widget build(BuildContext context) {
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    return ValueListenableBuilder<SleepTimer?>(
+      valueListenable: cubit.sleepTimer,
+      builder: (context, t, _) {
+        String? status;
+        if (t != null) {
+          if (t.endOfSurah) {
+            status = 'تتوقف التلاوة عند نهاية السورة';
+          } else {
+            final left = t.left;
+            final m = left.inMinutes, sec = left.inSeconds.remainder(60);
+            status = 'تتوقف بعد ${ArabicUtils.toArabicDigits(m)}:${ArabicUtils.toArabicDigits(sec.toString().padLeft(2, '0'))}';
+          }
+        }
+        return Column(
+          children: [
+            Wrap(
+              alignment: WrapAlignment.center,
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                ChoiceChip(
+                  avatar: const Icon(Icons.bedtime_off_rounded, size: 18),
+                  label: const Text('بدون'),
+                  selected: t == null,
+                  onSelected: (_) => cubit.cancelSleepTimer(),
+                ),
+                for (final m in _minutes)
+                  ChoiceChip(
+                    label: Text('${ArabicUtils.toArabicDigits(m)} د'),
+                    selected: false,
+                    onSelected: (_) => cubit.setSleepTimer(Duration(minutes: m)),
+                  ),
+                if (!live)
+                  ChoiceChip(
+                    avatar: const Icon(Icons.flag_rounded, size: 18),
+                    label: const Text('نهاية السورة'),
+                    selected: t?.endOfSurah == true,
+                    onSelected: (_) => cubit.sleepAtEndOfSurah(),
+                  ),
+              ],
+            ),
+            if (status != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 10),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.bedtime_rounded, size: 18, color: Tone.amethyst.ink(dark)),
+                    const SizedBox(width: 6),
+                    Text(status, style: TextStyle(fontWeight: FontWeight.w800, color: Tone.amethyst.ink(dark))),
+                  ],
+                ),
+              ),
+          ],
+        );
+      },
+    );
+  }
+}
+
 class _EmptyPlayer extends StatelessWidget {
   final VoidCallback onPlay;
 
@@ -312,6 +403,25 @@ class _EmptyPlayer extends StatelessWidget {
                   style: TextStyle(color: glass.onGlassMuted, height: 1.6),
                 ),
                 const SizedBox(height: 22),
+                if (context.read<AudioCubit>().resumePoint case final p?) ...[
+                  FilledButton.icon(
+                    style: FilledButton.styleFrom(
+                      minimumSize: const Size.fromHeight(58),
+                      backgroundColor: tone.deep,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                    ),
+                    onPressed: () => context.read<AudioCubit>().resume(),
+                    icon: const Icon(Icons.history_rounded, size: 24),
+                    label: Column(
+                      children: [
+                        const Text('تابع الاستماع', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
+                        Text('${p['title']} • ${p['artist']}',
+                            maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12)),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                ],
                 FilledButton.icon(
                   style: FilledButton.styleFrom(
                     minimumSize: const Size.fromHeight(54),

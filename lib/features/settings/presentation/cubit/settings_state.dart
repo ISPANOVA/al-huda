@@ -73,6 +73,9 @@ class SettingsState extends Equatable {
   /// Tasmee: a word with one doubtful letter counts as a mistake too.
   final bool tasmeeStrict;
 
+  /// The Mushaf in tajweed colours.
+  final bool tajweed;
+
   const SettingsState({
     this.themeType = AppThemeType.noirGold,
     this.themeMode = ThemeMode.dark,
@@ -110,6 +113,7 @@ class SettingsState extends Equatable {
     this.widgetTextColor = 0xFFFFFFFF,
     this.mushafPages = 'auto',
     this.tasmeeStrict = false,
+    this.tajweed = false,
   });
 
   SettingsState copyWith({
@@ -149,6 +153,7 @@ class SettingsState extends Equatable {
     int? widgetTextColor,
     String? mushafPages,
     bool? tasmeeStrict,
+    bool? tajweed,
   }) {
     return SettingsState(
       themeType: themeType ?? this.themeType,
@@ -187,6 +192,7 @@ class SettingsState extends Equatable {
       widgetTextColor: widgetTextColor ?? this.widgetTextColor,
       mushafPages: mushafPages ?? this.mushafPages,
       tasmeeStrict: tasmeeStrict ?? this.tasmeeStrict,
+      tajweed: tajweed ?? this.tajweed,
     );
   }
 
@@ -227,6 +233,7 @@ class SettingsState extends Equatable {
         'widgetTextColor': widgetTextColor,
         'mushafPages': mushafPages,
         'tasmeeStrict': tasmeeStrict,
+        'tajweed': tajweed,
       };
 
   factory SettingsState.fromMap(Map<String, dynamic> m) {
@@ -274,6 +281,7 @@ class SettingsState extends Equatable {
       widgetTextColor: (m['widgetTextColor'] as num?)?.toInt() ?? d.widgetTextColor,
       mushafPages: m['mushafPages'] as String? ?? d.mushafPages,
       tasmeeStrict: m['tasmeeStrict'] as bool? ?? d.tasmeeStrict,
+      tajweed: m['tajweed'] as bool? ?? d.tajweed,
     );
   }
 
@@ -315,5 +323,6 @@ class SettingsState extends Equatable {
         widgetTextColor,
         mushafPages,
         tasmeeStrict,
+        tajweed,
       ];
 }

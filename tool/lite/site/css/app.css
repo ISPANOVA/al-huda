@@ -440,3 +440,73 @@ body.in-mushaf .player { bottom: calc(var(--safe-b) + 8px); }
 /* Long lists: rows out of view are not laid out or painted until needed. */
 .list > *, .thikr, .rgrid > .rcard { content-visibility: auto; contain-intrinsic-size: auto 64px; }
 .thikr { contain-intrinsic-size: auto 220px; }
+.resume.listen { width: 100%; padding-bottom: 14px; font: inherit; color: inherit; text-align: right; cursor: pointer; }
+
+/* ---- tools: names, hadith, prayer log, Ramadan, similar ayahs ---- */
+.big { font-size: 30px; font-weight: 900; line-height: 1.25; font-family: ReemKufi, Tajawal; }
+.names { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 10px; }
+.names .nm { display: flex; flex-direction: column; align-items: center; padding: 10px 6px; margin: 0; }
+.names .nm b { font-family: Hafs, serif; font-size: 25px; font-weight: 400; line-height: 1.6; color: var(--gold); }
+.num.done { background: var(--emerald-d); color: #fff; } .num.done svg { width: 18px; height: 18px; }
+.ell { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 62vw; }
+.ell2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.ticks { display: flex; justify-content: space-around; gap: 6px; margin-top: 12px; }
+.tick { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.tick svg { width: 46px; height: 46px; padding: 11px; border-radius: 50%; border: 2px solid var(--line); color: var(--faint); transition: .2s; }
+.tick.on svg { background: linear-gradient(135deg, var(--sapphire-t), var(--sapphire-d)); border-color: transparent; color: #fff; }
+.tick small { font-weight: 700; }
+.plog { width: 100%; border-collapse: collapse; text-align: center; } .plog td, .plog th { padding: 4px 2px; }
+.plog td:first-child { text-align: right; white-space: nowrap; }
+.dot { width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--line); display: inline-grid; place-items: center; }
+.dot.on { background: var(--emerald-d); border-color: transparent; color: #fff; } .dot svg { width: 16px; height: 16px; }
+.ramadan { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; }
+.rd { border: 1px solid var(--line); border-radius: 12px; display: flex; flex-direction: column; align-items: center; overflow: hidden; }
+.rd.today { border: 2px solid var(--amber); }
+.rd.on { background: linear-gradient(135deg, var(--amber-t), var(--amber-d)); color: #fff; }
+.rd > button:first-child { width: 100%; padding: 8px 0 2px; font-family: ReemKufi, Tajawal; font-size: 17px; }
+.rd .moon svg { width: 16px; height: 16px; opacity: .4; margin-bottom: 4px; } .rd .moon.on svg { opacity: 1; color: #ffe3a3; }
+.sim { display: block; padding: 10px 6px; border-top: 1px solid var(--line); } .sim.me { border: 0; }
+.sim .hl { color: var(--coral-t); } [data-theme="light"] .sim .hl { color: var(--coral-d); }
+.sim-row { display: flex; align-items: center; gap: 10px; width: 100%; margin: 0 0 10px; }
+.vprev { display: flex; justify-content: center; margin-bottom: 12px; }
+.vprev canvas, .vprev video { width: min(100%, 300px); aspect-ratio: 9 / 16; height: auto; border-radius: 20px; background: #000; box-shadow: 0 10px 40px rgba(0,0,0,.4); }
+.pbar { height: 8px; border-radius: 8px; background: var(--card); overflow: hidden; margin-bottom: 12px; } .pbar i { display: block; height: 100%; width: 0; background: var(--gold); transition: width .2s; }
+
+/* ---- tajweed colours (same as the app) ---- */
+.tjdot { width: 16px; height: 16px; border-radius: 50%; flex: none; background: currentColor; }
+i[class^=tj] { font-style: normal; }
+.tj0 { color: #8C8C8C; }
+.tj1 { color: #8C8C8C; }
+.tj2 { color: #8C8C8C; }
+.tj3 { color: #E2C275; }
+.tj4 { color: #FF9A3C; }
+.tj5 { color: #FF5C63; }
+.tj6 { color: #FF7AA8; }
+.tj7 { color: #6FB2FF; }
+.tj8 { color: #D99BFF; }
+.tj9 { color: #D08CF0; }
+.tj10 { color: #69DB7C; }
+.tj11 { color: #3BC9DB; }
+.tj12 { color: #38D9A9; }
+.tj13 { color: #9DBB9D; }
+.tj14 { color: #ADB5BD; }
+.tj15 { color: #ADB5BD; }
+.tj16 { color: #8CE99A; }
+[data-theme="light"] .tj0 { color: #9A9A9A; }
+[data-theme="light"] .tj1 { color: #9A9A9A; }
+[data-theme="light"] .tj2 { color: #9A9A9A; }
+[data-theme="light"] .tj3 { color: #B8860B; }
+[data-theme="light"] .tj4 { color: #E8590C; }
+[data-theme="light"] .tj5 { color: #B5121B; }
+[data-theme="light"] .tj6 { color: #D6336C; }
+[data-theme="light"] .tj7 { color: #1C6FD1; }
+[data-theme="light"] .tj8 { color: #AE3EC9; }
+[data-theme="light"] .tj9 { color: #9C36B5; }
+[data-theme="light"] .tj10 { color: #2B8A3E; }
+[data-theme="light"] .tj11 { color: #1098AD; }
+[data-theme="light"] .tj12 { color: #087F5B; }
+[data-theme="light"] .tj13 { color: #5C7A5C; }
+[data-theme="light"] .tj14 { color: #868E96; }
+[data-theme="light"] .tj15 { color: #868E96; }
+[data-theme="light"] .tj16 { color: #2F9E44; }
+.ibtn.on { color: var(--gold); background: rgba(226,194,117,.16); }

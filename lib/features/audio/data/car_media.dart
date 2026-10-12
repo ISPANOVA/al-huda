@@ -8,6 +8,7 @@ import '../../media/media_catalog.dart';
 import '../../media/media_downloads.dart';
 import '../../quran/presentation/mushaf/mushaf_page.dart' show juzName;
 import '../domain/reciter.dart';
+import 'reciter_art.dart';
 import 'playlist_builder.dart';
 import 'quran_audio_handler.dart';
 
@@ -27,7 +28,76 @@ class CarMedia {
   final PlaylistBuilder _builder;
   final StorageService _storage;
 
-  CarMedia(this._handler, this._builder, this._storage);
+  CarMedia(this._handler, this._builder, this._storage) {
+    // «تابع الاستماع»: what was playing and where, kept across restarts.
+    _handler.mediaItem.listen((m) => _remember(m));
+    _handler.playbackState.listen((ps) {
+      if (!ps.playing) _remember(_handler.mediaItem.value, position: true);
+    });
+  }
+
+  static const _resumeKey = 'resume_listening';
+
+  /// The last recitation listened to: reciter, surah, ayah, position.
+  Map<String, dynamic>? get resumePoint {
+    final raw = _storage.settings.get(_resumeKey);
+    return raw is Map ? Map<String, dynamic>.from(raw) : null;
+  }
+
+  void _remember(MediaItem? m, {bool position = false}) {
+    final x = m?.extras;
+    if (m == null || x == null || x['live'] == true) return;
+    final reciter = x['reciter'] as String?;
+    final surah = (x['surah'] as num?)?.toInt();
+    if (reciter == null || surah == null) return;
+    _storage.settings.put(_resumeKey, {
+      'reciter': reciter,
+      'surah': surah,
+      'ayah': (x['ayah'] as num?)?.toInt() ?? 1,
+      'positionMs': position ? _handler.position.inMilliseconds : 0,
+      'title': m.title,
+      'artist': m.artist ?? '',
+      'at': DateTime.now().toIso8601String(),
+    });
+  }
+
+  /// Plays on from the saved point (the app's card and Android Auto).
+  Future<bool> resume() async {
+    final p = resumePoint;
+    if (p == null) return false;
+    final reciter = p['reciter'] as String;
+    final surah = (p['surah'] as num).toInt();
+    final position = Duration(milliseconds: (p['positionMs'] as num?)?.toInt() ?? 0);
+    try {
+      if (reciter.startsWith('mp3q:')) {
+        final r = MediaCatalog.byId(reciter.substring(5));
+        if (r == null) return false;
+        await _playMediaSurah(r, surah);
+        if (position > Duration.zero) await _handler.seek(position);
+      } else {
+        final ayah = ((p['ayah'] as num?)?.toInt() ?? 1).clamp(1, SurahMetadata.surah(surah).ayahCount);
+        await _playSurah(surah, from: ayah, reciter: Reciters.byId(reciter));
+      }
+      return true;
+    } catch (_) {
+      _handler.reportError('تعذر التشغيل الآن، تحقق من الاتصال');
+      return false;
+    }
+  }
+
+  MediaItem? get _resumeItem {
+    final p = resumePoint;
+    if (p == null) return null;
+    final surah = (p['surah'] as num).toInt();
+    final key = ReciterArt.keyFor(p['reciter'] as String?);
+    return MediaItem(
+      id: 'resume',
+      title: 'تابع: ${p['title']}',
+      displaySubtitle: p['artist'] as String?,
+      artUri: key != null ? _reciterArt(key) : _surahArt(surah),
+      playable: true,
+    );
+  }
 
   static const _quran = 'quran';
   static const _reciters = 'reciters';
@@ -111,11 +181,17 @@ class CarMedia {
     }
     if (parent == AudioService.recentRootId) {
       final now = _handler.mediaItem.value;
-      return now == null ? const [] : [now.copyWith(playable: true)];
+      if (now != null) return [now.copyWith(playable: true)];
+      final r = _resumeItem;
+      return r == null ? const [] : [r];
     }
     if (parent == _quran) {
       final r = _appReciter;
-      return [for (var s = 1; s <= 114; s++) _surahItem('surah:$s', s, r.nameAr, grouped: true)];
+      final resume = _resumeItem;
+      return [
+        if (resume != null) resume.copyWith(extras: {_groupTitle: 'تابع الاستماع'}),
+        for (var s = 1; s <= 114; s++) _surahItem('surah:$s', s, r.nameAr, grouped: true),
+      ];
     }
     if (parent == _reciters) {
       return [
@@ -184,6 +260,8 @@ class CarMedia {
   Future<void> _play(String id) async {
     final p = id.split(':');
     switch (p.first) {
+      case 'resume':
+        await resume();
       case 'surah':
         await _playSurah(int.parse(p[1]));
       case 'msurah':
@@ -251,11 +329,11 @@ class CarMedia {
     return null;
   }
 
-  Future<void> _playSurah(int surah) async {
+  Future<void> _playSurah(int surah, {int from = 1, Reciter? reciter}) async {
     final info = SurahMetadata.surah(surah);
     final playlist = _builder.build(
-      reciter: _appReciter,
-      fromGlobal: SurahMetadata.globalAyah(surah, 1),
+      reciter: reciter ?? _appReciter,
+      fromGlobal: SurahMetadata.globalAyah(surah, from),
       toGlobal: SurahMetadata.globalAyah(surah, info.ayahCount),
     );
     if (playlist.isEmpty) return;

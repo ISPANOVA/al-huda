@@ -16,17 +16,21 @@ class TafsirBook {
   /// Edition slug on the spa5k/tafsir_api dataset (null = bundled).
   final String? slug;
 
-  const TafsirBook(this.id, this.name, this.slug);
+  /// Tafsir id on the Quran.com API: the second source, or the only one.
+  final int? qc;
+
+  const TafsirBook(this.id, this.name, this.slug, [this.qc]);
 }
 
 const kTafsirBooks = [
   TafsirBook('muyassar', 'الميسر', null),
   TafsirBook('mukhtasar', 'المختصر', 'ar-tafsir-al-mukhtasar'),
-  TafsirBook('saadi', 'السعدي', 'ar-tafsir-as-saadi'),
-  TafsirBook('ibnkathir', 'ابن كثير', 'ar-tafsir-ibn-kathir'),
-  TafsirBook('baghawi', 'البغوي', 'ar-tafsir-al-baghawi'),
-  TafsirBook('qurtubi', 'القرطبي', 'ar-tafseer-al-qurtubi'),
-  TafsirBook('tabari', 'الطبري', 'ar-tafsir-al-tabari'),
+  TafsirBook('saadi', 'السعدي', 'ar-tafsir-as-saadi', 91),
+  TafsirBook('ibnkathir', 'ابن كثير', 'ar-tafsir-ibn-kathir', 14),
+  TafsirBook('wasit', 'الوسيط', null, 93),
+  TafsirBook('baghawi', 'البغوي', 'ar-tafsir-al-baghawi', 94),
+  TafsirBook('qurtubi', 'القرطبي', 'ar-tafseer-al-qurtubi', 90),
+  TafsirBook('tabari', 'الطبري', 'ar-tafsir-al-tabari', 15),
 ];
 
 class TafsirService {
@@ -35,17 +39,39 @@ class TafsirService {
   static final _dio = Dio(BaseOptions(connectTimeout: const Duration(seconds: 15)));
 
   static Future<String> fetch(StorageService storage, TafsirBook book, Ayah ayah) async {
-    if (book.slug == null) return ayah.tafseer;
+    if (book.slug == null && book.qc == null) return ayah.tafseer;
     final key = 'tafsir:${book.id}:${ayah.surah}:${ayah.numberInSurah}';
     final cached = storage.quran.get(key);
     if (cached is String && cached.isNotEmpty) return cached;
-    final url = 'https://cdn.jsdelivr.net/gh/spa5k/tafsir_api@main/tafsir/${book.slug}/${ayah.surah}/${ayah.numberInSurah}.json';
-    final res = await _dio.get<dynamic>(url);
-    final data = res.data;
-    final text = (data is Map ? data['text'] : null)?.toString().trim() ?? '';
+    var text = '';
+    if (book.slug != null) {
+      try {
+        final url = 'https://cdn.jsdelivr.net/gh/spa5k/tafsir_api@main/tafsir/${book.slug}/${ayah.surah}/${ayah.numberInSurah}.json';
+        final data = (await _dio.get<dynamic>(url)).data;
+        text = (data is Map ? data['text'] : null)?.toString().trim() ?? '';
+      } catch (_) {
+        if (book.qc == null) rethrow;
+      }
+    }
+    if (text.isEmpty && book.qc != null) {
+      final url = 'https://api.quran.com/api/v4/tafsirs/${book.qc}/by_ayah/${ayah.surah}:${ayah.numberInSurah}';
+      final data = (await _dio.get<dynamic>(url)).data;
+      final raw = (data is Map && data['tafsir'] is Map ? data['tafsir']['text'] : null)?.toString() ?? '';
+      text = clean(raw);
+    }
     if (text.isNotEmpty) await storage.quran.put(key, text);
     return text;
   }
+
+  /// Quran.com sends HTML: paragraphs to new lines, tags and entities out.
+  static String clean(String html) => html
+      .replaceAll(RegExp(r'<\s*(br|/p|/h\d|/div)[^>]*>', caseSensitive: false), '\n')
+      .replaceAll(RegExp(r'<[^>]+>'), '')
+      .replaceAll('&nbsp;', ' ')
+      .replaceAll('&quot;', '"')
+      .replaceAll('&amp;', '&')
+      .replaceAll(RegExp(r'\n{3,}'), '\n\n')
+      .trim();
 }
 
 /// Reads Arabic text aloud with the phone's text-to-speech voice.

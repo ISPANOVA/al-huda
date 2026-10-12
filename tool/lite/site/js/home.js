@@ -1,6 +1,6 @@
 // الرئيسية: next prayer, continue reading, the daily wird, quick actions and
 // the ayah of the day.
-import { $, ar, esc, icon, store, meta, surahs, today, toast } from './app.js';
+import { $, ar, esc, icon, store, meta, surahs, today, toast, core, data } from './app.js';
 import { NAMES, location, nextPrayer, timesFor, hm, countdown, hijriToday, HMONTHS } from './prayerlib.js';
 import { skyState, drawSky, GREETING } from './sky.js';
 import { ayahText } from './page.js';
@@ -80,6 +80,12 @@ export async function show(view) {
       <span class="resume-bar"><i style="width:${((last || 0) / 604) * 100}%"></i></span>
     </a>
 
+    ${!player.current && player.resumePoint ? `<button class="card resume listen" id="lis">
+      <span class="ticon t-amethyst">${icon('head')}</span>
+      <span class="grow" style="text-align:right"><small class="muted">تابع الاستماع</small>
+        <b>${esc(player.resumePoint.label)}</b><small class="muted">${esc(player.resumePoint.title)}</small></span>
+      <span class="pbtn">${icon('play')}</span></button>` : ''}
+
     <div class="goals">
       <a class="card" href="#/khatmah"><span class="ticon t-teal">${icon('book')}</span><b>${goal ? `${ar(Math.min(doneToday, goal))} / ${ar(goal)}` : 'حدّد هدفك'}</b><small>وردي</small></a>
       <a class="card" href="#/khatmah"><span class="ticon t-amethyst">${icon('flag')}</span><b>${k ? ar(Math.round((k.pages.length / 604) * 100)) + '٪' : 'ابدأ'}</b><small>الختمة</small></a>
@@ -96,6 +102,7 @@ export async function show(view) {
 
     <p class="dedication">صدقة جارية عن روح سمير حجازي، وعن سعد صالح، وعن جميع المسلمين</p>`;
 
+  $('#lis')?.addEventListener('click', () => player.resume());
   hijriToday().then((h) => { $('#hdate').textContent = `${ar(h.d)} ${HMONTHS[h.m - 1]} ${ar(h.y)} هـ`; }).catch(() => {});
   paintSky();
   addEventListener('resize', onSkyResize);
@@ -103,6 +110,7 @@ export async function show(view) {
   // Below the fold: after the first paint, so it never delays the top.
   if (window.requestIdleCallback) requestIdleCallback(() => ayahOfDay(m, names), { timeout: 1200 });
   else setTimeout(() => ayahOfDay(m, names), 300);
+  if (hour >= 12) setTimeout(() => tomorrowFast(view), 1800);
 }
 
 let skyTimes = null;
@@ -178,6 +186,20 @@ async function ayahOfDay(m, names) {
   } catch {
     box.innerHTML = '<p class="muted center">تعذر جلب آية اليوم.</p>';
   }
+}
+
+/// «غدًا يوم عرفة / الأيام البيض…»: a banner on the evening before a recommended fast.
+async function tomorrowFast(view) {
+  try {
+    const [api, cal] = await Promise.all([core(), data('calendar.json')]);
+    const t = new Date();
+    t.setDate(t.getDate() + 1);
+    const [, hm, hd] = api.hijri(t.getFullYear(), t.getMonth() + 1, t.getDate());
+    const o = cal.occasions.find((x) => x[0] === hm && x[1] === hd && x[4]);
+    const box = $('#today', view);
+    if (!o || !box?.isConnected) return;
+    box.insertAdjacentHTML('afterend', `<a class="card banner-fri" href="#/calendar"><b>غدًا ${esc(o[2])}</b><small>${esc(o[3] || '')}، انوِ الصيام من الليل</small></a>`);
+  } catch {}
 }
 
 export function leave() { clearInterval(timer); removeEventListener('resize', onSkyResize); }

@@ -1,6 +1,7 @@
 // Draws one page of the Madinah Mushaf with HTML: 15 fixed line slots, each
 // line justified edge to edge in the KFGQPC Hafs font, like the app.
 import { data, meta, esc } from './app.js';
+import { colour as colourWord, ready as tajReady } from './tajweed.js';
 
 const NUM = /([\s ]+[٠-٩]+)$/;
 export const BASMALA = 'بِسۡمِ ٱللَّهِ ٱلرَّحۡمَٰنِ ٱلرَّحِيمِ';
@@ -9,8 +10,9 @@ export const pageData = (p) => data(`p/${p}.json`);
 
 /// Fills [inner] (sized box) with page [p]. [word](i, ayah, text) may return
 /// extra classes for the i-th word of the page (the Tasmee's colours).
-export async function drawPage(inner, p, { word } = {}) {
+export async function drawPage(inner, p, { word, tajweed = false } = {}) {
   const [lines, m, names] = await Promise.all([pageData(p), meta(), data('surahs.json')]);
+  if (tajweed && !tajReady()) tajweed = false;
   let W = inner.clientWidth;
   let H = inner.clientHeight;
   if (!W || !H) return;
@@ -47,7 +49,9 @@ export async function drawPage(inner, p, { word } = {}) {
       for (let i = 2; i + 1 < l.length; i += 2) {
         const a = l[i], t = l[i + 1];
         const m2 = t.match(NUM);
-        const text = m2 ? `${esc(t.slice(0, m2.index))}<b class="n">${m2[1]}</b>` : esc(t);
+        const body = m2 ? t.slice(0, m2.index) : t;
+        const paint = (enc) => (m2 ? `${enc(body)}<b class="n">${m2[1]}</b>` : enc(body));
+        const text = tajweed && a !== 0 ? colourWord(p, k, paint, esc) : paint(esc);
         const cls = a !== 0 && word ? word(k, a) : '';
         words += `<span data-a="${a}" data-k="${a !== 0 ? k : -1}"${cls ? ` class="${cls}"` : ''}>${text}</span>`;
         if (a !== 0) k++;

@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -20,6 +21,7 @@ import 'features/home/presentation/home_shell.dart';
 import 'features/onboarding/onboarding_page.dart';
 import 'features/wird/wird_tracker.dart';
 import 'features/khatmah/presentation/cubit/khatmah_cubit.dart';
+import 'features/prayer/data/prayer_log.dart';
 import 'features/prayer/presentation/cubit/prayer_cubit.dart';
 import 'features/quran/domain/repositories/quran_repository.dart';
 import 'features/quran/presentation/cubit/bookmarks_cubit.dart';
@@ -49,11 +51,13 @@ class _AlHudaAppState extends State<AlHudaApp> {
     return MultiRepositoryProvider(
       providers: [
         RepositoryProvider<QuranRepository>.value(value: deps.quranRepository),
+        RepositoryProvider<Dio>.value(value: deps.dio),
         RepositoryProvider<StatsRepository>.value(value: deps.statsRepository),
         RepositoryProvider<AudioDownloadService>.value(value: deps.downloadService),
         RepositoryProvider<StorageService>.value(value: deps.storage),
         RepositoryProvider<NotificationService>.value(value: deps.notifications),
         RepositoryProvider<WirdTracker>(create: (_) => WirdTracker(deps.storage)),
+        RepositoryProvider<PrayerLog>(create: (_) => PrayerLog(deps.storage)),
       ],
       child: MultiBlocProvider(
         providers: [

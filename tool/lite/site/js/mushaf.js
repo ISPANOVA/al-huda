@@ -3,6 +3,7 @@
 import { $, $$, ar, esc, icon, store, data, meta, surahs, sheet, closeSheet, toast, today } from './app.js';
 import { drawPage, hizbLabel, JUZ, BASMALA, ayahText } from './page.js';
 import { player, listenSheet } from './player.js';
+import * as taj from './tajweed.js';
 
 const PAGES = 604;
 let root, pagesEl, page = 1, offPlayer, selected = 0, spread = false;
@@ -27,6 +28,7 @@ export async function show(view, args) {
       <button class="chip" id="surahChip"></button>
       <a class="ibtn" href="#/search">${icon('search')}</a>
       <span class="sp"></span>
+      <button class="ibtn${taj.on() ? ' on' : ''}" id="tj" title="مصحف التجويد">${icon('palette')}</button>
       <button class="ibtn" id="full" title="ملء الشاشة">${icon('expand')}</button>
       <button class="ibtn" id="tasmee" title="التسميع">${icon('mic')}</button>
       <button class="chip" id="juzChip"></button>
@@ -79,6 +81,8 @@ export async function show(view, args) {
   $('#pageChip', root).onclick = () => openIndex(m, names, 1);
   $('#tasmee', root).onclick = () => (location.hash = `#/tasmee/${page}`);
   $('#full', root).onclick = fullscreen;
+  $('#tj', root).onclick = () => tajweedSheet();
+  if (taj.on()) taj.load().then(relayout);
   $('#mark', root).onclick = () => toggleMark(m);
   $('#playPage', root).onclick = () => listenSheet(m.page.indexOf(page) + 1);
   offPlayer = player.on((it) => highlight(it?.ayah ?? 0, m));
@@ -150,11 +154,27 @@ function relayout() {
   goTo(page, false);
 }
 
+/// «مصحف التجويد»: on or off, and the colour key.
+function tajweedSheet() {
+  sheet(`<h3>مصحف التجويد</h3>
+    <button class="btn block${taj.on() ? ' ghost' : ''}" id="tjOn">${taj.on() ? 'إيقاف ألوان التجويد' : 'تشغيل ألوان التجويد'}</button>
+    <div class="list" style="margin-top:12px">${taj.RULES.map(([n, d], i) => `<div><i class="tjdot tj${i}"></i><span class="grow"><b class="tj${i}">${n}</b><br><small class="muted">${d}</small></span></div>`).join('')}</div>
+    <p class="muted small center">الألوان تقريبية مساعدة على التعلم، والعبرة بالتلقي من شيخ متقن.</p>`, (body, close) => {
+    $('#tjOn', body).onclick = async () => {
+      store.set('tajweed', !taj.on());
+      $('#tj', root).classList.toggle('on', taj.on());
+      close();
+      if (taj.on()) { toast('جارٍ تحميل ألوان التجويد…'); await taj.load(); }
+      relayout();
+    };
+  });
+}
+
 function drawAround(p) {
   for (let q = p - (spread ? 2 : 1); q <= p + (spread ? 3 : 1); q++) {
     if (q < 1 || q > PAGES) continue;
     const inner = pageEl(q).firstElementChild;
-    if (+inner.dataset.drawn !== q) drawPage(inner, q).then(() => q === page && highlight(player.current?.ayah ?? 0));
+    if (+inner.dataset.drawn !== q) drawPage(inner, q, { tajweed: taj.on() }).then(() => q === page && highlight(player.current?.ayah ?? 0));
   }
   // Pages far away are emptied (memory stays small).
   for (const s of $$('.inner[data-drawn]', pagesEl)) {
@@ -206,12 +226,15 @@ function label(g, m, names) { return `${names[m.surah[g - 1] - 1][1]}، ${ar(m.a
 async function ayahMenu(a, m, names) {
   for (const s of $$('span.sel', pagesEl)) s.classList.remove('sel');
   for (const s of $$(`span[data-a="${a}"]`, pagesEl)) s.classList.add('sel');
-  const text = await ayahText(a);
+  const [text, sim] = await Promise.all([ayahText(a), data('mutashabihat.json').catch(() => ({}))]);
   const name = names[m.surah[a - 1] - 1][1];
   await sheet(`<h3>سورة ${esc(name)}، الآية ${ar(m.ayah[a - 1])}</h3>
     <div class="list">
       <button data-x="play">${icon('play')}<span class="grow">الاستماع من هذه الآية<br><small class="muted">حدّد النطاق والتكرار والقارئ</small></span></button>
-      <button data-x="tafsir">${icon('book')}<span class="grow">التفسير الميسر</span></button>
+      <button data-x="tafsir">${icon('book')}<span class="grow">التفسير<br><small class="muted">الميسر والسعدي وابن كثير وغيرها</small></span></button>
+      ${sim[a]?.length ? `<button data-x="similar">${icon('repeat')}<span class="grow">آيات متشابهة<br><small class="muted">${ar(sim[a].length)} آية تشبهها في الألفاظ</small></span></button>` : ''}
+      <button data-x="video">${icon('tv')}<span class="grow">فيديو بصوت القارئ<br><small class="muted">ستوري لواتساب وانستجرام وفيسبوك</small></span></button>
+      <button data-x="image">${icon('image')}<span class="grow">مشاركة كصورة</span></button>
       <button data-x="tasmee">${icon('mic')}<span class="grow">سمّع من هذه الآية</span></button>
       <button data-x="hifz">${icon('repeat')}<span class="grow">احفظ هذه الآية (تكرار)</span></button>
       <button data-x="copy">${icon('copy')}<span class="grow">نسخ الآية</span></button>
@@ -223,6 +246,9 @@ async function ayahMenu(a, m, names) {
       const ref = `﴿${text}﴾ [${name}: ${ar(m.ayah[a - 1])}]`;
       if (x === 'play') { close(); setTimeout(() => listenSheet(a), 50); }
       if (x === 'tafsir') { close(); setTimeout(() => tafsir(a, m, names), 50); }
+      if (x === 'similar') { close(); import('./tools.js').then((t) => setTimeout(() => t.similarSheet(a), 50)); }
+      if (x === 'video') { close(); location.hash = `#/video/${m.surah[a - 1]}/${m.ayah[a - 1]}/${m.ayah[a - 1]}`; }
+      if (x === 'image') { close(); toast('جارٍ تجهيز الصورة…'); import('./video.js').then((v) => v.shareAyahImage(a)).catch(() => toast('تعذر إنشاء الصورة')); }
       if (x === 'tasmee') { close(); location.hash = `#/tasmee/${m.page[a - 1]}/${a}`; }
       if (x === 'hifz') { close(); location.hash = `#/hifz/${a}`; }
       if (x === 'copy') { close(); navigator.clipboard?.writeText(ref).then(() => toast('نُسخت الآية')); }
@@ -232,13 +258,63 @@ async function ayahMenu(a, m, names) {
   for (const s of $$('span.sel', pagesEl)) s.classList.remove('sel');
 }
 
+// The tafsir books: Al-Muyassar comes with the site; the others are fetched
+// (spa5k/tafsir_api, then Quran.com) and kept for the next time.
+const BOOKS = [['muyassar', 'الميسر'], ['saadi', 'السعدي', 'ar-tafsir-as-saadi', 91], ['ibnkathir', 'ابن كثير', 'ar-tafsir-ibn-kathir', 14],
+  ['wasit', 'الوسيط', null, 93], ['baghawi', 'البغوي', 'ar-tafsir-al-baghawi', 94], ['qurtubi', 'القرطبي', 'ar-tafseer-al-qurtubi', 90],
+  ['tabari', 'الطبري', 'ar-tafsir-al-tabari', 15]];
+const clean = (h) => h.replace(/<\s*(br|\/p|\/h\d|\/div)[^>]*>/gi, '\n').replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ').replace(/&quot;/g, '"').replace(/&amp;/g, '&').replace(/\n{3,}/g, '\n\n').trim();
+async function tafsirText(book, a, m) {
+  const [id, , slug, qc] = book;
+  if (id === 'muyassar') return (await data(`t/${m.page[a - 1]}.json`))[a] ?? '';
+  const key = `tafsir:${id}:${a}`;
+  try { const c = sessionStorage.getItem(key) || localStorage.getItem('h_' + key); if (c) return c; } catch {}
+  const s = m.surah[a - 1], v = m.ayah[a - 1];
+  let t = '';
+  if (slug) {
+    try { const r = await fetch(`https://cdn.jsdelivr.net/gh/spa5k/tafsir_api@main/tafsir/${slug}/${s}/${v}.json`); if (r.ok) t = ((await r.json()).text || '').trim(); } catch {}
+  }
+  if (!t && qc) {
+    const r = await fetch(`https://api.quran.com/api/v4/tafsirs/${qc}/by_ayah/${s}:${v}`);
+    if (r.ok) t = clean((await r.json()).tafsir?.text || '');
+  }
+  if (t) { try { sessionStorage.setItem(key, t); } catch {} }
+  return t;
+}
 async function tafsir(a, m, names) {
-  const t = await data(`t/${m.page[a - 1]}.json`);
   const text = await ayahText(a);
-  await sheet(`<h3>التفسير الميسر</h3>
-    <div class="quran center">${esc(text)}</div>
+  let book = BOOKS.find((b) => b[0] === store.get('tafsirBook', 'muyassar')) || BOOKS[0];
+  await sheet(`<h3>التفسير</h3>
+    <div class="chips" id="tb">${BOOKS.map((b) => `<button class="chip${b === book ? ' on' : ''}" data-b="${b[0]}">${b[1]}</button>`).join('')}</div>
+    <div class="quran center" style="margin-top:10px">${esc(text)}</div>
     <p class="muted small center">سورة ${esc(names[m.surah[a - 1] - 1][1])}، الآية ${ar(m.ayah[a - 1])}</p>
-    <div class="card" style="line-height:2">${esc(t[a] ?? '')}</div>`);
+    <div class="card" style="line-height:2;white-space:pre-line" id="tt"></div>
+    <div id="gh"></div>`, (body) => {
+    data('gharib.json').then((gh) => {
+      const w = gh.ayahs[`${m.surah[a - 1]}:${m.ayah[a - 1]}`];
+      if (!w) return;
+      $('#gh', body).innerHTML = `<div class="section">معاني الكلمات</div><div class="card" style="line-height:1.9">${w.slice(1).map(([k, v]) =>
+        `<p style="margin:6px 0"><b class="gold quran" style="font-size:20px">${esc(k)}:</b> ${esc(v)}</p>`).join('')}
+        <small class="muted">${esc(gh.source[w[0]])}، عبر ${esc(gh.source.via)}</small></div>`;
+    }).catch(() => {});
+    const load = async () => {
+      const box = $('#tt', body);
+      box.innerHTML = '<div class="spin" style="margin:20px auto;opacity:1"></div>';
+      try {
+        const t = await tafsirText(book, a, m);
+        box.textContent = t || 'التفسير غير متوفر لهذه الآية.';
+      } catch { box.textContent = `تعذر تحميل تفسير ${book[1]}. تحقق من الاتصال بالإنترنت.`; }
+    };
+    load();
+    $('#tb', body).onclick = (e) => {
+      const c = e.target.closest('[data-b]');
+      if (!c) return;
+      book = BOOKS.find((b) => b[0] === c.dataset.b);
+      store.set('tafsirBook', book[0]);
+      $$('[data-b]', body).forEach((x) => x.classList.toggle('on', x === c));
+      load();
+    };
+  });
 }
 
 async function openIndex(m, names, tab = 0) {
