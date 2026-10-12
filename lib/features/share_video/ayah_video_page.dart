@@ -50,6 +50,9 @@ class _AyahVideoPageState extends State<AyahVideoPage> {
   late String _reciterId = _initialReciter();
   String _bg = 'gold';
   ui.Image? _photo;
+  String? _clipPath; // a video from the phone behind the words
+  ui.Image? _clipThumb;
+  VideoPlayerController? _clipPlayer;
   ui.Image? _logo;
   ui.Image? _reciterPhoto;
   String _previewText = '';
@@ -78,6 +81,7 @@ class _AyahVideoPageState extends State<AyahVideoPage> {
   @override
   void dispose() {
     _player?.dispose();
+    _clipPlayer?.dispose();
     super.dispose();
   }
 
@@ -92,13 +96,21 @@ class _AyahVideoPageState extends State<AyahVideoPage> {
     if (mounted) setState(() => _previewText = a?.text ?? '');
   }
 
-  VideoFramePainter get _painter =>
-      VideoFramePainter(bg: VideoBackground.byId(_bg), photo: _photo, logo: _logo, reciterPhoto: _reciterPhoto);
+  bool get _isClip => _bg == VideoBackground.clip;
+
+  VideoFramePainter get _painter => VideoFramePainter(
+      bg: VideoBackground.byId(_bg), photo: _isClip ? _clipThumb : _photo, logo: _logo, reciterPhoto: _reciterPhoto);
 
   void _resetVideo() {
     _player?.dispose();
     _player = null;
     _video = null;
+    // The chosen clip plays (silent) behind the preview again.
+    if (_isClip) {
+      _clipPlayer?.play();
+    } else {
+      _clipPlayer?.pause();
+    }
   }
 
   Future<void> _pickSurah() async {
@@ -161,6 +173,40 @@ class _AyahVideoPageState extends State<AyahVideoPage> {
     });
   }
 
+  Future<void> _pickClip() async {
+    final r = await FilePicker.platform.pickFiles(type: FileType.video);
+    final path = r?.files.single.path;
+    if (path == null || !mounted) return;
+    final thumb = await AyahVideoService.clipThumbnail(path);
+    if (!mounted) return;
+    if (thumb == null) {
+      showGlassSnack(context, 'تعذر قراءة هذا الفيديو، جرّب فيديو آخر');
+      return;
+    }
+    VideoPlayerController? player = VideoPlayerController.file(File(path));
+    try {
+      await player.initialize();
+      await player.setVolume(0);
+      await player.setLooping(true);
+    } catch (_) {
+      // The preview then shows its first frame; the video is still made.
+      await player.dispose();
+      player = null;
+    }
+    if (!mounted) {
+      player?.dispose();
+      return;
+    }
+    _clipPlayer?.dispose();
+    setState(() {
+      _clipPath = path;
+      _clipThumb = thumb;
+      _clipPlayer = player;
+      _bg = VideoBackground.clip;
+      _resetVideo();
+    });
+  }
+
   Future<void> _build() async {
     if (_progress != null) return;
     setState(() {
@@ -179,6 +225,7 @@ class _AyahVideoPageState extends State<AyahVideoPage> {
         to: _to,
         reciter: _reciter,
         painter: _painter,
+        clip: _isClip ? _clipPath : null,
         onProgress: (p) {
           if (mounted) setState(() => _progress = p);
         },
@@ -190,6 +237,7 @@ class _AyahVideoPageState extends State<AyahVideoPage> {
         player.dispose();
         return;
       }
+      _clipPlayer?.pause();
       setState(() {
         _video = path;
         _length = length;
@@ -275,18 +323,7 @@ class _AyahVideoPageState extends State<AyahVideoPage> {
                               const Center(child: Icon(Icons.play_circle_fill_rounded, size: 72, color: Colors.white70)),
                           ]),
                         )
-                      : CustomPaint(
-                          painter: _PreviewPainter(
-                            _painter,
-                            FrameContent(
-                              text: _previewText,
-                              ayahNumber: _from,
-                              surahName: 'سورة ${_info.name}',
-                              reciterName: _reciter.nameAr,
-                              caption: 'الآية ${ArabicUtils.toArabicDigits(_from)}',
-                            ),
-                          ),
-                        ),
+                      : _framePreview(),
                 ),
               ),
             ),
@@ -416,12 +453,15 @@ class _AyahVideoPageState extends State<AyahVideoPage> {
                 final b = VideoBackground.all[i];
                 final selected = b.id == _bg;
                 final isPhoto = b.id == VideoBackground.custom;
+                final isClip = b.id == VideoBackground.clip;
                 return GestureDetector(
                   onTap: busy
                       ? null
                       : () {
                           if (isPhoto) {
                             _pickPhoto();
+                          } else if (isClip) {
+                            _pickClip();
                           } else {
                             setState(() {
                               _bg = b.id;
@@ -443,7 +483,15 @@ class _AyahVideoPageState extends State<AyahVideoPage> {
                           borderRadius: BorderRadius.circular(11),
                           child: isPhoto && _photo == null
                               ? Container(color: Colors.black26, child: const Icon(Icons.add_photo_alternate_rounded))
-                              : CustomPaint(painter: _SwatchPainter(VideoFramePainter(bg: b, photo: _photo, logo: _logo))),
+                              : isClip && _clipThumb == null
+                                  ? Container(color: Colors.black26, child: const Icon(Icons.video_library_rounded))
+                                  : Stack(fit: StackFit.expand, children: [
+                                      CustomPaint(
+                                          painter: _SwatchPainter(
+                                              VideoFramePainter(bg: b, photo: isClip ? _clipThumb : _photo, logo: _logo))),
+                                      if (isClip)
+                                        const Center(child: Icon(Icons.play_circle_fill_rounded, color: Colors.white70, size: 26)),
+                                    ]),
                         ),
                       ),
                       const SizedBox(height: 6),
@@ -477,6 +525,35 @@ class _AyahVideoPageState extends State<AyahVideoPage> {
         ],
       ),
     );
+  }
+}
+
+extension on _AyahVideoPageState {
+  /// The first frame as it will look; over a chosen clip, the clip plays under it.
+  Widget _framePreview() {
+    final content = FrameContent(
+      text: _previewText,
+      ayahNumber: _from,
+      surahName: 'سورة ${_info.name}',
+      reciterName: _reciter.nameAr,
+      caption: 'الآية ${ArabicUtils.toArabicDigits(_from)}',
+    );
+    final clip = _clipPlayer;
+    if (_isClip && clip != null && clip.value.isInitialized) {
+      final p = _painter;
+      return Stack(fit: StackFit.expand, children: [
+        FittedBox(
+          fit: BoxFit.cover,
+          clipBehavior: Clip.hardEdge,
+          child: SizedBox(width: clip.value.size.width, height: clip.value.size.height, child: VideoPlayer(clip)),
+        ),
+        CustomPaint(
+          painter: _PreviewPainter(
+              VideoFramePainter(bg: p.bg, photo: p.photo, logo: p.logo, reciterPhoto: p.reciterPhoto, overlayOnly: true), content),
+        ),
+      ]);
+    }
+    return CustomPaint(painter: _PreviewPainter(_painter, content));
   }
 }
 

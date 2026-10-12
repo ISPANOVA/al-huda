@@ -17,6 +17,7 @@ import '../../domain/adhan_voices.dart';
 import '../../domain/prayer_entities.dart';
 import '../cubit/prayer_cubit.dart';
 import '../prayer_log_page.dart';
+import '../prayer_share.dart';
 import '../prayer_tones.dart';
 import '../widgets/adhan_settings.dart';
 import '../widgets/prayer_calc_settings.dart';
@@ -49,6 +50,12 @@ class PrayerTimesPage extends StatelessWidget {
                 tone: Tone.sapphire,
                 subtitle: '${hijri.toFormat('dd MMMM yyyy')} هـ • $gregorian',
                 actions: [
+                  if (state.ready)
+                    NoorIconButton(
+                      icon: Icons.ios_share_rounded,
+                      tooltip: 'شارك المواقيت',
+                      onTap: () => _shareTimes(context, state),
+                    ),
                   NoorIconButton(
                     icon: Icons.explore_rounded,
                     tooltip: 'القبلة',
@@ -83,6 +90,11 @@ class PrayerTimesPage extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 14),
                   child: _Timeline(state: state),
                 ),
+                const SizedBox(height: 10),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 14),
+                  child: _ShareTimesButton(onTap: () => _shareTimes(context, state)),
+                ),
                 const SizedBox(height: 12),
                 const Padding(padding: EdgeInsets.symmetric(horizontal: 14), child: PrayerLogCard()),
                 const SizedBox(height: 12),
@@ -97,6 +109,45 @@ class PrayerTimesPage extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+Future<void> _shareTimes(BuildContext context, PrayerState state) async {
+  final today = state.today;
+  if (today == null) return;
+  final ok = await sharePrayerTimes(PrayerCardData.of(today, city: state.location?.city, next: state.next));
+  if (!ok && context.mounted) showGlassSnack(context, 'تعذر تجهيز صورة المواقيت');
+}
+
+/// «شارك مواقيت اليوم»: the times of the city as a picture.
+class _ShareTimesButton extends StatelessWidget {
+  final VoidCallback onTap;
+
+  const _ShareTimesButton({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final glass = GlassTheme.of(context);
+    return NoorCard(
+      onTap: onTap,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      child: Row(
+        children: [
+          const ToneIcon(Icons.ios_share_rounded, tone: Tone.sapphire, size: 40),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('شارك مواقيت اليوم', style: TextStyle(fontWeight: FontWeight.w800)),
+                Text('صورة بمواقيت مدينتك لواتساب أو الستوري', style: TextStyle(fontSize: 11.5, color: glass.onGlassMuted)),
+              ],
+            ),
+          ),
+          Icon(Icons.chevron_left_rounded, color: glass.onGlassMuted),
+        ],
+      ),
     );
   }
 }

@@ -67,6 +67,22 @@ class AyahVideoService {
     }
   }
 
+  /// The clip's first frame (for the preview and the swatch); null when the
+  /// phone cannot read the video.
+  static Future<ui.Image?> clipThumbnail(String path) async {
+    try {
+      final tmp = await getTemporaryDirectory();
+      final out = '${tmp.path}/clip_thumb_${DateTime.now().millisecondsSinceEpoch}.jpg';
+      final ok = await _channel.invokeMethod<bool>('thumb', {'path': path, 'out': out});
+      if (ok != true) return null;
+      final img = await loadFile(out, maxSide: 1600);
+      File(out).delete().ignore();
+      return img;
+    } catch (_) {
+      return null;
+    }
+  }
+
   Future<String> _audio(Reciter reciter, int global, Directory dir) async {
     final local = downloads.localFileIfExists(reciter.id, global);
     if (local != null) return local;
@@ -93,7 +109,13 @@ class AyahVideoService {
     required Reciter reciter,
     required VideoFramePainter painter,
     required void Function(VideoProgress) onProgress,
+    String? clip, // a video from the phone behind the words
   }) async {
+    // With a clip, frames with a see-through background: the encoder lays them over it.
+    final paint = clip == null
+        ? painter
+        : VideoFramePainter(
+            bg: painter.bg, photo: painter.photo, logo: painter.logo, reciterPhoto: painter.reciterPhoto, overlayOnly: true);
     final size = await supportedSize();
     final width = size[0], height = size[1];
     final tmp = await getTemporaryDirectory();
@@ -129,7 +151,7 @@ class AyahVideoService {
     var n = 0;
     Future<String> frame(FrameContent c) {
       final rec = ui.PictureRecorder();
-      painter.paintFrame(ui.Canvas(rec), ui.Size(width.toDouble(), height.toDouble()), c);
+      paint.paintFrame(ui.Canvas(rec), ui.Size(width.toDouble(), height.toDouble()), c);
       return _png(rec.endRecording(), width, height, '${work.path}/f${n++}.png');
     }
 
@@ -159,7 +181,7 @@ class AyahVideoService {
       segments.add({'audio': audio[ai++], 'silenceMs': 250, 'shots': shots});
     }
     final rec = ui.PictureRecorder();
-    painter.paintOutro(ui.Canvas(rec), ui.Size(width.toDouble(), height.toDouble()));
+    paint.paintOutro(ui.Canvas(rec), ui.Size(width.toDouble(), height.toDouble()));
     final outro = await _png(rec.endRecording(), width, height, '${work.path}/outro.png');
     segments.add({'audio': null, 'silenceMs': 2600, 'shots': [{'image': outro, 'weight': 1.0}]});
 
@@ -179,6 +201,7 @@ class AyahVideoService {
         'width': width,
         'height': height,
         'fps': fps,
+        if (clip != null) 'background': clip,
       }) ?? 0;
     } finally {
       _channel.setMethodCallHandler(null);

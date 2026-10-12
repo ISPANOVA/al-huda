@@ -18,6 +18,10 @@ class VideoBackground {
   const VideoBackground(this.id, this.name, this.colors, {this.ink = Colors.white, this.accent = const Color(0xFFE2C074)});
 
   static const custom = 'photo';
+  static const clip = 'clip'; // a video from the phone
+
+  /// The user's own picture or video, behind a dark veil.
+  bool get isOwn => id == custom || id == clip;
 
   static const all = [
     VideoBackground('night', 'ليل', [Color(0xFF03050F), Color(0xFF0A1230), Color(0xFF1D2347)], accent: Color(0xFFF1D7A0)),
@@ -29,6 +33,7 @@ class VideoBackground {
     VideoBackground('ivory', 'عاجي', [Color(0xFFFBF6EA), Color(0xFFF2E8D2), Color(0xFFE6D5B3)],
         ink: Color(0xFF2B1E12), accent: Color(0xFF8A5A1E)),
     VideoBackground(custom, 'صورة من جهازك', [Color(0xFF000000), Color(0xFF0A0A0A), Color(0xFF151515)]),
+    VideoBackground(clip, 'فيديو من جهازك', [Color(0xFF000000), Color(0xFF0A0A0A), Color(0xFF151515)]),
   ];
 
   static VideoBackground byId(String id) => all.firstWhere((b) => b.id == id, orElse: () => all.first);
@@ -55,11 +60,15 @@ class FrameContent {
 /// to any size, so the preview and the video are the same picture.
 class VideoFramePainter {
   final VideoBackground bg;
-  final ui.Image? photo; // the user's own background
+  final ui.Image? photo; // the user's own background (a video's first frame for [VideoBackground.clip])
   final ui.Image? logo; // assets/icon/logo_mark.png
   final ui.Image? reciterPhoto;
 
-  VideoFramePainter({required this.bg, this.photo, this.logo, this.reciterPhoto});
+  /// Only the words and the veil, the rest see-through: the frames laid over
+  /// a background video (by the encoder, or over the playing clip in the preview).
+  final bool overlayOnly;
+
+  VideoFramePainter({required this.bg, this.photo, this.logo, this.reciterPhoto, this.overlayOnly = false});
 
   static const w = 1080.0;
   static const h = 1920.0;
@@ -145,6 +154,10 @@ class VideoFramePainter {
     canvas.save();
     canvas.scale(size.width / w, size.height / h);
     _background(canvas);
+    if (bg.id == VideoBackground.clip) {
+      // Deeper over a moving picture, so the closing words read clearly.
+      canvas.drawRect(Offset.zero & const Size(w, h), Paint()..color = Colors.black.withValues(alpha: 0.35));
+    }
     if (logo != null) {
       const s = 300.0;
       canvas.drawImageRect(logo!, Offset.zero & Size(logo!.width.toDouble(), logo!.height.toDouble()),
@@ -166,12 +179,18 @@ class VideoFramePainter {
 
   void _background(Canvas canvas) {
     final r = Offset.zero & const Size(w, h);
-    if (bg.id == VideoBackground.custom && photo != null) {
-      final img = photo!;
-      final scale = math.max(w / img.width, h / img.height);
-      final src = Rect.fromCenter(
-          center: Offset(img.width / 2, img.height / 2), width: w / scale, height: h / scale);
-      canvas.drawImageRect(img, src, r, Paint()..filterQuality = FilterQuality.high);
+    if (bg.id == VideoBackground.clip || (bg.id == VideoBackground.custom && photo != null)) {
+      final img = photo;
+      if (!overlayOnly) {
+        if (img != null) {
+          final scale = math.max(w / img.width, h / img.height);
+          final src = Rect.fromCenter(
+              center: Offset(img.width / 2, img.height / 2), width: w / scale, height: h / scale);
+          canvas.drawImageRect(img, src, r, Paint()..filterQuality = FilterQuality.high);
+        } else {
+          canvas.drawRect(r, Paint()..color = const Color(0xFF0A0A0A));
+        }
+      }
       // Darkened so the white text stays clear on any photo.
       canvas.drawRect(
           r,

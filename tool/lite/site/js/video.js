@@ -51,15 +51,47 @@ function star(c, x, y, r1, r2) {
   c.closePath();
 }
 
+/// The dark veil over the user's own picture or video, so the words stay clear.
+function veil(c) {
+  const g = c.createLinearGradient(0, 0, 0, H);
+  g.addColorStop(0, 'rgba(0,0,0,.55)'); g.addColorStop(0.5, 'rgba(0,0,0,.35)'); g.addColorStop(1, 'rgba(0,0,0,.65)');
+  c.fillStyle = g; c.fillRect(0, 0, W, H);
+}
+
+/// A video from the phone: its picture now, cropped to fill the canvas, under the veil.
+function clipUnder(c, v) {
+  const cw = c.canvas.width, ch = c.canvas.height;
+  c.globalAlpha = 1;
+  if (v.videoWidth) {
+    const s = Math.max(cw / v.videoWidth, ch / v.videoHeight);
+    const w = cw / s, h = ch / s;
+    c.drawImage(v, (v.videoWidth - w) / 2, (v.videoHeight - h) / 2, w, h, 0, 0, cw, ch);
+  } else { c.fillStyle = '#0A0A0A'; c.fillRect(0, 0, cw, ch); }
+  c.save(); c.scale(cw / W, ch / H); veil(c); c.restore();
+}
+
+/// Moves the clip to [t] seconds (looped) and waits for that picture.
+function seekClip(v, t) {
+  const d = Number.isFinite(v.duration) && v.duration > 0.1 ? v.duration : 0;
+  const at = d ? t % d : 0;
+  if (Math.abs(v.currentTime - at) < 0.001 && v.readyState >= 2) return Promise.resolve();
+  return new Promise((ok) => {
+    const done = () => { v.removeEventListener('seeked', done); clearTimeout(slow); ok(); };
+    const slow = setTimeout(done, 2000);
+    v.addEventListener('seeked', done);
+    v.currentTime = at;
+  });
+}
+
 function background(c, bg, photo, logo) {
   const [id, , cols, accent] = bg;
+  // Over a video only the words are drawn: the clip and its veil go under them.
+  if (id === 'clip') { c.clearRect(0, 0, W, H); return; }
   if (id === 'photo' && photo) {
     const s = Math.max(W / photo.width, H / photo.height);
     const w = W / s, h = H / s;
     c.drawImage(photo, (photo.width - w) / 2, (photo.height - h) / 2, w, h, 0, 0, W, H);
-    const g = c.createLinearGradient(0, 0, 0, H);
-    g.addColorStop(0, 'rgba(0,0,0,.55)'); g.addColorStop(0.5, 'rgba(0,0,0,.35)'); g.addColorStop(1, 'rgba(0,0,0,.65)');
-    c.fillStyle = g; c.fillRect(0, 0, W, H);
+    veil(c);
     return;
   }
   const g = c.createLinearGradient(0, 0, 0, H);
@@ -251,6 +283,7 @@ export function drawOutro(c, bg, assets) {
   c.save();
   c.scale(c.canvas.width / W, c.canvas.height / H);
   background(c, bg, assets.photo, assets.logo);
+  if (bg[0] === 'clip') { c.fillStyle = 'rgba(0,0,0,.35)'; c.fillRect(0, 0, W, H); }
   if (assets.logo) c.drawImage(assets.logo, W / 2 - 150, 700 - 150, 300, 300);
   text(c, 'تطبيق الهدى', W / 2, 940, '700 96px ReemKufi', accent);
   text(c, 'القرآن الكريم • التلاوات • المواقيت • الأذكار', W / 2, 1060, '700 38px Tajawal', ink);
@@ -286,7 +319,7 @@ export async function shareAyahImage(g) {
   await deliver(blob, name, `﴿${t}﴾ [${names[m.surah[g - 1] - 1][1]}: ${ar(m.ayah[g - 1])}]\nمن تطبيق الهدى: https://${LINK}`);
 }
 
-async function deliver(blob, name, textMsg) {
+export async function deliver(blob, name, textMsg) {
   const file = new File([blob], name, { type: blob.type });
   if (navigator.canShare?.({ files: [file] })) {
     try { await navigator.share({ files: [file], text: textMsg }); return; } catch (e) { if (e.name === 'AbortError') return; }
@@ -310,6 +343,7 @@ export async function show(view, args) {
   if (!reciters.some((x) => x.id === rec)) rec = reciters[0].id;
   let bgId = store.get('videoBg', 'gold');
   let photo = null;
+  let clip = null; // <video> of the user's own clip
   built = null;
   const MAX = 40;
   view.innerHTML = top('فيديو بصوت القارئ', 'شاركه ستوري أو في محادثة', 'rose', 'tv') + `
@@ -332,7 +366,8 @@ export async function show(view, args) {
     <select class="field" id="vq">${reciters.map((r) => `<option value="${r.id}"${r.id === rec ? ' selected' : ''}>${esc(r.name)}${r.style ? '، ' + esc(r.style) : ''}</option>`).join('')}</select>
     <div class="section">الخلفية</div>
     <div class="chips" id="vb">${BGS.map(([id, n]) => `<button class="chip${id === bgId ? ' on' : ''}" data-bg="${id}">${n}</button>`).join('')}
-      <label class="chip">${icon('download')} صورة من جهازك<input type="file" accept="image/*" id="vph" hidden></label></div>
+      <label class="chip" id="vphl">${icon('download')} صورة من جهازك<input type="file" accept="image/*" id="vph" hidden></label>
+      <label class="chip" id="vcl">${icon('tv')} فيديو من جهازك<input type="file" accept="video/*" id="vcp" hidden></label></div>
     <button class="btn block" id="go" style="margin-top:18px">${icon('play')} إنشاء الفيديو</button>
     <p class="muted small center">الفيديو بمقاس الستوري وفيه رابط التطبيق. يُنشأ على جهازك ولا يُرفع لأي مكان.</p>`;
 
@@ -344,16 +379,37 @@ export async function show(view, args) {
     $('#vf', view).innerHTML = opt(f, 1, n);
     $('#vt', view).innerHTML = opt(t, f, Math.min(n, f + MAX - 1));
   };
-  const bgOf = () => (bgId === 'photo' ? ['photo', 'صورة', ['#000', '#000', '#000'], '#E2C074', '#fff'] : BGS.find((b) => b[0] === bgId) || BGS[0]);
+  const bgOf = () => (bgId === 'photo' ? ['photo', 'صورة', ['#000', '#000', '#000'], '#E2C074', '#fff']
+    : bgId === 'clip' ? ['clip', 'فيديو', ['#000', '#000', '#000'], '#E2C074', '#fff'] : BGS.find((b) => b[0] === bgId) || BGS[0]);
+  let loop = 0; // the preview's animation over a clip
   const preview = async () => {
     const r = reciters.find((x) => x.id === rec) || reciters[0];
     const assets = await assetsFor(r.id, photo);
     const g = m.surah.indexOf(s) + f;
     const txt = await ayahText(g);
     if (!pv.isConnected) return;
-    drawFrame(pv.getContext('2d'), { text: txt, num: f, surah: `سورة ${names[s - 1][1]}`, reciter: r.name, caption: `الآية ${ar(f)}` }, bgOf(), assets);
+    const fr = { text: txt, num: f, surah: `سورة ${names[s - 1][1]}`, reciter: r.name, caption: `الآية ${ar(f)}` };
+    const token = ++loop;
+    if (bgId !== 'clip' || !clip) {
+      clip?.pause();
+      drawFrame(pv.getContext('2d'), fr, bgOf(), assets);
+      return;
+    }
+    // The words drawn once, the clip playing under them.
+    const words = document.createElement('canvas');
+    words.width = pv.width; words.height = pv.height;
+    drawFrame(words.getContext('2d'), fr, bgOf(), assets);
+    const c = pv.getContext('2d');
+    clip.play().catch(() => {});
+    const tick = () => {
+      if (token !== loop || !pv.isConnected || pv.hidden) return clip?.pause();
+      clipUnder(c, clip);
+      c.drawImage(words, 0, 0);
+      requestAnimationFrame(tick);
+    };
+    tick();
   };
-  const reset = () => { built = null; $('#out', view).hidden = true; $('#vv', view).hidden = true; pv.hidden = false; preview(); };
+  const reset = () => { built = null; $('#vv', view).pause?.(); $('#out', view).hidden = true; $('#vv', view).hidden = true; pv.hidden = false; preview(); };
   fill(); preview();
   $('#vs', view).onchange = (e) => { s = +e.target.value; f = 1; t = Math.min(7, names[s - 1][2]); fill(); reset(); };
   $('#vf', view).onchange = (e) => { f = +e.target.value; fill(); reset(); };
@@ -372,6 +428,25 @@ export async function show(view, args) {
     photo = await img(URL.createObjectURL(file));
     if (photo) { bgId = 'photo'; $$('[data-bg]', view).forEach((x) => x.classList.remove('on')); reset(); }
   };
+  $('#vcp', view).onchange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const v = document.createElement('video');
+    v.muted = true; v.loop = true; v.playsInline = true; v.preload = 'auto';
+    v.setAttribute('playsinline', '');
+    const ok = await new Promise((done) => {
+      v.onloadeddata = () => done(true);
+      v.onerror = () => done(false);
+      setTimeout(() => done(v.readyState >= 2), 8000);
+      v.src = URL.createObjectURL(file);
+    });
+    if (!ok || !v.videoWidth) { toast('تعذر قراءة هذا الفيديو، جرّب فيديو آخر'); return; }
+    if (clip) { clip.pause(); URL.revokeObjectURL(clip.src); }
+    clip = v;
+    bgId = 'clip';
+    $$('[data-bg]', view).forEach((x) => x.classList.remove('on'));
+    reset();
+  };
   $('#go', view).onclick = async () => {
     const btn = $('#go', view);
     btn.disabled = true;
@@ -379,7 +454,9 @@ export async function show(view, args) {
     const prog = (label, v) => { $('#pl', view).textContent = label; $('#pb', view).style.width = `${Math.round(v * 100)}%`; };
     try {
       const r = reciters.find((x) => x.id === rec) || reciters[0];
-      const res = await render({ s, f, t, r, m, names, bg: bgOf(), photo, prog });
+      loop++; // the preview stops drawing on the clip while it is used
+      clip?.pause();
+      const res = await render({ s, f, t, r, m, names, bg: bgOf(), photo, clip: bgId === 'clip' ? clip : null, prog });
       built = res;
       const v = $('#vv', view);
       v.src = URL.createObjectURL(res.blob);
@@ -415,7 +492,7 @@ export async function show(view, args) {
 }
 
 /// Builds the MP4 in the browser. Returns {blob, name, text, seconds}.
-async function render({ s, f, t, r, m, names, bg, photo, prog }) {
+async function render({ s, f, t, r, m, names, bg, photo, clip, prog }) {
   const first = m.surah.indexOf(s) + 1;
   const g0 = first + f - 1, g1 = first + t - 1;
   const basmala = f === 1 && s !== 1 && s !== 9;
@@ -487,7 +564,7 @@ async function render({ s, f, t, r, m, names, bg, photo, prog }) {
   try { ({ Muxer, ArrayBufferTarget } = await import('https://cdn.jsdelivr.net/npm/mp4-muxer@5.1.3/+esm')); } catch {}
   const audioOk = 'AudioEncoder' in window && (await AudioEncoder.isConfigSupported({ codec: 'mp4a.40.2', sampleRate: RATE, numberOfChannels: 2, bitrate: 128000 }).catch(() => ({}))).supported;
   if (!size[2] || !Muxer || !audioOk) {
-    const blob = await recordRealtime(cv, ctx, shots, L, R, RATE, total, prog);
+    const blob = await recordRealtime(cv, ctx, shots, L, R, RATE, total, prog, clip);
     for (const sh of shots) sh.bmp.close?.();
     const ext = blob.type.includes('mp4') ? 'mp4' : 'webm';
     return { blob, name: `alhuda_${s}_${f}_${t}.${ext}`, seconds: total / RATE, text };
@@ -519,9 +596,14 @@ async function render({ s, f, t, r, m, names, bg, photo, prog }) {
     const sec = k / FPS;
     while (si < shots.length - 1 && sec >= shots[si].end) si++;
     const into = sec - shots[si].start;
-    ctx.globalAlpha = 1;
-    ctx.drawImage(shots[si].bmp, 0, 0);
-    if (si > 0 && into < fade) { ctx.globalAlpha = 1 - into / fade; ctx.drawImage(shots[si - 1].bmp, 0, 0); ctx.globalAlpha = 1; }
+    if (clip) {
+      await seekClip(clip, sec);
+      layer(ctx, clip, shots, si, into, fade);
+    } else {
+      ctx.globalAlpha = 1;
+      ctx.drawImage(shots[si].bmp, 0, 0);
+      if (si > 0 && into < fade) { ctx.globalAlpha = 1 - into / fade; ctx.drawImage(shots[si - 1].bmp, 0, 0); ctx.globalAlpha = 1; }
+    }
     const vf = new VideoFrame(cv, { timestamp: Math.round(sec * 1e6), duration: Math.round(1e6 / FPS) });
     venc.encode(vf, { keyFrame: k % FPS === 0 });
     vf.close();
@@ -536,8 +618,19 @@ async function render({ s, f, t, r, m, names, bg, photo, prog }) {
   return { blob, name: `alhuda_${s}_${f}_${t}.mp4`, seconds: total / RATE, text };
 }
 
+/// Over a clip: its picture, then the words, the old ones fading into the new.
+function layer(ctx, clip, shots, si, into, fade) {
+  clipUnder(ctx, clip);
+  if (si > 0 && into < fade) {
+    const k = into / fade;
+    ctx.globalAlpha = 1 - k; ctx.drawImage(shots[si - 1].bmp, 0, 0);
+    ctx.globalAlpha = k; ctx.drawImage(shots[si].bmp, 0, 0);
+  } else ctx.drawImage(shots[si].bmp, 0, 0);
+  ctx.globalAlpha = 1;
+}
+
 /// The slower way: the canvas and the sound are played and recorded live.
-async function recordRealtime(cv, ctx, shots, L, R, RATE, total, prog) {
+async function recordRealtime(cv, ctx, shots, L, R, RATE, total, prog, clip) {
   if (!('MediaRecorder' in window) || !cv.captureStream) throw new Error('codecs');
   const type = ['video/mp4;codecs=avc1,mp4a.40.2', 'video/mp4', 'video/webm;codecs=vp9,opus', 'video/webm'].find((x) => MediaRecorder.isTypeSupported(x));
   if (!type) throw new Error('codecs');
@@ -554,6 +647,7 @@ async function recordRealtime(cv, ctx, shots, L, R, RATE, total, prog) {
   rec.ondataavailable = (e) => e.data.size && chunks.push(e.data);
   const done = new Promise((ok) => { rec.onstop = ok; });
   const dur = total / RATE;
+  if (clip) { clip.currentTime = 0; clip.loop = true; await clip.play().catch(() => {}); }
   rec.start(500);
   const t0 = ac.currentTime + 0.05;
   src.start(t0);
@@ -564,15 +658,19 @@ async function recordRealtime(cv, ctx, shots, L, R, RATE, total, prog) {
       if (sec >= dur) return ok();
       while (si < shots.length - 1 && sec >= shots[si].end) si++;
       const into = sec - shots[si].start;
-      ctx.globalAlpha = 1;
-      ctx.drawImage(shots[si].bmp, 0, 0);
-      if (si > 0 && into < 0.35) { ctx.globalAlpha = 1 - into / 0.35; ctx.drawImage(shots[si - 1].bmp, 0, 0); ctx.globalAlpha = 1; }
+      if (clip) layer(ctx, clip, shots, si, Math.max(0, into), 0.35);
+      else {
+        ctx.globalAlpha = 1;
+        ctx.drawImage(shots[si].bmp, 0, 0);
+        if (si > 0 && into < 0.35) { ctx.globalAlpha = 1 - into / 0.35; ctx.drawImage(shots[si - 1].bmp, 0, 0); ctx.globalAlpha = 1; }
+      }
       prog('تسجيل الفيديو', 0.35 + 0.65 * Math.max(0, sec) / dur);
       requestAnimationFrame(tick);
     };
     tick();
   });
   rec.stop();
+  clip?.pause();
   await done;
   ac.close();
   return new Blob(chunks, { type: type.split(';')[0] });

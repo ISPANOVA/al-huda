@@ -120,12 +120,38 @@ class AyahVideo(private val onProgress: (Double) -> Unit) {
                 false
             }
         }
+
+        /** The clip's first picture as a JPEG at [out], for the preview; false when it cannot be read. */
+        fun thumbnail(path: String, out: String): Boolean = try {
+            val r = android.media.MediaMetadataRetriever()
+            r.setDataSource(path)
+            val bmp = r.getFrameAtTime(0, android.media.MediaMetadataRetriever.OPTION_CLOSEST_SYNC)
+            r.release()
+            if (bmp == null) false else {
+                java.io.FileOutputStream(out).use { bmp.compress(android.graphics.Bitmap.CompressFormat.JPEG, 88, it) }
+                bmp.recycle()
+                true
+            }
+        } catch (e: Exception) {
+            false
+        }
     }
 
     // ------------------------------------------------------------ render ---
 
     /** Writes the MP4 to [out]; returns its length in milliseconds. */
-    fun render(segments: List<Segment>, width: Int, height: Int, fps: Int, out: String): Long {
+    fun render(segments: List<Segment>, width: Int, height: Int, fps: Int, out: String, background: String? = null): Long {
+        // A clip from the phone behind the words: opened first so a file it
+        // cannot read fails before any work.
+        val clip = background?.let { BackgroundClip(it, width, height) }
+        try {
+            return renderInto(segments, width, height, fps, out, clip)
+        } finally {
+            clip?.release()
+        }
+    }
+
+    private fun renderInto(segments: List<Segment>, width: Int, height: Int, fps: Int, out: String, clip: BackgroundClip?): Long {
         // 1. The sound: every recitation decoded, brought to 44.1 kHz stereo
         //    and encoded to AAC. Each segment's exact length comes from it.
         val audio = AudioTrackBuilder()
@@ -213,23 +239,42 @@ class AyahVideo(private val onProgress: (Double) -> Unit) {
         val fade = 350_000L // a soft crossfade between frames
         val frames = ((totalUs + frameUs - 1) / frameUs).toInt().coerceAtLeast(1)
         val cache = LinkedHashMap<String, ByteArray>()
+        val overlays = LinkedHashMap<String, Overlay>()
         val mixed = ByteArray(width * height * 3 / 2)
+        val composed = ByteArray(width * height * 3 / 2)
+        val composedPrev = if (clip != null) ByteArray(width * height * 3 / 2) else composed
         fun yuv(path: String): ByteArray = cache.getOrPut(path) {
             if (cache.size > 3) cache.remove(cache.keys.first())
             toI420(path, width, height)
+        }
+        fun overlay(path: String): Overlay = overlays.getOrPut(path) {
+            if (overlays.size > 2) overlays.remove(overlays.keys.first())
+            Overlay(path, width, height)
         }
         var span = 0
         for (f in 0 until frames) {
             val pts = f * frameUs
             while (span < spans.size - 1 && pts >= spans[span].endUs) span++
-            val cur = yuv(spans[span].image)
             val into = pts - spans[span].startUs
-            val frame = if (span > 0 && into < fade && spans[span - 1].image != spans[span].image) {
-                val prev = yuv(spans[span - 1].image)
-                val k = (into * 256 / fade).toInt().coerceIn(0, 256)
-                for (i in mixed.indices) mixed[i] = (((prev[i].toInt() and 255) * (256 - k) + (cur[i].toInt() and 255) * k) shr 8).toByte()
-                mixed
-            } else cur
+            val fading = span > 0 && into < fade && spans[span - 1].image != spans[span].image
+            val k = (into * 256 / fade).toInt().coerceIn(0, 256)
+            val frame = if (clip != null) {
+                // The clip's frame at this moment, the words drawn over it.
+                clip.frameAt(pts)
+                overlay(spans[span].image).over(clip, composed)
+                if (fading) {
+                    overlay(spans[span - 1].image).over(clip, composedPrev)
+                    for (i in mixed.indices) mixed[i] = (((composedPrev[i].toInt() and 255) * (256 - k) + (composed[i].toInt() and 255) * k) shr 8).toByte()
+                    mixed
+                } else composed
+            } else {
+                val cur = yuv(spans[span].image)
+                if (fading) {
+                    val prev = yuv(spans[span - 1].image)
+                    for (i in mixed.indices) mixed[i] = (((prev[i].toInt() and 255) * (256 - k) + (cur[i].toInt() and 255) * k) shr 8).toByte()
+                    mixed
+                } else cur
+            }
             var idx: Int
             do {
                 idx = encoder.dequeueInputBuffer(TIMEOUT)
@@ -320,6 +365,278 @@ class AyahVideo(private val onProgress: (Double) -> Unit) {
                 val s = offset + row * w
                 for (col in 0 until w) buf.put(base + col * ps, src[s + col])
             }
+        }
+    }
+
+    // -------------------------------------------------- background clip ---
+
+    /**
+     * A frame drawn by Flutter with a see-through background (the words and a
+     * dark veil), kept as luma/chroma already multiplied by its alpha so laying
+     * it over the clip is one multiply-add a pixel.
+     */
+    private class Overlay(path: String, w: Int, h: Int) {
+        val y = ShortArray(w * h) // alpha * Y (0..255*256)
+        val ya = ShortArray(w * h) // 256 - alpha, what is left of the clip
+        val u = ShortArray(w * h / 4)
+        val v = ShortArray(w * h / 4)
+        val ca = ShortArray(w * h / 4)
+
+        init {
+            var bmp = BitmapFactory.decodeFile(path) ?: throw IllegalStateException("frame not readable: $path")
+            if (bmp.width != w || bmp.height != h) bmp = android.graphics.Bitmap.createScaledBitmap(bmp, w, h, true)
+            val px = IntArray(w * h)
+            bmp.getPixels(px, 0, w, 0, 0, w, h) // not premultiplied
+            bmp.recycle()
+            for (i in px.indices) {
+                val c = px[i]
+                val a = ((c ushr 24) and 255).let { it + (it shr 7) } // 0..256
+                val r = (c shr 16) and 255; val g = (c shr 8) and 255; val b = c and 255
+                val luma = ((47 * r + 157 * g + 16 * b + 128) shr 8) + 16
+                y[i] = (luma * a).toShort()
+                ya[i] = (256 - a).toShort()
+            }
+            val cw = w / 2; val ch = h / 2
+            for (yy in 0 until ch) for (xx in 0 until cw) {
+                var r = 0; var g = 0; var b = 0; var a = 0
+                for (dy in 0..1) for (dx in 0..1) {
+                    val c = px[(2 * yy + dy) * w + 2 * xx + dx]
+                    val al = (c ushr 24) and 255
+                    r += ((c shr 16) and 255) * al; g += ((c shr 8) and 255) * al; b += (c and 255) * al; a += al
+                }
+                val o = yy * cw + xx
+                val a256 = (a / 4).let { it + (it shr 7) }
+                if (a == 0) {
+                    u[o] = 0; v[o] = 0; ca[o] = 256
+                    continue
+                }
+                r /= a; g /= a; b /= a // the colour where it is drawn
+                val uu = ((-26 * r - 87 * g + 112 * b + 128) shr 8) + 128
+                val vv = ((112 * r - 102 * g - 10 * b + 128) shr 8) + 128
+                u[o] = (uu * a256).toShort(); v[o] = (vv * a256).toShort(); ca[o] = (256 - a256).toShort()
+            }
+        }
+
+        /** This frame over the clip's current picture, as I420 into [out]. */
+        fun over(clip: BackgroundClip, out: ByteArray) {
+            val by = clip.y; val bu = clip.u; val bv = clip.v
+            for (i in by.indices) {
+                out[i] = (((y[i].toInt() and 0xFFFF) + (by[i].toInt() and 255) * ya[i]) shr 8).toByte()
+            }
+            val n = bu.size
+            val uOff = by.size; val vOff = uOff + n
+            for (i in 0 until n) {
+                val left = ca[i].toInt()
+                out[uOff + i] = (((u[i].toInt() and 0xFFFF) + (bu[i].toInt() and 255) * left) shr 8).toByte()
+                out[vOff + i] = (((v[i].toInt() and 0xFFFF) + (bv[i].toInt() and 255) * left) shr 8).toByte()
+            }
+        }
+    }
+
+    /**
+     * The user's own video behind the words: decoded frame by frame, scaled to
+     * cover the story (turned the way the phone filmed it) and looped when the
+     * recitation is longer than it. Silent: only the recitation is heard.
+     */
+    class BackgroundClip(path: String, private val w: Int, private val h: Int) {
+        val y = ByteArray(w * h)
+        val u = ByteArray(w * h / 4)
+        val v = ByteArray(w * h / 4)
+
+        private val extractor = MediaExtractor()
+        private val decoder: MediaCodec
+        private val rotation: Int
+        private val frameUs: Long
+        private val info = MediaCodec.BufferInfo()
+        private var inputDone = false
+        private var have = false
+        private var pending = -1
+        private var pendingPts = 0L
+        private var lastPts = 0L
+        private var loopOffset = 0L
+        private var decodedThisLoop = 0
+        private var finished = false // nothing more can be decoded: the last picture stays
+
+        // Where each output pixel reads from, split per column and per row.
+        private var mapKey = ""
+        private var colY = IntArray(0); private var rowY = IntArray(0)
+        private var colC = IntArray(0); private var rowC = IntArray(0)
+        private var py = ByteArray(0); private var pu = ByteArray(0); private var pv = ByteArray(0)
+
+        init {
+            extractor.setDataSource(path)
+            val track = (0 until extractor.trackCount).firstOrNull {
+                extractor.getTrackFormat(it).getString(MediaFormat.KEY_MIME)?.startsWith("video/") == true
+            } ?: throw IllegalStateException("no video track")
+            extractor.selectTrack(track)
+            val fmt = extractor.getTrackFormat(track)
+            rotation = readRotation(path, fmt)
+            val rate = try {
+                if (fmt.containsKey(MediaFormat.KEY_FRAME_RATE)) fmt.getInteger(MediaFormat.KEY_FRAME_RATE) else 30
+            } catch (e: Exception) {
+                try { fmt.getFloat(MediaFormat.KEY_FRAME_RATE).toInt() } catch (e2: Exception) { 30 }
+            }
+            frameUs = 1_000_000L / rate.coerceIn(1, 120)
+            decoder = MediaCodec.createDecoderByType(fmt.getString(MediaFormat.KEY_MIME)!!)
+            fmt.setInteger(MediaFormat.KEY_COLOR_FORMAT, MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420Flexible)
+            decoder.configure(fmt, null, null, 0)
+            decoder.start()
+            // Darkness until the first frame arrives (and the first frame now,
+            // so an unreadable clip fails at once).
+            java.util.Arrays.fill(y, 16.toByte()); java.util.Arrays.fill(u, 128.toByte()); java.util.Arrays.fill(v, 128.toByte())
+            frameAt(0)
+        }
+
+        private fun readRotation(path: String, fmt: MediaFormat): Int {
+            if (fmt.containsKey("rotation-degrees")) return ((fmt.getInteger("rotation-degrees") % 360) + 360) % 360
+            return try {
+                val r = android.media.MediaMetadataRetriever()
+                r.setDataSource(path)
+                val d = r.extractMetadata(android.media.MediaMetadataRetriever.METADATA_KEY_VIDEO_ROTATION)?.toIntOrNull() ?: 0
+                r.release()
+                ((d % 360) + 360) % 360
+            } catch (e: Exception) {
+                0
+            }
+        }
+
+        /** Brings [y]/[u]/[v] to the clip's picture at [ptsUs] of the video. */
+        fun frameAt(ptsUs: Long) {
+            if (finished) return
+            var idle = 0
+            while (true) {
+                if (pending >= 0) {
+                    if (!have || pendingPts + loopOffset <= ptsUs) {
+                        // A picture the next one replaces before it is shown is not copied.
+                        val shown = !have || pendingPts + loopOffset + frameUs > ptsUs
+                        if (shown) decoder.getOutputImage(pending)?.let { take(it) }
+                        decoder.releaseOutputBuffer(pending, false)
+                        pending = -1
+                        have = true
+                        continue
+                    }
+                    return
+                }
+                if (!inputDone) {
+                    val inIdx = decoder.dequeueInputBuffer(0)
+                    if (inIdx >= 0) {
+                        val buf = decoder.getInputBuffer(inIdx)!!
+                        val n = extractor.readSampleData(buf, 0)
+                        if (n < 0) {
+                            decoder.queueInputBuffer(inIdx, 0, 0, 0, MediaCodec.BUFFER_FLAG_END_OF_STREAM)
+                            inputDone = true
+                        } else {
+                            decoder.queueInputBuffer(inIdx, 0, n, extractor.sampleTime, 0)
+                            extractor.advance()
+                        }
+                    }
+                }
+                val idx = decoder.dequeueOutputBuffer(info, TIMEOUT)
+                if (idx >= 0) {
+                    idle = 0
+                    if (info.flags and MediaCodec.BUFFER_FLAG_END_OF_STREAM != 0) {
+                        decoder.releaseOutputBuffer(idx, false)
+                        if (decodedThisLoop == 0) {
+                            if (!have) throw IllegalStateException("clip has no frames")
+                            finished = true
+                            return // nothing more to show: keep the last picture
+                        }
+                        // Again from the start, after the last frame's time.
+                        loopOffset += lastPts + frameUs
+                        lastPts = 0
+                        decodedThisLoop = 0
+                        extractor.seekTo(0, MediaExtractor.SEEK_TO_CLOSEST_SYNC)
+                        decoder.flush()
+                        inputDone = false
+                        continue
+                    }
+                    if (info.size <= 0) {
+                        decoder.releaseOutputBuffer(idx, false)
+                        continue
+                    }
+                    pending = idx
+                    pendingPts = info.presentationTimeUs
+                    lastPts = maxOf(lastPts, pendingPts)
+                    decodedThisLoop++
+                } else if (idx == MediaCodec.INFO_TRY_AGAIN_LATER) {
+                    if (++idle > 300) {
+                        if (have) { finished = true; return }
+                        throw IllegalStateException("clip decoder stalled")
+                    }
+                }
+            }
+        }
+
+        /** Copies one decoded picture, cropped to fill the story, into [y]/[u]/[v]. */
+        private fun take(image: Image) {
+            val crop = image.cropRect
+            val planes = image.planes
+            val key = "${crop.left},${crop.top},${crop.width()},${crop.height()},${planes[0].rowStride},${planes[0].pixelStride}," +
+                "${planes[1].rowStride},${planes[1].pixelStride}"
+            if (key != mapKey) buildMaps(crop.left, crop.top, crop.width(), crop.height(), planes)
+            mapKey = key
+            py = copy(planes[0].buffer, py)
+            pu = copy(planes[1].buffer, pu)
+            pv = copy(planes[2].buffer, pv)
+            val yLimit = py.size - 1
+            for (yy in 0 until h) {
+                val r = rowY[yy]; val o = yy * w
+                for (xx in 0 until w) y[o + xx] = py[minOf(r + colY[xx], yLimit)]
+            }
+            val cw = w / 2; val ch = h / 2
+            val uLimit = pu.size - 1; val vLimit = pv.size - 1
+            for (yy in 0 until ch) {
+                val r = rowC[yy]; val o = yy * cw
+                for (xx in 0 until cw) {
+                    val s = r + colC[xx]
+                    u[o + xx] = pu[minOf(s, uLimit)]
+                    v[o + xx] = pv[minOf(s, vLimit)]
+                }
+            }
+        }
+
+        private fun copy(buf: ByteBuffer, into: ByteArray): ByteArray {
+            val b = buf.duplicate()
+            b.position(0)
+            val n = b.remaining()
+            val arr = if (into.size == n) into else ByteArray(n)
+            b.get(arr, 0, n)
+            return arr
+        }
+
+        private fun buildMaps(left: Int, top: Int, cw: Int, ch: Int, planes: Array<Image.Plane>) {
+            val turned = rotation == 90 || rotation == 270
+            val dispW = if (turned) ch else cw
+            val dispH = if (turned) cw else ch
+            val scale = maxOf(w.toDouble() / dispW, h.toDouble() / dispH)
+            val x0 = (dispW - w / scale) / 2
+            val y0 = (dispH - h / scale) / 2
+            fun dx(x: Int) = (x0 + (x + 0.5) / scale).toInt().coerceIn(0, dispW - 1)
+            fun dy(y: Int) = (y0 + (y + 0.5) / scale).toInt().coerceIn(0, dispH - 1)
+            // Display point -> stored point, by how the phone was held.
+            fun src(px: Int, py: Int): IntArray = when (rotation) {
+                90 -> intArrayOf(py, ch - 1 - px)
+                180 -> intArrayOf(cw - 1 - px, ch - 1 - py)
+                270 -> intArrayOf(cw - 1 - py, px)
+                else -> intArrayOf(px, py)
+            }
+            val rsY = planes[0].rowStride; val psY = planes[0].pixelStride
+            val rsC = planes[1].rowStride; val psC = planes[1].pixelStride
+            fun idxY(px: Int, py: Int): Int { val s = src(px, py); return (top + s[1]) * rsY + (left + s[0]) * psY }
+            fun idxC(px: Int, py: Int): Int { val s = src(px, py); return ((top + s[1]) / 2) * rsC + ((left + s[0]) / 2) * psC }
+            // Each stored coordinate follows one display coordinate only, so a
+            // pixel's index is a column part plus a row part.
+            val y00 = idxY(0, 0); val c00 = idxC(0, 0)
+            colY = IntArray(w) { idxY(dx(it), 0) }
+            rowY = IntArray(h) { idxY(0, dy(it)) - y00 }
+            colC = IntArray(w / 2) { idxC(dx(2 * it), 0) }
+            rowC = IntArray(h / 2) { idxC(0, dy(2 * it)) - c00 }
+        }
+
+        fun release() {
+            try { decoder.stop() } catch (e: Exception) {}
+            try { decoder.release() } catch (e: Exception) {}
+            try { extractor.release() } catch (e: Exception) {}
         }
     }
 
