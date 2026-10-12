@@ -46,7 +46,8 @@ Future<void> playStation(BuildContext context, MediaRadio radio) async {
     cubit.togglePlay();
     return;
   }
-  final ok = await cubit.playRadio(radio.urls, radio.name, artist: radio.subtitle ?? 'بث مباشر على مدار الساعة');
+  final ok = await cubit.playRadio(radio.urls, radio.name,
+      artist: radio.subtitle ?? 'بث مباشر على مدار الساعة', reciter: radio.reciterKey);
   if (!ok && context.mounted) showGlassSnack(context, 'تعذر تشغيل ${radio.name} الآن، حاول مرة أخرى');
 }
 

@@ -35,7 +35,7 @@ def background():
 
 # Photos whose cut-out is not clean (checked by eye): the photo itself fades
 # into the background instead, from an oval around the face.
-BLEND = {"afs", "bader", "hthfi", "husr", "jbrl", "maher", "minsh", "mustafa", "shur"}
+BLEND = {"afs", "bader", "husr", "jbrl", "maher", "minsh", "mustafa", "shur"}
 
 
 def blended(base, img):
