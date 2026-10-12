@@ -402,6 +402,18 @@ body.in-mushaf .player { bottom: calc(var(--safe-b) + 8px); }
 .today a.next small { color: rgba(26,18,5,.75); }
 .banner-fri { display: flex; flex-direction: column; margin-top: 12px; border-color: rgba(255,203,107,.4); }
 .banner-fri small { color: var(--muted); }
+/* رمضان on the home: sunset colours, the countdown, the wird and the imsakiya. */
+.ramadan { margin-top: 12px; color: #fff; border: 0; background: linear-gradient(135deg, #2B1B4A, #6B3A5E 55%, #C9824A); }
+.ramadan .row { gap: 10px; align-items: center; }
+.ramadan .rmoon svg { width: 30px; height: 30px; color: #FFE3A3; }
+.ramadan b { display: block; font-size: 17px; }
+.ramadan small { color: rgba(255,255,255,.88); font-weight: 700; }
+.rchips { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+.rchips:empty { display: none; }
+.rchips span { padding: 4px 10px; border-radius: 14px; font-size: 12px; font-weight: 800; background: rgba(255,255,255,.14); border: 1px solid rgba(255,255,255,.2); }
+.ractions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+.ractions a { display: flex; align-items: center; justify-content: center; gap: 6px; padding: 10px 8px; border-radius: 16px; background: rgba(255,255,255,.16); color: #fff; font-size: 12.5px; font-weight: 800; text-decoration: none; text-align: center; }
+.ractions a svg { width: 18px; height: 18px; color: #FFE3A3; flex: none; }
 .athkar-now { display: flex; align-items: center; gap: 12px; margin-top: 12px; }
 .athkar-now .grow { display: flex; flex-direction: column; } .athkar-now .ticon { width: 44px; height: 44px; }
 .ayah-day { margin: 0; }
@@ -562,3 +574,15 @@ i[class^=tj] { font-style: normal; }
 .nextp .nring { width: 64px; height: 64px; }
 @media (min-width: 600px) { .sky { border: 1px solid rgba(255,255,255,.06); } .skyart { height: 250px; } .sky-top { top: 16px; } .sky-date { top: 76px; } }
 @media (min-width: 1000px) { .skyart { height: 280px; } .sky-top h1 { font-size: 38px; } .sky-date { top: 88px; } }
+
+/* الختمة الجماعية: the 30 parts. */
+.juzgrid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+@media (min-width: 700px) { .juzgrid { grid-template-columns: repeat(6, 1fr); } }
+.juz { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 10px 4px; border-radius: 16px; border: 1px solid var(--line, rgba(255,255,255,.12));
+  background: var(--card, rgba(255,255,255,.04)); color: inherit; font: inherit; cursor: pointer; min-width: 0; }
+.juz b { font-family: ReemKufi, Tajawal; font-size: 20px; color: var(--gold); }
+.juz small { font-size: 11px; color: var(--muted); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.juz.taken { background: rgba(226,192,116,.10); border-color: rgba(226,192,116,.35); }
+.juz.done { background: linear-gradient(135deg, #0E6B4E, #14916A); border-color: transparent; }
+.juz.done b, .juz.done small { color: #fff; }
+.juz.mine { box-shadow: 0 0 0 2px var(--gold) inset; }

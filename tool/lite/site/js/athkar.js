@@ -2,6 +2,7 @@
 import { $, $$, ar, esc, icon, store, data, top, today, toast } from './app.js';
 import { player, ayahItems } from './player.js';
 import { globalAyah } from './page.js';
+import { shareChoice } from './cards.js';
 
 const TONES = ['rose', 'amber', 'sapphire', 'emerald', 'amethyst', 'teal', 'sky', 'coral', 'gold', 'slate'];
 const key = () => 'ath_' + today();
@@ -50,7 +51,8 @@ function showCategory(view, cat, i) {
         ${t.virtue ? `<p class="small gold" style="margin:10px 0 0">${esc(t.virtue)}</p>` : ''}
         <p class="small muted" style="margin:6px 0 0">${esc(t.source || '')}</p>
         <div class="count">
-          ${t.quran ? `<button class="chip" data-play="${t.quran.join(',')}">${icon('play')} استماع</button>` : '<span></span>'}
+          <span class="row" style="gap:6px">${t.quran ? `<button class="chip" data-play="${t.quran.join(',')}">${icon('play')} استماع</button>` : ''}
+          <button class="ibtn" data-sh aria-label="مشاركة">${icon('share')}</button></span>
           <button class="counter" data-c>${''}</button>
         </div>
       </div>`).join('')}</div>`;
@@ -67,6 +69,12 @@ function showCategory(view, cat, i) {
   };
   paint();
   $('#list', view).onclick = async (e) => {
+    const sh = e.target.closest('[data-sh]');
+    if (sh) {
+      const t = cat.items.find((x) => x.id === sh.closest('.thikr').dataset.id);
+      shareChoice({ title: cat.title, body: t.text, source: t.source, quran: !!t.quran }, `${t.text}\n[${t.source || ''}]`);
+      return;
+    }
     const pl = e.target.closest('[data-play]');
     if (pl) {
       const [s, f, t] = pl.dataset.play.split(',').map(Number);

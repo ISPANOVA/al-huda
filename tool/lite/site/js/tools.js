@@ -3,12 +3,8 @@
 import { $, $$, ar, esc, icon, store, data, meta, surahs, top, toast, sheet, afterSheet } from './app.js';
 import { hijriToday } from './prayerlib.js';
 import { ayahText } from './page.js';
+import { shareChoice } from './cards.js';
 
-const share = (t) => {
-  if (navigator.share) navigator.share({ text: t }).catch(() => {});
-  else navigator.clipboard?.writeText(t).then(() => toast('نُسخ النص'));
-};
-const LINK = 'https://al-huda.xyz';
 
 export async function show(view, args, name) {
   if (name === 'asma') return asma(view);
@@ -41,7 +37,7 @@ async function asma(view) {
         ${i < names.length - 1 ? `<button class="chip" data-go="${i + 1}">التالي</button>` : ''}
         <button class="btn" id="sh">${icon('share')} مشاركة</button>
         ${i > 0 ? `<button class="chip" data-go="${i - 1}">السابق</button>` : ''}</div></div>`, (body) => {
-      $('#sh', body).onclick = () => share(`${n}: ${m}\n\n— الهدى ${LINK}`);
+      $('#sh', body).onclick = () => shareChoice({ title: 'من أسماء الله الحسنى', big: n, body: m }, `${n}: ${m}`);
       body.onclick = (e) => { const g = e.target.closest('[data-go]'); if (g) open(+g.dataset.go); };
     });
   };
@@ -68,7 +64,7 @@ async function nawawi(view, args) {
         ${i < list.length - 1 ? `<a class="chip" href="#/nawawi/${n + 1}">الحديث ${ar(n + 1)}</a>` : ''}</div>`;
     const ref = `${x}\n\n(الأربعون النووية، الحديث ${n})`;
     $('#cp', view).onclick = () => navigator.clipboard?.writeText(ref).then(() => toast('نُسخ الحديث'));
-    $('#sh', view).onclick = () => share(`${ref}\n— الهدى ${LINK}`);
+    $('#sh', view).onclick = () => shareChoice({ title: `الأربعون النووية • ${ar(n)}`, body: x, source: t }, ref);
     const size = (d) => { fs = Math.max(15, Math.min(32, fs + d)); store.set('nawawiFs', fs); $('#hx', view).style.fontSize = fs + 'px'; };
     $('#fm', view).onclick = () => size(-2);
     $('#fp', view).onclick = () => size(2);

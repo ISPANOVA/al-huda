@@ -14,6 +14,7 @@ import '../../../audio/presentation/widgets/mini_player.dart';
 import '../../../quran/presentation/mushaf/mushaf_reader_page.dart';
 import '../../domain/khatmah_plan.dart';
 import '../cubit/khatmah_cubit.dart';
+import '../../group/group_khatmah.dart';
 
 String describeGlobal(int global) {
   final r = SurahMetadata.fromGlobal(global);
@@ -32,6 +33,13 @@ class KhatmahPage extends StatelessWidget {
       subtitle: 'ورد وتذكير',
       icon: Icons.flag_rounded,
       tone: Tone.gold,
+      actions: [
+        IconButton(
+          tooltip: 'الختمة الجماعية',
+          icon: const Icon(Icons.groups_rounded),
+          onPressed: () => Navigator.of(context).push(GroupKhatmahListPage.route()),
+        ),
+      ],
       bottom: const MiniPlayer(),
       body: BlocConsumer<KhatmahCubit, KhatmahState>(
         listenWhen: (p, c) => c.justFinished && !p.justFinished,

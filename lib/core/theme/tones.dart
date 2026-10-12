@@ -61,7 +61,7 @@ class Tone {
         'prayer' || 'calendar' || 'imsakiya' => sapphire,
         'athkar' || 'virtues' => rose,
         'media' || 'player' || 'downloads' => amethyst,
-        'tasbeeh' || 'more' => teal,
+        'tasbeeh' || 'more' || 'group' => teal,
         'qibla' || 'stats' => amber,
         'hifz' || 'review' || 'tasmee' => coral,
         'ruqyah' || 'duas' => sky,

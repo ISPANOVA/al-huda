@@ -1,12 +1,16 @@
 // الرئيسية: next prayer, continue reading, the daily wird, quick actions and
 // the ayah of the day.
 import { $, ar, esc, icon, store, meta, surahs, today, toast, core, data } from './app.js';
-import { NAMES, location, nextPrayer, timesFor, hm, countdown, hijriToday, HMONTHS } from './prayerlib.js';
+import { NAMES, location, nextPrayer, timesFor, hm, countdown, hijriToday, HMONTHS, ramadanDays } from './prayerlib.js';
 import { skyState, drawSky, GREETING } from './sky.js';
 import { ayahText } from './page.js';
 import { player, ayahItems } from './player.js';
 
-let timer;
+let timer, rTimer;
+
+/// The first page of each juz (the Madani Mushaf), for the Ramadan wird.
+const JUZ_PAGES = [1, 22, 42, 62, 82, 102, 121, 142, 162, 182, 201, 222, 242, 262, 282, 302, 322, 342, 362, 382, 402, 422, 442, 462, 482, 502, 522, 542, 562, 582];
+const JUZ = ['الأول', 'الثاني', 'الثالث', 'الرابع', 'الخامس', 'السادس', 'السابع', 'الثامن', 'التاسع', 'العاشر', 'الحادي عشر', 'الثاني عشر', 'الثالث عشر', 'الرابع عشر', 'الخامس عشر', 'السادس عشر', 'السابع عشر', 'الثامن عشر', 'التاسع عشر', 'العشرون', 'الحادي والعشرون', 'الثاني والعشرون', 'الثالث والعشرون', 'الرابع والعشرون', 'الخامس والعشرون', 'السادس والعشرون', 'السابع والعشرون', 'الثامن والعشرون', 'التاسع والعشرون', 'الثلاثون'];
 
 export function streak() {
   const log = store.get('read', {});
@@ -109,7 +113,11 @@ export async function show(view) {
   <p class="dedication">صدقة جارية عن روح سمير حجازي، وعن سعد صالح، وعن جميع المسلمين</p>`;
 
   $('#lis')?.addEventListener('click', () => player.resume());
-  hijriToday().then((h) => { $('#hdate').textContent = `${ar(h.d)} ${HMONTHS[h.m - 1]} ${ar(h.y)} هـ`; }).catch(() => {});
+  hijriToday().then((h) => {
+    $('#hdate').textContent = `${ar(h.d)} ${HMONTHS[h.m - 1]} ${ar(h.y)} هـ`;
+    if (h.m === 9) ramadanCard(view, h.d);
+    else if (h.m === 8 && h.d >= 19) ramadanSoon(view);
+  }).catch(() => {});
   paintSky();
   addEventListener('resize', onSkyResize);
   tickPrayer();
@@ -195,6 +203,45 @@ async function ayahOfDay(m, names) {
   }
 }
 
+/// رمضان: the day, the countdown to iftar or imsak, the juz of the day and the imsakiya.
+async function ramadanCard(view, day) {
+  const box = $('#banners', view);
+  if (!box) return;
+  const d = Math.max(1, Math.min(30, day));
+  box.insertAdjacentHTML('afterbegin', `<div class="card ramadan">
+    <div class="row"><span class="rmoon">${icon('moon')}</span><span class="grow"><b>رمضان كريم • اليوم ${ar(d)}</b><small id="rline">حدّد موقعك لعدّاد الإفطار والسحور</small></span></div>
+    <div class="rchips" id="rchips"></div>
+    <div class="ractions"><a href="#/mushaf/${JUZ_PAGES[d - 1]}">${icon('book')} ورد اليوم: الجزء ${JUZ[d - 1]}</a><a href="#/prayer/month">${icon('cal')} الإمساكية</a></div></div>`);
+  if (!location()) return;
+  const now0 = new Date();
+  const [t, t2] = await Promise.all([timesFor(now0), timesFor(new Date(now0.getFullYear(), now0.getMonth(), now0.getDate() + 1))]);
+  const tick = () => {
+    const line = $('#rline', view);
+    if (!line) return clearInterval(rTimer);
+    const now = new Date();
+    const fajr = t[0], maghrib = t[4];
+    const nextFajr = now < fajr ? fajr : t2[0];
+    const imsak = new Date(nextFajr - 600000);
+    const left = (to) => { const m = Math.max(0, Math.round((to - new Date()) / 60000)); const hh = Math.floor(m / 60); return hh ? `${ar(hh)} س ${ar(m % 60)} د` : `${ar(m)} د`; };
+    line.textContent = now > fajr && now < maghrib ? `باقٍ على الإفطار ${left(maghrib)}`
+      : now < imsak ? `باقٍ على الإمساك ${left(imsak)}` : `حان الإمساك • الفجر ${hm(nextFajr)}`;
+    $('#rchips', view).innerHTML = `<span>الإمساك ${hm(imsak)}</span><span>الإفطار ${hm(maghrib)}</span>`;
+  };
+  tick();
+  clearInterval(rTimer);
+  rTimer = setInterval(tick, 20000);
+}
+
+/// The last days of Sha'ban: Ramadan is near.
+async function ramadanSoon(view) {
+  const r = await ramadanDays().catch(() => null);
+  const box = $('#banners', view);
+  if (!r || !box) return;
+  const n = Math.round((r.days[0] - new Date(new Date().toDateString())) / 864e5);
+  if (n < 1 || n > 10) return;
+  box.insertAdjacentHTML('afterbegin', `<a class="card banner-fri" href="#/prayer/month"><b>اقترب رمضان</b><small>${n === 1 ? 'رمضان غدًا بإذن الله' : `باقٍ ${ar(n)} ${n <= 10 ? 'أيام' : 'يومًا'}`} • الإمساكية جاهزة لمدينتك</small></a>`);
+}
+
 /// «غدًا يوم عرفة / الأيام البيض…»: a banner on the evening before a recommended fast.
 async function tomorrowFast(view) {
   try {
@@ -209,5 +256,5 @@ async function tomorrowFast(view) {
   } catch {}
 }
 
-export function leave() { clearInterval(timer); removeEventListener('resize', onSkyResize); }
+export function leave() { clearInterval(timer); clearInterval(rTimer); removeEventListener('resize', onSkyResize); }
 function onSkyResize() { paintSky(); }

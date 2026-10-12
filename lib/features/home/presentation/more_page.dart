@@ -13,6 +13,7 @@ import '../../hifz/hifz_review_page.dart';
 import '../../audio/presentation/pages/downloads_page.dart';
 import '../../audio/presentation/pages/memorization_page.dart';
 import '../../audio/presentation/pages/player_page.dart';
+import '../../khatmah/group/group_khatmah.dart';
 import '../../khatmah/presentation/pages/khatmah_page.dart';
 import '../../qibla/presentation/pages/qibla_page.dart';
 import '../../settings/presentation/pages/settings_page.dart';
@@ -56,6 +57,7 @@ class MorePage extends StatelessWidget {
           (id: 'review', icon: Icons.psychology_rounded, title: 'مراجعة الحفظ', subtitle: 'اختبر حفظك بإخفاء الكلمات', route: HifzReviewPage.route),
           (id: 'similar', icon: Icons.compare_arrows_rounded, title: 'المتشابهات اللفظية', subtitle: 'آيات تتشابه ألفاظها لتثبيت الحفظ', route: SimilarAyahsPage.route),
           (id: 'calendar', icon: Icons.calendar_month_rounded, title: 'التقويم الهجري', subtitle: 'المناسبات وتذكير الصيام', route: CalendarPage.route),
+          (id: 'group', icon: Icons.groups_rounded, title: 'الختمة الجماعية', subtitle: 'اختموا القرآن معًا برابط', route: GroupKhatmahListPage.route),
           (id: 'imsakiya', icon: Icons.brightness_3_rounded, title: 'إمساكية رمضان', subtitle: 'السحور والإفطار ومتابعة الصيام', route: ImsakiyaPage.route),
         ]
       ),

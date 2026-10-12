@@ -4,6 +4,7 @@ import 'package:hijri/hijri_calendar.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/theme/web_lite.dart';
+import '../../../core/data/juz_pages.dart';
 import '../../../core/data/surah_metadata.dart';
 import '../../../core/services/home_widgets.dart';
 import '../../../core/theme/app_themes.dart';
@@ -549,12 +550,6 @@ class _SeasonalCards extends StatelessWidget {
 class RamadanHomeCard extends StatelessWidget {
   const RamadanHomeCard({super.key});
 
-  /// The first page of each juz in the Madani Mushaf.
-  static const juzPages = [
-    1, 22, 42, 62, 82, 102, 121, 142, 162, 182, 201, 222, 242, 262, 282,
-    302, 322, 342, 362, 382, 402, 422, 442, 462, 482, 502, 522, 542, 562, 582,
-  ];
-
   @override
   Widget build(BuildContext context) {
     final day = IslamicCalendar.hijriOf(DateTime.now()).hDay.clamp(1, 30);
@@ -649,7 +644,7 @@ class RamadanHomeCard extends StatelessWidget {
               Row(
                 children: [
                   action(Icons.menu_book_rounded, 'ورد اليوم: ${juzName(day)}',
-                      () => MushafReaderPage.open(context, page: juzPages[day - 1])),
+                      () => MushafReaderPage.open(context, page: kJuzStartPages[day - 1])),
                   const SizedBox(width: 8),
                   action(Icons.calendar_month_rounded, 'الإمساكية', () => Navigator.of(context).push(ImsakiyaPage.route())),
                 ],
