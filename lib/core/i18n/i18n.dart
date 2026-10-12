@@ -140,6 +140,11 @@ class I18n {
         var ok = true;
         for (var i = 1; i <= m.groupCount; i++) {
           final g = m[i]!;
+          // A gap never spans « • », «، »…: those pieces are translated one by one.
+          if (_separators.hasMatch(g)) {
+            ok = false;
+            break;
+          }
           final r = _gap(g, depth + 1) ?? (p.lenient && g.split(' ').length <= 3 ? g : null);
           if (r == null) {
             ok = false;

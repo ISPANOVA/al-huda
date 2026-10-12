@@ -81,6 +81,8 @@ function translate(s, depth) {
       const parts = [];
       let ok = true;
       for (let i = 1; i < m.length; i++) {
+        // A gap never spans « • », «، »…: those pieces are translated one by one.
+        if (SEPARATORS.test(m[i])) { ok = false; break; }
         const r = gap(m[i], depth + 1) ?? (p.lenient && m[i].split(' ').length <= 3 ? m[i] : null);
         if (r == null) { ok = false; break; }
         parts.push(r);

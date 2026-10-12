@@ -263,7 +263,7 @@ class _ResultTile extends StatelessWidget {
                             style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: glass.onGlassMuted)),
                       ),
                       const SizedBox(width: 4),
-                      Icon(Icons.chevron_left_rounded, size: 20, color: glass.onGlassMuted),
+                      Icon(kGoChevron, size: 20, color: glass.onGlassMuted),
                     ],
                   ),
                   const SizedBox(height: 6),

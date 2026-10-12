@@ -152,7 +152,7 @@ class _SettingRow extends StatelessWidget {
             if (toggle)
               Switch(value: value!, onChanged: onChanged)
             else
-              trailing ?? Icon(Icons.chevron_left_rounded, color: glass.onGlassMuted),
+              trailing ?? Icon(kGoChevron, color: glass.onGlassMuted),
           ],
         ),
       ),

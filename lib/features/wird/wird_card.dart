@@ -39,7 +39,7 @@ class WirdCard extends StatelessWidget {
                 ],
               ),
             ),
-            const Icon(Icons.chevron_left_rounded),
+            const Icon(kGoChevron),
           ],
         ),
       );

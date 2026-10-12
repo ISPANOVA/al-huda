@@ -146,7 +146,7 @@ class _ShareTimesButton extends StatelessWidget {
               ],
             ),
           ),
-          Icon(Icons.chevron_left_rounded, color: glass.onGlassMuted),
+          Icon(kGoChevron, color: glass.onGlassMuted),
         ],
       ),
     );
@@ -550,7 +550,7 @@ class _SettingsEntry extends StatelessWidget {
               ],
             ),
           ),
-          Icon(Icons.chevron_left_rounded, color: glass.onGlassMuted),
+          Icon(kGoChevron, color: glass.onGlassMuted),
         ],
       ),
     );

@@ -222,7 +222,7 @@ class _MediaDownloadsPageState extends State<MediaDownloadsPage> {
                         ],
                       ),
                     ),
-                    Icon(Icons.chevron_left_rounded, color: glass.onGlassMuted),
+                    Icon(kGoChevron, color: glass.onGlassMuted),
                   ],
                 ),
               ),

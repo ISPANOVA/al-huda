@@ -1,10 +1,14 @@
 import 'package:flutter/widgets.dart' as w;
-import 'package:flutter/widgets.dart' show BuildContext, Color, InlineSpan, Locale, StatelessWidget, StrutStyle, TextAlign,
+import 'package:flutter/widgets.dart' show BuildContext, Color, IconData, InlineSpan, Locale, StatelessWidget, StrutStyle, TextAlign,
     TextDirection, TextHeightBehavior, TextOverflow, TextScaler, TextStyle, TextWidthBasis, Widget;
 
 import 'i18n.dart';
 
 export 'i18n.dart' show tr, I18n;
+
+/// The «open» chevron of list rows and cards: the same arrow (›) in Arabic
+/// and English (Icons.chevron_left_rounded turns with the text direction).
+const IconData kGoChevron = IconData(0xf63b, fontFamily: 'MaterialIcons');
 
 /// The app's [Text]: Flutter's own, with the string passed through [tr] so
 /// the interface follows the chosen language. Files import it in place of

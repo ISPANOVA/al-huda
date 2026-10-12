@@ -70,7 +70,7 @@ class _AsmaPageState extends State<AsmaPage> {
                       Navigator.of(ctx).pop();
                       _open(i + 1);
                     },
-                    icon: const Icon(Icons.chevron_left_rounded),
+                    icon: const Icon(kGoChevron),
                   ),
               ],
             ),
@@ -318,7 +318,7 @@ class _HadithPageState extends State<_HadithPage> {
               if (_i < kNawawi.length - 1)
                 TextButton.icon(
                   onPressed: () => _go(_i + 1),
-                  icon: const Icon(Icons.chevron_left_rounded),
+                  icon: const Icon(kGoChevron),
                   label: Text('الحديث ${ArabicUtils.toArabicDigits(kNawawi[_i + 1].$1)}'),
                 ),
             ],

@@ -133,7 +133,7 @@ class _CalendarPageState extends State<CalendarPage> {
                                 ],
                               ),
                             ),
-                            _MonthNavButton(icon: Icons.chevron_left_rounded, onTap: () => _shift(1)),
+                            _MonthNavButton(icon: kGoChevron, onTap: () => _shift(1)),
                           ],
                         ),
                       ),
@@ -518,7 +518,7 @@ class _RamadanCard extends StatelessWidget {
               ],
             ),
           ),
-          const Icon(Icons.chevron_left_rounded, color: Colors.white),
+          const Icon(kGoChevron, color: Colors.white),
         ],
       ),
     );

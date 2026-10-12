@@ -76,7 +76,7 @@ class ExactAlarmBanner extends StatelessWidget {
                     ],
                   ),
                 ),
-                Icon(Icons.chevron_left_rounded, color: glass.onGlassMuted),
+                Icon(kGoChevron, color: glass.onGlassMuted),
               ],
             ),
           ),

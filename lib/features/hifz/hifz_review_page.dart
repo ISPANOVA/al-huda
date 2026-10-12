@@ -197,7 +197,7 @@ class _HifzReviewPageState extends State<HifzReviewPage> {
                                         fontSize: 11, fontWeight: FontWeight.w900, color: scoreTone.ink(dark))),
                               )
                             else
-                              Icon(Icons.chevron_left_rounded, color: glass.onGlassMuted),
+                              Icon(kGoChevron, color: glass.onGlassMuted),
                           ],
                         ),
                       ),

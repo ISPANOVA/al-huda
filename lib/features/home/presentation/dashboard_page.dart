@@ -696,7 +696,7 @@ class _BannerCard extends StatelessWidget {
                 ],
               ),
             ),
-            const Icon(Icons.chevron_left_rounded, color: Colors.white),
+            const Icon(kGoChevron, color: Colors.white),
           ],
         ),
       ),

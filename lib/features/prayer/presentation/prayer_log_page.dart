@@ -47,7 +47,7 @@ class PrayerLogCard extends StatelessWidget {
                   const Expanded(child: Text('صلواتي اليوم', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900))),
                   Text('${ArabicUtils.toArabicDigits(done.length)} / ٥',
                       style: const TextStyle(fontFamily: AppFonts.display, fontSize: 18)),
-                  Icon(Icons.chevron_left_rounded, color: glass.onGlassMuted),
+                  Icon(kGoChevron, color: glass.onGlassMuted),
                 ],
               ),
               const SizedBox(height: 12),

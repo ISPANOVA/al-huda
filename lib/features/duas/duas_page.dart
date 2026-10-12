@@ -133,7 +133,7 @@ class _CategoryTile extends StatelessWidget {
             children: [
               _TonePill('${ArabicUtils.toArabicDigits(category.items.length)} أدعية', tone: tone),
               const Spacer(),
-              Icon(Icons.chevron_left_rounded, size: 20, color: tone.ink(dark)),
+              Icon(kGoChevron, size: 20, color: tone.ink(dark)),
             ],
           ),
         ],

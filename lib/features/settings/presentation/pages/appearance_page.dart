@@ -70,7 +70,7 @@ class AppearancePage extends StatelessWidget {
                           child: Text('تعديل ألواني',
                               style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15, color: glass.onGlass)),
                         ),
-                        Icon(Icons.chevron_left_rounded, color: glass.onGlassMuted),
+                        Icon(kGoChevron, color: glass.onGlassMuted),
                       ],
                     ),
                   ),

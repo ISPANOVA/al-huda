@@ -121,7 +121,7 @@ class _CategoryTile extends StatelessWidget {
           const SizedBox(width: 8),
           _TonePill(ArabicUtils.toArabicDigits(category.items.length), tone: tone),
           const SizedBox(width: 2),
-          Icon(Icons.chevron_left_rounded, color: tone.ink(dark)),
+          Icon(kGoChevron, color: tone.ink(dark)),
         ],
       ),
     );

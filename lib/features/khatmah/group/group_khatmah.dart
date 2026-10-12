@@ -283,7 +283,7 @@ class _GroupKhatmahListPageState extends State<GroupKhatmahListPage> {
                     ListTile(
                       leading: const ToneIcon(Icons.flag_rounded, tone: _tone, size: 40),
                       title: Text(g.$2, style: const TextStyle(fontWeight: FontWeight.w800)),
-                      trailing: const Icon(Icons.chevron_left_rounded),
+                      trailing: const Icon(kGoChevron),
                       onTap: () async {
                         await Navigator.of(context).push(GroupKhatmahPage.route(g.$1));
                         if (mounted) setState(() {});

@@ -312,7 +312,7 @@ class _SettingRow extends StatelessWidget {
             if (toggle)
               Switch(value: value!, onChanged: onChanged)
             else
-              Icon(Icons.chevron_left_rounded, color: glass.onGlassMuted),
+              Icon(kGoChevron, color: glass.onGlassMuted),
           ],
         ),
       ),
@@ -636,7 +636,7 @@ class _AppearanceEntry extends StatelessWidget {
                   ],
                 ),
               ),
-              Icon(Icons.chevron_left_rounded, color: glass.onGlassMuted),
+              Icon(kGoChevron, color: glass.onGlassMuted),
             ],
           ),
         ),

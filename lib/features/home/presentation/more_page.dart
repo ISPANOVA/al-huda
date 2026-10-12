@@ -127,7 +127,7 @@ class MorePage extends StatelessWidget {
                       leading: ToneIcon(items[i].icon, tone: Tone.of(items[i].id), size: 44),
                       title: Text(items[i].title, style: const TextStyle(fontWeight: FontWeight.w900)),
                       subtitle: Text(items[i].subtitle, style: TextStyle(fontSize: 12, color: glass.onGlassMuted)),
-                      trailing: Icon(Icons.chevron_left_rounded, color: glass.onGlassMuted),
+                      trailing: Icon(kGoChevron, color: glass.onGlassMuted),
                       onTap: () => Navigator.of(context).push(items[i].route()),
                     ),
                   ],

@@ -505,7 +505,7 @@ class MediaSectionHeader extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(action!, style: TextStyle(fontWeight: FontWeight.w800, color: glass.accent)),
-                  Icon(Icons.chevron_left_rounded, size: 20, color: glass.accent),
+                  Icon(kGoChevron, size: 20, color: glass.accent),
                 ],
               ),
             ),

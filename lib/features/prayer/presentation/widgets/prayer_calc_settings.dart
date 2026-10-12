@@ -253,7 +253,7 @@ class _CalcRow extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 8),
-            Icon(Icons.chevron_left_rounded, color: glass.onGlassMuted),
+            Icon(kGoChevron, color: glass.onGlassMuted),
           ],
         ),
       ),

@@ -240,7 +240,7 @@ class _MemorizationPageState extends State<MemorizationPage> {
                       Text('تغيير',
                           style: TextStyle(
                               fontSize: 12.5, fontWeight: FontWeight.w800, color: Tone.amethyst.ink(dark))),
-                      Icon(Icons.chevron_left_rounded, size: 20, color: Tone.amethyst.ink(dark)),
+                      Icon(kGoChevron, size: 20, color: Tone.amethyst.ink(dark)),
                     ],
                   ),
                 ),
