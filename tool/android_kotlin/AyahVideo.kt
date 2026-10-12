@@ -455,6 +455,7 @@ class AyahVideo(private val onProgress: (Double) -> Unit) {
         private var lastPts = 0L
         private var loopOffset = 0L
         private var decodedThisLoop = 0
+        private var finished = false // nothing more can be decoded: the last picture stays
 
         // Where each output pixel reads from, split per column and per row.
         private var mapKey = ""
@@ -470,7 +471,11 @@ class AyahVideo(private val onProgress: (Double) -> Unit) {
             extractor.selectTrack(track)
             val fmt = extractor.getTrackFormat(track)
             rotation = readRotation(path, fmt)
-            val rate = if (fmt.containsKey(MediaFormat.KEY_FRAME_RATE)) fmt.getInteger(MediaFormat.KEY_FRAME_RATE) else 30
+            val rate = try {
+                if (fmt.containsKey(MediaFormat.KEY_FRAME_RATE)) fmt.getInteger(MediaFormat.KEY_FRAME_RATE) else 30
+            } catch (e: Exception) {
+                try { fmt.getFloat(MediaFormat.KEY_FRAME_RATE).toInt() } catch (e2: Exception) { 30 }
+            }
             frameUs = 1_000_000L / rate.coerceIn(1, 120)
             decoder = MediaCodec.createDecoderByType(fmt.getString(MediaFormat.KEY_MIME)!!)
             fmt.setInteger(MediaFormat.KEY_COLOR_FORMAT, MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420Flexible)
@@ -497,6 +502,7 @@ class AyahVideo(private val onProgress: (Double) -> Unit) {
 
         /** Brings [y]/[u]/[v] to the clip's picture at [ptsUs] of the video. */
         fun frameAt(ptsUs: Long) {
+            if (finished) return
             var idle = 0
             while (true) {
                 if (pending >= 0) {
@@ -530,6 +536,7 @@ class AyahVideo(private val onProgress: (Double) -> Unit) {
                         decoder.releaseOutputBuffer(idx, false)
                         if (decodedThisLoop == 0) {
                             if (!have) throw IllegalStateException("clip has no frames")
+                            finished = true
                             return // nothing more to show: keep the last picture
                         }
                         // Again from the start, after the last frame's time.
@@ -551,7 +558,7 @@ class AyahVideo(private val onProgress: (Double) -> Unit) {
                     decodedThisLoop++
                 } else if (idx == MediaCodec.INFO_TRY_AGAIN_LATER) {
                     if (++idle > 300) {
-                        if (have) return
+                        if (have) { finished = true; return }
                         throw IllegalStateException("clip decoder stalled")
                     }
                 }
