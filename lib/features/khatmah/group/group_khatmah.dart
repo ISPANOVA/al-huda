@@ -20,13 +20,18 @@ import '../../quran/presentation/mushaf/mushaf_reader_page.dart';
 import '../../../core/i18n/text.dart';
 
 /// One juz of a shared khatmah.
+/// One juz of a shared khatmah: everyone reading it (more than one may), done
+/// once any of them finishes it.
 class GroupPart {
   final int part;
-  final String? who;
+  final List<(String, bool)> readers; // name, finished
   final bool done;
-  final bool mine;
+  final bool mine; // this phone reads it
+  final bool mineDone;
 
-  const GroupPart(this.part, this.who, this.done, this.mine);
+  const GroupPart(this.part, this.readers, this.done, this.mine, this.mineDone);
+
+  String? get who => readers.isEmpty ? null : readers.firstWhere((r) => r.$2, orElse: () => readers.first).$1;
 }
 
 /// A khatmah shared by link (see functions/api/khatmah on the website).
@@ -37,13 +42,16 @@ class GroupKhatmah {
   final int round;
   final bool isOwner;
   final List<GroupPart> parts;
-  final String? error; // 'taken' when someone else took the part first
+  final int readers; // how many people read in this khatmah
+  final int? justCompleted; // this action finished khatmah number N (the next one began)
+  final String? error;
 
-  const GroupKhatmah(this.id, this.name, this.ownerName, this.round, this.isOwner, this.parts, this.error);
+  const GroupKhatmah(this.id, this.name, this.ownerName, this.round, this.isOwner, this.parts, this.readers,
+      this.justCompleted, this.error);
 
   int get done => parts.where((p) => p.done).length;
-  int get taken => parts.where((p) => p.who != null).length;
-  bool get complete => done == 30;
+  int get taken => parts.where((p) => p.readers.isNotEmpty).length;
+  int get completed => round - 1; // khatmahs the group has finished
 
   factory GroupKhatmah.fromJson(Map<String, dynamic> j) => GroupKhatmah(
         j['id'] as String,
@@ -53,8 +61,19 @@ class GroupKhatmah {
         j['isOwner'] == true,
         [
           for (final p in (j['parts'] as List? ?? const []))
-            GroupPart((p['part'] as num).toInt(), p['who'] as String?, p['done'] == true, p['mine'] == true),
+            GroupPart(
+              (p['part'] as num).toInt(),
+              [
+                for (final r in (p['readers'] as List? ?? const []))
+                  if (r is Map) ((r['who'] ?? '').toString(), r['done'] == true),
+              ],
+              p['done'] == true,
+              p['mine'] == true,
+              p['mineDone'] == true,
+            ),
         ],
+        (j['readers'] as num?)?.toInt() ?? 0,
+        (j['justCompleted'] as num?)?.toInt(),
         j['error'] as String?,
       );
 
@@ -348,7 +367,11 @@ class _GroupKhatmahPageState extends State<GroupKhatmahPage> {
       final k = await _service.act(widget.id, action, body);
       if (!mounted) return;
       setState(() => _k = k);
-      if (k.error == 'taken') showGlassSnack(context, 'سبقك أحد إلى هذا الجزء');
+      if (k.justCompleted != null) {
+        showGlassSnack(context,
+            'تمّت الختمة رقم ${ArabicUtils.toArabicDigits(k.justCompleted!)}، تقبّل الله منا ومنكم. بدأت الختمة التالية',
+            icon: Icons.celebration_rounded);
+      }
     } on GroupError catch (e) {
       if (mounted) showGlassSnack(context, e.message);
     } finally {
@@ -386,66 +409,75 @@ class _GroupKhatmahPageState extends State<GroupKhatmahPage> {
     return name;
   }
 
+  /// A juz: who reads it, and read it / I'll read it / I finished it.
   Future<void> _tapPart(GroupPart p) async {
-    final k = _k!;
-    if (p.mine) {
-      final choice = await showGlassSheet<String>(context, builder: (ctx) {
-        return Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text('الجزء ${ArabicUtils.toArabicDigits(p.part)}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
+    final choice = await showGlassSheet<String>(context, builder: (ctx) {
+      final glass = GlassTheme.of(ctx);
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text('الجزء ${ArabicUtils.toArabicDigits(p.part)}',
+              textAlign: TextAlign.center, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
+          const SizedBox(height: 6),
+          if (p.readers.isEmpty)
+            Text('لم يختره أحد بعد.', textAlign: TextAlign.center, style: TextStyle(color: glass.onGlassMuted))
+          else
+            for (final r in p.readers)
+              ListTile(
+                dense: true,
+                leading: Icon(r.$2 ? Icons.check_circle_rounded : Icons.menu_book_rounded,
+                    color: r.$2 ? Tone.emerald.mid : glass.onGlassMuted),
+                title: Text(r.$1, style: const TextStyle(fontWeight: FontWeight.w700)),
+                trailing: Text(r.$2 ? 'أتمّه' : 'يقرؤه', style: TextStyle(color: glass.onGlassMuted)),
+              ),
+          const Divider(),
+          ListTile(
+            leading: const Icon(Icons.menu_book_rounded),
+            title: const Text('اقرأ الجزء في المصحف'),
+            onTap: () => Navigator.of(ctx).pop('read'),
+          ),
+          if (p.mine) ...[
             ListTile(
-              leading: const Icon(Icons.menu_book_rounded),
-              title: const Text('اقرأ الجزء'),
-              onTap: () => Navigator.of(ctx).pop('read'),
-            ),
-            ListTile(
-              leading: Icon(p.done ? Icons.undo_rounded : Icons.check_circle_rounded),
-              title: Text(p.done ? 'لم أُتمّه بعد' : 'أتممت قراءته'),
+              leading: Icon(p.mineDone ? Icons.undo_rounded : Icons.check_circle_rounded),
+              title: Text(p.mineDone ? 'لم أُتمّه بعد' : 'أتممت قراءته'),
               onTap: () => Navigator.of(ctx).pop('done'),
             ),
             ListTile(
               leading: const Icon(Icons.logout_rounded),
-              title: const Text('ترك الجزء لغيري'),
+              title: const Text('لن أقرأه'),
               onTap: () => Navigator.of(ctx).pop('release'),
             ),
+          ] else ...[
+            ListTile(
+              leading: const Icon(Icons.flag_rounded),
+              title: Text(p.readers.isEmpty ? 'سأقرأ هذا الجزء' : 'سأقرؤه أنا أيضًا'),
+              onTap: () => Navigator.of(ctx).pop('claim'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.check_circle_rounded),
+              title: const Text('قرأته بالفعل'),
+              onTap: () => Navigator.of(ctx).pop('finished'),
+            ),
           ],
-        );
-      });
-      if (!mounted || choice == null) return;
-      switch (choice) {
-        case 'read':
-          MushafReaderPage.open(context, page: kJuzStartPages[p.part - 1]);
-        case 'done':
-          await _act('done', {'part': p.part, 'done': !p.done});
-        case 'release':
-          await _act('release', {'part': p.part});
-      }
-      return;
-    }
-    if (p.who != null) {
-      if (!k.isOwner) {
-        showGlassSnack(context, p.done ? 'أتمّه ${p.who}' : 'محجوز لـ ${p.who}');
+        ],
+      );
+    });
+    if (!mounted || choice == null) return;
+    switch (choice) {
+      case 'read':
+        MushafReaderPage.open(context, page: kJuzStartPages[p.part - 1]);
         return;
-      }
-      final ok = await showGlassSheet<bool>(context, builder: (ctx) {
-        return Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text('الجزء ${ArabicUtils.toArabicDigits(p.part)} محجوز لـ ${p.who}${p.done ? '، وقد أتمّه' : ''}',
-                textAlign: TextAlign.center, style: const TextStyle(fontWeight: FontWeight.w800)),
-            const SizedBox(height: 12),
-            OutlinedButton(onPressed: () => Navigator.of(ctx).pop(true), child: const Text('إتاحة الجزء لغيره')),
-          ],
-        );
-      });
-      if (ok == true) await _act('release', {'part': p.part});
-      return;
+      case 'done':
+        await _act('done', {'part': p.part, 'done': !p.mineDone});
+        return;
+      case 'release':
+        await _act('release', {'part': p.part});
+        return;
     }
     final who = _service.name.isNotEmpty ? _service.name : await _askName();
     if (who == null || !mounted) return;
-    await _act('claim', {'part': p.part, 'who': who});
+    await _act(choice == 'claim' ? 'claim' : 'done', {'part': p.part, 'who': who, 'done': true});
   }
 
   Future<void> _restart() async {
@@ -453,7 +485,7 @@ class _GroupKhatmahPageState extends State<GroupKhatmahPage> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('إعادة الختمة'),
-        content: const Text('تُفرَّغ الأجزاء كلها ويبدأ الجميع من جديد بنفس الرابط.'),
+        content: const Text('تُفرَّغ أجزاء هذه الختمة ويبدأ الجميع من جديد بنفس الرابط.'),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('إلغاء')),
           FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('ابدأ من جديد')),
@@ -470,7 +502,7 @@ class _GroupKhatmahPageState extends State<GroupKhatmahPage> {
     final dark = Theme.of(context).brightness == Brightness.dark;
     return GlassScaffold(
       title: k?.name ?? 'الختمة الجماعية',
-      subtitle: k == null ? null : 'محجوز ${ArabicUtils.toArabicDigits(k.taken)} من ٣٠ جزءًا',
+      subtitle: k == null ? null : 'يقرأ معكم ${ArabicUtils.toArabicDigits(k.readers)}',
       icon: Icons.groups_rounded,
       tone: _tone,
       actions: [
@@ -506,7 +538,7 @@ class _GroupKhatmahPageState extends State<GroupKhatmahPage> {
                               children: [
                                 Expanded(
                                   child: Text(
-                                    k.complete ? 'تمّت الختمة، تقبّل الله منا ومنكم' : 'أُتمّ ${ArabicUtils.toArabicDigits(k.done)} من ٣٠ جزءًا',
+                                    'أُتمّ ${ArabicUtils.toArabicDigits(k.done)} من ٣٠ جزءًا',
                                     style: const TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w900),
                                   ),
                                 ),
@@ -529,7 +561,8 @@ class _GroupKhatmahPageState extends State<GroupKhatmahPage> {
                             Text(
                               [
                                 if (k.ownerName != null && k.ownerName!.isNotEmpty) 'أنشأها ${k.ownerName}',
-                                if (k.round > 1) 'الختمة رقم ${ArabicUtils.toArabicDigits(k.round)}',
+                                if (k.completed > 0)
+                                  'أتممتم ${ArabicUtils.toArabicDigits(k.completed)} ${k.completed == 1 ? 'ختمة' : 'ختمات'} معًا',
                                 'اسحب للأسفل للتحديث',
                               ].join(' • '),
                               style: TextStyle(color: Colors.white.withValues(alpha: 0.85), fontSize: 12),
@@ -548,7 +581,14 @@ class _GroupKhatmahPageState extends State<GroupKhatmahPage> {
                         icon: const Icon(Icons.share_rounded, color: Colors.white),
                         label: const Text('ادعُ غيرك إلى الختمة', style: TextStyle(fontWeight: FontWeight.w800, color: Colors.white)),
                       ),
-                      const GlassSectionTitle('الأجزاء (اضغط جزءًا متاحًا لتحجزه)', tone: _tone),
+                      const GlassSectionTitle('الأجزاء', tone: _tone),
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 10),
+                        child: Text(
+                          'اختر أي جزء تقرؤه، حتى لو كان غيرك يقرؤه. يُحتسب الجزء عند أول من يتمّه، وعند تمام الثلاثين تبدأ ختمة جديدة بنفس الرابط.',
+                          style: TextStyle(fontSize: 12, height: 1.6, color: glass.onGlassMuted),
+                        ),
+                      ),
                       LayoutBuilder(builder: (context, box) {
                         final cols = box.maxWidth >= 560 ? 6 : 5;
                         return GridView.count(
@@ -591,7 +631,13 @@ class _GroupKhatmahPageState extends State<GroupKhatmahPage> {
                                                 fontSize: 20,
                                                 color: p.done ? Colors.white : glass.accent)),
                                         Text(
-                                          p.done ? 'تمّ' : p.who ?? 'متاح',
+                                          p.done
+                                              ? 'تمّ'
+                                              : p.readers.isEmpty
+                                                  ? 'متاح'
+                                                  : p.readers.length == 1
+                                                      ? p.readers.first.$1
+                                                      : '${ArabicUtils.toArabicDigits(p.readers.length)} يقرؤونه',
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
                                           style: TextStyle(
@@ -612,7 +658,7 @@ class _GroupKhatmahPageState extends State<GroupKhatmahPage> {
                         OutlinedButton.icon(
                           onPressed: _busy ? null : _restart,
                           icon: const Icon(Icons.restart_alt_rounded),
-                          label: Text(k.complete ? 'ابدأ ختمة جديدة بنفس الرابط' : 'إعادة الختمة من البداية'),
+                          label: const Text('إعادة هذه الختمة من البداية'),
                         ),
                       ],
                       const SizedBox(height: 8),
