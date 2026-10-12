@@ -507,7 +507,9 @@ class AyahVideo(private val onProgress: (Double) -> Unit) {
             while (true) {
                 if (pending >= 0) {
                     if (!have || pendingPts + loopOffset <= ptsUs) {
-                        decoder.getOutputImage(pending)?.let { take(it) }
+                        // A picture the next one replaces before it is shown is not copied.
+                        val shown = !have || pendingPts + loopOffset + frameUs > ptsUs
+                        if (shown) decoder.getOutputImage(pending)?.let { take(it) }
                         decoder.releaseOutputBuffer(pending, false)
                         pending = -1
                         have = true
