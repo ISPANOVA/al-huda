@@ -8,7 +8,7 @@ import { PHOTOS } from './reciters.js';
 import { CDN } from './player.js';
 
 const W = 1080, H = 1920;
-const LINK = location.host || 'al-huda-brf.pages.dev';
+const LINK = 'al-huda.xyz';
 export const BGS = [
   ['gold', 'ذهبي', ['#050505', '#15100A', '#2A1F0C'], '#E2C074', '#fff'],
   ['night', 'ليل', ['#03050F', '#0A1230', '#1D2347'], '#F1D7A0', '#fff'],
@@ -283,7 +283,7 @@ export async function shareAyahImage(g) {
     caption: `الآية ${ar(m.ayah[g - 1])}` }, bg, assets);
   const blob = await new Promise((ok) => cv.toBlob(ok, 'image/png'));
   const name = `alhuda_${m.surah[g - 1]}_${m.ayah[g - 1]}.png`;
-  await deliver(blob, name, `﴿${t}﴾ [${names[m.surah[g - 1] - 1][1]}: ${ar(m.ayah[g - 1])}]\nمن تطبيق الهدى: ${location.origin}`);
+  await deliver(blob, name, `﴿${t}﴾ [${names[m.surah[g - 1] - 1][1]}: ${ar(m.ayah[g - 1])}]\nمن تطبيق الهدى: https://${LINK}`);
 }
 
 async function deliver(blob, name, textMsg) {
@@ -482,7 +482,7 @@ async function render({ s, f, t, r, m, names, bg, photo, prog }) {
   // 3. Encode and mux: WebCodecs (fast, MP4 with AAC); else the browser
   //    records the video as it plays (takes as long as the video).
   const range = f === t ? `الآية ${ar(f)}` : `الآيات ${ar(f)}–${ar(t)}`;
-  const text = `سورة ${names[s - 1][1]} • ${range} • بصوت ${r.name}\nمن تطبيق الهدى: ${location.origin}`;
+  const text = `سورة ${names[s - 1][1]} • ${range} • بصوت ${r.name}\nمن تطبيق الهدى: https://${LINK}`;
   let Muxer, ArrayBufferTarget;
   try { ({ Muxer, ArrayBufferTarget } = await import('https://cdn.jsdelivr.net/npm/mp4-muxer@5.1.3/+esm')); } catch {}
   const audioOk = 'AudioEncoder' in window && (await AudioEncoder.isConfigSupported({ codec: 'mp4a.40.2', sampleRate: RATE, numberOfChannels: 2, bitrate: 128000 }).catch(() => ({}))).supported;

@@ -56,7 +56,7 @@ export async function show(view, args, name) {
     show(view, args, name);
   });
   $('#share', view).onclick = () => {
-    const t = 'الهدى: المصحف والتسميع ومواقيت الصلاة والأذكار، مجاني بلا إعلانات. ' + location.origin;
+    const t = 'الهدى: المصحف والتسميع ومواقيت الصلاة والأذكار، مجاني بلا إعلانات. ' + 'https://al-huda.xyz';
     if (navigator.share) navigator.share({ text: t }).catch(() => {}); else navigator.clipboard?.writeText(t).then(() => toast('نُسخ الرابط'));
   };
 }
