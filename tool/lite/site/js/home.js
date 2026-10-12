@@ -53,11 +53,14 @@ export async function show(view) {
   view.innerHTML = `<div class="home">
     <div class="hcol hmain">
       <section class="sky" id="sky">
-        <canvas id="skyc" aria-hidden="true"></canvas>
-        <div class="sky-top">
-          <div class="grow"><small id="greet"></small><h1>الهدى</h1><b id="hdate"></b><small>${esc(greg)}</small></div>
-          <a class="skybtn" href="#/qibla" aria-label="القبلة">${icon('compass')}</a>
-          <a class="skybtn" href="#/settings" aria-label="الإعدادات">${icon('gear')}</a>
+        <div class="skyart">
+          <canvas id="skyc" aria-hidden="true"></canvas>
+          <div class="sky-top">
+            <div class="grow"><small id="greet"></small><h1>الهدى</h1></div>
+            <a class="skybtn" href="#/qibla" aria-label="القبلة">${icon('compass')}</a>
+            <a class="skybtn" href="#/settings" aria-label="الإعدادات">${icon('gear')}</a>
+          </div>
+          <div class="sky-date"><b id="hdate"></b><small>${esc(greg)}</small></div>
         </div>
         <a class="nextp" href="#/prayer" id="next">
           <span class="grow"><small id="nlabel">الصلاة القادمة</small>
@@ -65,6 +68,7 @@ export async function show(view) {
             <small id="ncity"></small></span>
           <span class="nring" id="nring" hidden><svg viewBox="0 0 72 72"><circle cx="36" cy="36" r="32"/><circle cx="36" cy="36" r="32" id="narc"/></svg>
             <span><b id="ncount"></b><small>متبقٍ</small></span></span>
+          ${icon('back', 'muted')}
         </a>
       </section>
       <div class="today" id="today"></div>
@@ -123,7 +127,7 @@ async function paintSky() {
   const st = skyState(new Date(), skyTimes);
   $('#greet').textContent = GREETING[st.phase];
   // The sun's path stays below the title on phones.
-  drawSky(cv, st, { orbitTop: cv.clientWidth < 600 ? 0.42 : 0.24, horizonAt: 0.7 });
+  drawSky(cv, st, { orbitTop: 0.5, horizonAt: 0.9 });
 }
 
 /// Today's six times in a row, the next one lit.

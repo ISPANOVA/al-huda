@@ -384,19 +384,6 @@ body.in-mushaf .player { bottom: calc(var(--safe-b) + 8px); }
 @media (min-width: 1000px) { .mushaf::after { height: 64px; } }
 
 /* ---- home: the app's living sky, today's prayers, goals ---- */
-.sky { position: relative; height: 330px; margin: calc(-8px - var(--safe-t)) -16px 0; border-radius: 0 0 34px 34px; overflow: hidden; color: #fff; }
-.sky canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
-.sky-top { position: absolute; top: calc(var(--safe-t) + 14px); left: 16px; right: 18px; display: flex; align-items: flex-start; gap: 8px; }
-.sky-top .grow { display: flex; flex-direction: column; }
-.sky-top small { color: rgba(255,255,255,.72); font-size: 13px; }
-.sky-top h1 { margin: 0; font-family: ReemKufi, Tajawal; font-size: 40px; line-height: 1.25; text-shadow: 0 0 18px rgba(243,213,138,.4); }
-.sky-top b { color: #ffe3a3; font-size: 13.5px; }
-.skybtn { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; color: #fff; background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.35); flex: none; }
-.skybtn svg { width: 22px; height: 22px; }
-.nextp { position: absolute; left: 14px; right: 14px; bottom: 16px; display: flex; align-items: center; gap: 10px; padding: 8px 16px 8px 8px;
-  border-radius: 24px; background: rgba(0,0,0,.38); border: 1px solid rgba(255,255,255,.14); color: #fff; }
-.nextp .grow { display: flex; flex-direction: column; min-width: 0; }
-.nextp small { color: rgba(255,255,255,.7); font-size: 12px; }
 .nrow { display: flex; align-items: flex-end; gap: 8px; }
 .nrow b { font-family: ReemKufi, Tajawal; font-size: 26px; line-height: 1.25; }
 .nrow em { font-style: normal; color: #ffe3a3; font-weight: 800; padding-bottom: 3px; }
@@ -503,8 +490,6 @@ i[class^=tj] { font-style: normal; }
 .hmain > .sky { order: 1; } .hmain > .today { order: 2; } .hmain > #banners { order: 3; }
 .hside > .cont { order: 4; } .hside > .goals { order: 5; } .hside > .athkar-now { order: 6; } .hside > .hsec { order: 7; } .hmain > .hayah { order: 8; }
 #banners:empty { display: none; }
-.sky::after { content: ""; position: absolute; inset: 0 0 auto 0; height: 46%; background: linear-gradient(rgba(0,0,0,.42), transparent); pointer-events: none; }
-.sky-top, .nextp { z-index: 1; }
 .cont { display: grid; gap: 10px; margin-top: 12px; }
 .ccard { position: relative; display: flex; align-items: center; gap: 12px; margin: 0 !important; overflow: hidden; width: 100%; font: inherit; color: inherit; text-align: right; cursor: pointer; }
 .ccard .grow { display: flex; flex-direction: column; min-width: 0; }
@@ -522,7 +507,7 @@ i[class^=tj] { font-style: normal; }
 .tools a { display: flex; flex-direction: column; align-items: center; gap: 7px; font-size: 12.5px; font-weight: 800; text-align: center; }
 .tools .ticon { width: 50px; height: 50px; border-radius: 17px; }
 @media (min-width: 600px) {
-  .sky { margin: 0; border-radius: 30px; height: 340px; }
+  .sky { margin: 0; border-radius: 28px; }
   .cont.two { grid-template-columns: 1fr 1fr; }
   .goals .card { flex-direction: row; justify-content: center; gap: 10px; text-align: right; padding: 14px 10px; }
 }
@@ -532,8 +517,6 @@ i[class^=tj] { font-style: normal; }
   .home { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr); gap: 22px; align-items: start; }
   .hcol { display: flex; flex-direction: column; }
   .hcol > * { order: 0 !important; }
-  .sky { height: 380px; }
-  .nextp { max-width: 440px; left: auto; right: 18px; bottom: 18px; }
   .today { margin-top: 12px; }
   .cont { margin-top: 0; } .cont.two { grid-template-columns: 1fr; }
   .goals { margin-top: 12px; } .goals .card { flex-direction: column; text-align: center; gap: 6px; }
@@ -553,3 +536,29 @@ i[class^=tj] { font-style: normal; }
 .agrid .ticon { width: 52px; height: 52px; border-radius: 17px; }
 .asim { display: flex; align-items: center; gap: 12px; width: 100%; margin-top: 14px; text-align: right; }
 .asim .grow { display: flex; flex-direction: column; }
+
+/* ---- the home's sky: the scene with the title on top, the next prayer
+   as a bar under it (nothing overlaps) ---- */
+.sky { position: relative; margin: calc(-8px - var(--safe-t)) -16px 0; border-radius: 0 0 28px 28px; overflow: hidden; color: #fff;
+  background: #07101d; border: 1px solid rgba(255,255,255,.06); border-top: 0; }
+.skyart { position: relative; height: calc(230px + var(--safe-t)); }
+.skyart canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.skyart::after { content: ""; position: absolute; inset: 0 0 auto 0; height: 55%; background: linear-gradient(rgba(0,0,0,.38), transparent); pointer-events: none; }
+.sky-top { position: absolute; z-index: 1; top: calc(var(--safe-t) + 14px); left: 16px; right: 18px; display: flex; align-items: center; gap: 8px; }
+.sky-top .grow { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+.sky-top small { color: rgba(255,255,255,.78); font-size: 13px; }
+.sky-top h1 { margin: 0; font-family: ReemKufi, Tajawal; font-size: 34px; line-height: 1.2; text-shadow: 0 0 18px rgba(243,213,138,.35); }
+.skybtn { width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; color: #fff; background: rgba(0,0,0,.18);
+  border: 1px solid rgba(255,255,255,.3); flex: none; backdrop-filter: blur(4px); }
+.skybtn svg { width: 21px; height: 21px; }
+.sky-date { position: absolute; z-index: 1; top: calc(var(--safe-t) + 74px); right: 18px; display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+.sky-date b { color: #ffe3a3; font-size: 13.5px; } .sky-date small { color: rgba(255,255,255,.72); font-size: 12.5px; }
+.sky-date b:not(:empty)::after { content: "•"; margin-inline-start: 8px; color: rgba(255,255,255,.45); font-weight: 400; }
+.nextp { display: flex; align-items: center; gap: 14px; padding: 12px 16px; border-top: 1px solid rgba(255,255,255,.08);
+  background: linear-gradient(180deg, #0b1626, #07101d); }
+.nextp .grow { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+.nextp small { color: rgba(255,255,255,.7); font-size: 12px; }
+.nextp > svg { width: 20px; height: 20px; opacity: .6; }
+.nextp .nring { width: 64px; height: 64px; }
+@media (min-width: 600px) { .sky { border: 1px solid rgba(255,255,255,.06); } .skyart { height: 250px; } .sky-top { top: 16px; } .sky-date { top: 76px; } }
+@media (min-width: 1000px) { .skyart { height: 280px; } .sky-top h1 { font-size: 38px; } .sky-date { top: 88px; } }
