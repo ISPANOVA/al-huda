@@ -316,6 +316,7 @@ export async function show(view, args) {
     <div class="vprev"><canvas id="pv" width="360" height="640"></canvas><video id="vv" playsinline controls loop hidden></video></div>
     <div id="prog" hidden><p class="center small" id="pl"></p><div class="pbar"><i id="pb"></i></div></div>
     <div id="out" hidden>
+      <button class="btn block" id="fs" style="margin-top:4px">${icon('expand')} شاهد الفيديو بملء الشاشة</button>
       <div class="section">شارك الفيديو</div>
       <button class="btn block" id="sh">${icon('share')} مشاركة (واتساب، انستجرام، فيسبوك…)</button>
       <button class="btn ghost block" id="dl" style="margin-top:8px">${icon('download')} تنزيل الفيديو</button>
@@ -388,7 +389,8 @@ export async function show(view, args) {
       $('#len', view).textContent = res.seconds > 60
         ? `مدة الفيديو ${ar(Math.round(res.seconds))} ثانية: الستوري في واتساب وانستجرام يعرض دقيقة واحدة، فاختر آيات أقل للستوري.`
         : `مدة الفيديو ${ar(Math.round(res.seconds))} ثانية`;
-      $('#out', view).scrollIntoView({ behavior: 'smooth' });
+      // The video first: watch it before saving or sharing.
+      $('.vprev', view).scrollIntoView({ behavior: 'smooth', block: 'start' });
     } catch (e) {
       console.error(e);
       toast(e?.message === 'net' ? 'تعذر تحميل التلاوة، تحقق من الاتصال' : 'المتصفح لا يدعم إنشاء الفيديو، جرّب Chrome أو تطبيق الهدى');
@@ -396,6 +398,13 @@ export async function show(view, args) {
       btn.disabled = false;
       $('#prog', view).hidden = true;
     }
+  };
+  $('#fs', view).onclick = () => {
+    const v = $('#vv', view);
+    v.currentTime = 0;
+    v.play().catch(() => {});
+    if (v.requestFullscreen) v.requestFullscreen().catch(() => {});
+    else v.webkitEnterFullscreen?.();
   };
   $('#sh', view).onclick = () => built && deliver(built.blob, built.name, built.text);
   $('#dl', view).onclick = () => {
