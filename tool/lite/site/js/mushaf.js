@@ -1,6 +1,6 @@
 // المصحف: pages swiped like a paper Mushaf (native scroll snapping), drawn
 // only around the page in view, ayah menu, index, tafseer and recitation.
-import { $, $$, ar, esc, icon, store, data, meta, surahs, sheet, closeSheet, toast, today } from './app.js';
+import { $, $$, ar, esc, icon, store, data, meta, surahs, sheet, closeSheet, toast, today, afterSheet } from './app.js';
 import { drawPage, hizbLabel, JUZ, BASMALA, ayahText } from './page.js';
 import { player, listenSheet } from './player.js';
 import * as taj from './tajweed.js';
@@ -228,18 +228,20 @@ async function ayahMenu(a, m, names) {
   for (const s of $$(`span[data-a="${a}"]`, pagesEl)) s.classList.add('sel');
   const [text, sim] = await Promise.all([ayahText(a), data('mutashabihat.json').catch(() => ({}))]);
   const name = names[m.surah[a - 1] - 1][1];
-  await sheet(`<h3>سورة ${esc(name)}، الآية ${ar(m.ayah[a - 1])}</h3>
-    <div class="list">
-      <button data-x="play">${icon('play')}<span class="grow">الاستماع من هذه الآية<br><small class="muted">حدّد النطاق والتكرار والقارئ</small></span></button>
-      <button data-x="tafsir">${icon('book')}<span class="grow">التفسير<br><small class="muted">الميسر والسعدي وابن كثير وغيرها</small></span></button>
-      ${sim[a]?.length ? `<button data-x="similar">${icon('repeat')}<span class="grow">آيات متشابهة<br><small class="muted">${ar(sim[a].length)} آية تشبهها في الألفاظ</small></span></button>` : ''}
-      <button data-x="video">${icon('tv')}<span class="grow">فيديو بصوت القارئ<br><small class="muted">ستوري لواتساب وانستجرام وفيسبوك</small></span></button>
-      <button data-x="image">${icon('image')}<span class="grow">مشاركة كصورة</span></button>
-      <button data-x="tasmee">${icon('mic')}<span class="grow">سمّع من هذه الآية</span></button>
-      <button data-x="hifz">${icon('repeat')}<span class="grow">احفظ هذه الآية (تكرار)</span></button>
-      <button data-x="copy">${icon('copy')}<span class="grow">نسخ الآية</span></button>
-      <button data-x="share">${icon('share')}<span class="grow">مشاركة</span></button>
-    </div>`, (body, close) => {
+  const ACTS = [
+    ['play', 'استماع', 'play', 'emerald'], ['tafsir', 'التفسير', 'book', 'gold'], ['video', 'فيديو', 'tv', 'coral'], ['image', 'صورة', 'image', 'sky'],
+    ['tasmee', 'تسميع', 'mic', 'rose'], ['hifz', 'احفظها', 'repeat', 'amethyst'], ['copy', 'نسخ', 'copy', 'slate'], ['share', 'مشاركة', 'share', 'teal'],
+  ];
+  await sheet(`<div class="amenu">
+    <div class="ahead"><span class="num">${ar(m.ayah[a - 1])}</span>
+      <span class="grow"><b>سورة ${esc(name)}</b><small class="muted">الآية ${ar(m.ayah[a - 1])}، الصفحة ${ar(m.page[a - 1])}</small></span></div>
+    <p class="aprev">${esc(text)}</p>
+    <div class="agrid">${ACTS.map(([x, t, ic, tone]) => `<button data-x="${x}"><span class="ticon t-${tone}">${icon(ic)}</span>${t}</button>`).join('')}</div>
+    ${sim[a]?.length ? `<button class="card asim" data-x="similar"><span class="ticon t-coral" style="width:44px;height:44px">${icon('repeat')}</span>
+      <span class="grow"><b>آيات متشابهة</b><small class="muted">${ar(sim[a].length)} ${sim[a].length > 2 && sim[a].length < 11 ? 'آيات تشبهها' : 'آية تشبهها'} في الألفاظ</small></span>${icon('back', 'muted')}</button>` : ''}
+  </div>`, (body, close) => {
+    // Pages open after the sheet's own history entry is gone.
+    const go = (hash) => afterSheet(() => { location.hash = hash; });
     body.onclick = async (e) => {
       const x = e.target.closest('[data-x]')?.dataset.x;
       if (!x) return;
@@ -247,10 +249,10 @@ async function ayahMenu(a, m, names) {
       if (x === 'play') { close(); setTimeout(() => listenSheet(a), 50); }
       if (x === 'tafsir') { close(); setTimeout(() => tafsir(a, m, names), 50); }
       if (x === 'similar') { close(); import('./tools.js').then((t) => setTimeout(() => t.similarSheet(a), 50)); }
-      if (x === 'video') { close(); location.hash = `#/video/${m.surah[a - 1]}/${m.ayah[a - 1]}/${m.ayah[a - 1]}`; }
+      if (x === 'video') { close(); go(`#/video/${m.surah[a - 1]}/${m.ayah[a - 1]}/${m.ayah[a - 1]}`); }
       if (x === 'image') { close(); toast('جارٍ تجهيز الصورة…'); import('./video.js').then((v) => v.shareAyahImage(a)).catch(() => toast('تعذر إنشاء الصورة')); }
-      if (x === 'tasmee') { close(); location.hash = `#/tasmee/${m.page[a - 1]}/${a}`; }
-      if (x === 'hifz') { close(); location.hash = `#/hifz/${a}`; }
+      if (x === 'tasmee') { close(); go(`#/tasmee/${m.page[a - 1]}/${a}`); }
+      if (x === 'hifz') { close(); go(`#/hifz/${a}`); }
       if (x === 'copy') { close(); navigator.clipboard?.writeText(ref).then(() => toast('نُسخت الآية')); }
       if (x === 'share') { close(); if (navigator.share) navigator.share({ text: ref }).catch(() => {}); else navigator.clipboard?.writeText(ref).then(() => toast('نُسخت الآية')); }
     };

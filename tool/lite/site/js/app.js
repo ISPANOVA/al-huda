@@ -132,6 +132,9 @@ export function closeSheet(v) {
     history.back();
   }
 }
+/// Runs [f] once the closed sheet's history entry is gone (a page opened
+/// from a sheet would otherwise be undone by that step back).
+export function afterSheet(f) { Promise.resolve(backing).then(() => setTimeout(f, 0)); }
 $('#sheet').addEventListener('click', (e) => { if (e.target.id === 'sheet') closeSheet(); });
 
 export function top(title, sub = '', tone = 'gold', ic = 'book', back = true) {

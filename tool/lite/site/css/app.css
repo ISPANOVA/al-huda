@@ -117,7 +117,8 @@ a:active, button:active { transform: scale(.97); }
 .qa .ticon { width: 48px; height: 48px; }
 .row { display: flex; align-items: center; gap: 12px; }
 .row .grow { flex: 1; min-width: 0; }
-.list > * { display: flex; align-items: center; gap: 12px; padding: 12px 4px; border-bottom: 1px solid rgba(255,255,255,.06); }
+.list > * { display: flex; align-items: center; gap: 12px; padding: 12px 4px; border-bottom: 1px solid rgba(255,255,255,.06); width: 100%; text-align: right; }
+.list > * > .grow { flex: 1; min-width: 0; }
 [data-theme="light"] .list > * { border-bottom-color: rgba(0,0,0,.06); }
 .list > *:last-child { border-bottom: 0; }
 .num { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; flex: none; font-weight: 800; font-size: 13px;
@@ -383,19 +384,6 @@ body.in-mushaf .player { bottom: calc(var(--safe-b) + 8px); }
 @media (min-width: 1000px) { .mushaf::after { height: 64px; } }
 
 /* ---- home: the app's living sky, today's prayers, goals ---- */
-.sky { position: relative; height: 330px; margin: calc(-8px - var(--safe-t)) -16px 0; border-radius: 0 0 34px 34px; overflow: hidden; color: #fff; }
-.sky canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
-.sky-top { position: absolute; top: calc(var(--safe-t) + 14px); left: 16px; right: 18px; display: flex; align-items: flex-start; gap: 8px; }
-.sky-top .grow { display: flex; flex-direction: column; }
-.sky-top small { color: rgba(255,255,255,.72); font-size: 13px; }
-.sky-top h1 { margin: 0; font-family: ReemKufi, Tajawal; font-size: 40px; line-height: 1.25; text-shadow: 0 0 18px rgba(243,213,138,.4); }
-.sky-top b { color: #ffe3a3; font-size: 13.5px; }
-.skybtn { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; color: #fff; background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.35); flex: none; }
-.skybtn svg { width: 22px; height: 22px; }
-.nextp { position: absolute; left: 14px; right: 14px; bottom: 16px; display: flex; align-items: center; gap: 10px; padding: 8px 16px 8px 8px;
-  border-radius: 24px; background: rgba(0,0,0,.38); border: 1px solid rgba(255,255,255,.14); color: #fff; }
-.nextp .grow { display: flex; flex-direction: column; min-width: 0; }
-.nextp small { color: rgba(255,255,255,.7); font-size: 12px; }
 .nrow { display: flex; align-items: flex-end; gap: 8px; }
 .nrow b { font-family: ReemKufi, Tajawal; font-size: 26px; line-height: 1.25; }
 .nrow em { font-style: normal; color: #ffe3a3; font-weight: 800; padding-bottom: 3px; }
@@ -414,19 +402,8 @@ body.in-mushaf .player { bottom: calc(var(--safe-b) + 8px); }
 .today a.next small { color: rgba(26,18,5,.75); }
 .banner-fri { display: flex; flex-direction: column; margin-top: 12px; border-color: rgba(255,203,107,.4); }
 .banner-fri small { color: var(--muted); }
-.resume { position: relative; display: flex; align-items: center; gap: 14px; margin-top: 12px; overflow: hidden; padding-bottom: 20px; }
-.resume .grow { display: flex; flex-direction: column; }
-.resume-surah { font-family: ReemKufi, Tajawal; font-size: 22px; line-height: 1.35; }
-.resume-bar { position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: rgba(226,194,117,.12); } .resume-bar i { display: block; height: 100%; background: var(--gold); }
-.goals { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 12px; }
-.goals .card { margin: 0; display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 14px 6px; text-align: center; }
-.goals .ticon { width: 42px; height: 42px; } .goals .ticon svg { width: 22px; height: 22px; }
-.goals b { font-size: 15px; } .goals small { color: var(--muted); font-size: 12px; }
 .athkar-now { display: flex; align-items: center; gap: 12px; margin-top: 12px; }
 .athkar-now .grow { display: flex; flex-direction: column; } .athkar-now .ticon { width: 44px; height: 44px; }
-.tools { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px 6px; }
-.tools a { display: flex; flex-direction: column; align-items: center; gap: 7px; font-size: 12.5px; font-weight: 800; text-align: center; }
-.tools .ticon { width: 54px; height: 54px; border-radius: 18px; }
 .ayah-day { margin: 0; }
 .ayah-day .verse { margin: 0; }
 .ayah-day figcaption { text-align: center; color: var(--muted); font-size: 13px; margin-top: 4px; }
@@ -434,13 +411,9 @@ body.in-mushaf .player { bottom: calc(var(--safe-b) + 8px); }
 .ayah-actions > * { display: inline-flex; align-items: center; gap: 6px; padding: 8px 12px; border-radius: 12px; font-weight: 800; font-size: 13.5px; color: var(--gold); }
 .ayah-actions svg { width: 20px; height: 20px; }
 .dedication { text-align: center; color: var(--muted); font-size: 13px; margin: 26px 0 0; }
-@media (min-width: 600px) { .tools { grid-template-columns: repeat(8, 1fr); } .sky { margin: 0; border-radius: 34px; height: 360px; } }
-@media (min-width: 1000px) { .sky { height: 400px; } .nextp { max-width: 520px; left: auto; right: 20px; bottom: 20px; } }
-
 /* Long lists: rows out of view are not laid out or painted until needed. */
 .list > *, .thikr, .rgrid > .rcard { content-visibility: auto; contain-intrinsic-size: auto 64px; }
 .thikr { contain-intrinsic-size: auto 220px; }
-.resume.listen { width: 100%; padding-bottom: 14px; font: inherit; color: inherit; text-align: right; cursor: pointer; }
 
 /* ---- tools: names, hadith, prayer log, Ramadan, similar ayahs ---- */
 .big { font-size: 30px; font-weight: 900; line-height: 1.25; font-family: ReemKufi, Tajawal; }
@@ -510,3 +483,82 @@ i[class^=tj] { font-style: normal; }
 [data-theme="light"] .tj15 { color: #868E96; }
 [data-theme="light"] .tj16 { color: #2F9E44; }
 .ibtn.on { color: var(--gold); background: rgba(226,194,117,.16); }
+
+/* ---- home: one column on phones, two on wide screens ---- */
+.home { display: flex; flex-direction: column; }
+.hcol { display: contents; }
+.hmain > .sky { order: 1; } .hmain > .today { order: 2; } .hmain > #banners { order: 3; }
+.hside > .cont { order: 4; } .hside > .goals { order: 5; } .hside > .athkar-now { order: 6; } .hside > .hsec { order: 7; } .hmain > .hayah { order: 8; }
+#banners:empty { display: none; }
+.cont { display: grid; gap: 10px; margin-top: 12px; }
+.ccard { position: relative; display: flex; align-items: center; gap: 12px; margin: 0 !important; overflow: hidden; width: 100%; font: inherit; color: inherit; text-align: right; cursor: pointer; }
+.ccard .grow { display: flex; flex-direction: column; min-width: 0; }
+.ccard .ticon { width: 48px; height: 48px; }
+.ctitle { font-family: ReemKufi, Tajawal; font-size: 21px; line-height: 1.35; } .ctitle.sm { font-size: 17px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ccard .ell { max-width: 100%; }
+.cbar { position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: rgba(226,194,117,.12); } .cbar i { display: block; height: 100%; background: var(--gold); }
+.goals { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 12px; }
+.goals .card { margin: 0; display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 12px 4px; text-align: center; }
+.goals .card > span:last-child { display: flex; flex-direction: column; }
+.goals .ticon { width: 38px; height: 38px; border-radius: 13px; } .goals .ticon svg { width: 20px; height: 20px; }
+.goals b { font-size: 14px; white-space: nowrap; } .goals small { color: var(--muted); font-size: 11.5px; }
+.hsec { margin-top: 4px; }
+.tools { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px 6px; padding: 16px 8px; }
+.tools a { display: flex; flex-direction: column; align-items: center; gap: 7px; font-size: 12.5px; font-weight: 800; text-align: center; }
+.tools .ticon { width: 50px; height: 50px; border-radius: 17px; }
+@media (min-width: 600px) {
+  .sky { margin: 0; border-radius: 28px; }
+  .cont.two { grid-template-columns: 1fr 1fr; }
+  .goals .card { flex-direction: row; justify-content: center; gap: 10px; text-align: right; padding: 14px 10px; }
+}
+/* Computers and tablets in landscape: the sky, today and the ayah on one side,
+   reading, goals and tools on the other. */
+@media (min-width: 1000px) {
+  .home { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr); gap: 22px; align-items: start; }
+  .hcol { display: flex; flex-direction: column; }
+  .hcol > * { order: 0 !important; }
+  .today { margin-top: 12px; }
+  .cont { margin-top: 0; } .cont.two { grid-template-columns: 1fr; }
+  .goals { margin-top: 12px; } .goals .card { flex-direction: column; text-align: center; gap: 6px; }
+  .hayah .section { margin-top: 18px; }
+  .dedication { margin-top: 30px; }
+}
+
+/* ---- the ayah menu ---- */
+.amenu .ahead { display: flex; align-items: center; gap: 12px; }
+.amenu .ahead .grow { display: flex; flex-direction: column; }
+.amenu .ahead b { font-family: ReemKufi, Tajawal; font-size: 19px; }
+.amenu .aprev { font-family: Hafs, serif; font-size: 22px; line-height: 2; text-align: center; margin: 12px 0 6px; padding: 10px 12px;
+  border-radius: 18px; background: var(--card); border: 1px solid var(--line);
+  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.agrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px 6px; margin-top: 14px; }
+.agrid button { display: flex; flex-direction: column; align-items: center; gap: 7px; font-size: 12.5px; font-weight: 800; }
+.agrid .ticon { width: 52px; height: 52px; border-radius: 17px; }
+.asim { display: flex; align-items: center; gap: 12px; width: 100%; margin-top: 14px; text-align: right; }
+.asim .grow { display: flex; flex-direction: column; }
+
+/* ---- the home's sky: the scene with the title on top, the next prayer
+   as a bar under it (nothing overlaps) ---- */
+.sky { position: relative; margin: calc(-8px - var(--safe-t)) -16px 0; border-radius: 0 0 28px 28px; overflow: hidden; color: #fff;
+  background: #07101d; border: 1px solid rgba(255,255,255,.06); border-top: 0; }
+.skyart { position: relative; height: calc(230px + var(--safe-t)); }
+.skyart canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.skyart::after { content: ""; position: absolute; inset: 0 0 auto 0; height: 55%; background: linear-gradient(rgba(0,0,0,.38), transparent); pointer-events: none; }
+.sky-top { position: absolute; z-index: 1; top: calc(var(--safe-t) + 14px); left: 16px; right: 18px; display: flex; align-items: center; gap: 8px; }
+.sky-top .grow { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+.sky-top small { color: rgba(255,255,255,.78); font-size: 13px; }
+.sky-top h1 { margin: 0; font-family: ReemKufi, Tajawal; font-size: 34px; line-height: 1.2; text-shadow: 0 0 18px rgba(243,213,138,.35); }
+.skybtn { width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; color: #fff; background: rgba(0,0,0,.18);
+  border: 1px solid rgba(255,255,255,.3); flex: none; backdrop-filter: blur(4px); }
+.skybtn svg { width: 21px; height: 21px; }
+.sky-date { position: absolute; z-index: 1; top: calc(var(--safe-t) + 74px); right: 18px; display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+.sky-date b { color: #ffe3a3; font-size: 13.5px; } .sky-date small { color: rgba(255,255,255,.72); font-size: 12.5px; }
+.sky-date b:not(:empty)::after { content: "•"; margin-inline-start: 8px; color: rgba(255,255,255,.45); font-weight: 400; }
+.nextp { display: flex; align-items: center; gap: 14px; padding: 12px 16px; border-top: 1px solid rgba(255,255,255,.08);
+  background: linear-gradient(180deg, #0b1626, #07101d); }
+.nextp .grow { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+.nextp small { color: rgba(255,255,255,.7); font-size: 12px; }
+.nextp > svg { width: 20px; height: 20px; opacity: .6; }
+.nextp .nring { width: 64px; height: 64px; }
+@media (min-width: 600px) { .sky { border: 1px solid rgba(255,255,255,.06); } .skyart { height: 250px; } .sky-top { top: 16px; } .sky-date { top: 76px; } }
+@media (min-width: 1000px) { .skyart { height: 280px; } .sky-top h1 { font-size: 38px; } .sky-date { top: 88px; } }

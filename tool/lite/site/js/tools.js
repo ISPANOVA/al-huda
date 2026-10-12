@@ -1,6 +1,6 @@
 // أسماء الله الحسنى، الأربعون النووية، حاسبة الزكاة، متابعة الصلوات (ورمضان)،
 // المتشابهات اللفظية: the same content and keys as the app.
-import { $, $$, ar, esc, icon, store, data, meta, surahs, top, toast, sheet } from './app.js';
+import { $, $$, ar, esc, icon, store, data, meta, surahs, top, toast, sheet, afterSheet } from './app.js';
 import { hijriToday } from './prayerlib.js';
 import { ayahText } from './page.js';
 
@@ -236,7 +236,15 @@ export async function similarSheet(g) {
   }));
   sheet(`<h3>آيات متشابهة</h3><p class="muted small center">${ar(others.length)} آية تشترك في ألفاظها مع ${ref(g)}</p>
     <div class="sim me"><small class="gold">${ref(g)}</small><div class="quran" style="font-size:22px;line-height:1.9">${esc(text)}</div></div>${rows.join('')}`,
-  (body, close) => { body.onclick = (e) => { if (e.target.closest('[data-close]')) close(); }; });
+  (body, close) => {
+    body.onclick = (e) => {
+      const l = e.target.closest('[data-close]');
+      if (!l) return;
+      e.preventDefault();
+      close();
+      afterSheet(() => { location.hash = l.getAttribute('href'); });
+    };
+  });
 }
 
 async function similarPage(view, args) {
