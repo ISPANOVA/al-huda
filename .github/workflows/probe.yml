@@ -1,0 +1,40 @@
+name: Probe data sources
+# Push to probe: fetches a few public Quran APIs to check what they offer
+# (tafsirs, tajweed, word meanings) and publishes the answers to the
+# probe-results branch. Never touches the app build.
+on:
+  push:
+    branches: [probe]
+permissions:
+  contents: write
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Probe
+        run: |
+          mkdir -p "$RUNNER_TEMP/out"; cd "$RUNNER_TEMP/out"
+          UA="AlHudaApp/1.0 (github.com/ISPANOVA/al-huda)"
+          get() { curl -sL -A "$UA" --max-time 60 "$2" -o "$1" -w "$1 %{http_code} %{size_download}\n" >> status.txt || echo "$1 failed" >> status.txt; }
+          get tafsirs.json "https://api.quran.com/api/v4/resources/tafsirs"
+          get translations.json "https://api.quran.com/api/v4/resources/translations"
+          get tafsir91.json "https://api.quran.com/api/v4/tafsirs/91/by_ayah/2:255"
+          get tafsir14.json "https://api.quran.com/api/v4/tafsirs/14/by_ayah/2:255"
+          get tajweed_ch1.json "https://api.quran.com/api/v4/quran/verses/uthmani_tajweed?chapter_number=1"
+          get words_p1.json "https://api.quran.com/api/v4/verses/by_page/2?words=true&word_fields=text_uthmani,text_qpc_hafs,text_uthmani_tajweed,code_v2&per_page=50"
+          get words_ar.json "https://api.quran.com/api/v4/verses/by_key/2:2?words=true&word_translation_language=ar&word_fields=text_qpc_hafs"
+          get qpc_ch1.json "https://api.quran.com/api/v4/quran/verses/qpc_hafs?chapter_number=1"
+          get cloud_editions.json "https://api.alquran.cloud/v1/edition?language=ar"
+          get cloud_tajweed_1.json "https://api.alquran.cloud/v1/surah/1/quran-tajweed"
+          get qul_resources.html "https://qul.tarteel.ai/resources"
+          cat status.txt
+      - name: Publish
+        if: always()
+        run: |
+          cd "$RUNNER_TEMP/out"
+          git init -q -b probe-results
+          git config user.name ci-bot && git config user.email ci-bot@users.noreply.github.com
+          git add -A && git commit -qm "probe ${GITHUB_RUN_NUMBER}"
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${GITHUB_REPOSITORY}.git" HEAD:probe-results
