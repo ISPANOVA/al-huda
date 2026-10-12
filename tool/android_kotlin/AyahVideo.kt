@@ -508,7 +508,15 @@ class VideoProvider : ContentProvider() {
         val f = file(uri)
         val cols = projection ?: arrayOf(OpenableColumns.DISPLAY_NAME, OpenableColumns.SIZE)
         val c = MatrixCursor(cols)
-        c.addRow(cols.map { if (it == OpenableColumns.SIZE) f.length() else if (it == OpenableColumns.DISPLAY_NAME) f.name else null }.toTypedArray())
+        val row = arrayOfNulls<Any>(cols.size)
+        cols.forEachIndexed { i, col ->
+            row[i] = when (col) {
+                OpenableColumns.SIZE -> f.length()
+                OpenableColumns.DISPLAY_NAME -> f.name
+                else -> null
+            }
+        }
+        c.addRow(row)
         return c
     }
 
