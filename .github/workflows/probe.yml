@@ -10,7 +10,7 @@ permissions:
 jobs:
   probe:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
       - name: Probe
@@ -30,6 +30,9 @@ jobs:
           get cloud_tajweed_1.json "https://api.alquran.cloud/v1/surah/1/quran-tajweed"
           get qul_resources.html "https://qul.tarteel.ai/resources"
           cat status.txt
+      - name: Tajweed colours for the bundled Mushaf
+        if: always()
+        run: python3 tool/quran/tajweed.py "$RUNNER_TEMP/out"
       - name: Publish
         if: always()
         run: |
