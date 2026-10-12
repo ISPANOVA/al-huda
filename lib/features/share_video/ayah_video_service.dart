@@ -129,7 +129,7 @@ class AyahVideoService {
     var n = 0;
     Future<String> frame(FrameContent c) {
       final rec = ui.PictureRecorder();
-      painter.paintFrame(Canvas(rec), Size(width.toDouble(), height.toDouble()), c);
+      painter.paintFrame(ui.Canvas(rec), ui.Size(width.toDouble(), height.toDouble()), c);
       return _png(rec.endRecording(), width, height, '${work.path}/f${n++}.png');
     }
 
@@ -159,7 +159,7 @@ class AyahVideoService {
       segments.add({'audio': audio[ai++], 'silenceMs': 250, 'shots': shots});
     }
     final rec = ui.PictureRecorder();
-    painter.paintOutro(Canvas(rec), Size(width.toDouble(), height.toDouble()));
+    painter.paintOutro(ui.Canvas(rec), ui.Size(width.toDouble(), height.toDouble()));
     final outro = await _png(rec.endRecording(), width, height, '${work.path}/outro.png');
     segments.add({'audio': null, 'silenceMs': 2600, 'shots': [{'image': outro, 'weight': 1.0}]});
 

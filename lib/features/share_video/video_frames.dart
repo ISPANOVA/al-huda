@@ -162,7 +162,7 @@ class VideoFramePainter {
   // ----------------------------------------------------------------- parts ---
 
   void _background(Canvas canvas) {
-    const r = Offset.zero & Size(w, h);
+    final r = Offset.zero & const Size(w, h);
     if (bg.id == VideoBackground.custom && photo != null) {
       final img = photo!;
       final scale = math.max(w / img.width, h / img.height);
