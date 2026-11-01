@@ -13,6 +13,7 @@ import '../../../virtues/virtues_pages.dart';
 import '../../../duas/duas_page.dart';
 import '../../../../core/widgets/gradient_background.dart';
 import '../../../audio/presentation/cubit/audio_cubit.dart';
+import '../../../audio/presentation/cubit/audio_state.dart';
 import '../../../audio/presentation/widgets/mini_player.dart';
 import '../../../settings/presentation/cubit/settings_cubit.dart';
 import '../../data/athkar_data.dart';
@@ -396,14 +397,7 @@ class _ThikrCard extends StatelessWidget {
                       text: '${thikr.text}\n[${thikr.source}]'),
                 ),
                 if (thikr.quran != null)
-                  IconButton(
-                    tooltip: tr('استماع'),
-                    icon: Icon(Icons.volume_up_rounded, color: ink),
-                    onPressed: () {
-                      final q = thikr.quran!;
-                      context.read<AudioCubit>().playAyahs(q.surah, q.from, q.to);
-                    },
-                  ),
+                  _ListenButton(quran: thikr.quran!, color: ink),
                 const SizedBox(width: 4),
                 GestureDetector(
                   onTap: tap,
@@ -486,6 +480,43 @@ class _ToneProgressBar extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// «استماع» on a Quranic thikr: shows that the recitation is loading or
+/// playing, and a second tap stops it (instead of loading it all again).
+class _ListenButton extends StatelessWidget {
+  final ({int surah, int from, int to}) quran;
+  final Color color;
+
+  const _ListenButton({required this.quran, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    final q = quran;
+    return BlocBuilder<AudioCubit, AudioState>(
+      buildWhen: (a, b) => a.surah != b.surah || a.ayah != b.ayah || a.playing != b.playing || a.buffering != b.buffering,
+      builder: (context, st) {
+        final ayah = st.ayah ?? -1;
+        final mine = !st.isLive && st.surah == q.surah && ((ayah >= q.from && ayah <= q.to) || (ayah == 0 && q.from == 1));
+        final busy = mine && st.buffering;
+        final on = mine && st.playing;
+        return IconButton(
+          tooltip: tr(on ? 'إيقاف' : 'استماع'),
+          icon: busy
+              ? SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2.2, color: color))
+              : Icon(on ? Icons.stop_rounded : Icons.volume_up_rounded, color: color),
+          onPressed: () {
+            final audio = context.read<AudioCubit>();
+            if (on || busy) {
+              audio.stop();
+            } else {
+              audio.playAyahs(q.surah, q.from, q.to);
+            }
+          },
+        );
+      },
     );
   }
 }

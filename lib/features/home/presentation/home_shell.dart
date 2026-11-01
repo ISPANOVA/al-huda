@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart' hide Text;
+import 'package:flutter/physics.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -164,14 +165,55 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
   Widget _bar() => RepaintBoundary(
         child: Column(
           mainAxisSize: MainAxisSize.min,
-          children: [const MiniPlayer(), _BottomNav(index: _index, onTap: _go)],
+          children: [
+            const MiniPlayer(),
+            _BottomNav(index: _index, collapsed: _collapsed, onTap: _go, onExpand: () => _setCollapsed(false)),
+          ],
         ),
       );
+
+  /// Folded into the circle while a page is scrolled down.
+  bool _collapsed = false;
+  double _scrollRun = 0;
+
+  void _setCollapsed(bool v) {
+    if (v != _collapsed && mounted) setState(() => _collapsed = v);
+  }
+
+  /// Down a page: the bar folds once the finger has gone [_foldAfter] down
+  /// in one run; up again (or back at the top): it opens.
+  static const _foldAfter = 28.0;
+  bool _onScroll(ScrollNotification n) {
+    if (_index == quranTab || n.metrics.axis != Axis.vertical) return false;
+    if (n is ScrollUpdateNotification) {
+      final d = n.scrollDelta ?? 0;
+      if (n.metrics.pixels <= n.metrics.minScrollExtent + 8) {
+        _scrollRun = 0;
+        _setCollapsed(false);
+        return false;
+      }
+      // A change of direction starts a new run.
+      if (d.sign != _scrollRun.sign && d != 0) _scrollRun = 0;
+      _scrollRun += d;
+      if (_scrollRun > _foldAfter) {
+        _setCollapsed(true);
+      } else if (_scrollRun < -_foldAfter) {
+        _setCollapsed(false);
+      }
+    } else if (n is OverscrollNotification && n.overscroll < 0) {
+      _setCollapsed(false);
+    }
+    return false;
+  }
 
   void _go(int i) {
     if (i == _index) return;
     MushafReaderPage.setImmersive(false);
-    setState(() => _index = i);
+    _scrollRun = 0;
+    setState(() {
+      _index = i;
+      _collapsed = false;
+    });
     context.read<StorageService>().settings.put(_lastTabKey, i);
     if (i == quranTab) _guide();
   }
@@ -265,7 +307,10 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
                     Column(
                       children: [
                         Expanded(
-                          child: FadeThroughIndexedStack(index: _index, children: _pages),
+                          child: NotificationListener<ScrollNotification>(
+                            onNotification: _onScroll,
+                            child: FadeThroughIndexedStack(index: _index, children: _pages),
+                          ),
                         ),
                       ],
                     ),
@@ -282,13 +327,16 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
                             final hidden = immersive && _index == quranTab;
                             return IgnorePointer(
                             ignoring: hidden,
+                            // One curve for the slide and the fade, gentler on
+                            // the way back, so it glides rather than jumps.
                             child: AnimatedSlide(
-                              offset: hidden ? const Offset(0, 1) : Offset.zero,
-                              duration: const Duration(milliseconds: 240),
-                              curve: Curves.easeOutCubic,
+                              offset: hidden ? const Offset(0, 1.1) : Offset.zero,
+                              duration: Duration(milliseconds: hidden ? 300 : 380),
+                              curve: hidden ? Curves.easeInCubic : Curves.easeOutQuart,
                               child: AnimatedOpacity(
                                 opacity: hidden ? 0 : 1,
-                                duration: const Duration(milliseconds: 200),
+                                duration: Duration(milliseconds: hidden ? 260 : 340),
+                                curve: hidden ? Curves.easeIn : Curves.easeOut,
                                 child: child,
                               ),
                             ),
@@ -482,95 +530,253 @@ class _SideNavItem extends StatelessWidget {
 
 /// Floating, pill-style navigation: the selected tab grows into a capsule
 /// with its label; the others show icons only.
-class _BottomNav extends StatelessWidget {
+/// The bottom bar: a pill of icons with a lens on the current tab. Hold
+/// and slide a finger along it and the lens follows; letting go opens the tab
+/// under it. Scrolling a page down folds it into a small circle at the bottom
+/// left (the current tab's icon); scrolling up or tapping the circle opens it.
+///
+/// Raw pointer events (not gesture recognizers) drive it, so a page's own
+/// scrolling or a competing gesture can never swallow a tap or a slide: every
+/// touch that ends on the bar opens a tab.
+class _BottomNav extends StatefulWidget {
   final int index;
+  final bool collapsed;
   final ValueChanged<int> onTap;
+  final VoidCallback onExpand;
 
-  const _BottomNav({required this.index, required this.onTap});
+  const _BottomNav({required this.index, required this.collapsed, required this.onTap, required this.onExpand});
+
+  @override
+  State<_BottomNav> createState() => _BottomNavState();
+}
+
+class _BottomNavState extends State<_BottomNav> with TickerProviderStateMixin {
+  static const _height = 62.0;
+  static const _circle = 56.0;
+  static const _pad = 5.0;
+
+  /// Where the lens is, in tabs (0 = the first tab; fractions while sliding).
+  late final AnimationController _lens =
+      AnimationController.unbounded(vsync: this, value: widget.index.toDouble());
+
+  /// 0 = the full bar, 1 = folded into the circle.
+  late final AnimationController _fold = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 420),
+    reverseDuration: const Duration(milliseconds: 380),
+    value: widget.collapsed ? 1 : 0,
+  );
+
+  /// The press: 0 at rest, 1 while a finger is on the bar (the lens swells).
+  late final AnimationController _press =
+      AnimationController(vsync: this, duration: const Duration(milliseconds: 160));
+
+  int? _pointer;
+  double _downX = 0;
+  double _lastX = 0;
+  bool _sliding = false;
+  int _hover = -1;
+
+  static const _spring = SpringDescription(mass: 1, stiffness: 420, damping: 34);
+
+  @override
+  void didUpdateWidget(covariant _BottomNav old) {
+    super.didUpdateWidget(old);
+    if (old.index != widget.index && _pointer == null) _settle(widget.index);
+    if (old.collapsed != widget.collapsed) {
+      widget.collapsed ? _fold.forward() : _fold.reverse();
+    }
+  }
+
+  @override
+  void dispose() {
+    _lens.dispose();
+    _fold.dispose();
+    _press.dispose();
+    super.dispose();
+  }
+
+  void _settle(int i) {
+    _lens.animateWith(SpringSimulation(_spring, _lens.value, i.toDouble(), _lens.velocity));
+  }
+
+  int get _count => _HomeShellState._tabs.length;
+
+  /// The tab (as a fractional position) under [dx] in a bar [w] wide.
+  double _at(double dx, double w) {
+    final slot = (w - _pad * 2) / _count;
+    var x = ((dx - _pad) / slot - 0.5).clamp(0.0, _count - 1.0);
+    if (Directionality.of(context) == TextDirection.rtl) x = _count - 1 - x;
+    return x;
+  }
+
+  void _down(PointerDownEvent e, double w) {
+    if (_pointer != null) return;
+    _pointer = e.pointer;
+    _downX = _lastX = e.localPosition.dx;
+    _sliding = false;
+    _hover = _at(_downX, w).round();
+    _press.forward();
+  }
+
+  void _move(PointerMoveEvent e, double w) {
+    if (e.pointer != _pointer) return;
+    _lastX = e.localPosition.dx;
+    if (!_sliding && (e.localPosition.dx - _downX).abs() < 6) return;
+    _sliding = true;
+    final x = _at(e.localPosition.dx, w);
+    _lens.value = x;
+    final h = x.round();
+    if (h != _hover) {
+      _hover = h;
+      HapticFeedback.selectionClick();
+    }
+  }
+
+  void _up(PointerEvent e, double w) {
+    if (e.pointer != _pointer) return;
+    _pointer = null;
+    _press.reverse();
+    // A cancelled touch carries no position: the last one seen stands for it.
+    if (e is PointerUpEvent) _lastX = e.localPosition.dx;
+    final target = (_sliding ? _lens.value : _at(_lastX, w)).round().clamp(0, _count - 1);
+    _sliding = false;
+    _settle(target);
+    if (target != widget.index) {
+      HapticFeedback.selectionClick();
+      widget.onTap(target);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final glass = GlassTheme.of(context);
     final dark = Theme.of(context).brightness == Brightness.dark;
     final base = glass.backgroundGradient.last;
-    final surface = dark ? Color.lerp(base, Colors.black, 0.45)! : Color.lerp(base, Colors.white, 0.75)!;
+    final surface = dark ? Color.lerp(base, Colors.black, 0.55)! : Color.lerp(base, Colors.white, 0.8)!;
     final bottom = MediaQuery.paddingOf(context).bottom;
+    final rtl = Directionality.of(context) == TextDirection.rtl;
     const tabs = _HomeShellState._tabs;
+    final decoration = BoxDecoration(
+      color: surface.withValues(alpha: 0.97),
+      borderRadius: BorderRadius.circular(_height),
+      border: Border.all(color: glass.accent.withValues(alpha: dark ? 0.18 : 0.28)),
+      boxShadow: liteShadows([
+        BoxShadow(color: Colors.black.withValues(alpha: dark ? 0.45 : 0.16), blurRadius: 22, offset: const Offset(0, 8)),
+      ]),
+    );
     return Padding(
       padding: EdgeInsets.fromLTRB(14, 4, 14, 10 + bottom),
-      child: Container(
-        height: 64,
-        decoration: BoxDecoration(
-          color: surface.withValues(alpha: 0.96),
-          borderRadius: BorderRadius.circular(32),
-          border: Border.all(color: glass.accent.withValues(alpha: dark ? 0.18 : 0.3)),
-          boxShadow: liteShadows([
-            BoxShadow(
-              color: Colors.black.withValues(alpha: dark ? 0.45 : 0.15),
-              blurRadius: 24,
-              offset: const Offset(0, 8),
-            ),
-          ]),
-        ),
-        padding: const EdgeInsets.all(7),
-        child: LayoutBuilder(builder: (context, c) {
-          final selectedW = c.maxWidth * 0.31;
-          final otherW = (c.maxWidth - selectedW) / (tabs.length - 1);
-          return Row(
-            children: [
-              for (var i = 0; i < tabs.length; i++)
-                GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onTap: () {
-                    HapticFeedback.selectionClick();
-                    onTap(i);
-                  },
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 360),
-                    curve: Curves.easeOutCubic,
-                    width: i == index ? selectedW : otherW,
-                    height: double.infinity,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(26),
-                      gradient: i == index ? tabs[i].tone.gradient() : null,
+      child: LayoutBuilder(builder: (context, c) {
+        final full = c.maxWidth;
+        return AnimatedBuilder(
+          animation: Listenable.merge([_fold, _lens, _press]),
+          builder: (context, _) {
+            final t = Curves.easeInOutCubic.transform(_fold.value);
+            final w = full + (_circle - full) * t;
+            final h = _height + (_circle - _height) * t;
+            final slot = (full - _pad * 2) / _count;
+            final lens = _lens.value;
+            final near = lens.round().clamp(0, _count - 1);
+            // The lens takes the colour of the tab beneath it, blending between two.
+            final lo = lens.floor().clamp(0, _count - 1), hi = lens.ceil().clamp(0, _count - 1);
+            final f = (lens - lo).clamp(0.0, 1.0);
+            final g1 = tabs[lo].tone.gradient().colors, g2 = tabs[hi].tone.gradient().colors;
+            final lensGradient = LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [Color.lerp(g1.first, g2.first, f)!, Color.lerp(g1.last, g2.last, f)!],
+            );
+            final swell = _press.value;
+            final lensX = rtl ? full - _pad - (lens + 1) * slot : _pad + lens * slot;
+            final bar = SizedBox(
+              width: full,
+              height: _height,
+              child: Stack(
+                children: [
+                  Positioned(
+                    left: lensX - swell * 3,
+                    top: _pad - swell * 2,
+                    width: slot + swell * 6,
+                    height: _height - _pad * 2 + swell * 4,
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        gradient: lensGradient,
+                        borderRadius: BorderRadius.circular(_height),
+                        boxShadow: liteShadows([
+                          BoxShadow(color: lensGradient.colors.last.withValues(alpha: 0.35 + swell * 0.15), blurRadius: 12, offset: const Offset(0, 3)),
+                        ]),
+                      ),
                     ),
-                    child: ClipRect(
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          AnimatedScale(
-                            scale: i == index ? 1.08 : 1,
-                            duration: const Duration(milliseconds: 300),
-                            child: Icon(
-                              i == index ? tabs[i].active : tabs[i].icon,
-                              size: 23,
-                              color: i == index
-                                  ? Colors.white
-                                  : (dark ? tabs[i].tone.light : tabs[i].tone.deep).withValues(alpha: 0.72),
-                            ),
-                          ),
-                          if (i == index)
-                            Flexible(
-                              child: Padding(
-                                padding: const EdgeInsetsDirectional.only(start: 6),
-                                child: TweenAnimationBuilder<double>(
-                                  key: ValueKey(index),
-                                  tween: Tween(begin: 0, end: 1),
-                                  duration: const Duration(milliseconds: 320),
+                  ),
+                  Positioned.fill(
+                    left: _pad,
+                    right: _pad,
+                    child: Row(
+                      children: [
+                        for (var i = 0; i < _count; i++)
+                          Expanded(
+                            child: Semantics(
+                              button: true,
+                              selected: i == widget.index,
+                              label: tr(tabs[i].label),
+                              onTap: () => widget.onTap(i),
+                              child: Center(
+                                child: AnimatedScale(
+                                  scale: i == near ? 1.12 : 1,
+                                  duration: const Duration(milliseconds: 200),
                                   curve: Curves.easeOut,
-                                  builder: (context, v, child) => Opacity(opacity: v, child: child),
-                                  child: Text(
-                                    tabs[i].label,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.clip,
-                                    softWrap: false,
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w800,
-                                    ),
+                                  child: Icon(
+                                    i == near ? tabs[i].active : tabs[i].icon,
+                                    size: 25,
+                                    color: i == near
+                                        ? Colors.white
+                                        : (dark ? tabs[i].tone.light : tabs[i].tone.deep).withValues(alpha: 0.78),
                                   ),
                                 ),
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            );
+            final current = tabs[widget.index];
+            return Align(
+              alignment: Alignment.bottomLeft,
+              child: SizedBox(
+                width: w,
+                height: h,
+                child: Listener(
+                  behavior: HitTestBehavior.opaque,
+                  onPointerDown: t > 0.5 ? null : (e) => _down(e, full),
+                  onPointerMove: t > 0.5 ? null : (e) => _move(e, full),
+                  onPointerUp: t > 0.5 ? (_) => widget.onExpand() : (e) => _up(e, full),
+                  onPointerCancel: t > 0.5 ? null : (e) => _up(e, full),
+                  child: DecoratedBox(
+                    decoration: decoration,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(_height),
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          // The full bar, laid out at its own width and clipped as it folds.
+                          if (t < 1)
+                            Positioned(
+                              left: 0,
+                              top: (h - _height) / 2,
+                              child: Opacity(opacity: (1 - t * 1.6).clamp(0.0, 1.0), child: bar),
+                            ),
+                          if (t > 0)
+                            Opacity(
+                              opacity: ((t - 0.35) / 0.65).clamp(0.0, 1.0),
+                              child: Container(
+                                width: _circle - 10,
+                                height: _circle - 10,
+                                decoration: BoxDecoration(shape: BoxShape.circle, gradient: current.tone.gradient()),
+                                child: Icon(current.active, size: 24, color: Colors.white),
                               ),
                             ),
                         ],
@@ -578,10 +784,11 @@ class _BottomNav extends StatelessWidget {
                     ),
                   ),
                 ),
-            ],
-          );
-        }),
-      ),
+              ),
+            );
+          },
+        );
+      }),
     );
   }
 }

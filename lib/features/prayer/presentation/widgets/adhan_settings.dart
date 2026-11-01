@@ -438,7 +438,26 @@ class _AdhanSettingsCardState extends State<AdhanSettingsCard> {
                               },
                             ),
                       title: Text(v.nameAr, style: const TextStyle(fontWeight: FontWeight.w700)),
-                      subtitle: Text(v.origin),
+                      subtitle: AdhanVoices.fajrVoices.contains(v.id)
+                          ? Row(
+                              children: [
+                                Flexible(child: Text(v.origin, overflow: TextOverflow.ellipsis)),
+                                const SizedBox(width: 6),
+                                ValueListenableBuilder<String?>(
+                                  valueListenable: AdhanPreview.playing,
+                                  builder: (_, playing, __) {
+                                    final on = playing == AdhanPreview.key('${v.id}_fajr', true);
+                                    return ActionChip(
+                                      visualDensity: VisualDensity.compact,
+                                      avatar: Icon(on ? Icons.stop_rounded : Icons.play_arrow_rounded, size: 16),
+                                      label: const Text('أذان الفجر', style: TextStyle(fontSize: 11.5)),
+                                      onPressed: () => AdhanPreview.toggle(ctx, '${v.id}_fajr', true),
+                                    );
+                                  },
+                                ),
+                              ],
+                            )
+                          : Text(v.origin),
                       trailing: v.id == s.adhanVoice
                           ? Icon(Icons.check_circle_rounded,
                               color: Tone.amethyst.ink(Theme.of(ctx).brightness == Brightness.dark))

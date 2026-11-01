@@ -297,12 +297,12 @@ class PrayerCubit extends Cubit<PrayerState> {
               title: title,
               body: body,
               when: when,
-              voice: voice.id,
+              voice: AdhanVoices.forPrayer(voice.id, fajr: p == PrayerName.fajr),
               voiceName: voice.nameAr,
               full: s.adhanFull,
             );
         if (native) {
-          nativeItems.add((id: slot, at: when, sound: AdhanNative.sound(voice.id, s.adhanFull), title: title, body: body));
+          nativeItems.add((id: slot, at: when, sound: AdhanNative.sound(AdhanVoices.forPrayer(voice.id, fajr: p == PrayerName.fajr), s.adhanFull), title: title, body: body));
           fallback.add(notify);
         } else {
           await notify();

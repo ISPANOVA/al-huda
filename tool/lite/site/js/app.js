@@ -5,6 +5,7 @@ export const $ = (s, el = document) => el.querySelector(s);
 export const $$ = (s, el = document) => [...el.querySelectorAll(s)];
 
 import { startI18n, isEnglish } from './i18n.js';
+import { initNav, syncNav } from './nav.js';
 
 const AR = '٠١٢٣٤٥٦٧٨٩';
 /// Numbers in Arabic digits (Latin ones in the English interface).
@@ -198,6 +199,7 @@ function highlight(name) {
   const tab = TABS[name] ?? 'home';
   for (const a of $$('#nav a')) a.className = a.dataset.tab === tab ? `on t-${TONES[tab]}` : '';
   $('#nav').classList.toggle('hide', name === 'tasmee' || name === 'mushaf');
+  syncNav();
 }
 // The new page fades in as soon as it is written.
 const view0 = $('#view');
@@ -246,6 +248,7 @@ async function warm() {
   setTimeout(() => idle(() => core().catch(() => {})), 1500);
 }
 
+initNav();
 startI18n().catch(() => {}).then(route).then(() => {
   const s = $('#splash');
   setTimeout(() => { s.classList.add('out'); setTimeout(() => s.remove(), 400); }, 350);
