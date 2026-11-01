@@ -1,7 +1,6 @@
 // الأذكار: categories, a counter for every thikr, and today's progress.
-import { $, $$, ar, esc, icon, store, data, top, today, toast } from './app.js';
+import { $, $$, ar, esc, icon, store, data, meta, top, today, toast } from './app.js';
 import { player, ayahItems } from './player.js';
-import { globalAyah } from './page.js';
 import { shareChoice } from './cards.js';
 
 const TONES = ['rose', 'amber', 'sapphire', 'emerald', 'amethyst', 'teal', 'sky', 'coral', 'gold', 'slate'];
@@ -15,7 +14,17 @@ function progress() {
   return {};
 }
 
+// The ayah index of [surah]:[ayah], once meta.json is in (loaded with the page).
+let M = null;
+function ayahIndex(surah, ayah, m = M) {
+  if (!m) return 0;
+  M = m;
+  for (let i = 0; i < m.surah.length; i++) if (m.surah[i] === surah && m.ayah[i] === ayah) return i + 1;
+  return 1;
+}
+
 export async function show(view, args) {
+  meta().then((m) => { M = m; }).catch(() => {});
   const cats = await data('athkar.json');
   const cat = args[0] && cats.find((c) => c.id === args[0]);
   if (cat) return showCategory(view, cat, cats.indexOf(cat));
@@ -78,8 +87,12 @@ function showCategory(view, cat, i) {
     const pl = e.target.closest('[data-play]');
     if (pl) {
       const [s, f, t] = pl.dataset.play.split(',').map(Number);
-      const a = await globalAyah(s, f);
-      player.play(ayahItems(a, a + (t - f)), cat.title);
+      // Played in the tap itself: a browser lets a page start audio only
+      // straight from the user's gesture, not after waiting for a download.
+      const a = ayahIndex(s, f);
+      if (a) { player.play(ayahItems(a, a + (t - f)), cat.title); return; }
+      const m = await meta();
+      player.play(ayahItems(ayahIndex(s, f, m), ayahIndex(s, f, m) + (t - f)), cat.title);
       return;
     }
     const card = e.target.closest('.thikr');
