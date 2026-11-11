@@ -76,7 +76,7 @@ def main():
     dump("data/words.json", {"words": words, "pageStart": page_start})
 
     # Similar ayahs, tajweed colours and word meanings, as the app has them.
-    for name in ["mutashabihat.json", "tajweed.txt", "gharib.json"]:
+    for name in ["mutashabihat.json", "tajweed.txt", "gharib.json", "asbab.json"]:
         src = os.path.join(ROOT, "assets/quran", name)
         if os.path.exists(src):
             shutil.copy(src, os.path.join(OUT, "data", name))

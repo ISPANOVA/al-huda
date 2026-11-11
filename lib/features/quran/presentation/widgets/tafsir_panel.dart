@@ -7,6 +7,8 @@ import '../../../../core/services/storage_service.dart';
 import '../../../../core/theme/app_themes.dart';
 import '../../domain/entities/ayah.dart';
 import '../../../../core/i18n/text.dart';
+import '../../../../core/utils/arabic_utils.dart';
+import 'asbab.dart';
 
 /// Tafsir books the reader can switch between. Al-Muyassar ships with the
 /// app; the others are fetched once per ayah and then kept offline.
@@ -25,6 +27,8 @@ class TafsirBook {
 
 const kTafsirBooks = [
   TafsirBook('muyassar', 'الميسر', null),
+  // Shown only for ayahs with an authenticated occasion of revelation.
+  TafsirBook('asbab', 'سبب النزول', null),
   TafsirBook('mukhtasar', 'المختصر', 'ar-tafsir-al-mukhtasar'),
   TafsirBook('saadi', 'السعدي', 'ar-tafsir-as-saadi', 91),
   TafsirBook('ibnkathir', 'ابن كثير', 'ar-tafsir-ibn-kathir', 14),
@@ -40,6 +44,7 @@ class TafsirService {
   static final _dio = Dio(BaseOptions(connectTimeout: const Duration(seconds: 15)));
 
   static Future<String> fetch(StorageService storage, TafsirBook book, Ayah ayah) async {
+    if (book.id == 'asbab') return '';
     if (book.slug == null && book.qc == null) return ayah.tafseer;
     final key = 'tafsir:${book.id}:${ayah.surah}:${ayah.numberInSurah}';
     final cached = storage.quran.get(key);
@@ -132,7 +137,48 @@ class _TafsirPanelState extends State<TafsirPanel> {
   late TafsirBook _book = kTafsirBooks.firstWhere((b) => b.id == _lastBook, orElse: () => kTafsirBooks.first);
   late Future<String> _text = _load();
 
-  Future<String> _load() => TafsirService.fetch(context.read<StorageService>(), _book, widget.ayah);
+  bool get _hasAsbab => Asbab.of(widget.ayah.surah, widget.ayah.numberInSurah).isNotEmpty;
+  List<TafsirBook> get _books => [for (final b in kTafsirBooks) if (b.id != 'asbab' || _hasAsbab) b];
+
+  @override
+  void initState() {
+    super.initState();
+    Asbab.load().then((_) {
+      if (!mounted) return;
+      setState(() {});
+    }).catchError((_) {});
+  }
+
+  Future<String> _load() => TafsirService.fetch(context.read<StorageService>(), _shown, widget.ayah);
+
+  /// «سبب النزول» kept from another ayah that has none: Al-Muyassar instead.
+  TafsirBook get _shown => _book.id == 'asbab' && !_hasAsbab ? kTafsirBooks.first : _book;
+
+  Widget _asbab(GlassTheme glass) {
+    final a = widget.ayah;
+    final list = Asbab.of(a.surah, a.numberInSurah);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        for (final e in list) ...[
+          if (e.ayahs.length > 1)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 6),
+              child: Text(
+                'نزلت في الآيات ${ArabicUtils.toArabicDigits(e.ayahs.first)}–${ArabicUtils.toArabicDigits(e.ayahs.last)}',
+                style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w800, color: glass.accent),
+              ),
+            ),
+          for (var i = 0; i < e.texts.length; i++) ...[
+            if (i > 0) Divider(color: glass.accent.withValues(alpha: 0.2), height: 22),
+            Text(e.texts[i], style: TextStyle(fontSize: 16, height: 1.85, color: glass.onGlass)),
+          ],
+          const SizedBox(height: 10),
+        ],
+        Text(Asbab.source, style: TextStyle(fontSize: 11.5, height: 1.6, color: glass.onGlassMuted)),
+      ],
+    );
+  }
 
   void _select(TafsirBook b) {
     TafsirVoice.stop();
@@ -166,11 +212,11 @@ class _TafsirPanelState extends State<TafsirPanel> {
             height: 34,
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
-              itemCount: kTafsirBooks.length,
+              itemCount: _books.length,
               separatorBuilder: (_, _) => const SizedBox(width: 6),
               itemBuilder: (context, i) {
-                final b = kTafsirBooks[i];
-                final on = b.id == _book.id;
+                final b = _books[i];
+                final on = b.id == _shown.id;
                 return GestureDetector(
                   onTap: () => _select(b),
                   child: AnimatedContainer(
@@ -190,7 +236,7 @@ class _TafsirPanelState extends State<TafsirPanel> {
             ),
           ),
           const SizedBox(height: 10),
-          FutureBuilder<String>(
+          if (_shown.id == 'asbab') _asbab(glass) else FutureBuilder<String>(
             future: _text,
             builder: (context, snap) {
               if (snap.connectionState != ConnectionState.done) {
@@ -205,7 +251,7 @@ class _TafsirPanelState extends State<TafsirPanel> {
                   padding: const EdgeInsets.symmetric(vertical: 10),
                   child: Text(
                     snap.hasError
-                        ? 'تعذر تحميل تفسير ${_book.name}. تحقق من الاتصال بالإنترنت (يُحفظ بعد أول قراءة).'
+                        ? 'تعذر تحميل تفسير ${_shown.name}. تحقق من الاتصال بالإنترنت (يُحفظ بعد أول قراءة).'
                         : 'التفسير غير متوفر لهذه الآية.',
                     style: TextStyle(color: glass.onGlassMuted, height: 1.7),
                   ),
