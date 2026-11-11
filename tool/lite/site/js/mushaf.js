@@ -285,9 +285,13 @@ async function tafsirText(book, a, m) {
 }
 async function tafsir(a, m, names) {
   const text = await ayahText(a);
-  let book = BOOKS.find((b) => b[0] === store.get('tafsirBook', 'muyassar')) || BOOKS[0];
+  // أسباب النزول: a choice beside the books, for the ayahs that have one.
+  const asbab = await data('asbab.json').catch(() => null);
+  const occ = (asbab?.ayahs[`${m.surah[a - 1]}:${m.ayah[a - 1]}`] || []).map((i) => asbab.items[i]);
+  const books = occ.length ? [BOOKS[0], ['asbab', 'سبب النزول'], ...BOOKS.slice(1)] : BOOKS;
+  let book = books.find((b) => b[0] === store.get('tafsirBook', 'muyassar')) || BOOKS[0];
   await sheet(`<h3>التفسير</h3>
-    <div class="chips" id="tb">${BOOKS.map((b) => `<button class="chip${b === book ? ' on' : ''}" data-b="${b[0]}">${b[1]}</button>`).join('')}</div>
+    <div class="chips" id="tb">${books.map((b) => `<button class="chip${b === book ? ' on' : ''}" data-b="${b[0]}">${b[1]}</button>`).join('')}</div>
     <div class="quran center" style="margin-top:10px">${esc(text)}</div>
     <p class="muted small center">سورة ${esc(names[m.surah[a - 1] - 1][1])}، الآية ${ar(m.ayah[a - 1])}</p>
     <div class="card" style="line-height:2;white-space:pre-line" id="tt"></div>
@@ -302,6 +306,12 @@ async function tafsir(a, m, names) {
     const load = async () => {
       const box = $('#tt', body);
       box.innerHTML = '<div class="spin" style="margin:20px auto;opacity:1"></div>';
+      if (book[0] === 'asbab') {
+        box.innerHTML = occ.map(([, ayahs, texts]) => (ayahs.length > 1 ? `<b class="gold small">نزلت في الآيات ${ar(ayahs[0])}–${ar(ayahs[ayahs.length - 1])}</b>\n` : '')
+          + texts.map(esc).join('\n<hr style="border:0;border-top:1px solid var(--line);margin:10px 0">')).join('\n\n')
+          + `\n<small class="muted">${esc(asbab.source)}</small>`;
+        return;
+      }
       try {
         const t = await tafsirText(book, a, m);
         box.textContent = t || 'التفسير غير متوفر لهذه الآية.';
@@ -311,7 +321,7 @@ async function tafsir(a, m, names) {
     $('#tb', body).onclick = (e) => {
       const c = e.target.closest('[data-b]');
       if (!c) return;
-      book = BOOKS.find((b) => b[0] === c.dataset.b);
+      book = books.find((b) => b[0] === c.dataset.b);
       store.set('tafsirBook', book[0]);
       $$('[data-b]', body).forEach((x) => x.classList.toggle('on', x === c));
       load();
