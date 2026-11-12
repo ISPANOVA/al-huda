@@ -161,21 +161,24 @@ class _TafsirPanelState extends State<TafsirPanel> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         for (final e in list) ...[
-          if (e.ayahs.length > 1)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 6),
-              child: Text(
-                'نزلت في الآيات ${ArabicUtils.toArabicDigits(e.ayahs.first)}–${ArabicUtils.toArabicDigits(e.ayahs.last)}',
-                style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w800, color: glass.accent),
-              ),
+          Padding(
+            padding: const EdgeInsets.only(bottom: 6),
+            child: Text(
+              [
+                'من ${Asbab.names[e.source]}',
+                if (e.ayahs.length > 1)
+                  'الآيات ${ArabicUtils.toArabicDigits(e.ayahs.first)}–${ArabicUtils.toArabicDigits(e.ayahs.last)}',
+              ].join(' • '),
+              style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w800, color: glass.accent),
             ),
+          ),
           for (var i = 0; i < e.texts.length; i++) ...[
             if (i > 0) Divider(color: glass.accent.withValues(alpha: 0.2), height: 22),
             Text(e.texts[i], style: TextStyle(fontSize: 16, height: 1.85, color: glass.onGlass)),
           ],
-          const SizedBox(height: 10),
+          Divider(color: glass.accent.withValues(alpha: 0.35), height: 26),
         ],
-        Text(Asbab.source, style: TextStyle(fontSize: 11.5, height: 1.6, color: glass.onGlassMuted)),
+        Text({for (final e in list) Asbab.sources[e.source]}.join('\n'), style: TextStyle(fontSize: 11.5, height: 1.6, color: glass.onGlassMuted)),
       ],
     );
   }

@@ -286,8 +286,9 @@ async function tafsirText(book, a, m) {
 async function tafsir(a, m, names) {
   const text = await ayahText(a);
   // أسباب النزول: a choice beside the books, for the ayahs that have one.
-  const asbab = await data('asbab.json').catch(() => null);
-  const occ = (asbab?.ayahs[`${m.surah[a - 1]}:${m.ayah[a - 1]}`] || []).map((i) => asbab.items[i]);
+  const idx = await data('asbab/index.json').catch(() => []);
+  const asbab = idx.includes(m.surah[a - 1]) ? await data(`asbab/${m.surah[a - 1]}.json`).catch(() => null) : null;
+  const occ = asbab?.ayahs[m.ayah[a - 1]] || [];
   const books = occ.length ? [BOOKS[0], ['asbab', 'سبب النزول'], ...BOOKS.slice(1)] : BOOKS;
   let book = books.find((b) => b[0] === store.get('tafsirBook', 'muyassar')) || BOOKS[0];
   await sheet(`<h3>التفسير</h3>
@@ -307,9 +308,9 @@ async function tafsir(a, m, names) {
       const box = $('#tt', body);
       box.innerHTML = '<div class="spin" style="margin:20px auto;opacity:1"></div>';
       if (book[0] === 'asbab') {
-        box.innerHTML = occ.map(([, ayahs, texts]) => (ayahs.length > 1 ? `<b class="gold small">نزلت في الآيات ${ar(ayahs[0])}–${ar(ayahs[ayahs.length - 1])}</b>\n` : '')
-          + texts.map(esc).join('\n<hr style="border:0;border-top:1px solid var(--line);margin:10px 0">')).join('\n\n')
-          + `\n<small class="muted">${esc(asbab.source)}</small>`;
+        box.innerHTML = occ.map(([src, , ayahs, texts]) => `<b class="gold small">من ${esc(asbab.names[src])}${ayahs.length > 1 ? ` • الآيات ${ar(ayahs[0])}–${ar(ayahs[ayahs.length - 1])}` : ''}</b>\n`
+          + texts.map(esc).join('\n<hr style="border:0;border-top:1px solid var(--line);margin:10px 0">')).join('\n<hr style="border:0;border-top:1px solid var(--gold);opacity:.4;margin:14px 0">')
+          + `\n<small class="muted">${[...new Set(occ.map((o) => o[0]))].map((i) => esc(asbab.sources[i])).join('<br>')}</small>`;
         return;
       }
       try {
