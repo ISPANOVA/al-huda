@@ -36,6 +36,16 @@ class Asbab {
         };
       }();
 
+  /// The ayahs of [surah] that have an occasion, in order.
+  static List<int> ayahsOf(int surah) {
+    final out = <int>[];
+    for (final k in _ayahs.keys) {
+      final i = k.indexOf(':');
+      if (k.substring(0, i) == '$surah') out.add(int.parse(k.substring(i + 1)));
+    }
+    return out..sort();
+  }
+
   /// The occasions told for this ayah (each with the ayahs it covers).
   static List<AsbabEntry> of(int surah, int ayah) =>
       [for (final i in _ayahs['$surah:$ayah'] ?? const <int>[]) _items[i]];

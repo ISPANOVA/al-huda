@@ -289,7 +289,7 @@ async function tafsir(a, m, names) {
   const idx = await data('asbab/index.json').catch(() => []);
   const asbab = idx.includes(m.surah[a - 1]) ? await data(`asbab/${m.surah[a - 1]}.json`).catch(() => null) : null;
   const occ = asbab?.ayahs[m.ayah[a - 1]] || [];
-  const books = occ.length ? [BOOKS[0], ['asbab', 'سبب النزول'], ...BOOKS.slice(1)] : BOOKS;
+  const books = [BOOKS[0], ['asbab', 'سبب النزول'], ...BOOKS.slice(1)];
   let book = books.find((b) => b[0] === store.get('tafsirBook', 'muyassar')) || BOOKS[0];
   await sheet(`<h3>التفسير</h3>
     <div class="chips" id="tb">${books.map((b) => `<button class="chip${b === book ? ' on' : ''}" data-b="${b[0]}">${b[1]}</button>`).join('')}</div>
@@ -307,6 +307,12 @@ async function tafsir(a, m, names) {
     const load = async () => {
       const box = $('#tt', body);
       box.innerHTML = '<div class="spin" style="margin:20px auto;opacity:1"></div>';
+      if (book[0] === 'asbab' && !occ.length) {
+        const sur = names[m.surah[a - 1] - 1];
+        const near = Object.keys(asbab?.ayahs || {}).map(Number).sort((x, y) => x - y);
+        box.innerHTML = `<span class="muted">لم يرد لهذه الآية سبب نزول خاص في كتب أسباب النزول (الصحيح، المحرر، الواحدي). فأكثر القرآن نزل ابتداءً للهداية والتشريع، لا جوابًا عن حادثة أو سؤال.\n\nسورة ${esc(sur[1])} ${sur[3] ? 'مكية' : 'مدنية'}.${near.length ? `\n\nآيات من السورة لها سبب نزول: ${near.slice(0, 12).map(ar).join('، ')}${near.length > 12 ? '…' : ''}` : ''}</span>`;
+        return;
+      }
       if (book[0] === 'asbab') {
         box.innerHTML = occ.map(([src, , ayahs, texts]) => `<b class="gold small">من ${esc(asbab.names[src])}${ayahs.length > 1 ? ` • الآيات ${ar(ayahs[0])}–${ar(ayahs[ayahs.length - 1])}` : ''}</b>\n`
           + texts.map(esc).join('\n<hr style="border:0;border-top:1px solid var(--line);margin:10px 0">')).join('\n<hr style="border:0;border-top:1px solid var(--gold);opacity:.4;margin:14px 0">')

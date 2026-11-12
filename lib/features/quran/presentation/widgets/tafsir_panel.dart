@@ -9,6 +9,7 @@ import '../../domain/entities/ayah.dart';
 import '../../../../core/i18n/text.dart';
 import '../../../../core/utils/arabic_utils.dart';
 import 'asbab.dart';
+import '../../../../core/data/surah_metadata.dart';
 
 /// Tafsir books the reader can switch between. Al-Muyassar ships with the
 /// app; the others are fetched once per ayah and then kept offline.
@@ -137,8 +138,7 @@ class _TafsirPanelState extends State<TafsirPanel> {
   late TafsirBook _book = kTafsirBooks.firstWhere((b) => b.id == _lastBook, orElse: () => kTafsirBooks.first);
   late Future<String> _text = _load();
 
-  bool get _hasAsbab => Asbab.of(widget.ayah.surah, widget.ayah.numberInSurah).isNotEmpty;
-  List<TafsirBook> get _books => [for (final b in kTafsirBooks) if (b.id != 'asbab' || _hasAsbab) b];
+  List<TafsirBook> get _books => [for (final b in kTafsirBooks) if (b.id != 'asbab' || Asbab.loaded) b];
 
   @override
   void initState() {
@@ -152,11 +152,24 @@ class _TafsirPanelState extends State<TafsirPanel> {
   Future<String> _load() => TafsirService.fetch(context.read<StorageService>(), _shown, widget.ayah);
 
   /// «سبب النزول» kept from another ayah that has none: Al-Muyassar instead.
-  TafsirBook get _shown => _book.id == 'asbab' && !_hasAsbab ? kTafsirBooks.first : _book;
+  TafsirBook get _shown => _book;
 
   Widget _asbab(GlassTheme glass) {
     final a = widget.ayah;
     final list = Asbab.of(a.surah, a.numberInSurah);
+    if (list.isEmpty) {
+      final info = SurahMetadata.surah(a.surah);
+      final near = Asbab.ayahsOf(a.surah);
+      return Text(
+        [
+          'لم يرد لهذه الآية سبب نزول خاص في كتب أسباب النزول (${Asbab.names.join('، ')}). فأكثر القرآن نزل ابتداءً للهداية والتشريع، لا جوابًا عن حادثة أو سؤال.',
+          'سورة ${info.name} ${info.isMeccan ? 'مكية' : 'مدنية'}.',
+          if (near.isNotEmpty)
+            'آيات من السورة لها سبب نزول: ${near.take(12).map(ArabicUtils.toArabicDigits).join('، ')}${near.length > 12 ? '…' : ''}',
+        ].join('\n\n'),
+        style: TextStyle(fontSize: 15, height: 1.8, color: glass.onGlassMuted),
+      );
+    }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
