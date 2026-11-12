@@ -89,6 +89,15 @@ def main():
     for s, ayahs in per.items():
         dump(f"data/asbab/{s}.json", {"sources": asbab["sources"], "names": asbab["names"], "ayahs": ayahs})
     dump("data/asbab/index.json", sorted(int(s) for s in per))
+    # Ayah topics, one file per surah.
+    topics = json.load(open(os.path.join(ROOT, "assets/quran/topics.json"), encoding="utf-8"))
+    per = {}
+    for key, ids in topics["ayahs"].items():
+        s, a = key.split(":")
+        per.setdefault(s, {})[a] = [topics["topics"][i] for i in ids]
+    for s, ayahs in per.items():
+        dump(f"data/topics/{s}.json", {"source": topics["source"], "ayahs": ayahs})
+    dump("data/topics/index.json", sorted(int(s) for s in per))
     # The English interface: the same dictionary as the app.
     shutil.copy(os.path.join(ROOT, "assets/i18n/en.json"), os.path.join(OUT, "data", "en.json"))
 

@@ -289,7 +289,12 @@ async function tafsir(a, m, names) {
   const idx = await data('asbab/index.json').catch(() => []);
   const asbab = idx.includes(m.surah[a - 1]) ? await data(`asbab/${m.surah[a - 1]}.json`).catch(() => null) : null;
   const occ = asbab?.ayahs[m.ayah[a - 1]] || [];
-  const books = [BOOKS[0], ['asbab', 'سبب النزول'], ...BOOKS.slice(1)];
+  const books = [BOOKS[0], ['asbab', 'سبب النزول'], ['topics', 'الموضوع'], ...BOOKS.slice(1)];
+  const tIdx = await data('topics/index.json').catch(() => []);
+  const tops = tIdx.includes(m.surah[a - 1]) ? await data(`topics/${m.surah[a - 1]}.json`).catch(() => null) : null;
+  // The index leaves some ayahs out: the nearest indexed one (up to 5 away) stands in.
+  let tFrom = 0, tList = null;
+  for (let d = 0; d <= 5 && !tList; d++) for (const v of d ? [m.ayah[a - 1] - d, m.ayah[a - 1] + d] : [m.ayah[a - 1]]) if (!tList && tops?.ayahs[v]) { tFrom = v; tList = tops.ayahs[v]; }
   let book = books.find((b) => b[0] === store.get('tafsirBook', 'muyassar')) || BOOKS[0];
   await sheet(`<h3>التفسير</h3>
     <div class="chips" id="tb">${books.map((b) => `<button class="chip${b === book ? ' on' : ''}" data-b="${b[0]}">${b[1]}</button>`).join('')}</div>
@@ -307,6 +312,15 @@ async function tafsir(a, m, names) {
     const load = async () => {
       const box = $('#tt', body);
       box.innerHTML = '<div class="spin" style="margin:20px auto;opacity:1"></div>';
+      if (book[0] === 'topics') {
+        if (!tList) { box.innerHTML = '<span class="muted">لم تُفهرس هذه الآية ولا ما حولها في الموضوعات القرآنية بعد.</span>'; return; }
+        const groups = new Map();
+        for (const [n, parent] of tList) { const k = parent || ''; if (!groups.has(k)) groups.set(k, []); groups.get(k).push(n); }
+        box.innerHTML = (tFrom !== m.ayah[a - 1] ? `<b class="gold small">من سياق الآيات: موضوع الآية ${ar(tFrom)}</b>\n` : '')
+          + [...groups].map(([k, ns]) => (k ? `<b class="gold small">${esc(k)}</b>\n` : '') + ns.map((n) => `• ${esc(n)}`).join('\n')).join('\n\n')
+          + `\n\n<small class="muted">${esc(tops.source)}</small>`;
+        return;
+      }
       if (book[0] === 'asbab' && !occ.length) {
         const sur = names[m.surah[a - 1] - 1];
         const near = Object.keys(asbab?.ayahs || {}).map(Number).sort((x, y) => x - y);
