@@ -1,7 +1,4 @@
 name: Probe data sources
-# Push to probe: fetches a few public Quran APIs to check what they offer
-# (tafsirs, tajweed, word meanings) and publishes the answers to the
-# probe-results branch. Never touches the app build.
 on:
   push:
     branches: [probe]
@@ -10,37 +7,17 @@ permissions:
 jobs:
   probe:
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
       - name: Probe
         run: |
           mkdir -p "$RUNNER_TEMP/out"; cd "$RUNNER_TEMP/out"
           UA="AlHudaApp/1.0 (github.com/ISPANOVA/al-huda)"
-          for f in Husary_128kbps_Mujawwad Husary_Mujawwad_64kbps Husary_64kbps_Mujawwad; do
-            echo "$f $(curl -s -o /dev/null -A "$UA" -w '%{http_code}' -r 0-0 https://everyayah.com/data/$f/002255.mp3)" >> everyayah.txt
+          for f in asbab asbab-book-2919 asbab-book-460; do
+            curl -sL -A "$UA" --max-time 120 "https://quranpedia.net/dumps/$f.json.gz" -o $f.json.gz && gunzip -f $f.json.gz
           done
-          curl -sL -A "$UA" --max-time 120 "https://quranpedia.net/dumps/meanings.json.gz" -o meanings.json.gz
-          gunzip -c meanings.json.gz > meanings.json
-          # Only the classical books: Ibn al-Haim (d. 815 AH, the cleaner text), then Ibn al-Jawzi (d. 597 AH) where he alone covers.
-          python3 -c "
-          import json, re
-          d=json.load(open('meanings.json'))
-          out={}
-          for e in d['data']:
-            got={m['book_info']['id']: m for m in e['meanings']}
-            for bid, tag in ((327, 'h'), (208, 'j')):
-              m=got.get(bid)
-              if not m: continue
-              words=[[w['text'].strip(), re.sub(r'\s+', ' ', w['meaning']).strip()] for w in m['words'] if w.get('meaning')]
-              if words:
-                out['%d:%d'%(e['surah'],e['ayah'])]=[tag]+words
-                break
-          json.dump({'source': {'j': 'تذكرة الأريب في تفسير الغريب، لابن الجوزي (ت ٥٩٧هـ)', 'h': 'التبيان في تفسير غريب القرآن، لابن الهائم (ت ٨١٥هـ)', 'via': 'الموسوعة القرآنية quranpedia.net، نسخة '+d['license'].get('version','')}, 'ayahs': out}, open('gharib.json','w'), ensure_ascii=False, separators=(',',':'))
-          print(len(out), sum(len(v)-1 for v in out.values()))
-          " > gharib_report.txt 2>&1
-          ls -la gharib.json; cat everyayah.txt gharib_report.txt
-          rm -f meanings.json meanings.json.gz
+          curl -sL -A "$UA" --max-time 60 "https://quranpedia.net/dumps/manifest.json" -o manifest.json
+          ls -la
       - name: Publish
         if: always()
         run: |
