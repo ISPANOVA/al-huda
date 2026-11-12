@@ -13,7 +13,7 @@ jobs:
         run: |
           mkdir -p "$RUNNER_TEMP/out"; cd "$RUNNER_TEMP/out"
           UA="AlHudaApp/1.0 (github.com/ISPANOVA/al-huda)"
-          for f in asbab asbab-book-2919 asbab-book-460; do
+          for f in topics topics-index; do
             curl -sL -A "$UA" --max-time 120 "https://quranpedia.net/dumps/$f.json.gz" -o $f.json.gz && gunzip -f $f.json.gz
           done
           curl -sL -A "$UA" --max-time 60 "https://quranpedia.net/dumps/manifest.json" -o manifest.json
