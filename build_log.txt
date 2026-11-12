@@ -1,0 +1,190 @@
+Flutter 3.47.5 • channel stable • https://github.com/flutter/flutter.git
+Framework • revision 6a19cca564 (8 weeks ago) • 2026-09-17 14:13:22 -0400
+Engine • hash ab598368592da0064197e2bc15c7f5b0a2c6bb1f (revision af7e796e16) (1 months ago) • 2026-09-16 18:35:09.000Z
+Tools • Dart 3.13.4 • DevTools 2.60.0
+Resolving dependencies...
+Downloading packages...
+  archive 4.3.0 (4.6.0 available)
+  cli_util 0.4.2 (0.6.0 available)
+  code_assets 1.2.1 (2.2.0 available)
+  cross_file 0.3.5+5 (0.4.0 available)
+  crypto 3.0.7 (3.0.8 available)
+  dbus 0.7.15 (0.8.0 available)
+  equatable 2.1.0 (3.0.0 available)
++ file_picker 10.3.10 (13.3.3 available)
+  flutter_cache_manager 3.4.5 (3.5.0 available)
+  flutter_local_notifications 22.3.1 (23.0.0 available)
+  flutter_local_notifications_linux 8.0.1 (9.0.0 available)
+  flutter_local_notifications_platform_interface 12.2.0 (13.0.0 available)
+  flutter_local_notifications_web 1.0.0 (2.0.0 available)
+  flutter_local_notifications_windows 3.1.1 (4.0.0 available)
++ flutter_plugin_android_lifecycle 2.0.35
+  flutter_timezone 5.1.0 (5.1.1 available)
++ flutter_tts 4.2.5
+  geocoding 4.0.0 (5.0.1 available)
+  geocoding_android 4.0.1 (5.1.0 available)
+  geocoding_platform_interface 3.2.0 (5.0.0 available)
+< geolocator 14.0.2 (was 14.1.1) (14.1.2 available)
+  geolocator_android 5.1.1 (5.2.1 available)
+  geolocator_apple 2.3.14 (2.4.3 available)
+< geolocator_linux 0.2.4 (was 0.2.6) (0.2.6 available)
+  geolocator_platform_interface 4.4.0 (4.4.1 available)
+  google_fonts 6.3.3 (9.0.0 available)
+  gsettings 0.2.8 (0.2.9 available)
++ hive_ce 2.23.3
+  hooks 2.0.2 (2.2.0 available)
+  image 4.10.1 (4.12.0 available)
++ isolate_channel 0.6.2
+  jni 1.0.3 (1.1.2 available)
+  jni_flutter 1.0.3 (1.0.4+1 available)
+  material_color_utilities 0.13.0 (0.13.1 available)
+  meta 1.18.3 (1.19.0 available)
+  objective_c 9.5.0 (9.6.4 available)
+< package_info_plus 9.0.1 (was 10.2.1) (10.2.2 available)
+< package_info_plus_platform_interface 3.2.1 (was 4.1.0) (4.1.0 available)
+  petitparser 7.0.2 (7.1.0 available)
+  posix 6.5.2 (6.5.4 available)
++ record 7.2.0
++ record_android 2.3.0
++ record_darwin 2.0.0
++ record_linux 2.2.0
++ record_platform_interface 2.2.0
+  record_use 0.6.0 (1.1.1 available)
++ record_web 2.2.0
++ record_windows 2.4.0
+  sensors_plus 7.1.0 (7.1.1 available)
+< share_plus 12.0.2 (was 13.3.0) (13.3.1 available)
+< share_plus_platform_interface 6.1.0 (was 7.2.0) (7.2.0 available)
++ sherpa_onnx 1.13.8 (2.0.1 available)
++ sherpa_onnx_android_arm64 1.13.8 (2.0.1 available)
++ sherpa_onnx_android_armeabi 1.13.8 (2.0.1 available)
++ sherpa_onnx_android_x86 1.13.8 (2.0.1 available)
++ sherpa_onnx_android_x86_64 1.13.8 (2.0.1 available)
++ sherpa_onnx_ios 1.13.8 (2.0.1 available)
++ sherpa_onnx_linux 1.13.8 (2.0.1 available)
++ sherpa_onnx_macos 1.13.8 (2.0.1 available)
++ sherpa_onnx_web 1.13.8 (2.0.1 available)
++ sherpa_onnx_windows 1.13.8 (2.0.1 available)
++ speech_to_text 7.5.0
++ speech_to_text_platform_interface 2.5.0
++ speech_to_text_windows 1.0.1
+  sqflite 2.4.4 (2.4.6 available)
+  sqflite_android 2.4.4 (2.4.6 available)
+  sqflite_common 2.5.13 (2.5.17 available)
+  sqflite_darwin 2.4.4 (2.4.6 available)
+  sqflite_platform_interface 2.4.2 (2.4.4 available)
+  synchronized 3.4.2 (3.6.1+1 available)
+  test_api 0.7.12 (0.7.15 available)
+  timezone 0.11.1 (0.11.2 available)
+  vector_math 2.4.0 (2.4.4 available)
+  video_player 2.14.0 (2.14.1 available)
+  video_player_avfoundation 2.12.0 (2.12.3 available)
+  vm_service 15.3.0 (15.4.0 available)
+  web 1.1.1 (from transitive dependency to direct dependency) (1.1.2 available)
+< win32 5.15.0 (was 6.4.0) (6.4.0 available)
+  xml 7.0.1 (7.1.0 available)
+These packages are no longer being depended on:
+- ffi_leak_tracker 0.1.2
+Changed 34 dependencies!
+65 packages have newer versions incompatible with dependency constraints.
+Try `flutter pub outdated` for more information.
+Upgrading analysis_options.yaml to exclude build and platform directories.
+pages 604 words 77430
+
+::group::✅ Passing tests
+✅ export
+::endgroup::
+
+🎉 1 test passed.
+Compiled 10,908,009 input bytes (5,456,598 characters source) to 147,411 characters JavaScript in 1.17 seconds
+460K	/home/runner/work/_temp/lite/js
+56K	/home/runner/work/_temp/lite/css
+444K	/home/runner/work/_temp/lite/js
+48K	/home/runner/work/_temp/lite/css
+/home/runner/work/_temp/lite:
+total 156
+drwxr-xr-x 8 runner runner  4096 Nov 12 03:08 .
+drwxr-xr-x 7 runner runner  4096 Nov 12 03:08 ..
+-rw-r--r-- 1 runner runner   451 Nov 12 03:07 _headers
+drwxr-xr-x 2 runner runner  4096 Nov 12 03:07 css
+drwxr-xr-x 6 runner runner  4096 Nov 12 03:08 data
+-rw-r--r-- 1 runner runner  6518 Nov 12 03:08 favicon.png
+drwxr-xr-x 2 runner runner  4096 Nov 12 03:08 fonts
+drwxr-xr-x 2 runner runner  4096 Nov 12 03:07 icons
+drwxr-xr-x 3 runner runner  4096 Nov 12 03:07 img
+-rw-r--r-- 1 runner runner  4271 Nov 12 03:07 index.html
+drwxr-xr-x 2 runner runner  4096 Nov 12 03:08 js
+-rw-r--r-- 1 runner runner   775 Nov 12 03:07 manifest.json
+-rw-r--r-- 1 runner runner 89692 Nov 12 03:08 og.jpg
+-rw-r--r-- 1 runner runner  6911 Nov 12 03:08 privacy.html
+-rw-r--r-- 1 runner runner  2594 Nov 12 03:08 sw.js
+
+/home/runner/work/_temp/lite/data:
+total 4652
+drwxr-xr-x 6 runner runner    4096 Nov 12 03:08 .
+drwxr-xr-x 8 runner runner    4096 Nov 12 03:08 ..
+drwxr-xr-x 2 runner runner    4096 Nov 12 03:08 asbab
+-rw-r--r-- 1 runner runner    7512 Nov 12 03:08 asma.json
+-rw-r--r-- 1 runner runner   22437 Nov 12 03:08 athkar.json
+-rw-r--r-- 1 runner runner    4067 Nov 12 03:08 calendar.json
+-rw-r--r-- 1 runner runner   11327 Nov 12 03:08 duas.json
+-rw-r--r-- 1 runner runner  137234 Nov 12 03:08 en.json
+-rw-r--r-- 1 runner runner  759468 Nov 12 03:08 gharib.json
+-rw-r--r-- 1 runner runner   12430 Nov 12 03:08 media.json
+-rw-r--r-- 1 runner runner  101107 Nov 12 03:08 meta.json
+-rw-r--r-- 1 runner runner   85241 Nov 12 03:08 mutashabihat.json
+-rw-r--r-- 1 runner runner   43416 Nov 12 03:08 nawawi.json
+drwxr-xr-x 2 runner runner   20480 Nov 12 03:08 p
+-rw-r--r-- 1 runner runner    1429 Nov 12 03:08 reciters.json
+-rw-r--r-- 1 runner runner  750980 Nov 12 03:08 search.json
+-rw-r--r-- 1 runner runner    4082 Nov 12 03:08 surahs.json
+drwxr-xr-x 2 runner runner   20480 Nov 12 03:08 t
+-rw-r--r-- 1 runner runner  471849 Nov 12 03:08 tajweed.txt
+drwxr-xr-x 2 runner runner    4096 Nov 12 03:08 topics
+-rw-r--r-- 1 runner runner   12755 Nov 12 03:08 virtues.json
+-rw-r--r-- 1 runner runner 2246262 Nov 12 03:08 words.json
+
+/home/runner/work/_temp/lite/js:
+total 448
+drwxr-xr-x 2 runner runner   4096 Nov 12 03:08 .
+drwxr-xr-x 8 runner runner   4096 Nov 12 03:08 ..
+-rw-r--r-- 1 runner runner  10411 Nov 12 03:08 app.js
+-rw-r--r-- 1 runner runner   5427 Nov 12 03:08 athkar.js
+-rw-r--r-- 1 runner runner   3354 Nov 12 03:08 calendar.js
+-rw-r--r-- 1 runner runner   5761 Nov 12 03:08 cards.js
+-rw-r--r-- 1 runner runner  10762 Nov 12 03:08 content.js
+-rw-r--r-- 1 runner runner 147411 Nov 12 03:08 core.js
+-rw-r--r-- 1 runner runner  12172 Nov 12 03:08 group.js
+-rw-r--r-- 1 runner runner   4075 Nov 12 03:08 hifz.js
+-rw-r--r-- 1 runner runner  15135 Nov 12 03:08 home.js
+-rw-r--r-- 1 runner runner   3601 Nov 12 03:08 i18n.js
+-rw-r--r-- 1 runner runner   7213 Nov 12 03:08 khatmah.js
+-rw-r--r-- 1 runner runner   9407 Nov 12 03:08 media.js
+-rw-r--r-- 1 runner runner   5356 Nov 12 03:08 more.js
+-rw-r--r-- 1 runner runner  19264 Nov 12 03:08 mushaf.js
+-rw-r--r-- 1 runner runner   2639 Nov 12 03:08 nav.js
+-rw-r--r-- 1 runner runner   4404 Nov 12 03:08 page.js
+-rw-r--r-- 1 runner runner  11162 Nov 12 03:08 player.js
+-rw-r--r-- 1 runner runner  14540 Nov 12 03:08 prayer.js
+-rw-r--r-- 1 runner runner   3894 Nov 12 03:08 prayerlib.js
+-rw-r--r-- 1 runner runner   3980 Nov 12 03:08 qibla.js
+-rw-r--r-- 1 runner runner   6533 Nov 12 03:08 reciters.js
+-rw-r--r-- 1 runner runner   2113 Nov 12 03:08 search.js
+-rw-r--r-- 1 runner runner  24589 Nov 12 03:08 settings.js
+-rw-r--r-- 1 runner runner   3762 Nov 12 03:08 sky.js
+-rw-r--r-- 1 runner runner   3145 Nov 12 03:08 tajweed.js
+-rw-r--r-- 1 runner runner   5314 Nov 12 03:08 tasbeeh.js
+-rw-r--r-- 1 runner runner  15656 Nov 12 03:08 tasmee.js
+-rw-r--r-- 1 runner runner  18582 Nov 12 03:08 tools.js
+-rw-r--r-- 1 runner runner  26614 Nov 12 03:08 video.js
+
+┌─ New feature ────────────────────────────────────────────────────────────────────────────┐
+│   WebAssembly compilation is new. Understand the details before deploying to production. │
+│   See https://flutter.dev/to/wasm for more information.                                  │
+└──────────────────────────────────────────────────────────────────────────────────────────┘
+Compiling lib/main.dart for the Web...                          
+Expected to find fonts for (MaterialIcons, packages/cupertino_icons/CupertinoIcons), but found (MaterialIcons). This usually means you are referring to font families in an IconData class but not including them in the assets section of your pubspec.yaml, are missing the package that would include them, or are missing "uses-material-design: true".
+Font asset "MaterialIcons-Regular.otf" was tree-shaken, reducing it from 1645184 to 39900 bytes (97.6% reduction). Tree-shaking can be disabled by providing the --no-tree-shake-icons flag when building your app.
+Compiling lib/main.dart for the Web...                             93.3s
+✓ Built build/web
+98M	build/site

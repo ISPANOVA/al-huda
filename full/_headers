@@ -1,0 +1,16 @@
+/*
+  Cross-Origin-Opener-Policy: same-origin
+  Cross-Origin-Embedder-Policy: credentialless
+  X-Content-Type-Options: nosniff
+/index.html
+  Cache-Control: no-cache
+/
+  Cache-Control: no-cache
+/flutter_bootstrap.js
+  Cache-Control: no-cache
+/main.dart.js
+  Cache-Control: no-cache
+/main.dart.wasm
+  Cache-Control: no-cache
+/main.dart.mjs
+  Cache-Control: no-cache
