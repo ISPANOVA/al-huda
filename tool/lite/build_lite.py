@@ -76,10 +76,28 @@ def main():
     dump("data/words.json", {"words": words, "pageStart": page_start})
 
     # Similar ayahs, tajweed colours and word meanings, as the app has them.
-    for name in ["mutashabihat.json", "tajweed.txt", "gharib.json", "asbab.json"]:
+    for name in ["mutashabihat.json", "tajweed.txt", "gharib.json"]:
         src = os.path.join(ROOT, "assets/quran", name)
         if os.path.exists(src):
             shutil.copy(src, os.path.join(OUT, "data", name))
+    # Occasions of revelation, one small file per surah (the whole is ~4 MB).
+    asbab = json.load(open(os.path.join(ROOT, "assets/quran/asbab.json"), encoding="utf-8"))
+    per = {}
+    for key, idx in asbab["ayahs"].items():
+        s, a = key.split(":")
+        per.setdefault(s, {})[a] = [asbab["items"][i] for i in idx]
+    for s, ayahs in per.items():
+        dump(f"data/asbab/{s}.json", {"sources": asbab["sources"], "names": asbab["names"], "ayahs": ayahs})
+    dump("data/asbab/index.json", sorted(int(s) for s in per))
+    # Ayah topics, one file per surah.
+    topics = json.load(open(os.path.join(ROOT, "assets/quran/topics.json"), encoding="utf-8"))
+    per = {}
+    for key, ids in topics["ayahs"].items():
+        s, a = key.split(":")
+        per.setdefault(s, {})[a] = [topics["topics"][i] for i in ids]
+    for s, ayahs in per.items():
+        dump(f"data/topics/{s}.json", {"source": topics["source"], "ayahs": ayahs})
+    dump("data/topics/index.json", sorted(int(s) for s in per))
     # The English interface: the same dictionary as the app.
     shutil.copy(os.path.join(ROOT, "assets/i18n/en.json"), os.path.join(OUT, "data", "en.json"))
 

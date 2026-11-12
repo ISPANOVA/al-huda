@@ -9,6 +9,8 @@ import '../../domain/entities/ayah.dart';
 import '../../../../core/i18n/text.dart';
 import '../../../../core/utils/arabic_utils.dart';
 import 'asbab.dart';
+import 'ayah_topics.dart';
+import '../../../../core/data/surah_metadata.dart';
 
 /// Tafsir books the reader can switch between. Al-Muyassar ships with the
 /// app; the others are fetched once per ayah and then kept offline.
@@ -29,6 +31,7 @@ const kTafsirBooks = [
   TafsirBook('muyassar', 'الميسر', null),
   // Shown only for ayahs with an authenticated occasion of revelation.
   TafsirBook('asbab', 'سبب النزول', null),
+  TafsirBook('topics', 'الموضوع', null),
   TafsirBook('mukhtasar', 'المختصر', 'ar-tafsir-al-mukhtasar'),
   TafsirBook('saadi', 'السعدي', 'ar-tafsir-as-saadi', 91),
   TafsirBook('ibnkathir', 'ابن كثير', 'ar-tafsir-ibn-kathir', 14),
@@ -44,7 +47,7 @@ class TafsirService {
   static final _dio = Dio(BaseOptions(connectTimeout: const Duration(seconds: 15)));
 
   static Future<String> fetch(StorageService storage, TafsirBook book, Ayah ayah) async {
-    if (book.id == 'asbab') return '';
+    if (book.id == 'asbab' || book.id == 'topics') return '';
     if (book.slug == null && book.qc == null) return ayah.tafseer;
     final key = 'tafsir:${book.id}:${ayah.surah}:${ayah.numberInSurah}';
     final cached = storage.quran.get(key);
@@ -137,8 +140,7 @@ class _TafsirPanelState extends State<TafsirPanel> {
   late TafsirBook _book = kTafsirBooks.firstWhere((b) => b.id == _lastBook, orElse: () => kTafsirBooks.first);
   late Future<String> _text = _load();
 
-  bool get _hasAsbab => Asbab.of(widget.ayah.surah, widget.ayah.numberInSurah).isNotEmpty;
-  List<TafsirBook> get _books => [for (final b in kTafsirBooks) if (b.id != 'asbab' || _hasAsbab) b];
+  List<TafsirBook> get _books => [for (final b in kTafsirBooks) if (b.id != 'asbab' || Asbab.loaded) b];
 
   @override
   void initState() {
@@ -147,35 +149,90 @@ class _TafsirPanelState extends State<TafsirPanel> {
       if (!mounted) return;
       setState(() {});
     }).catchError((_) {});
+    AyahTopics.load().then((_) {
+      if (mounted) setState(() {});
+    }).catchError((_) {});
   }
 
   Future<String> _load() => TafsirService.fetch(context.read<StorageService>(), _shown, widget.ayah);
 
   /// «سبب النزول» kept from another ayah that has none: Al-Muyassar instead.
-  TafsirBook get _shown => _book.id == 'asbab' && !_hasAsbab ? kTafsirBooks.first : _book;
+  TafsirBook get _shown => _book;
 
   Widget _asbab(GlassTheme glass) {
     final a = widget.ayah;
     final list = Asbab.of(a.surah, a.numberInSurah);
+    if (list.isEmpty) {
+      final info = SurahMetadata.surah(a.surah);
+      final near = Asbab.ayahsOf(a.surah);
+      return Text(
+        [
+          'لم يرد لهذه الآية سبب نزول خاص في كتب أسباب النزول (${Asbab.names.join('، ')}). فأكثر القرآن نزل ابتداءً للهداية والتشريع، لا جوابًا عن حادثة أو سؤال.',
+          'سورة ${info.name} ${info.isMeccan ? 'مكية' : 'مدنية'}.',
+          if (near.isNotEmpty)
+            'آيات من السورة لها سبب نزول: ${near.take(12).map(ArabicUtils.toArabicDigits).join('، ')}${near.length > 12 ? '…' : ''}',
+        ].join('\n\n'),
+        style: TextStyle(fontSize: 15, height: 1.8, color: glass.onGlassMuted),
+      );
+    }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         for (final e in list) ...[
-          if (e.ayahs.length > 1)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 6),
-              child: Text(
-                'نزلت في الآيات ${ArabicUtils.toArabicDigits(e.ayahs.first)}–${ArabicUtils.toArabicDigits(e.ayahs.last)}',
-                style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w800, color: glass.accent),
-              ),
+          Padding(
+            padding: const EdgeInsets.only(bottom: 6),
+            child: Text(
+              [
+                'من ${Asbab.names[e.source]}',
+                if (e.ayahs.length > 1)
+                  'الآيات ${ArabicUtils.toArabicDigits(e.ayahs.first)}–${ArabicUtils.toArabicDigits(e.ayahs.last)}',
+              ].join(' • '),
+              style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w800, color: glass.accent),
             ),
+          ),
           for (var i = 0; i < e.texts.length; i++) ...[
             if (i > 0) Divider(color: glass.accent.withValues(alpha: 0.2), height: 22),
             Text(e.texts[i], style: TextStyle(fontSize: 16, height: 1.85, color: glass.onGlass)),
           ],
+          Divider(color: glass.accent.withValues(alpha: 0.35), height: 26),
+        ],
+        Text({for (final e in list) Asbab.sources[e.source]}.join('\n'), style: TextStyle(fontSize: 11.5, height: 1.6, color: glass.onGlassMuted)),
+      ],
+    );
+  }
+
+  Widget _topicsView(GlassTheme glass) {
+    final a = widget.ayah;
+    final t = AyahTopics.of(a.surah, a.numberInSurah);
+    if (t == null) {
+      return Text('لم تُفهرس هذه الآية ولا ما حولها في الموضوعات القرآنية بعد.',
+          style: TextStyle(fontSize: 15, height: 1.8, color: glass.onGlassMuted));
+    }
+    // Topics under the same heading are listed together.
+    final groups = <String, List<String>>{};
+    for (final (name, parent) in t.topics) {
+      groups.putIfAbsent(parent ?? '', () => []).add(name);
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (t.from != a.numberInSurah)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Text('من سياق الآيات: موضوع الآية ${ArabicUtils.toArabicDigits(t.from)}',
+                style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w800, color: glass.accent)),
+          ),
+        for (final g in groups.entries) ...[
+          if (g.key.isNotEmpty)
+            Text(g.key, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: glass.accent)),
+          for (final n in g.value)
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Text('• $n', style: TextStyle(fontSize: 16, height: 1.7, color: glass.onGlass)),
+            ),
           const SizedBox(height: 10),
         ],
-        Text(Asbab.source, style: TextStyle(fontSize: 11.5, height: 1.6, color: glass.onGlassMuted)),
+        Text(AyahTopics.source, style: TextStyle(fontSize: 11.5, height: 1.6, color: glass.onGlassMuted)),
       ],
     );
   }
@@ -236,7 +293,7 @@ class _TafsirPanelState extends State<TafsirPanel> {
             ),
           ),
           const SizedBox(height: 10),
-          if (_shown.id == 'asbab') _asbab(glass) else FutureBuilder<String>(
+          if (_shown.id == 'asbab') _asbab(glass) else if (_shown.id == 'topics') _topicsView(glass) else FutureBuilder<String>(
             future: _text,
             builder: (context, snap) {
               if (snap.connectionState != ConnectionState.done) {
